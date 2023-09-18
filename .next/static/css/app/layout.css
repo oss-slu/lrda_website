@@ -557,6 +557,9 @@ video {
   --tw-backdrop-saturate:  ;
   --tw-backdrop-sepia:  ;
 }
+.static {
+  position: static;
+}
 .flex {
   display: flex;
 }
@@ -572,8 +575,14 @@ video {
 .justify-between {
   justify-content: space-between;
 }
+.border {
+  border-width: 1px;
+}
 .p-24 {
   padding: 6rem;
+}
+.p-2 {
+  padding: 0.5rem;
 }
 .text-2xl {
   font-size: 1.5rem;
