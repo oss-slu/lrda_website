@@ -578,11 +578,11 @@ video {
 .border {
   border-width: 1px;
 }
-.p-24 {
-  padding: 6rem;
-}
 .p-2 {
   padding: 0.5rem;
+}
+.p-24 {
+  padding: 6rem;
 }
 .text-2xl {
   font-size: 1.5rem;

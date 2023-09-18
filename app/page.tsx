@@ -1,7 +1,8 @@
-import Image from "next/image";
+// use client
 
+import Image from "next/image";
 import React, { useState } from 'react';
-import { Note } from './types'; // assuming types.ts is in the same directory level
+import { Note } from './types'; 
 
 export default function Home() {
   // Initialize note state with the Note type
@@ -47,4 +48,3 @@ export default function Home() {
     </main>
   );
 }
-
