@@ -1,26 +1,25 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UserData } from "../../types";
 import { getItem } from "../utils/async_storage";
 
 export class User {
-  private static instance: User;
-  private userData: UserData | null = null;
-  private callback: ((isLoggedIn: boolean) => void) | null = null;
-
-  public static getInstance(): User {
-    if (!User.instance) {
-      User.instance = new User();
+    private static instance: User;
+    private userData: UserData | null = null;
+    private callback: ((isLoggedIn: boolean) => void) | null = null;
+  
+    public static getInstance(): User {
+      if (!User.instance) {
+        User.instance = new User();
+      }
+      return User.instance;
     }
-    return User.instance;
-  }
-
-  private async persistUser(userData: UserData) {
-    try {
-      await AsyncStorage.setItem("userData", JSON.stringify(userData));
-    } catch (error) {
-      console.log(error);
+  
+    private persistUser(userData: UserData) {
+      try {
+        localStorage.setItem("userData", JSON.stringify(userData));
+      } catch (error) {
+        console.log(error);
+      }
     }
-  }
 
   public setLoginCallback(callback: (isLoggedIn: boolean) => void) {
     this.callback = callback;
@@ -34,7 +33,7 @@ export class User {
 
   private async loadUser(): Promise<UserData | null> {
     try {
-      const value = await AsyncStorage.getItem("userData");
+      const value = await localStorage.getItem("userData");
       if (value !== null) {
         return JSON.parse(value);
       }
@@ -46,7 +45,7 @@ export class User {
 
   private async clearUser() {
     try {
-      await AsyncStorage.removeItem("userData");
+      await localStorage.removeItem("userData");
     } catch (error) {
       console.log(error);
     }
