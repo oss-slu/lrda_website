@@ -1,49 +1,10 @@
-// use client
 import Image from "next/image";
-import React, { useState } from 'react';
-import { Note } from './types'; 
 
 export default function Home() {
-  // Initialize note state with the Note type
-  const [note, setNote] = useState<Note>({
-    id: '',
-    title: '',
-    text: '',
-    time: new Date(),
-    media: [],
-    audio: [],
-    creator: '',
-    latitude: '',
-    longitude: '',
-    published: undefined,
-    tags: []
-  });
-
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Update the text field of the note object
-    setNote({
-      ...note,
-      text: e.target.value,
-    });
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      
       <div className="">
-        <h1 className="text-blue-500 text-2xl">Where's Religion?</h1>
-      </div>
-      <div className="note-taking-section">
-        <h2>Your Notes:</h2>
-        <textarea
-          value={note.text}
-          onChange={handleNotesChange}
-          rows={10}
-          cols={50}
-          placeholder="Write your notes here..."
-          className="border p-2"
-        >
-        </textarea>
+        <h1 className="text-blue-500 text-xl">Where's Religion?</h1>
       </div>
     </main>
   );
