@@ -1,5 +1,4 @@
 node_modules
-.next
-next
-yarn.lock
+.next/
 .DS_Store
+yarn.lock
