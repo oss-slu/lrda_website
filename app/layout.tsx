@@ -1,4 +1,4 @@
-import './globals.css';
+import '../app/globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
@@ -73,18 +73,18 @@ export default function RootLayout({
           }
         `}
       </style>
-      <body className={inter.className}>
+      <div className={inter.className}>
         <header>
           {/* Enhanced search bar */}
           <div className="search-bar">
-            <input type="text" placeholder="What are you looking for?" />
+            <input type="text" data-testid="searchbar" placeholder="What are you looking for?" />
             <button>
               <i className="fas fa-search"></i> {/* Magnifying glass icon */}
             </button>
           </div>
         </header>
         <main>{children}</main>
-      </body>
+      </div>
     </>
   );
 }
