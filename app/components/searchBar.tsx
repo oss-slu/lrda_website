@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import ApiService from './ApiService';
+import ApiService from '../lib/utils/ApiService';
 
 const SearchBar = () => {
   const [searchText, setSearchText] = useState('');
 
   const handleSearch = async () => {
     try {
-      const response = await ApiService.searchMessages(searchText, 'Yash Bhatia');
+      const response = await ApiService.searchMessages(searchText);
       console.log('API Response:', response);
     } catch (error) {
       console.error('API Error:', error);
