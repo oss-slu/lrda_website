@@ -1,4 +1,5 @@
 import Image from "next/image";
+import SearchBar from './components/searchBar'; // imports reusable search bar
 
 export default function Home() {
   return (
