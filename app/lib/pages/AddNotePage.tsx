@@ -1,17 +1,25 @@
+// AddNotePage.tsx
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Editor, EditorState } from "draft-js";
 import 'draft-js/dist/Draft.css';
 
 export default function AddNotePage() {
   const [text, textUpdate] = useState(EditorState.createEmpty());
+  const [editor, setEditor] = useState(false);  // New state variable
+
+  // New useEffect to update editor state on component mount
+  useEffect(() => {
+    setEditor(true);
+  }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="">
         <h1 className="text-blue-500 text-xl">Draft.js Testing Environment</h1>
         <div style={editorStyles}>
-          <Editor editorState={text} onChange={textUpdate} />
+          { editor && <Editor editorState={text} onChange={textUpdate} editorKey="editor" /> }
+          {/* Conditionally render Editor if editor is true */}
         </div>
       </div>
     </main>
