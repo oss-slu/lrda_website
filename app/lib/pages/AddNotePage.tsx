@@ -1,31 +1,29 @@
-import Image from "next/image";
+'use client'
 import { useState } from "react";
 import { Editor, EditorState } from "draft-js";
-import { LexicalEditor } from "lexical";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-
-function handleError(error: any) {
-  console.error(error);
-}
+import 'draft-js/dist/Draft.css';
 
 export default function AddNotePage() {
-    const [text, textUpdate] = useState(EditorState.createEmpty());
+  const [text, textUpdate] = useState(EditorState.createEmpty());
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="">
         <h1 className="text-blue-500 text-xl">Draft.js Testing Environment</h1>
-        <Editor editorState={text} onChange={textUpdate} />
-      </div>
-      <div className="">
-        <h1 className="text-blue-500 text-xl">Lexical Testing Environment</h1>
-        <LexicalComposer
-          initialConfig={{ namespace: "MyEditor", onError: handleError }}
-        >
-          <ContentEditable />
-        </LexicalComposer>
+        <div style={editorStyles}>
+          <Editor editorState={text} onChange={textUpdate} />
+        </div>
       </div>
     </main>
   );
 }
+
+const editorStyles = {
+  border: '1px solid black',
+  padding: '10px',
+  borderRadius: '4px',
+  minHeight: '200px',
+  width: '800px',
+  color: 'black',
+  backgroundColor: 'white',
+};
