@@ -1,4 +1,4 @@
-//use client
+'use client'
 import React, { useState } from 'react';
 import ApiService from '../lib/utils/ApiService';
 
@@ -6,7 +6,8 @@ const SearchBar = () => {
   const [searchText, setSearchText] = typeof window !== 'undefined' ? useState('') : [''];
 
   const handleSearch = async () => {
-    if (!searchText) {  // Check if searchText is empty
+    console.log("Search text:", searchText);
+    if (!searchText) {  
       console.log("Search text is empty. Aborting search.");
       return;
     }

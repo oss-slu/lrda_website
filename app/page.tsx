@@ -1,4 +1,4 @@
-'use client'
+
 import Image from "next/image";
 import SearchBar from './components/searchBar';
 
