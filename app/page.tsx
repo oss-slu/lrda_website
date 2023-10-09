@@ -1,6 +1,6 @@
-
 import Image from "next/image";
 import SearchBar from './components/searchBar';
+import AddNotePage from "./lib/pages/AddNotePage";
 import Sidebar from "./lib/components/Sidebar";
 
 export default function Home() {
@@ -10,6 +10,8 @@ export default function Home() {
         <Sidebar />
         <h1 className="text-blue-500 text-xl mb-4">Where's Religion?</h1>
         <SearchBar />
+        <h1 className="text-blue-500 text-xl">Where's Religion?</h1>
+        <AddNotePage />
       </div>
     </main>
   );
