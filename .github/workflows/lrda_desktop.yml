@@ -1,0 +1,27 @@
+name: lrda_desktop CI
+
+on:
+  push:
+    branches:
+      - 16-jest-test-cases-rendering-components # replace with the name of your default branch if different
+  pull_request:
+    branches:
+      - 16-jest-test-cases-rendering-components # replace with the name of your default branch if different
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x] # Adjust according to your project's Node.js version
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn install # or 'npm install' if you're using npm
+      - name: Run tests
+        run: yarn test # or 'npm test' if you're using npm
