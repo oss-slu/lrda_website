@@ -3,10 +3,10 @@ name: lrda_desktop CI
 on:
   push:
     branches:
-      - 16-jest-test-cases-rendering-components # replace with the name of your default branch if different
+      - main # replace with the name of your default branch if different
   pull_request:
     branches:
-      - 16-jest-test-cases-rendering-components # replace with the name of your default branch if different
+      - main # replace with the name of your default branch if different
 
 jobs:
   build:
