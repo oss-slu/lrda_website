@@ -1,8 +1,14 @@
-import React from "react";
+import Layout from "../layout";
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
 import NoteComponent from "../lib/components/noteComponent";
-import { render, screen, fireEvent } from "@testing-library/react";
-import "@testing-library/jest-dom/extend-expect";
 import { RichUtils } from 'draft-js';
+
+// describe("NoteComponent Rendering", () => {
+//   it("Renders the component", () => {
+//     render(<NoteComponent />);
+//   });
+// });
 
 jest.mock('draft-js', () => ({
   ...jest.requireActual('draft-js'),
@@ -13,8 +19,8 @@ jest.mock('draft-js', () => ({
 }));
 
 describe("NoteComponent Component", () => {
-  
-  it("renders without crashing", () => {
+
+  it("renders the note component without crashing", () => {
     render(<NoteComponent />);
     expect(screen.getByText("Draft.js Testing Environment")).toBeInTheDocument();
   });
