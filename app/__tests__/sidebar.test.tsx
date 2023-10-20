@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useRouter } from 'next/router';
 import '@testing-library/jest-dom/extend-expect';
-import Sidebar from '../lib/components/Sidebar'; // Update the path to your Sidebar component accordingly
+import Sidebar from '../lib/components/sidebar'; // Update the path to your Sidebar component accordingly
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
