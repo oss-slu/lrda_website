@@ -4,12 +4,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import NoteComponent from "../lib/components/noteComponent";
 import { RichUtils } from 'draft-js';
 
-// describe("NoteComponent Rendering", () => {
-//   it("Renders the component", () => {
-//     render(<NoteComponent />);
-//   });
-// });
-
 jest.mock('draft-js', () => ({
   ...jest.requireActual('draft-js'),
   RichUtils: {
