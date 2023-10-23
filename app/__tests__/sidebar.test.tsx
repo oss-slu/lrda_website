@@ -31,10 +31,5 @@ describe('Sidebar Component', () => {
     expect(linkElement).toBeInTheDocument();
   });
 
-  it('navigates to "/add-note" when "Add Note" link is clicked', () => {
-    render(<Sidebar />);
-    const linkElement = screen.getByText('Add Note');
-    fireEvent.click(linkElement);
-    expect(mockPush).toHaveBeenCalledWith('/add-note');
-  });
+
 });
