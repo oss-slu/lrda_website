@@ -18,8 +18,15 @@ const SearchBar = () => {
       console.error('API Error:', error);
     }
   };
-  
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      // If Enter key is pressed, trigger the search
+      handleSearch();
+    }
+  };
+
+  
   return (
     <div className="flex items-center space-x-4">
       <input
@@ -32,6 +39,7 @@ const SearchBar = () => {
       <button
         className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
         onClick={handleSearch}
+        data-testid="1234" // Add the custom Test ID
       >
         Search
       </button>
