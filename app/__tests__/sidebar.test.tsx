@@ -29,4 +29,6 @@ describe('Sidebar Component', () => {
     const linkElement = screen.getByText('Add Note');
     expect(linkElement).toBeInTheDocument();
   });
+
+
 });
