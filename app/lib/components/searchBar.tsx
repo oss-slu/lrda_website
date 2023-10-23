@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import ApiService from '../lib/utils/ApiService';
+import ApiService from '../utils/ApiService';
 
 const SearchBar = () => {
   const [searchText, setSearchText] = typeof window !== 'undefined' ? useState('') : [''];
