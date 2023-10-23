@@ -2,7 +2,7 @@ import Image from "next/image";
 import SearchBar from './lib/components/search_bar';
 import AddNotePage from "./lib/pages/add_note_page";
 import Sidebar from "./lib/components/side_bar";
-import NoteComponent from "./lib/components/noteComponent";
+import NoteComponent from "./lib/components/note_component";
 
 
 export default function Home() {

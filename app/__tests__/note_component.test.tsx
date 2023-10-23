@@ -1,7 +1,7 @@
 import Layout from "../layout";
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
-import NoteComponent from "../lib/components/noteComponent";
+import NoteComponent from "../lib/components/note_component";
 import { RichUtils } from 'draft-js';
 
 jest.mock('draft-js', () => ({
