@@ -1,5 +1,5 @@
 import Image from "next/image";
-import SearchBar from './components/searchBar';
+import SearchBar from './lib/components/searchBar';
 import AddNotePage from "./lib/pages/AddNotePage";
 import Sidebar from "./lib/components/Sidebar";
 
