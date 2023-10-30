@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { User } from '../models/user_class'; 
-import styles from './LoginButton.module.css'; 
 
 type LoginButtonProps = {
   username: string;
@@ -32,7 +31,13 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password, onLoginSt
   };
 
   return (
-    <button onClick={handleLogin} className={styles.loginButton} disabled={isLoading}>
+    <button 
+      onClick={handleLogin}
+      className={`${
+        isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      } bg-blue-700 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
+      disabled={isLoading}
+    >
       {isLoading ? 'Loading...' : 'Login'}
     </button>
   );
