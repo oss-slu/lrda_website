@@ -1,31 +1,33 @@
+'use client'
 import React, { useState } from 'react';
 import { User } from '../models/user_class'; 
 
 type LoginButtonProps = {
   username: string;
   password: string;
-  onLoginStatus: (status: string) => void;
-  onError: () => void;
 };
 
 const user = User.getInstance();
 
-const LoginButton: React.FC<LoginButtonProps> = ({ username, password, onLoginStatus, onError }) => {
+const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (username === '' || password === '') {
-      onError(); // Function to handle empty fields, likely showing an error message
+      // Internal function to handle empty fields, likely showing an error message
+      console.log("Username or password cannot be empty.");
       return;
     }
 
     setIsLoading(true);
     try {
       const status = await user.login(username, password);
-      onLoginStatus(status); // Callback to update the parent component about login status
+      // Internal logic to update the component about login status
+      console.log("Login status:", status);
       setIsLoading(false);
     } catch (error) {
-      onError(); // Function to handle errors, likely showing an error message
+      // Internal function to handle errors, likely showing an error message
+      console.log("An error occurred during login:", error);
       setIsLoading(false);
     }
   };
