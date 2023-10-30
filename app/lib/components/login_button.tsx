@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User } from '../../models/user_class'; // Assuming the User class is at the same path as in React Native
-import styles from './LoginButton.module.css'; // Assuming you have a CSS module for styling
+import { User } from '../models/user_class'; 
+import styles from './LoginButton.module.css'; 
 
 type LoginButtonProps = {
   username: string;
