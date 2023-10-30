@@ -1,7 +1,8 @@
+'use client'
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 
-const Login = () => {
+const Page = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [snackState, toggleSnack] = useState(false);
@@ -55,4 +56,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Page;
