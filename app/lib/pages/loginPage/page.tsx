@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import LoginButton from "../../components/login_button";
 
 const Page = () => {
   const [username, setUsername] = useState("");
@@ -46,7 +47,7 @@ const Page = () => {
             <button className="mb-2 text-sm text-blue-500 hover:underline">
               Forgot Password?
             </button>
-            <h3>Login Button Goes Here</h3>
+            <LoginButton username={username} password={password}></LoginButton>
             <h3>Register Button Goes Here</h3>
           </div>
           {snackState && (
