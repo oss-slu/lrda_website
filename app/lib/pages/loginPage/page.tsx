@@ -6,9 +6,6 @@ import LoginButton from "../../components/login_button";
 const Page = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [snackState, toggleSnack] = useState(false);
-
-  const onDismissSnackBar = () => toggleSnack(false);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#F4DFCD]">
@@ -50,17 +47,7 @@ const Page = () => {
             <LoginButton username={username} password={password}></LoginButton>
             <h3>Register Button Goes Here</h3>
           </div>
-          {snackState && (
-            <div className="fixed bottom-20 bg-white text-center p-5 rounded-lg">
-              Invalid User Credentials
-              <button
-                className="ml-8 text-blue-500"
-                onClick={onDismissSnackBar}
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

@@ -27,6 +27,9 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       const status = await user.login(username, password);
       // Internal logic to update the component about login status
       console.log("Login status:", status);
+      if(status == "success"){
+        window.location.href = '/';
+      }
       setIsLoading(false);
     } catch (error) {
       // Internal function to handle errors, likely showing an error message
