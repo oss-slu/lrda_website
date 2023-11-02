@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User } from "../models/user_class";
 
 type LoginButtonProps = {
@@ -15,6 +15,21 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
 
   const onDismissSnackBar = () => toggleSnack(false);
 
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (snackState) {
+      timer = setTimeout(() => {
+        toggleSnack(false); 
+      }, 3000);
+    }
+    return () => {
+      if (timer !== null) {
+        clearTimeout(timer as ReturnType<typeof setTimeout>);
+      }
+    };
+  }, [snackState]);
+  
+  
   const handleLogin = async () => {
     if (username === "" || password === "") {
       // Internal function to handle empty fields, likely showing an error message
