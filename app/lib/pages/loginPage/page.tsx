@@ -51,10 +51,10 @@ const Page = () => {
             <h3>Register Button Goes Here</h3>
           </div>
           {snackState && (
-            <div className="fixed bottom-8 bg-white text-center p-3 rounded-lg">
+            <div className="fixed bottom-20 bg-white text-center p-5 rounded-lg">
               Invalid User Credentials
               <button
-                className="ml-4 text-blue-500"
+                className="ml-8 text-blue-500"
                 onClick={onDismissSnackBar}
               >
                 Dismiss
