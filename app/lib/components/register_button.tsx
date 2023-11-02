@@ -12,8 +12,15 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
     // No functional logic is required for this visually matching button
   };
 
+  const buttonStyle = {
+    position: 'absolute',  // Position the button absolutely within the nearest positioned ancestor
+    top: '0',             // Position it at the top
+    right: '0',           // Position it at the right
+    margin: '1rem',       // Add margin as needed
+  };
+
   return (
-    <div className="fixed top-0 right-0 m-4">
+    <div style={buttonStyle}>
       <button
         onClick={handleClick}
         className={`${
@@ -28,6 +35,7 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
 };
 
 export default RegisterButton;
+
 
 
 
