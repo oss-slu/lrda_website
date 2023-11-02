@@ -3,7 +3,7 @@ import SearchBar from './lib/components/search_bar';
 import AddNotePage from "./lib/pages/add_note_page";
 import Sidebar from "./lib/components/side_bar";
 import NoteComponent from "./lib/components/note_component";
-
+import RegisterButton from "./lib/components/register_button";
 
 export default function Home() {
   return (
@@ -13,6 +13,7 @@ export default function Home() {
         <h1 className="text-blue-500 text-xl mb-4">Where's Religion?</h1>
         <SearchBar />
         <NoteComponent />
+        <RegisterButton/>
       </div>
     </main>
   );

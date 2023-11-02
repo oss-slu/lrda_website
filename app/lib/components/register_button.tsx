@@ -1,27 +1,34 @@
-// components/RegisterButton.js
+'use client'
+import React, { useState } from 'react';
 
-import React from 'react';
+type RegisterButtonProps = {
+  // No props required for this visually matching button
+};
 
-const RegisterButton = () => {
+const RegisterButton: React.FC<RegisterButtonProps> = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    // No functional logic is required for this visually matching button
+  };
+
   return (
-    <button className="register-button">
-      Register
-      <style jsx>{`
-        .register-button {
-          background-color: #0070f3;
-          color: #fff;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          transition: background-color 0.3s;
-        }
-        .register-button:hover {
-          background-color: #0056b3;
-        }
-      `}</style>
-    </button>
+    <div className="fixed top-0 right-0 m-4">
+      <button
+        onClick={handleClick}
+        className={`${
+          isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+        } bg-blue-500 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
+        disabled={isLoading}
+      >
+        {isLoading ? 'Registering...' : 'Register'}
+      </button>
+    </div>
   );
 };
 
 export default RegisterButton;
+
+
+
+
