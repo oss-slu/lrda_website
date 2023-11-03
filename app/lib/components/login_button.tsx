@@ -43,6 +43,8 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       // Internal logic to update the component about login status
       console.log("Login status:", status);
       if(status == "success"){
+
+        localStorage.setItem(username, password);
         window.location.href = '/';
       }
       setIsLoading(false);
