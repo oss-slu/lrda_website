@@ -15,8 +15,6 @@ export default function Home() {
         <h1 className="text-blue-500 text-xl mb-4">Where's Religion?</h1>
         <SearchBar />
         <NoteComponent />
-        <RegisterButton/>
-        
       </div>
     </main>
   );

@@ -9,24 +9,32 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = () => {
+    setIsLoading(true); // Set loading state when clicked
+    // Simulate an API call or any asynchronous operation
+    setTimeout(() => {
+      setIsLoading(false); // Set loading state to false after the operation is complete
+    }, 2000); // Simulate a 2-second loading period
+
     // No functional logic is required for this visually matching button
   };
 
   const buttonStyle = {
-    position: 'absolute',  // Position the button absolutely within the nearest positioned ancestor
-    top: '0',             // Position it at the top
-    right: '0',           // Position it at the right
-    margin: '1rem',       // Add margin as needed
+    margin: '0', // Remove any margin
+  };
+
+  // Add margin-top to create space between the LoginButton and RegisterButton
+  const buttonContainerStyle = {
+    marginTop: '1rem', // Adjust the margin-top as needed
   };
 
   return (
-    <div style={buttonStyle}>
+    <div style={buttonContainerStyle}>
       <button
         onClick={handleClick}
         className={`${
           isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        } bg-blue-500 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
-        disabled={isLoading}
+        } bg-blue-700 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
+        disabled={isLoading} // Disable the button when in a loading state
       >
         {isLoading ? 'Registering...' : 'Register'}
       </button>
