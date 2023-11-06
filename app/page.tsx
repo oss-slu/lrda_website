@@ -1,10 +1,12 @@
-import Image from "next/image";
-import SearchBar from './lib/components/search_bar';
-import AddNotePage from "./lib/pages/add_note_page";
+'use client'
+import { useState, useEffect } from "react";
+import SearchBar from "./lib/components/search_bar";
 import Sidebar from "./lib/components/side_bar";
 import NoteComponent from "./lib/components/note_component";
-import LoginButton from "./lib/components/login_button";
+import Link from "next/link";
+import { User } from "./lib/models/user_class";
 
+const user = User.getInstance();
 
 export default function Home() {
   return (
@@ -14,7 +16,6 @@ export default function Home() {
         <h1 className="text-blue-500 text-xl mb-4">Where's Religion?</h1>
         <SearchBar />
         <NoteComponent />
-        <LoginButton username="Stuart Ray" password="4" />
       </div>
     </main>
   );
