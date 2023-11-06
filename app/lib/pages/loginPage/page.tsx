@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import LoginButton from "../../components/login_button";
+import RegisterButton from "../../components/register_button";
 
 const Page = () => {
   const [username, setUsername] = useState("");
@@ -44,10 +45,11 @@ const Page = () => {
             <button className="mb-2 text-sm text-blue-500 hover:underline">
               Forgot Password?
             </button>
-            <LoginButton username={username} password={password}></LoginButton>
-            <h3>Register Button Goes Here</h3>
+            <div className="flex flex-col items-start"> {/* Use items-start to align content to the left */}
+              <LoginButton username={username} password={password}></LoginButton>
+              <RegisterButton />
+            </div>
           </div>
-          
         </div>
       </div>
     </div>
@@ -55,3 +57,5 @@ const Page = () => {
 };
 
 export default Page;
+
+
