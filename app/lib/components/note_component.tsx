@@ -48,7 +48,6 @@ export default function NoteComponent() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="">
-        <h1 className="text-blue-500 text-xl">Draft.js Testing Environment</h1>
         <div className="border border-black p-4 rounded-lg">
           <button onClick={toggleBold} className="border border-black p-2 m-1 rounded-md text-black">
             Bold
