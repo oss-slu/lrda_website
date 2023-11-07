@@ -48,14 +48,16 @@ const Sidebar = () => {
         <div>
           <Link
             className="text-blue-500 text-xl mb-4"
-            href="/lib/pages/loginPage"
-          >
-            Login
-          </Link>
+            href="/lib/pages/loginPage">Login</Link>
         </div>
       )}
       <div className="mt-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded">
-        <Link href="/add-note">Add Note</Link>
+        <Link href="/lib/pages">Add Note</Link>
+      </div>
+      <div className="mt-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded">
+        <Link href="/lib/pages/MapPage">
+          Maps
+        </Link>
       </div>
     </div>
   );
