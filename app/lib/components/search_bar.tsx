@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import ApiService from '../utils/api_service';
+import { Button } from "@/components/ui/button";
 
 const SearchBar = () => {
   const [searchText, setSearchText] = typeof window !== 'undefined' ? useState('') : [''];
@@ -36,14 +37,14 @@ const SearchBar = () => {
         className="border border-gray-300 rounded-md p-2 text-black"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
+        onKeyPress={handleKeyPress} 
       />
-      <button
-        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+      <Button
         onClick={handleSearch}
-        data-testid="1234" // Add the custom Test ID
+        data-testid="search-button"
       >
         Search
-      </button>
+      </Button>
     </div>
   );
 };
