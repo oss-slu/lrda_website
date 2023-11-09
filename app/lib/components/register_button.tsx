@@ -26,7 +26,7 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
         className={` ${
           isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
         } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
-        disabled={isLoading} // Disable the Button when in a loading state
+        disabled={isLoading}
       >
         {isLoading ? 'Registering...' : 'Register'}
       </Button>
