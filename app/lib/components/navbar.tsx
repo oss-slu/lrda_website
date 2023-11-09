@@ -51,17 +51,17 @@ export default function Navbar() {
         {name ? (
           <div className="flex items-center gap-4">
             <span className="text-lg font-semibold">Hi, {name}!</span>
-            <button
+            <Button
               className= "text-sm px-4 py-2 rounded"
               onClick={handleLogout}
             >
               Logout
-            </button>
+            </Button>
           </div>
         ) : (
           <Button
             onClick={() => {window.location.href="/lib/pages/loginPage"}}
-            className="text-white px-4 py-2 rounded-md"
+            className="px-4 py-2 rounded-md"
             >
             Login
           </Button>
