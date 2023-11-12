@@ -1,7 +1,9 @@
 'use client'
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/router';
 import { User } from "../models/user_class";
+import { Button } from "@/components/ui/button";
 
 const user = User.getInstance();
 
@@ -29,34 +31,41 @@ const Sidebar = () => {
     fetchName();
   }, []);
   
-
+  // Wrap the content in a flex container
   return (
-    <div className="fixed top-0 left-0 bottom-0 w-64 bg-gray-200 p-4 overflow-y-auto">
-      {name ? (
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-lg font-semibold leading-normal">
-            Hi, {name}!
-          </span>
-          <button
-            className="text-blue-500 text-m leading-normal p-0"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-      ) : (
-        <div>
-          <Link
-            className="text-blue-500 text-xl mb-4"
-            href="/lib/pages/loginPage"
-          >
-            Login
-          </Link>
-        </div>
-      )}
-      <div className="mt-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded">
-        <Link href="/add-note">Add Note</Link>
+    <div className="fixed top-0 left-0 bottom-0 w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col justify-between">
+      <div>
+        {name ? (
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-lg font-semibold leading-normal">
+              Hi, {name}!
+            </span>
+            <button
+              className="text-blue-500 text-m leading-normal p-0"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div>
+            <Link
+              className="text-blue-500 text-xl mb-4"
+              href="/lib/pages/loginPage"
+            >
+              Login
+            </Link>
+          </div>
+        )}
+        {/* Other sidebar content goes here */}
       </div>
+
+      {/* Add Note button at the bottom */}
+      <Button
+        data-testid="add-note-button"
+      >
+        Add Note
+      </Button>
     </div>
   );
 };
