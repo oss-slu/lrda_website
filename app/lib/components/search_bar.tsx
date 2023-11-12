@@ -42,6 +42,7 @@ const SearchBar = () => {
       <Button
         onClick={handleSearch}
         data-testid="search-button"
+        
       >
         Search
       </Button>

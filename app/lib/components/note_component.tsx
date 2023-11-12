@@ -46,21 +46,21 @@ export default function NoteComponent() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="">
-        <div className="border border-black p-4 rounded-lg">
-          <button onClick={toggleBold} className="border border-black p-2 m-1 rounded-md text-black">
+    <main className="flex flex-grow min-h-screen flex-col items-center justify-between p-6 lg:p-24">
+      <div className="w-full max-w-4xl">
+        <div className="flex border-b border-black p-2">
+          <button onClick={toggleBold} className="border border-black px-3 py-1 m-1 rounded text-black">
             Bold
           </button>
-          <button onClick={toggleItalic} className="border border-black p-2 m-1 rounded-md text-black">
+          <button onClick={toggleItalic} className="border border-black px-3 py-1 m-1 rounded text-black">
             Italic
           </button>
-          <button onClick={toggleUnderline} className="border border-black p-2 m-1 rounded-md text-black">
+          <button onClick={toggleUnderline} className="border border-black px-3 py-1 m-1 rounded text-black">
             Underline
           </button>
         </div>
-        <div style={editorStyles}>
-          {isClient && (
+        {isClient && (
+          <div className="mt-2 border border-black p-4 rounded-lg min-h-[300px] w-full bg-white">
             <Editor
               editorState={editorState}
               onChange={setEditorState}
@@ -71,8 +71,8 @@ export default function NoteComponent() {
               ariaLabel="Text editor"
               ariaMultiline={true}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   );
