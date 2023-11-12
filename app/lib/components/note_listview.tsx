@@ -1,27 +1,37 @@
 // note_listview.tsx
-import React from 'react';
-
-interface Note {
-  id: number;
-  title: string;
-  content: string;
-}
-
-// Dummy data for the list
-const notes: Note[] = [
-  { id: 1, title: 'Note 1', content: 'Lorem ipsum dolor sit amet...' },
-  { id: 2, title: 'Note 2', content: 'Consectetur adipiscing elit...' },
-  { id: 3, title: 'Note 3', content: 'Sed do eiusmod tempor...' },
-  // ... add as many notes as needed
-];
+import React, { useState, useEffect } from 'react';
+import { User } from "../models/user_class";
+import ApiService from '../utils/api_service';
+import { Note } from '../../types'; 
 
 const NoteListView: React.FC = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const user = User.getInstance();
+      const userName = await user.getName();
+      if (userName) {
+        try {
+          const userNotes = await ApiService.fetchMessages(false, true, userName);
+          setNotes(userNotes);
+        } catch (error) {
+          console.error('Error fetching notes:', error);
+          // Handle the error as appropriate for your application
+        }
+      }
+    };
+
+    fetchNotes();
+  }, []);
+
   return (
     <div className="my-4">
       {notes.map((note) => (
         <div key={note.id} className="mb-2 p-2 bg-white rounded shadow">
           <h3 className="text-lg font-semibold">{note.title}</h3>
-          <p>{note.content}</p>
+          <p>{note.text}</p>
+          {/* Render other note properties as needed */}
         </div>
       ))}
     </div>
