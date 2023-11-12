@@ -7,6 +7,7 @@ const user = User.getInstance();
 
 const Sidebar = () => {
   const [name, setName] = useState<string | null>(null);
+  const [isNoteVisible, setIsNoteVisible] = useState(true); // Add this state
 
   const handleLogout = () => {
     localStorage.removeItem(name || "");
