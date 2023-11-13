@@ -21,19 +21,18 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="flex items-center space-x-4 min-w-300">
+    <div className="flex items-center space-x-2">
       <input
         type="text"
         placeholder="Search..."
-        className="border border-gray-300 rounded-md p-2 text-black"
+        className="bg-gray-800 border border-gray-700 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300 ease-in-out"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
       />
       <Button
-        className="px-4 py-2 rounded-md"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition duration-300 ease-in-out"
         onClick={handleSearch}
         data-testid="search-button"
-        
       >
         Search
       </Button>
@@ -42,7 +41,3 @@ const SearchBar = () => {
 };
 
 export default SearchBar;
-
-
-
-
