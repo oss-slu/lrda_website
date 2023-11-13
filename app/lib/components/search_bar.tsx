@@ -28,10 +28,9 @@ const SearchBar = () => {
         className="border border-gray-300 rounded-md p-2 text-black"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
-        onKeyPress={handleKeyPress} 
       />
       <Button
-        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+        className="px-4 py-2 rounded-md"
         onClick={handleSearch}
         data-testid="search-button"
         

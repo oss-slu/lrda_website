@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useState, useEffect } from "react";
 import SearchBar from "./lib/components/search_bar";
 import Sidebar from "./lib/components/side_bar";
@@ -10,9 +10,9 @@ const user = User.getInstance();
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="">
-        <Sidebar />
+    <main className="relative flex h-screen flex-row p-24">
+      <Sidebar />
+      <div className="flex-1 ml-64">
         <NoteComponent />
       </div>
     </main>
