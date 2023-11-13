@@ -11,7 +11,7 @@ const user = User.getInstance();
 const Sidebar = () => {
   // Wrap the content in a flex container
   return (
-    <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
+    <div className="bg-gray-200 p-4 w-64 overflow-y-auto flex flex-col">
       <div>
         <NoteListView />{" "}
       </div>
