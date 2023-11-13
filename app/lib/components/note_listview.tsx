@@ -13,7 +13,7 @@ const NoteListView: React.FC = () => {
       const userId = await user.getId();
       if (userId) {
         try {
-          const userNotes = await ApiService.fetchMessages(false, true, userId);
+          const userNotes = await ApiService.fetchMessages(false, false, userId);
           setNotes(userNotes);
         } catch (error) {
           console.error('Error fetching notes:', error);
