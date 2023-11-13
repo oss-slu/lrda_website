@@ -1,10 +1,10 @@
 'use client'
 import React, { useState } from 'react';
 import ApiService from '../utils/api_service';
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
 const SearchBar = () => {
-  const [searchText, setSearchText] = typeof window !== 'undefined' ? useState('') : [''];
+  const [searchText, setSearchText] = useState("");
 
   const handleSearch = async () => {
     console.log("Search text:", searchText);
@@ -20,26 +20,17 @@ const SearchBar = () => {
     }
   };
 
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      // If Enter key is pressed, trigger the search
-      handleSearch();
-    }
-  };
-
-  
-
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-4 min-w-300">
       <input
         type="text"
         placeholder="Search..."
         className="border border-gray-300 rounded-md p-2 text-black"
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
-        onKeyPress={handleKeyPress} 
       />
       <Button
+        className="px-4 py-2 rounded-md"
         onClick={handleSearch}
         data-testid="search-button"
         

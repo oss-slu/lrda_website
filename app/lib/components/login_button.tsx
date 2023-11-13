@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { User } from "../models/user_class";
+import { Button } from "@/components/ui/button";
 
 type LoginButtonProps = {
   username: string;
@@ -58,20 +59,20 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
 
   return (
     <div>
-      <button
+      <Button
         onClick={handleLogin}
         className={`${
           isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-        } bg-blue-700 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
+        } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
         disabled={isLoading}
       >
         {isLoading ? "Loading..." : "Login"}
-      </button>
+      </Button>
       <div className="flex flex-col items-center justify-center w-full h-full">
         {snackState && (
           <div className="fixed bottom-20 bg-white text-center p-5 rounded-lg">
             Invalid User Credentials
-            <button className="ml-8 text-blue-500" onClick={onDismissSnackBar}>
+            <button className="ml-8" onClick={onDismissSnackBar}>
               Dismiss
             </button>
           </div>
