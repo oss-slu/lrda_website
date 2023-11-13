@@ -35,38 +35,33 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-blue-500 w-full h-16 flex justify-between items-center p-4 text-white">
-      <button
-        className="text-xl px-4 py-2 rounded focus:outline-none"
-        onClick={() => {
-          window.location.href = "/";
-        }}
-      >
+    <nav className="bg-gray-900 w-full h-20 flex justify-between items-center px-6 py-3 text-white">
+    <Link legacyBehavior href="/" passHref>
+      <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
         Where's Religion?
-      </button>
-      <div className="flex items-center">
-        <SearchBar />
-      </div>
-      <div>
-        {name ? (
-          <div className="flex items-center gap-4">
-            <span className="text-lg font-semibold">Hi, {name}!</span>
-            <Button
-              className= "text-sm px-4 py-2 rounded"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          </div>
-        ) : (
+      </a>
+    </Link >
+    <div className="flex items-center gap-4">
+      <SearchBar />
+      {name ? (
+        <div className="flex items-center gap-6">
+          <span className="text-lg font-semibold">Hi, {name}!</span>
           <Button
-            onClick={() => {window.location.href="./pages/loginPage"}}
-            className="px-4 py-2 rounded-md"
-            >
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+        </div>
+      ) : (
+        <Link href="/lib/pages/loginPage" passHref>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow">
             Login
           </Button>
-        )}
-      </div>
-    </nav>
+        </Link>
+      )}
+    </div>
+  </nav>
+  
   );
 }
