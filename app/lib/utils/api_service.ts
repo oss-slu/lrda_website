@@ -20,7 +20,7 @@ export default class ApiService {
       if (global) {
         body = { type: "message" };
       } else if (published) {
-        body = { type: "message", published: true };
+        body = { type: "message", published: true, creator: userId };
       } else {
         body = { type: "message", creator: userId };
       }
