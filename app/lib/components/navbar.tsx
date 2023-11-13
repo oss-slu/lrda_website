@@ -60,7 +60,7 @@ export default function Navbar() {
           </div>
         ) : (
           <Button
-            onClick={() => {window.location.href="./pages/loginPage"}}
+            onClick={() => {window.location.href="lib/pages/loginPage"}}
             className="px-4 py-2 rounded-md"
             >
             Login
