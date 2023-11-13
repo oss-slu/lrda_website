@@ -10,10 +10,10 @@ const NoteListView: React.FC = () => {
   useEffect(() => {
     const fetchNotes = async () => {
       const user = User.getInstance();
-      const userName = await user.getName();
-      if (userName) {
+      const userId = await user.getId();
+      if (userId) {
         try {
-          const userNotes = await ApiService.fetchMessages(false, true, userName);
+          const userNotes = await ApiService.fetchMessages(false, false, userId);
           setNotes(userNotes);
         } catch (error) {
           console.error('Error fetching notes:', error);
