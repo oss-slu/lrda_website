@@ -21,16 +21,23 @@ describe("NoteComponent Component", () => {
   describe("Button interactions", () => {
     it("toggles bold style when Bold button is clicked", () => {
       render(<NoteComponent />);
-      const boldButton = screen.getByText("Bold");
+      const boldButton = screen.getByTestId('Bold');
       fireEvent.click(boldButton);
       expect(RichUtils.toggleInlineStyle).toHaveBeenCalledWith(expect.anything(), 'BOLD');
     });
 
     it("toggles italic style when Italic button is clicked", () => {
       render(<NoteComponent />);
-      const italicButton = screen.getByText("Italic");
+      const italicButton = screen.getByTestId('Italic');
       fireEvent.click(italicButton);
       expect(RichUtils.toggleInlineStyle).toHaveBeenCalledWith(expect.anything(), 'ITALIC');
+    });
+
+    it("toggles italic style when Italic button is clicked", () => {
+      render(<NoteComponent />);
+      const underlineButton = screen.getByTestId('Underline');
+      fireEvent.click(underlineButton);
+      expect(RichUtils.toggleInlineStyle).toHaveBeenCalledWith(expect.anything(), 'UNDERLINE');
     });
   });
 });

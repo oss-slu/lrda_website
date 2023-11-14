@@ -58,19 +58,22 @@ export default function NoteComponent() {
           <Button
             onClick={toggleBold}
             className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
+            data-testid="Bold"
           >
             <FontBoldIcon />
           </Button>
           <Button
             onClick={toggleItalic}
             className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
+            data-testid="Italic"
           >
             <FontItalicIcon />
           </Button>
           <Button
             onClick={toggleUnderline}
             className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
-          >
+            data-testid="Underline"
+            >
             <UnderlineIcon />
           </Button>
         </div>
