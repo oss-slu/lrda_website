@@ -1,13 +1,16 @@
 'use client'
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactElement } from "react";
 import Link from "next/link";
 import { User } from "../models/user_class";
 
+interface SidebarProps {
+  setNoteComponentVisible: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 const user = User.getInstance();
 
-const Sidebar = () => {
+function Sidebar({ setNoteComponentVisible }: SidebarProps): ReactElement {
   const [name, setName] = useState<string | null>(null);
-  const [isNoteVisible, setIsNoteVisible] = useState(true); // Add this state
 
   const handleLogout = () => {
     localStorage.removeItem(name || "");
@@ -26,10 +29,14 @@ const Sidebar = () => {
         console.log("No user cached");
       }
     };
-  
+
     fetchName();
   }, []);
-  
+
+  const handleAddNote = () => {
+    // Set the state in the NoteComponent
+    setNoteComponentVisible(true);
+  };
 
   return (
     <div className="fixed top-0 left-0 bottom-0 w-64 bg-gray-200 p-4 overflow-y-auto">
@@ -55,11 +62,15 @@ const Sidebar = () => {
           </Link>
         </div>
       )}
-      <div className="mt-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded">
-        <Link href="/add-note">Add Note</Link>
+      <div
+        className="mt-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded"
+        onClick={handleAddNote} // Call the function on button click
+      >
+        Add Note
       </div>
     </div>
   );
-};
+}
 
 export default Sidebar;
+
