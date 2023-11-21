@@ -1,9 +1,8 @@
-'use client'
-import { useState } from "react";
-import SearchBar from "./lib/components/search_bar";
+"use client";
 import Sidebar from "./lib/components/side_bar";
 import NoteComponent from "./lib/components/note_component";
 import { User } from "./lib/models/user_class";
+import { useState } from "react";
 
 const user = User.getInstance();
 
@@ -16,16 +15,11 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="flex">
-        <Sidebar setNoteComponentVisible={setNoteComponentVisible} />
-        <div className="ml-4"> {/* Adjust the margin to your preference */}
-          <h1 className="text-blue-500 text-xl mb-4">Where's Religion?</h1>
-          <SearchBar />
-          <NoteComponent isNoteComponentVisible={isNoteComponentVisible} onClose={handleCloseNoteComponent} />
-        </div>
+    <main className="relative flex h-screen flex-row p-24">
+      <Sidebar />
+      <div className="flex-1 ml-64">
+        <NoteComponent />
       </div>
     </main>
   );
 }
-

@@ -22,7 +22,7 @@ test('updates the search input when the user types', () => {
   test('triggers search on pressing Enter key', () => {
     const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('1234'); // Use your custom Test ID here
+    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
   
     // Enter a search query
     fireEvent.change(searchInput, { target: { value: 'Sample Query' } });
@@ -35,7 +35,7 @@ test('updates the search input when the user types', () => {
   test('handles large amount of search input', () => {
     const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('1234'); // Use your custom Test ID here
+    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
   
     // Enter a large amount of text in the search input
     const largeText = 'Lorem ipsum '.repeat(1000); // Creating a large text
@@ -53,7 +53,7 @@ test('updates the search input when the user types', () => {
   test('handles search input with special characters', () => {
     const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('1234'); // Use your custom Test ID here
+    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
   
     // Enter a search query with special characters
     const specialCharacters = '!@#$%^&*()';
