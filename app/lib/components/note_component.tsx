@@ -2,7 +2,13 @@
 import { Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
-import { stateToHTML } from 'draft-js-export-html';
+import { stateToHTML } from "draft-js-export-html";
+import {
+  FontBoldIcon,
+  FontItalicIcon,
+  UnderlineIcon,
+} from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
 
 export default function NoteComponent() {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -16,14 +22,14 @@ export default function NoteComponent() {
 
   useEffect(() => {
     setPlainText(editorState.getCurrentContent().getPlainText());
-  }, [editorState])
+  }, [editorState]);
 
   useEffect(() => {
     // Updates the rawHTML component as the editorState changes
     const html = stateToHTML(editorState.getCurrentContent());
     setRawHTML(html);
   }, [editorState]);
-  
+
   const handleKeyCommand = (command: any) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -46,21 +52,33 @@ export default function NoteComponent() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="">
-        <div className="border border-black p-4 rounded-lg">
-          <button onClick={toggleBold} className="border border-black p-2 m-1 rounded-md text-black">
-            Bold
-          </button>
-          <button onClick={toggleItalic} className="border border-black p-2 m-1 rounded-md text-black">
-            Italic
-          </button>
-          <button onClick={toggleUnderline} className="border border-black p-2 m-1 rounded-md text-black">
-            Underline
-          </button>
+    <main className="flex flex-grow min-h-screen flex-col items-center justify-between p-6 lg:p-24">
+      <div className="w-full max-w-4xl">
+        <div className="flex border-b border-black p-2">
+          <Button
+            onClick={toggleBold}
+            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
+            data-testid="Bold"
+          >
+            <FontBoldIcon />
+          </Button>
+          <Button
+            onClick={toggleItalic}
+            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
+            data-testid="Italic"
+          >
+            <FontItalicIcon />
+          </Button>
+          <Button
+            onClick={toggleUnderline}
+            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
+            data-testid="Underline"
+            >
+            <UnderlineIcon />
+          </Button>
         </div>
-        <div style={editorStyles}>
-          {isClient && (
+        {isClient && (
+          <div className="mt-2 border border-black p-4 rounded-lg min-h-[300px] w-full bg-white">
             <Editor
               editorState={editorState}
               onChange={setEditorState}
@@ -71,8 +89,8 @@ export default function NoteComponent() {
               ariaLabel="Text editor"
               ariaMultiline={true}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 type RegisterButtonProps = {
   // No props required for this visually matching button
@@ -18,26 +19,17 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
     // No functional logic is required for this visually matching button
   };
 
-  const buttonStyle = {
-    margin: '0', // Remove any margin
-  };
-
-  // Add margin-top to create space between the LoginButton and RegisterButton
-  const buttonContainerStyle = {
-    marginTop: '1rem', // Adjust the margin-top as needed
-  };
-
   return (
-    <div style={buttonContainerStyle}>
-      <button
+    <div>
+      <Button
         onClick={handleClick}
-        className={`${
+        className={` ${
           isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        } bg-blue-700 text-white w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
-        disabled={isLoading} // Disable the button when in a loading state
+        } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
+        disabled={isLoading}
       >
         {isLoading ? 'Registering...' : 'Register'}
-      </button>
+      </Button>
     </div>
   );
 };
