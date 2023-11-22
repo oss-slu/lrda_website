@@ -1,11 +1,24 @@
 "use client";
-
+import {
+  FontBoldIcon,
+  FontItalicIcon,
+  UnderlineIcon,
+  TextAlignLeftIcon,
+  TextAlignCenterIcon,
+  TextAlignRightIcon,
+  QuoteIcon,
+  ChatBubbleIcon,
+  ListBulletIcon,
+  InstagramLogoIcon,
+  LinkedInLogoIcon,
+} from "@radix-ui/react-icons";
 import { Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
-import { stateToHTML } from 'draft-js-export-html';
+import { stateToHTML } from "draft-js-export-html";
+import { Button } from "@/components/ui/button";
 
-export default function NoteComponent() {
+export default function ToolPage() {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [isClient, setIsClient] = useState(false);
 
@@ -14,16 +27,10 @@ export default function NoteComponent() {
   }, []);
 
   useEffect(() => {
-    setPlainText(editorState.getCurrentContent().getPlainText());
+    // Additional effects as needed
   }, [editorState]);
 
-  useEffect(() => {
-    // Updates the rawHTML component as the editorState changes
-    const html = stateToHTML(editorState.getCurrentContent());
-    setRawHTML(html);
-  }, [editorState]);
-
-  const handleKeyCommand = (command: any) => {
+  const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
       setEditorState(newState);
@@ -44,88 +51,153 @@ export default function NoteComponent() {
     setEditorState(RichUtils.toggleInlineStyle(editorState, "UNDERLINE"));
   };
 
-  const handleClose = () => {
-    // Call the onClose function to close the component
-    onClose();
+  const handleTextAlignLeft = () => {
+    // Implement text alignment left
+  };
+
+  const handleTextAlignCenter = () => {
+    // Implement text alignment center
+  };
+
+  const handleTextAlignRight = () => {
+    // Implement text alignment right
+  };
+
+  const handleQuote = () => {
+    // Implement quoting
+  };
+
+  const handleChatBubble = () => {
+    // Implement chat bubble functionality
+  };
+
+  const handleListBullet = () => {
+    // Implement bullet list functionality
+  };
+
+  const handleInstagramLogo = () => {
+    // Implement Instagram logo functionality
+  };
+
+  const handleLinkedInLogo = () => {
+    // Implement LinkedIn logo functionality
   };
 
   return (
-    <main className="flex flex-grow min-h-screen flex-col items-center justify-between p-6 lg:p-24">
-      <div className="w-full max-w-4xl">
-        <div className="flex border-b border-black p-2">
-          <Button
-            onClick={toggleBold}
-            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
-            data-testid="Bold"
-          >
-            <FontBoldIcon />
-          </Button>
-          <Button
-            onClick={toggleItalic}
-            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
-            data-testid="Italic"
-          >
-            <FontItalicIcon />
-          </Button>
-          <Button
-            onClick={toggleUnderline}
-            className="border w-10 h-10 bg-secondary border-black px-3 py-1 m-1 rounded text-black"
-            data-testid="Underline"
-            >
-            <UnderlineIcon />
-          </Button>
+    <div className="flex flex-col h-screen">
+      {/* Tool icons above the NoteComponent */}
+      <div className="flex items-center justify-start p-4 bg-gray-200">
+        <Button
+          onClick={toggleBold}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="Bold"
+        >
+          <FontBoldIcon />
+        </Button>
+        <Button
+          onClick={toggleItalic}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="Italic"
+        >
+          <FontItalicIcon />
+        </Button>
+        <Button
+          onClick={toggleUnderline}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="Underline"
+        >
+          <UnderlineIcon />
+        </Button>
+        <Button
+          onClick={handleTextAlignLeft}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="TextAlignLeft"
+        >
+          <TextAlignLeftIcon />
+        </Button>
+        <Button
+          onClick={handleTextAlignCenter}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="TextAlignCenter"
+        >
+          <TextAlignCenterIcon />
+        </Button>
+        <Button
+          onClick={handleTextAlignRight}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="TextAlignRight"
+        >
+          <TextAlignRightIcon />
+        </Button>
+        <Button
+          onClick={handleQuote}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="Quote"
+        >
+          <QuoteIcon />
+        </Button>
+        <Button
+          onClick={handleChatBubble}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="ChatBubble"
+        >
+          <ChatBubbleIcon />
+        </Button>
+        <Button
+          onClick={handleListBullet}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="ListBullet"
+        >
+          <ListBulletIcon />
+        </Button>
+        <Button
+          onClick={handleInstagramLogo}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="InstagramLogo"
+        >
+          <InstagramLogoIcon />
+        </Button>
+        <Button
+          onClick={handleLinkedInLogo}
+          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
+          data-testid="LinkedInLogo"
+        >
+          <LinkedInLogoIcon />
+        </Button>
+      </div>
+
+      {/* Main content area with NoteComponent */}
+      <main className="flex-grow p-6 lg:p-24">
+        <div className="max-w-4xl">
+          {isClient && (
+            <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
+              <Editor
+                editorState={editorState}
+                onChange={setEditorState}
+                handleKeyCommand={handleKeyCommand}
+                editorKey="editor"
+                placeholder="Start writing your notes here . . ."
+                spellCheck={true}
+                ariaLabel="Text editor"
+                ariaMultiline={true}
+              />
+            </div>
+          )}
         </div>
-        {isClient && (
-          <div className="mt-2 border border-black p-4 rounded-lg min-h-[300px] w-full bg-white">
-            <Editor
-              editorState={editorState}
-              onChange={setEditorState}
-              handleKeyCommand={handleKeyCommand}
-              editorKey="editor"
-              placeholder="Start writing your notes here . . ."
-              spellCheck={true}
-              ariaLabel="Text editor"
-              ariaMultiline={true}
-            />
-          </div>
-        )}
-      </div>
-      <button onClick={toggleBold} className="border border-black p-2 m-1 rounded-md text-black">
-        Bold
-      </button>
-      <button onClick={toggleItalic} className="border border-black p-2 m-1 rounded-md text-black">
-        Italic
-      </button>
-      <button onClick={toggleUnderline} className="border border-black p-2 m-1 rounded-md text-black">
-        Underline
-      </button>
-      <div style={{ ...editorStyles, width: '100%' }}>
-        {isClient && (
-          <Editor
-            editorState={editorState}
-            onChange={setEditorState}
-            handleKeyCommand={handleKeyCommand}
-            editorKey="editor"
-            placeholder="Start writing your notes here . . ."
-            spellCheck={true}
-            ariaLabel="Text editor"
-            ariaMultiline={true}
-          />
-        )}
-      </div>
+      </main>
     </div>
   );
-};
+}
 
 const editorStyles = {
   border: "1px solid black",
   padding: "10px",
   borderRadius: "4px",
+  minHeight: "300px",
+  width: "800px",
   color: "black",
   backgroundColor: "white",
 };
-
-export default NoteComponent;
 
 
 
