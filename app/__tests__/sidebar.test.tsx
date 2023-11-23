@@ -18,17 +18,23 @@ describe('Sidebar Component', () => {
   });
 
   it('renders the sidebar correctly', () => {
-    render(<Sidebar />);
+    render(<Sidebar setNoteComponentVisible={function (value: React.SetStateAction<boolean>): void {
+      throw new Error('Function not implemented.');
+    } } />);
     // Query for a child element of the sidebar to confirm it's rendered
     const linkElement = screen.getByText('Add Note');
     expect(linkElement).toBeInTheDocument();
   });
 
   it('displays the "Add Note" link', () => {
-    render(<Sidebar />);
+    render(<Sidebar setNoteComponentVisible={function (value: React.SetStateAction<boolean>): void {
+      throw new Error('Function not implemented.');
+    } } />);
     const linkElement = screen.getByText('Add Note');
     expect(linkElement).toBeInTheDocument();
   });
+
+  
 
 
 });

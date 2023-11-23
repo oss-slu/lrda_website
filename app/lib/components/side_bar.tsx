@@ -6,6 +6,10 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import NoteListView from "./note_listview";
 
+interface SidebarProps {
+  setNoteComponentVisible: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 const user = User.getInstance();
 
 const Sidebar = () => {
@@ -18,6 +22,7 @@ const Sidebar = () => {
       <Button data-testid="add-note-button">Add Note</Button>
     </div>
   );
-};
+}
 
 export default Sidebar;
+
