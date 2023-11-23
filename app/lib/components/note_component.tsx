@@ -12,24 +12,24 @@ import {
   InstagramLogoIcon,
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
-import { Editor, EditorState, RichUtils } from "draft-js";
+import { Editor, EditorState, Modifier, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
 import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
+import Sidebar from "./side_bar";
+
 
 export default function ToolPage() {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const [isNoteComponentVisible, setNoteComponentVisible] = useState(false);
+  const [isToolPageVisible, setToolPageVisible] = useState(true); // Set initial visibility state
 
   useEffect(() => {
     // Additional effects as needed
-  }, [editorState]);
+  }, [editorState, isToolPageVisible]); 
 
+  
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -40,8 +40,22 @@ export default function ToolPage() {
   };
 
   const toggleBold = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "BOLD"));
+    // Check if the current selection is bold
+    const currentStyle = editorState.getCurrentInlineStyle();
+    const isBold = currentStyle.has("BOLD");
+  
+    // Toggle the "BOLD" style
+    let newEditorState = RichUtils.toggleInlineStyle(editorState, "BOLD");
+  
+    // If the selection was already bold, remove the "BOLD" style
+    if (isBold) {
+      newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
+    }
+  
+    // Set the new editor state
+    setEditorState(newEditorState);
   };
+  
 
   const toggleItalic = () => {
     setEditorState(RichUtils.toggleInlineStyle(editorState, "ITALIC"));
@@ -52,27 +66,37 @@ export default function ToolPage() {
   };
 
   const handleTextAlignLeft = () => {
-    // Implement text alignment left
+    setEditorState(RichUtils.toggleBlockType(editorState, 'left'));
   };
 
   const handleTextAlignCenter = () => {
-    // Implement text alignment center
+    setEditorState(RichUtils.toggleBlockType(editorState, 'center'));
   };
 
-  const handleTextAlignRight = () => {
-    // Implement text alignment right
-  };
+const handleTextAlignRight = () => {
+  setEditorState(RichUtils.toggleBlockType(editorState, 'right'));
+};
 
-  const handleQuote = () => {
-    // Implement quoting
-  };
+const handleQuote = () => {
+  setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'));
+};
 
-  const handleChatBubble = () => {
-    // Implement chat bubble functionality
-  };
+const handleChatBubble = () => {
+  // Example: Inserting a custom chat bubble character
+  const contentState = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const newContentState = Modifier.insertText(
+    contentState,
+    selection,
+    '💬', // You can replace this with your preferred chat bubble character
+  );
+  const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
+  setEditorState(newEditorState);
+};
+
 
   const handleListBullet = () => {
-    // Implement bullet list functionality
+    setEditorState(RichUtils.toggleBlockType(editorState, 'unordered-list-item'));
   };
 
   const handleInstagramLogo = () => {
@@ -84,13 +108,16 @@ export default function ToolPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className={`flex flex-col h-screen ${isToolPageVisible ? '' : 'hidden'}`}>
+   <Sidebar setNoteComponentVisible={setNoteComponentVisible} setToolPageVisible={setToolPageVisible} />
+
       {/* Tool icons above the NoteComponent */}
       <div className="flex items-center justify-start p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
           className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
           data-testid="Bold"
+          
         >
           <FontBoldIcon />
         </Button>
@@ -166,11 +193,11 @@ export default function ToolPage() {
         </Button>
       </div>
 
-      {/* Main content area with NoteComponent */}
-      <main className="flex-grow p-6 lg:p-24">
+  {/* Main content area with NoteComponent */}
+  <main className="flex-grow p-6 lg:p-24">
         <div className="max-w-4xl">
-          {isClient && (
-            <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
+          {isNoteComponentVisible && (
+            <div className={`mt-2 p-4 rounded-lg w-full bg-white`}>
               <Editor
                 editorState={editorState}
                 onChange={setEditorState}
@@ -198,6 +225,9 @@ const editorStyles = {
   color: "black",
   backgroundColor: "white",
 };
+
+
+
 
 
 
