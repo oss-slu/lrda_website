@@ -12,23 +12,32 @@ import {
   InstagramLogoIcon,
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
-import { Editor, EditorState, RichUtils } from "draft-js";
+import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
 import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
 
-export default function ToolPage() {
-  const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [isClient, setIsClient] = useState(false);
+type ToolPageProps = {
+  text?: string;
+};
+
+export default function ToolPage({ text }: ToolPageProps) {
+  const [editorState, setEditorState] = useState(() => {
+    if (text) {
+      const contentState = ContentState.createFromText(text);
+      return EditorState.createWithContent(contentState);
+    }
+    return EditorState.createEmpty();
+  });
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    // Additional effects as needed
-  }, [editorState]);
+    if (text) {
+      const contentState = ContentState.createFromText(text);
+      const newEditorState = EditorState.createWithContent(contentState);
+      setEditorState(newEditorState);
+    }
+  }, [text]);
 
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -169,7 +178,6 @@ export default function ToolPage() {
       {/* Main content area with NoteComponent */}
       <main className="flex-grow p-6 lg:p-24">
         <div className="max-w-4xl">
-          {isClient && (
             <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
               <Editor
                 editorState={editorState}
@@ -182,7 +190,6 @@ export default function ToolPage() {
                 ariaMultiline={true}
               />
             </div>
-          )}
         </div>
       </main>
     </div>
