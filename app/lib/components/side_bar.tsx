@@ -17,6 +17,9 @@ const Sidebar = () => {
   // Wrap the content in a flex container
   return (
     <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
+       <div className="w-full">
+        <SearchBar />
+      </div>
       <div>
         <NoteListView />{" "}
       </div>
