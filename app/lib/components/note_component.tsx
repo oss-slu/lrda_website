@@ -15,7 +15,8 @@ import {
 import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
-import { stateToHTML } from "draft-js-export-html";
+import { stateFromHTML } from 'draft-js-import-html';
+import { stateToHTML } from 'draft-js-export-html';
 import { Button } from "@/components/ui/button";
 
 type ToolPageProps = {
@@ -23,17 +24,11 @@ type ToolPageProps = {
 };
 
 export default function ToolPage({ text }: ToolPageProps) {
-  const [editorState, setEditorState] = useState(() => {
-    if (text) {
-      const contentState = ContentState.createFromText(text);
-      return EditorState.createWithContent(contentState);
-    }
-    return EditorState.createEmpty();
-  });
+  const [editorState, setEditorState] = useState(EditorState.createEmpty());
 
   useEffect(() => {
     if (text) {
-      const contentState = ContentState.createFromText(text);
+      const contentState = stateFromHTML(text); // Convert HTML to content state
       const newEditorState = EditorState.createWithContent(contentState);
       setEditorState(newEditorState);
     }
