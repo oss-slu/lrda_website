@@ -4,6 +4,7 @@ import { User } from "../models/user_class";
 import ApiService from "../utils/api_service";
 import { Note } from "../../types";
 import { Button } from "@/components/ui/button";
+import DataConversion from "../utils/data_conversion";
 
 type NoteListViewProps = {
   onNoteSelect: (noteText: string) => void;
@@ -21,9 +22,9 @@ const NoteListView: React.FC<NoteListViewProps> = ({ onNoteSelect }) => {
           const userNotes = await ApiService.fetchMessages(
             false,
             false,
-            userId
+            userId,
           );
-          setNotes(userNotes);
+          setNotes(DataConversion.convertMediaTypes(userNotes));
         } catch (error) {
           console.error("Error fetching notes:", error);
           // Handle the error as appropriate for your application
@@ -44,7 +45,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ onNoteSelect }) => {
         console.log(note);
 
         return (
-          <Button key={note.id} className="bg-secondary text-primary p-2 m-1" onClick={() => handleLoadText(note.BodyText)}>
+          <Button key={note.id} className="bg-secondary text-primary p-2 m-1" onClick={() => handleLoadText(note.text)}>
             <h3 className="text-lg font-semibold">{note.title}</h3>
             {/* <p>{note.BodyText}</p> */}
           </Button>
