@@ -9,9 +9,11 @@ import NoteListView from './note_listview';
 interface SidebarProps {
   setNoteComponentVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setToolPageVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  // Add a prop for toolPageVisible
+  toolPageVisible: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageVisible }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageVisible, toolPageVisible }) => {
   const handleAddNoteClick = () => {
     setNoteComponentVisible(true);
     setToolPageVisible(true);
@@ -21,7 +23,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageV
     setNoteComponentVisible(false);
     setToolPageVisible(false);
   };
-
 
   return (
     <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
@@ -44,4 +45,3 @@ const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageV
 };
 
 export default Sidebar;
-

@@ -25,6 +25,7 @@ export default function ToolPage() {
   const [isNoteComponentVisible, setNoteComponentVisible] = useState(false);
   const [isToolPageVisible, setToolPageVisible] = useState(true); // Set initial visibility state
 
+
   useEffect(() => {
     // Additional effects as needed
   }, [editorState, isToolPageVisible]); 
@@ -109,7 +110,8 @@ const handleChatBubble = () => {
 
   return (
     <div className={`flex flex-col h-screen ${isToolPageVisible ? '' : 'hidden'}`}>
-   <Sidebar setNoteComponentVisible={setNoteComponentVisible} setToolPageVisible={setToolPageVisible} />
+   <Sidebar setNoteComponentVisible={setNoteComponentVisible} setToolPageVisible={setToolPageVisible} toolPageVisible={false} />
+
 
       {/* Tool icons above the NoteComponent */}
       <div className="flex items-center justify-start p-4 bg-gray-200">
@@ -225,7 +227,6 @@ const editorStyles = {
   color: "black",
   backgroundColor: "white",
 };
-
 
 
 
