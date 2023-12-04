@@ -1,68 +1,66 @@
+import React from 'react';
 import SearchBar from '../lib/components/search_bar'; // Make sure to adjust the import path
 import "@testing-library/jest-dom";
 import { render, fireEvent } from '@testing-library/react';
 
+describe('SearchBar Component', () => {
+  let originalConsoleError: jest.Mock;
+  let mockOnSearch: jest.Mock;
 
-test('renders the SearchBar component', () => {
-  render(<SearchBar />);
-});
-;
+  beforeEach(() => {
+    // Mock console.error
+    originalConsoleError = console.error;
+    console.error = jest.fn();
 
-test('updates the search input when the user types', () => {
-    const { getByPlaceholderText } = render(<SearchBar />);
+    // Create a mock function for onSearch
+    mockOnSearch = jest.fn();
+  });
+
+  afterEach(() => {
+    // Restore original console.error
+    console.error = originalConsoleError;
+  });
+
+  test('renders the SearchBar component', () => {
+    render(<SearchBar onSearch={mockOnSearch} />);
+  });
+
+  test('updates the search input when the user types', () => {
+    const { getByPlaceholderText } = render(<SearchBar onSearch={mockOnSearch} />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-  
-    // Simulate user input
+
     fireEvent.change(searchInput, { target: { value: 'Sample Query' } });
-  
-    // Check if the search input value updates correctly
     expect(searchInput).toHaveValue('Sample Query');
+    expect(mockOnSearch).toHaveBeenCalledWith('Sample Query');
   });
 
   test('triggers search on pressing Enter key', () => {
-    const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
+    const { getByPlaceholderText } = render(<SearchBar onSearch={mockOnSearch} />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
-  
-    // Enter a search query
+
     fireEvent.change(searchInput, { target: { value: 'Sample Query' } });
-  
-    // Press the Enter key
     fireEvent.keyPress(searchInput, { key: 'Enter', code: 'Enter', charCode: 13 });
-  
+    expect(mockOnSearch).toHaveBeenCalledWith('Sample Query');
   });
 
   test('handles large amount of search input', () => {
-    const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
+    const { getByPlaceholderText } = render(<SearchBar onSearch={mockOnSearch} />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
-  
-    // Enter a large amount of text in the search input
     const largeText = 'Lorem ipsum '.repeat(1000); // Creating a large text
-  
+
     fireEvent.change(searchInput, { target: { value: largeText } });
-  
-    // Press the Enter key
     fireEvent.keyPress(searchInput, { key: 'Enter', code: 'Enter', charCode: 13 });
-  
-    // Check if the search is aborted or if the component handles it gracefully
-    // You can check if there are any performance issues
-    expect(queryByText('Sample Query')).not.toBeInTheDocument();
+    expect(mockOnSearch).toHaveBeenCalledWith(largeText);
   });
 
   test('handles search input with special characters', () => {
-    const { getByPlaceholderText, getByTestId, queryByText } = render(<SearchBar />);
+    const { getByPlaceholderText } = render(<SearchBar onSearch={mockOnSearch} />);
     const searchInput = getByPlaceholderText('Search...'); // Assuming 'Search...' is the placeholder text
-    const searchButton = getByTestId('search-button'); // Use your custom Test ID here
-  
-    // Enter a search query with special characters
     const specialCharacters = '!@#$%^&*()';
-  
+
     fireEvent.change(searchInput, { target: { value: specialCharacters } });
-  
-    // Press the Enter key
     fireEvent.keyPress(searchInput, { key: 'Enter', code: 'Enter', charCode: 13 });
-  
-    // Check if the search is handled correctly or if any special characters are sanitized
-    expect(queryByText('Sample Query')).not.toBeInTheDocument();
+    expect(mockOnSearch).toHaveBeenCalledWith(specialCharacters);
   });
+
+});
