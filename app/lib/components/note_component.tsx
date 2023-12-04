@@ -220,6 +220,7 @@ const handleChatBubble = () => {
   );
 }
 
+
 const editorStyles = {
   border: "1px solid black",
   padding: "10px",
@@ -229,6 +230,7 @@ const editorStyles = {
   color: "black",
   backgroundColor: "white",
 };
+
 
 
 
