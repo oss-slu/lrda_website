@@ -82,8 +82,4 @@ describe("Navbar Component", () => {
     expect(screen.getByText(/where's religion?/i)).toBeInTheDocument();
     expect(screen.getByRole("navigation")).toBeInTheDocument();
   });
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/52-render-notes-from-the-left-side-to-the-main-screen
 });
