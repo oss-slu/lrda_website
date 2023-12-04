@@ -71,8 +71,10 @@ export default function ToolPage() {
   };
 
   const handleTextAlignCenter = () => {
-    setEditorState(RichUtils.toggleBlockType(editorState, 'center'));
+    console.log("handleTextAlignCenter called");
+    setEditorState(RichUtils.toggleBlockType(editorState, 'paragraph'));
   };
+  
 
 const handleTextAlignRight = () => {
   setEditorState(RichUtils.toggleBlockType(editorState, 'right'));
