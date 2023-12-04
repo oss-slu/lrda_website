@@ -12,23 +12,40 @@ import {
   InstagramLogoIcon,
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
-import { Editor, EditorState, RichUtils } from "draft-js";
+import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
+import { stateFromHTML } from "draft-js-import-html";
 import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
+import { Note } from "@/app/types";
+import { Input } from "@/components/ui/input";
 
-export default function ToolPage() {
+type ToolPageProps = {
+  note?: Note;
+};
+
+export default function ToolPage({ note }: ToolPageProps) {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [isClient, setIsClient] = useState(false);
+  const [title, setTitle] = useState("");
+  const [images, setImages] = useState<any>();
+  const [time, setTime] = useState<Date | undefined>();
+  const [longitude, setLongitude] = useState<string | undefined>();
+  const [latitude, setLatitude] = useState<string | undefined>();
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (note) {
+      setTitle(note.title);
+      setImages(note.media);
+      setTime(note.time);
+      setLongitude(note.longitude);
+      setLatitude(note.latitude);
 
-  useEffect(() => {
-    // Additional effects as needed
-  }, [editorState]);
+      const contentState = stateFromHTML(note.text);
+      const newEditorState = EditorState.createWithContent(contentState);
+      setEditorState(newEditorState);
+    }
+  }, [note]);
 
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -83,9 +100,19 @@ export default function ToolPage() {
     // Implement LinkedIn logo functionality
   };
 
+  const handleTitleChange = (event: any) => {
+    setTitle(event.target.value);
+  };
+
   return (
     <div className="flex flex-col h-screen">
-      {/* Tool icons above the NoteComponent */}
+      <Input
+        className="text-3xl font-bold custom-input"
+        value={title}
+        onChange={handleTitleChange}
+        placeholder="Title"
+      />
+
       <div className="flex items-center justify-start p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
@@ -165,24 +192,21 @@ export default function ToolPage() {
           <LinkedInLogoIcon />
         </Button>
       </div>
-
-      {/* Main content area with NoteComponent */}
       <main className="flex-grow p-6 lg:p-24">
         <div className="max-w-4xl">
-          {isClient && (
-            <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-              <Editor
-                editorState={editorState}
-                onChange={setEditorState}
-                handleKeyCommand={handleKeyCommand}
-                editorKey="editor"
-                placeholder="Start writing your notes here . . ."
-                spellCheck={true}
-                ariaLabel="Text editor"
-                ariaMultiline={true}
-              />
-            </div>
-          )}
+          <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
+            <Editor
+              editorState={editorState}
+              onChange={setEditorState}
+              handleKeyCommand={handleKeyCommand}
+              editorKey="editor"
+              placeholder="Start writing your notes here . . ."
+              spellCheck={true}
+              ariaLabel="Text editor"
+              data-testid="editor"
+              ariaMultiline={true}
+            />
+          </div>
         </div>
       </main>
     </div>
@@ -198,7 +222,3 @@ const editorStyles = {
   color: "black",
   backgroundColor: "white",
 };
-
-
-
-
