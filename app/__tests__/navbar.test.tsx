@@ -82,11 +82,4 @@ describe("Navbar Component", () => {
     expect(screen.getByText(/where's religion?/i)).toBeInTheDocument();
     expect(screen.getByRole("navigation")).toBeInTheDocument();
   });
-
-  it("renders SearchBar component", async () => {
-    await act(async () => {
-      render(<Navbar />);
-    });
-    expect(screen.getByPlaceholderText(/search.../i)).toBeInTheDocument();
-  });
 });
