@@ -19,6 +19,7 @@ import { stateFromHTML } from "draft-js-import-html";
 import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/app/types";
+import { Input } from "@/components/ui/input";
 
 type ToolPageProps = {
   note?: Note;
@@ -26,8 +27,8 @@ type ToolPageProps = {
 
 export default function ToolPage({ note }: ToolPageProps) {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [title, setTitle] = useState<string | undefined>();
-  const [images, setImages] = useState<any>(); // Replace 'any' with the correct type if available
+  const [title, setTitle] = useState("");
+  const [images, setImages] = useState<any>();
   const [time, setTime] = useState<Date | undefined>();
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
@@ -99,9 +100,19 @@ export default function ToolPage({ note }: ToolPageProps) {
     // Implement LinkedIn logo functionality
   };
 
+  const handleTitleChange = (event: any) => {
+    setTitle(event.target.value);
+  };
+
   return (
     <div className="flex flex-col h-screen">
-      <h1 className="text-3xl font-bold text-gray-800">{title}</h1>{" "}
+      <Input
+        className="text-3xl font-bold custom-input"
+        value={title}
+        onChange={handleTitleChange}
+        placeholder="Title"
+      />
+
       <div className="flex items-center justify-start p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
