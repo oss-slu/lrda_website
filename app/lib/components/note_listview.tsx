@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import DataConversion from "../utils/data_conversion";
 
 type NoteListViewProps = {
+  notes: Note[];
   onNoteSelect: (note: Note) => void;
 };
 
-const NoteListView: React.FC<NoteListViewProps> = ({ onNoteSelect }) => {
-  const [notes, setNotes] = useState<Note[]>([]);
+const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => {
   const [fresh, setFresh] = useState(true);
 
   useEffect(() => {
@@ -20,27 +20,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({ onNoteSelect }) => {
       setFresh(false);
     }
   }, [notes, onNoteSelect]);
-
-  useEffect(() => {
-    const fetchNotes = async () => {
-      const user = User.getInstance();
-      const userId = await user.getId();
-      if (userId) {
-        try {
-          const userNotes = await ApiService.fetchMessages(
-            false,
-            false,
-            userId
-          );
-          setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
-        } catch (error) {
-          console.error("Error fetching notes:", error);
-        }
-      }
-    };
-
-    fetchNotes();
-  }, []);
 
   const handleLoadText = (note: Note) => {
     onNoteSelect(note);
