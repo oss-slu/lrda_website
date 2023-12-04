@@ -138,7 +138,7 @@ export default class ApiService {
   
       // Request body for retrieving messages of type "message"
       const body = {
-        type: "Agent",
+        type: "message",
       };
   
       const response = await fetch(url, {
@@ -149,23 +149,23 @@ export default class ApiService {
   
       let data = await response.json();
   
-      // // Convert the query to lowercase for case-insensitive matching
-      // const lowerCaseQuery = query.toLowerCase();
+      // Convert the query to lowercase for case-insensitive matching
+      const lowerCaseQuery = query.toLowerCase();
   
-      // // Filter the messages by title or tags containing the query string
-      // data = data.filter((message: any) => {
-      //   // Check if title contains the query string
-      //   if (message.title && message.title.toLowerCase().includes(lowerCaseQuery)) {
-      //     return true;
-      //   }
+      // Filter the messages by title or tags containing the query string
+      data = data.filter((message: any) => {
+        // Check if title contains the query string
+        if (message.title && message.title.toLowerCase().includes(lowerCaseQuery)) {
+          return true;
+        }
   
-      //   // Check if any tags contain the query string
-      //   if (message.tags && message.tags.some((tag: string) => tag.toLowerCase().includes(lowerCaseQuery))) {
-      //     return true;
-      //   }
+        // Check if any tags contain the query string
+        if (message.tags && message.tags.some((tag: string) => tag.toLowerCase().includes(lowerCaseQuery))) {
+          return true;
+        }
   
-      //   return false;
-      // });
+        return false;
+      });
   
       return data;
     } catch (error) {
