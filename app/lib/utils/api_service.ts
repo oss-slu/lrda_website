@@ -174,5 +174,38 @@ export default class ApiService {
     }
   }
   
+ /**
+   * Fetches all messages for a specific user.
+   * @param {string} userId - The ID of the user whose messages are to be fetched.
+   * @returns {Promise<any[]>} - The array of messages fetched from the API.
+   */
+ static async fetchUserMessages(userId: string): Promise<any[]> {
+  try {
+    const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    // Body for the request: fetch messages of type 'message' created by the specified user
+    const body = {
+      type: "message",
+      creator: userId
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user messages:", error);
+    throw error;
+  }
+}
+
+  
   
 }
