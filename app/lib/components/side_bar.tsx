@@ -5,9 +5,10 @@ import { useRouter } from "next/router";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import NoteListView from "./note_listview";
+import { Note } from "@/app/types";
 
 type SidebarProps = {
-  onNoteSelect: (noteText: string) => void;
+  onNoteSelect: (note: Note) => void;
 };
 
 const user = User.getInstance();

@@ -15,24 +15,36 @@ import {
 import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
-import { stateFromHTML } from 'draft-js-import-html';
-import { stateToHTML } from 'draft-js-export-html';
+import { stateFromHTML } from "draft-js-import-html";
+import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
+import { Note } from "@/app/types";
 
 type ToolPageProps = {
-  text?: string;
+  note?: Note;
 };
 
-export default function ToolPage({ text }: ToolPageProps) {
+export default function ToolPage({ note }: ToolPageProps) {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
+  const [title, setTitle] = useState<string | undefined>();
+  const [images, setImages] = useState<any>(); // Replace 'any' with the correct type if available
+  const [time, setTime] = useState<Date | undefined>();
+  const [longitude, setLongitude] = useState<string | undefined>();
+  const [latitude, setLatitude] = useState<string | undefined>();
 
   useEffect(() => {
-    if (text) {
-      const contentState = stateFromHTML(text); // Convert HTML to content state
+    if (note) {
+      setTitle(note.title);
+      setImages(note.media);
+      setTime(note.time);
+      setLongitude(note.longitude);
+      setLatitude(note.latitude);
+
+      const contentState = stateFromHTML(note.text);
       const newEditorState = EditorState.createWithContent(contentState);
       setEditorState(newEditorState);
     }
-  }, [text]);
+  }, [note]);
 
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -89,7 +101,7 @@ export default function ToolPage({ text }: ToolPageProps) {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Tool icons above the NoteComponent */}
+      <h1 className="text-3xl font-bold text-gray-800">{title}</h1>{" "}
       <div className="flex items-center justify-start p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
@@ -169,22 +181,21 @@ export default function ToolPage({ text }: ToolPageProps) {
           <LinkedInLogoIcon />
         </Button>
       </div>
-
-      {/* Main content area with NoteComponent */}
       <main className="flex-grow p-6 lg:p-24">
         <div className="max-w-4xl">
-            <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-              <Editor
-                editorState={editorState}
-                onChange={setEditorState}
-                handleKeyCommand={handleKeyCommand}
-                editorKey="editor"
-                placeholder="Start writing your notes here . . ."
-                spellCheck={true}
-                ariaLabel="Text editor"
-                ariaMultiline={true}
-              />
-            </div>
+          <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
+            <Editor
+              editorState={editorState}
+              onChange={setEditorState}
+              handleKeyCommand={handleKeyCommand}
+              editorKey="editor"
+              placeholder="Start writing your notes here . . ."
+              spellCheck={true}
+              ariaLabel="Text editor"
+              data-testid="editor"
+              ariaMultiline={true}
+            />
+          </div>
         </div>
       </main>
     </div>
@@ -200,7 +211,3 @@ const editorStyles = {
   color: "black",
   backgroundColor: "white",
 };
-
-
-
-
