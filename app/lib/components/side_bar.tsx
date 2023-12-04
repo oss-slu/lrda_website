@@ -16,8 +16,9 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageVisible, toolPageVisible }) => {
   const handleAddNoteClick = () => {
     setNoteComponentVisible(true);
-    setToolPageVisible(true);
+
   };
+
 
   return (
     <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">

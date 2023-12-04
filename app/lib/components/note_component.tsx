@@ -23,14 +23,14 @@ import Sidebar from "./side_bar";
 export default function ToolPage() {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [isNoteComponentVisible, setNoteComponentVisible] = useState(false);
-  const [isToolPageVisible, setToolPageVisible] = useState(true); // Set initial visibility state
-
+  const [isToolPageVisible, setToolPageVisible] = useState(true);
 
   useEffect(() => {
     // Additional effects as needed
-  }, [editorState, isToolPageVisible]); 
+  }, [editorState, isToolPageVisible]);
 
-  
+  const blockType = RichUtils.getCurrentBlockType(editorState);
+
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -67,18 +67,19 @@ export default function ToolPage() {
   };
 
   const handleTextAlignLeft = () => {
-    setEditorState(RichUtils.toggleBlockType(editorState, 'left'));
-  };
-
-  const handleTextAlignCenter = () => {
-    console.log("handleTextAlignCenter called");
-    setEditorState(RichUtils.toggleBlockType(editorState, 'paragraph'));
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_LEFT'));
   };
   
-
-const handleTextAlignRight = () => {
-  setEditorState(RichUtils.toggleBlockType(editorState, 'right'));
-};
+  const handleTextAlignCenter = () => {
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_CENTER'));
+  };
+  
+  const handleTextAlignRight = () => {
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_RIGHT'));
+  };
+  
+  
+  
 
 const handleQuote = () => {
   setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'));
@@ -211,6 +212,15 @@ const handleChatBubble = () => {
                 spellCheck={true}
                 ariaLabel="Text editor"
                 ariaMultiline={true}
+                // Add styleMap to apply custom styles
+                customStyleMap={{
+                  'TEXT_ALIGN_LEFT': { textAlign: 'left' },
+                  'TEXT_ALIGN_CENTER': { textAlign: 'center' },
+                  'TEXT_ALIGN_RIGHT': { textAlign: 'right' },
+                  'blockquote': { margin: '16px 0', borderLeft: '2px solid #ddd', paddingLeft: '10px' },
+                  'unordered-list-item': { listStyleType: 'disc', marginLeft: '1em' },
+                  // Add more styles as needed
+                }}
               />
             </div>
           )}
@@ -218,7 +228,7 @@ const handleChatBubble = () => {
       </main>
     </div>
   );
-}
+};
 
 
 const editorStyles = {
@@ -229,8 +239,8 @@ const editorStyles = {
   width: "800px",
   color: "black",
   backgroundColor: "white",
+  
 };
-
 
 
 
