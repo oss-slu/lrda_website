@@ -1,7 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useRouter } from 'next/router';
 import Sidebar from '../lib/components/side_bar'; // Update the path to your Sidebar component accordingly
+import moxios from 'moxios';
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
@@ -9,12 +10,28 @@ jest.mock('next/router', () => ({
 
 describe('Sidebar Component', () => {
   let mockPush: jest.Mock;
+  let originalConsoleError: jest.Mock;
 
   beforeEach(() => {
+    // Install Moxios before each test
+    moxios.install();
+
     mockPush = jest.fn();
     (useRouter as jest.Mock).mockImplementation(() => ({
       push: mockPush,
     }));
+
+    // Mock console.error
+    originalConsoleError = console.error;
+    console.error = jest.fn();
+  });
+
+  afterEach(() => {
+    // Uninstall Moxios after each test
+    moxios.uninstall();
+
+    // Restore original console.error
+    console.error = originalConsoleError;
   });
 
   it('renders the sidebar correctly', () => {
@@ -34,7 +51,6 @@ describe('Sidebar Component', () => {
     expect(linkElement).toBeInTheDocument();
   });
 
-  
-
+  // ... any other tests ...
 
 });
