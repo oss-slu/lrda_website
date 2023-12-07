@@ -1,32 +1,24 @@
 "use client";
+import React, { useState } from "react";
 import Sidebar from "./lib/components/side_bar";
-import NoteComponent from "./lib/components/note_component";
-import { User } from "./lib/models/user_class";
-import { SetStateAction, useState } from "react";
-
-// Initialize user
-const user = User.getInstance();
+import ToolPage from "./lib/components/note_component";
+import { Note } from "./types";
 
 // Home component
 export default function Home() {
-  // State to control the visibility of the NoteComponent
-  const [isNoteComponentVisible, setNoteComponentVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note>();
 
-  // Function to close the NoteComponent
-  const handleCloseNoteComponent = () => {
-    setNoteComponentVisible(false);
+  const handleNoteSelect = (note: Note) => {
+    setSelectedNote(note);
   };
 
   return (
-    <main className="relative flex h-screen flex-row p-4">
-      {/* Pass setNoteComponentVisible to Sidebar */}
-      <Sidebar setNoteComponentVisible={setNoteComponentVisible} setToolPageVisible={function (value: SetStateAction<boolean>): void {
-      } } toolPageVisible={false} />
-
+    <main className="relative flex h-screen flex-row p-24">
+      <Sidebar onNoteSelect={handleNoteSelect} />
       <div className="flex-1 ml-64">
-        {/* Render NoteComponent only if isNoteComponentVisible is true */}
-        {isNoteComponentVisible && <NoteComponent onClose={handleCloseNoteComponent} />}
+        <ToolPage note={selectedNote} />
       </div>
     </main>
   );
 }
+

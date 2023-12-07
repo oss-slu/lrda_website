@@ -1,39 +1,44 @@
 // note_listview.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { User } from "../models/user_class";
-import ApiService from '../utils/api_service';
-import { Note } from '../../types'; 
+import ApiService from "../utils/api_service";
+import { Note } from "../../types";
+import { Button } from "@/components/ui/button";
+import DataConversion from "../utils/data_conversion";
 
-const NoteListView: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
+type NoteListViewProps = {
+  notes: Note[];
+  onNoteSelect: (note: Note) => void;
+};
+
+const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => {
+  const [fresh, setFresh] = useState(true);
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      const user = User.getInstance();
-      const userId = await user.getId();
-      if (userId) {
-        try {
-          const userNotes = await ApiService.fetchMessages(false, false, userId);
-          setNotes(userNotes);
-        } catch (error) {
-          console.error('Error fetching notes:', error);
-          // Handle the error as appropriate for your application
-        }
-      }
-    };
+    if (notes.length > 0 && fresh) {
+      onNoteSelect(notes[0]);
+      setFresh(false);
+      console.log("NoteListView: useEffect: onNoteSelect", notes[0])
+    }
+  }, [notes, onNoteSelect]);
 
-    fetchNotes();
-  }, []);
+  const handleLoadText = (note: Note) => {
+    onNoteSelect(note);
+  };
 
   return (
-    <div className="my-4">
-      {notes.map((note) => (
-        <div key={note.id} className="mb-2 p-2 bg-white rounded shadow">
-          <h3 className="text-lg font-semibold">{note.title}</h3>
-          <p>{note.text}</p>
-          {/* Render other note properties as needed */}
-        </div>
-      ))}
+    <div className="my-4 flex flex-col">
+      {notes.map((note) => {
+        return (
+          <Button
+            key={note.id}
+            className="bg-secondary text-primary p-2 m-1"
+            onClick={() => handleLoadText(note)}
+          >
+            <h3 className="text-lg font-semibold">{note.title}</h3>
+          </Button>
+        );
+      })}
     </div>
   );
 };

@@ -1,29 +1,63 @@
 "use client";
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { User } from '../models/user_class';
-import { Button } from '@/components/ui/button';
-import NoteListView from './note_listview';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { User } from "../models/user_class";
+import { Button } from "@/components/ui/button";
+import SearchBar from "./search_bar";
+import NoteListView from "./note_listview";
+import { Note } from "@/app/types";
+import ApiService from "../utils/api_service";
 
-interface SidebarProps {
-  setNoteComponentVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setToolPageVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  // Add a prop for toolPageVisible
-  toolPageVisible: boolean;
-}
+type SidebarProps = {
+  onNoteSelect: (note: Note) => void;
+};
 
-const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageVisible, toolPageVisible }) => {
-  const handleAddNoteClick = () => {
-    setNoteComponentVisible(true);
+const user = User.getInstance();
+const userId = user.getId();
 
+
+const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    const fetchUserMessages = async () => {
+      try {
+        const userId = await user.getId();
+        if (userId) {
+          const userNotes = await ApiService.fetchUserMessages(userId);
+          setNotes(userNotes);
+          setFilteredNotes(userNotes);
+        } else {
+          console.error("User not logged in");
+        }
+      } catch (error) {
+        console.error("Error fetching user messages:", error);
+      }
+    };
+
+    fetchUserMessages();
+  }, []);
+
+  const handleSearch = (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setFilteredNotes(notes);
+      return;
+    }
+    const filtered = notes.filter(note =>
+      note.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredNotes(filtered);
   };
-
 
   return (
     <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
+      <div className="w-full">
+        <SearchBar onSearch={handleSearch} />
+      </div>
       <div>
-        <NoteListView />
+        <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
       </div>
       {/* Use the handleAddNoteClick function for the onClick event */}
       <Button data-testid="add-note-button" onClick={handleAddNoteClick} className="w-full">
@@ -32,5 +66,8 @@ const Sidebar: React.FC<SidebarProps> = ({ setNoteComponentVisible, setToolPageV
     </div>
   );
 };
+
+
+export default Sidebar;
 
 export default Sidebar;
