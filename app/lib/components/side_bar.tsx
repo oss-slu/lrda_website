@@ -59,13 +59,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       <div>
         <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
       </div>
-      {/* Use the handleAddNoteClick function for the onClick event */}
-      <Button data-testid="add-note-button" onClick={handleAddNoteClick} className="w-full">
-        Add Note
-      </Button>
+      <Button data-testid="add-note-button">Add Note</Button>
     </div>
   );
 };
 
 
 export default Sidebar;
+
