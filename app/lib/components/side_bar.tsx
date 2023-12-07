@@ -69,5 +69,3 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
 
 export default Sidebar;
-
-export default Sidebar;
