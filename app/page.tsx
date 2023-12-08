@@ -13,7 +13,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative flex h-screen flex-row p-24">
+    <main className="relative flex h-screen flex-row p-4">
       <Sidebar onNoteSelect={handleNoteSelect} />
       <div className="flex-1 ml-64">
         <ToolPage note={selectedNote} />

@@ -9,10 +9,9 @@ import {
   QuoteIcon,
   ChatBubbleIcon,
   ListBulletIcon,
-  InstagramLogoIcon,
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
-import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
+import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
 import { stateFromHTML } from "draft-js-import-html";
@@ -83,15 +82,15 @@ export default function ToolPage({ note }: ToolPageProps) {
   };
 
   const handleTextAlignLeft = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_LEFT'));
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'left'));
   };
   
   const handleTextAlignCenter = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_CENTER'));
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'center'));
   };
   
   const handleTextAlignRight = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'TEXT_ALIGN_RIGHT'));
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'right'));
   };
   
   
@@ -205,13 +204,7 @@ const handleChatBubble = () => {
         >
           <ListBulletIcon />
         </Button>
-        <Button
-          onClick={handleInstagramLogo}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="InstagramLogo"
-        >
-          <InstagramLogoIcon />
-        </Button>
+        
         <Button
           onClick={handleLinkedInLogo}
           className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
@@ -220,8 +213,8 @@ const handleChatBubble = () => {
           <LinkedInLogoIcon />
         </Button>
       </div>
-      <main className="flex-grow p-6 lg:p-24">
-        <div className="max-w-4xl">
+      <main className="flex-grow p-6 lg:p-4">
+        <div className="max-w-full max-h-full overflow-auto">
           <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
             <Editor
               editorState={editorState}
