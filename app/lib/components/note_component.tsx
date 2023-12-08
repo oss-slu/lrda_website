@@ -11,6 +11,7 @@ import {
   ListBulletIcon,
 } from "@radix-ui/react-icons";
 import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
+import { Textarea } from "@/components/ui/textarea"
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
 import { stateFromHTML } from "draft-js-import-html";
@@ -44,6 +45,8 @@ export default function ToolPage({ note }: ToolPageProps) {
       setEditorState(newEditorState);
     }
   }, [note]);
+
+  
 
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -198,23 +201,27 @@ const handleChatBubble = () => {
         </Button>
         
       </div>
-      <main className="flex-grow p-6 lg:p-4">
-        <div className="max-w-full max-h-full overflow-auto">
+      <main className="flex-grow p-6 lg:p-4 w-full">
+        <div className="max-w-full flex-grow overflow-auto">
           <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-            <Editor
-              editorState={editorState}
-              onChange={setEditorState}
-              handleKeyCommand={handleKeyCommand}
-              editorKey="editor"
+          <Textarea
+              value={editorState.getCurrentContent().getPlainText()}
+              onChange={(e) => {
+                const contentState = ContentState.createFromText(e.target.value);
+                const newEditorState = EditorState.push(editorState, contentState, 'insert-characters');
+                setEditorState(newEditorState);
+              }}
               placeholder="Start writing your notes here . . ."
               spellCheck={true}
-              ariaLabel="Text editor"
+              aria-label="Text editor"
               data-testid="editor"
-              ariaMultiline={true}
+              // Add any additional props you need for the Textarea component
             />
+
           </div>
         </div>
       </main>
+
     </div>
   );
 };
@@ -225,8 +232,9 @@ const editorStyles = {
   padding: "10px",
   borderRadius: "4px",
   minHeight: "300px",
-  width: "800px",
+  width: "100%", 
   color: "black",
   backgroundColor: "white",
-  
+  overflow: "auto", 
 };
+
