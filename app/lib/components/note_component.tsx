@@ -9,10 +9,9 @@ import {
   QuoteIcon,
   ChatBubbleIcon,
   ListBulletIcon,
-  InstagramLogoIcon,
-  LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
-import { ContentState, Editor, EditorState, RichUtils } from "draft-js";
+import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
+import { Textarea } from "@/components/ui/textarea"
 import "draft-js/dist/Draft.css";
 import { useState, useEffect } from "react";
 import { stateFromHTML } from "draft-js-import-html";
@@ -47,6 +46,8 @@ export default function ToolPage({ note }: ToolPageProps) {
     }
   }, [note]);
 
+  
+
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -57,8 +58,22 @@ export default function ToolPage({ note }: ToolPageProps) {
   };
 
   const toggleBold = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "BOLD"));
+    // Check if the current selection is bold
+    const currentStyle = editorState.getCurrentInlineStyle();
+    const isBold = currentStyle.has("BOLD");
+  
+    // Toggle the "BOLD" style
+    let newEditorState = RichUtils.toggleInlineStyle(editorState, "BOLD");
+  
+    // If the selection was already bold, remove the "BOLD" style
+    if (isBold) {
+      newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
+    }
+  
+    // Set the new editor state
+    setEditorState(newEditorState);
   };
+  
 
   const toggleItalic = () => {
     setEditorState(RichUtils.toggleInlineStyle(editorState, "ITALIC"));
@@ -69,36 +84,42 @@ export default function ToolPage({ note }: ToolPageProps) {
   };
 
   const handleTextAlignLeft = () => {
-    // Implement text alignment left
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'left'));
   };
-
+  
   const handleTextAlignCenter = () => {
-    // Implement text alignment center
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'center'));
   };
-
+  
   const handleTextAlignRight = () => {
-    // Implement text alignment right
+    setEditorState(RichUtils.toggleInlineStyle(editorState, 'right'));
   };
+  
+  
+  
 
-  const handleQuote = () => {
-    // Implement quoting
-  };
+const handleQuote = () => {
+  setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'));
+};
 
-  const handleChatBubble = () => {
-    // Implement chat bubble functionality
-  };
+const handleChatBubble = () => {
+  // Example: Inserting a custom chat bubble character
+  const contentState = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const newContentState = Modifier.insertText(
+    contentState,
+    selection,
+    '💬', // You can replace this with your preferred chat bubble character
+  );
+  const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
+  setEditorState(newEditorState);
+};
+
 
   const handleListBullet = () => {
-    // Implement bullet list functionality
+    setEditorState(RichUtils.toggleBlockType(editorState, 'unordered-list-item'));
   };
 
-  const handleInstagramLogo = () => {
-    // Implement Instagram logo functionality
-  };
-
-  const handleLinkedInLogo = () => {
-    // Implement LinkedIn logo functionality
-  };
 
   const handleTitleChange = (event: any) => {
     setTitle(event.target.value);
@@ -113,11 +134,12 @@ export default function ToolPage({ note }: ToolPageProps) {
         placeholder="Title"
       />
 
-      <div className="flex items-center justify-start p-4 bg-gray-200">
+      <div className="flex items-center justify-right p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
           className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
           data-testid="Bold"
+          
         >
           <FontBoldIcon />
         </Button>
@@ -177,48 +199,43 @@ export default function ToolPage({ note }: ToolPageProps) {
         >
           <ListBulletIcon />
         </Button>
-        <Button
-          onClick={handleInstagramLogo}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="InstagramLogo"
-        >
-          <InstagramLogoIcon />
-        </Button>
-        <Button
-          onClick={handleLinkedInLogo}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="LinkedInLogo"
-        >
-          <LinkedInLogoIcon />
-        </Button>
+        
       </div>
-      <main className="flex-grow p-6 lg:p-24">
-        <div className="max-w-4xl">
+      <main className="flex-grow p-6 lg:p-4 w-full">
+        <div className="max-w-full flex-grow overflow-auto">
           <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-            <Editor
-              editorState={editorState}
-              onChange={setEditorState}
-              handleKeyCommand={handleKeyCommand}
-              editorKey="editor"
+          <Textarea
+              value={editorState.getCurrentContent().getPlainText()}
+              onChange={(e) => {
+                const contentState = ContentState.createFromText(e.target.value);
+                const newEditorState = EditorState.push(editorState, contentState, 'insert-characters');
+                setEditorState(newEditorState);
+              }}
               placeholder="Start writing your notes here . . ."
               spellCheck={true}
-              ariaLabel="Text editor"
+              aria-label="Text editor"
               data-testid="editor"
-              ariaMultiline={true}
+              // Add any additional props you need for the Textarea component
+              className="h-screen w-full p-4 border border-black"
             />
+
           </div>
         </div>
       </main>
+
     </div>
   );
-}
+};
+
 
 const editorStyles = {
   border: "1px solid black",
   padding: "10px",
   borderRadius: "4px",
   minHeight: "300px",
-  width: "800px",
+  width: "100%", 
   color: "black",
   backgroundColor: "white",
+  overflow: "auto", 
 };
+

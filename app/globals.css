@@ -74,25 +74,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-.custom-input:focus {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  -moz-box-shadow: none !important;
-  padding: none !important;
-  margin: none !important;
-  border: none !important;
-}
-.custom-input {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  -moz-box-shadow: none !important;
-  padding: none !important;
-  margin: none !important;
-  border: none !important;
-}
-

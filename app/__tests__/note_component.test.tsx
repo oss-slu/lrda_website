@@ -3,6 +3,7 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
 import NoteComponent from "../lib/components/note_component";
 import { RichUtils } from 'draft-js';
+import ToolPage from "../lib/components/note_component";
 
 jest.mock('draft-js', () => ({
   ...jest.requireActual('draft-js'),
@@ -41,3 +42,5 @@ describe("NoteComponent Component", () => {
     });
   });
 });
+
+
