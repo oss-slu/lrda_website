@@ -134,7 +134,7 @@ const handleChatBubble = () => {
         placeholder="Title"
       />
 
-      <div className="flex items-center justify-start p-4 bg-gray-200">
+      <div className="flex items-center justify-right p-4 bg-gray-200">
         <Button
           onClick={toggleBold}
           className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
@@ -216,6 +216,7 @@ const handleChatBubble = () => {
               aria-label="Text editor"
               data-testid="editor"
               // Add any additional props you need for the Textarea component
+              className="h-screen w-full p-4 border border-black"
             />
 
           </div>
