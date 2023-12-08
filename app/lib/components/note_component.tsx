@@ -9,7 +9,6 @@ import {
   QuoteIcon,
   ChatBubbleIcon,
   ListBulletIcon,
-  LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
 import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
 import "draft-js/dist/Draft.css";
@@ -118,13 +117,6 @@ const handleChatBubble = () => {
     setEditorState(RichUtils.toggleBlockType(editorState, 'unordered-list-item'));
   };
 
-  const handleInstagramLogo = () => {
-    // Implement Instagram logo functionality
-  };
-
-  const handleLinkedInLogo = () => {
-    // Implement LinkedIn logo functionality
-  };
 
   const handleTitleChange = (event: any) => {
     setTitle(event.target.value);
@@ -205,13 +197,6 @@ const handleChatBubble = () => {
           <ListBulletIcon />
         </Button>
         
-        <Button
-          onClick={handleLinkedInLogo}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="LinkedInLogo"
-        >
-          <LinkedInLogoIcon />
-        </Button>
       </div>
       <main className="flex-grow p-6 lg:p-4">
         <div className="max-w-full max-h-full overflow-auto">
