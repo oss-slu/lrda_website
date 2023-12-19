@@ -4,6 +4,7 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Input } from "@/components/ui/input";
 import { Note } from "@/app/types";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 type NoteEditorProps = {
   note?: Note;
@@ -40,9 +41,32 @@ export default function NoteEditor({ note }: NoteEditorProps) {
         className="m-4"
       />
       <div className="flex justify-center space-x-2 p-2">
-        <button onClick={() => editor.chain().focus().toggleBold().run()} className="btn">Bold</button>
-        <button onClick={() => editor.chain().focus().toggleItalic().run()} className="btn">Italic</button>
-        <button onClick={() => editor.chain().focus().toggleUnderline().run()} className="btn">Underline</button>
+      <ToggleGroup type="single" aria-label="Text formatting">
+    <ToggleGroupItem
+      value="bold"
+      onClick={() => editor.chain().focus().toggleBold().run()}
+      aria-label="Bold"
+      className="btn"
+    >
+      Bold
+    </ToggleGroupItem>
+    <ToggleGroupItem
+      value="italic"
+      onClick={() => editor.chain().focus().toggleItalic().run()}
+      aria-label="Italic"
+      className="btn"
+    >
+      Italic
+    </ToggleGroupItem>
+    <ToggleGroupItem
+      value="underline"
+      onClick={() => editor.chain().focus().toggleUnderline().run()}
+      aria-label="Underline"
+      className="btn"
+    >
+      Underline
+    </ToggleGroupItem>
+  </ToggleGroup>
       </div>
       <main className="flex-grow p-6">
         <div className="overflow-auto">
