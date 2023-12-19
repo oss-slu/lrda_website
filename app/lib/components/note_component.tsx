@@ -19,6 +19,7 @@ import { stateToHTML } from "draft-js-export-html";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/app/types";
 import { Input } from "@/components/ui/input";
+import TimePicker from "./time_picker";
 
 type ToolPageProps = {
   note?: Note;
@@ -45,8 +46,6 @@ export default function ToolPage({ note }: ToolPageProps) {
       setEditorState(newEditorState);
     }
   }, [note]);
-
-  
 
   const handleKeyCommand = (command: string) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -202,6 +201,7 @@ const handleChatBubble = () => {
         
       </div>
       <main className="flex-grow p-6 lg:p-4 w-full">
+        <TimePicker input={time} />
         <div className="max-w-full flex-grow overflow-auto">
           <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
           <Textarea
@@ -222,7 +222,6 @@ const handleChatBubble = () => {
           </div>
         </div>
       </main>
-
     </div>
   );
 };
