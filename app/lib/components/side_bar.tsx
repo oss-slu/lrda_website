@@ -10,6 +10,7 @@ import { Note } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
+
 type SidebarProps = {
   onNoteSelect: (note: Note) => void;
 };
