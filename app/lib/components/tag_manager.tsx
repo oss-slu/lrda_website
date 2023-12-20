@@ -1,25 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TagManagerProps {
   inputTags?: string[];
 }
 
 const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
-    const [tags, setTags] = useState<string[]>(inputTags || []);
+  const [tags, setTags] = useState<string[]>(inputTags || []);
   const [tagInput, setTagInput] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (inputTags !== tags) { 
+    if (inputTags !== tags) {
       setTags(inputTags || []);
     }
   }, [inputTags]);
 
-
   const addTag = (tag: string) => {
-    if (tag && !tags.includes(tag)) {
+    if (tag.includes(" ")) {
+      toast({
+        description: "Your tag must not contain spaces",
+        duration: 2000,
+      });
+      setTagInput("");
+      return;
+    }
+    if (tag.length <= 2) {
+      toast({
+        description: "Tags must be longer than 2 characters",
+      });
+      return;
+    }
+    if (tags.includes(tag)) {
+      toast({
+        description: "Duplicate tags are not allowed",
+      });
+      setTagInput("");
+      return;
+    }
+    if (tag && !tags.includes(tag) && tag.length > 2 && !tag.includes(" ")) {
       setTags((prevTags) => [...prevTags, tag]);
       setTagInput("");
     }
@@ -40,31 +61,29 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
   };
 
   return (
-    <div className="mt-2">
-      <Input
-        value={tagInput}
-        placeholder="Add tags here!"
-        onKeyDown={handleKeyDown}
-        onChange={handleInputChange}
-        className="w-min"
-      />
-      <div className="flex flex-wrap gap-2 mt-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={tagInput}
+          placeholder="Add tags..."
+          onKeyDown={handleKeyDown}
+          onChange={handleInputChange}
+          className="flex-1 min-w-[90px] max-w-[280px]"
+        />
         {tags.map((tag, index) => (
           <div
             key={index}
-            className="flex items-center gap-2 bg-gray-200 px-2 py-1 rounded"
+            className="flex text-xs items-center gap-2 bg-gray-200 px-2 py-1 rounded"
           >
             <button
               onClick={() => removeTag(tag)}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900"
             >
-              <XIcon className="h-3 w-3"/>
+              <XIcon className="h-3 w-3" />
             </button>
             {tag}
           </div>
         ))}
       </div>
-    </div>
   );
 };
 
