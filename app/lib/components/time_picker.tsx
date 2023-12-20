@@ -12,23 +12,28 @@ function formatDateTime(date: Date) {
   
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    const formattedHours = hours % 12 === 0 ? 12 : hours % 12; // Convert 0 hours to 12 for noon/midnight
+    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
     const ampm = hours < 12 ? 'AM' : 'PM';
   
     return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
-export default function TimePicker() {
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`);
+interface TimePickerProps {
+  initialDate: Date;
+}
+
+export default function TimePicker({ initialDate }: TimePickerProps) {
+  const validInitialDate = initialDate || new Date();
+  const [date, setDate] = useState(validInitialDate);
+  const [time, setTime] = useState(`${validInitialDate.getHours().toString().padStart(2, '0')}:${validInitialDate.getMinutes().toString().padStart(2, '0')}`);
 
   useEffect(() => {
     const [hours, minutes] = time.split(':').map(Number);
     const newDate = new Date(date);
     newDate.setHours(hours, minutes);
     setDate(newDate);
-  }, [time]);
+  }, [time, date]);
 
   const handleDayClick = (newDay: Date) => {
     const [hours, minutes] = time.split(':').map(Number);
