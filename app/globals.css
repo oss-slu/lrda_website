@@ -34,6 +34,8 @@
  
     --radius: 0.5rem;
   }
+
+
  
   .dark {
     --background: 222.2 84% 4.9%;
@@ -72,5 +74,18 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+
+.tiptap {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  ul, ol {
+    list-style: none;
+    padding: 0 1rem;
+    border-left: 4px solid black;
   }
 }

@@ -5,8 +5,15 @@ import StarterKit from "@tiptap/starter-kit";
 import { Input } from "@/components/ui/input";
 import { Underline } from "@tiptap/extension-underline";
 import { Note } from "@/app/types";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import Document from '@tiptap/extension-document'
+import Paragraph from '@tiptap/extension-paragraph'
+import Text from '@tiptap/extension-text'
 import TimePicker from "./time_picker";
+import BulletList from '@tiptap/extension-bullet-list'
+import ListItem from '@tiptap/extension-list-item'
+import OrderedList from '@tiptap/extension-ordered-list'
+import Blockquote from "@tiptap/extension-blockquote";
+import ToolBar from "./toolbar";
 
 type NoteEditorProps = {
   note?: Note;
@@ -18,9 +25,26 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   const [time, setTime] = useState<Date | undefined>();
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
+  const [boldActive, setBoldActive] = useState("btn");
 
   const editor = useEditor({
-    extensions: [StarterKit, Underline],
+    extensions: [StarterKit, Document, Paragraph, Text, Underline, OrderedList,
+      ListItem.configure({
+        HTMLAttributes: {
+          class: 'pl-4 border-l border-l-[value]',
+        },
+      }),
+      BulletList.configure({
+        HTMLAttributes: {
+          class: "pl-4 border-l border-l-[value]"
+        }
+      }), 
+      Blockquote.configure({
+        HTMLAttributes: {
+          className: "pl-4 border-l border-l-[value]"
+        }
+      })
+    ],
     content: note?.text || "<p>Type your text...</p>",
   });
 
@@ -41,10 +65,6 @@ export default function NoteEditor({ note }: NoteEditorProps) {
     setTitle(event.target.value);
   };
 
-  if (!editor) {
-    return null;
-  }
-
   return (
     <div className="flex flex-col h-screen">
       <Input
@@ -53,37 +73,10 @@ export default function NoteEditor({ note }: NoteEditorProps) {
         placeholder="Title"
         className="m-4"
       />
-      <div className="flex justify-center space-x-2 p-2">
-        <ToggleGroup type="multiple" aria-label="Text formatting">
-          <ToggleGroupItem
-            value="bold"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            aria-label="Bold"
-            className={editor.isActive("bold") ? "active-btn" : "btn"}
-          >
-            Bold
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="italic"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            aria-label="Italic"
-            className={editor.isActive("italic") ? "active-btn" : "btn"}
-          >
-            Italic
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="underline"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            aria-label="Underline"
-            className={editor.isActive("underline") ? "active-btn" : "btn"}
-          >
-            Underline
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
       <main className="flex-grow p-6">
         <TimePicker initialDate={time || new Date()} />
         <div className="overflow-auto">
+          <ToolBar editor={editor}/>
           <div className="mt-2 border border-black p-4 rounded-lg bg-white">
             <EditorContent editor={editor} />
           </div>

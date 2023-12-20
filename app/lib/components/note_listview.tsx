@@ -18,7 +18,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => 
     if (notes.length > 0 && fresh) {
       onNoteSelect(notes[0]);
       setFresh(false);
-      console.log("NoteListView: useEffect: onNoteSelect", notes[0])
     }
   }, [notes, onNoteSelect]);
 
