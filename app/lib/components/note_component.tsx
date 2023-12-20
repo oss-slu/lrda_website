@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { Input } from "@/components/ui/input";
 import { Underline } from "@tiptap/extension-underline";
 import { Note } from "@/app/types";
@@ -13,6 +12,9 @@ import BulletList from '@tiptap/extension-bullet-list'
 import ListItem from '@tiptap/extension-list-item'
 import OrderedList from '@tiptap/extension-ordered-list'
 import Blockquote from "@tiptap/extension-blockquote";
+import History from "@tiptap/extension-history";
+import Bold from '@tiptap/extension-bold'
+import Italic from '@tiptap/extension-italic'
 import ToolBar from "./toolbar";
 
 type NoteEditorProps = {
@@ -25,10 +27,9 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   const [time, setTime] = useState<Date | undefined>();
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
-  const [boldActive, setBoldActive] = useState("btn");
 
   const editor = useEditor({
-    extensions: [StarterKit, Document, Paragraph, Text, Underline, OrderedList,
+    extensions: [Document, Bold, Italic, History, Paragraph, Text, Underline, OrderedList,
       ListItem.configure({
         HTMLAttributes: {
           class: 'pl-4 border-l border-l-[value]',
@@ -41,7 +42,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
       }), 
       Blockquote.configure({
         HTMLAttributes: {
-          className: "pl-4 border-l border-l-[value]"
+          className: "border-l-6 border-tan bg-tan bg-opacity-[0.5] pl-4"
         }
       })
     ],

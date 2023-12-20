@@ -1,5 +1,13 @@
 import { Editor } from "@tiptap/react";
-import { BoldIcon, UnderlineIcon, ItalicIcon, ListOrderedIcon, TextQuoteIcon} from "lucide-react";
+import {
+  BoldIcon,
+  UnderlineIcon,
+  ItalicIcon,
+  ListOrderedIcon,
+  TextQuoteIcon,
+  UndoIcon,
+  RedoIcon,
+} from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ToolBarProps {
@@ -13,6 +21,20 @@ const ToolBar: React.FC<ToolBarProps> = ({ editor }) => {
   return (
     <div className="flex justify-center space-x-2 p-2">
       <ToggleGroup type="multiple" aria-label="Text formatting">
+        <ToggleGroupItem
+          value="undo"
+          onClick={() => editor.chain().focus().undo().run()}
+          aria-label="Undo"
+        >
+          <UndoIcon className="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="redo"
+          onClick={() => editor.chain().focus().redo().run()}
+          aria-label="Redo"
+        >
+          <RedoIcon className="h-4 w-4" />
+        </ToggleGroupItem>
         <ToggleGroupItem
           value="bold"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -43,7 +65,7 @@ const ToolBar: React.FC<ToolBarProps> = ({ editor }) => {
           aria-label="Ordered List"
           className={editor.isActive("orderedList") ? "active-btn" : "btn"}
         >
-            <ListOrderedIcon className="h-4 w-4" />
+          <ListOrderedIcon className="h-4 w-4" />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="blockquote"
