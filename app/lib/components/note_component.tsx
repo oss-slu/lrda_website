@@ -1,37 +1,28 @@
 "use client";
-import {
-  FontBoldIcon,
-  FontItalicIcon,
-  UnderlineIcon,
-  TextAlignLeftIcon,
-  TextAlignCenterIcon,
-  TextAlignRightIcon,
-  QuoteIcon,
-  ChatBubbleIcon,
-  ListBulletIcon,
-} from "@radix-ui/react-icons";
-import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
-import { Textarea } from "@/components/ui/textarea"
-import "draft-js/dist/Draft.css";
-import { useState, useEffect } from "react";
-import { stateFromHTML } from "draft-js-import-html";
-import { stateToHTML } from "draft-js-export-html";
-import { Button } from "@/components/ui/button";
-import { Note } from "@/app/types";
+import React, { useState, useEffect } from "react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import { Input } from "@/components/ui/input";
+import { Underline } from "@tiptap/extension-underline";
+import { Note } from "@/app/types";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import TimePicker from "./time_picker";
 
-type ToolPageProps = {
+type NoteEditorProps = {
   note?: Note;
 };
 
-export default function ToolPage({ note }: ToolPageProps) {
-  const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [title, setTitle] = useState("");
+export default function NoteEditor({ note }: NoteEditorProps) {
+  const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState<any>();
-  const [time, setTime] = useState<Date | undefined>();
+  const [time, setTime] = useState<Date | undefined>(note?.time);
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
+
+  const editor = useEditor({
+    extensions: [StarterKit, Underline],
+    content: note?.text || "<p>Type your text...</p>",
+  });
 
   useEffect(() => {
     if (note) {
@@ -40,87 +31,13 @@ export default function ToolPage({ note }: ToolPageProps) {
       setTime(note.time);
       setLongitude(note.longitude);
       setLatitude(note.latitude);
-
-      const contentState = stateFromHTML(note.text);
-      const newEditorState = EditorState.createWithContent(contentState);
-      setEditorState(newEditorState);
+      if (editor) {
+        editor.commands.setContent(note.text);
+      }
     }
-  }, [note]);
+  }, [note, editor]);
 
-  const handleKeyCommand = (command: string) => {
-    const newState = RichUtils.handleKeyCommand(editorState, command);
-    if (newState) {
-      setEditorState(newState);
-      return "handled";
-    }
-    return "not-handled";
-  };
-
-  const toggleBold = () => {
-    // Check if the current selection is bold
-    const currentStyle = editorState.getCurrentInlineStyle();
-    const isBold = currentStyle.has("BOLD");
-  
-    // Toggle the "BOLD" style
-    let newEditorState = RichUtils.toggleInlineStyle(editorState, "BOLD");
-  
-    // If the selection was already bold, remove the "BOLD" style
-    if (isBold) {
-      newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
-    }
-  
-    // Set the new editor state
-    setEditorState(newEditorState);
-  };
-  
-
-  const toggleItalic = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "ITALIC"));
-  };
-
-  const toggleUnderline = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "UNDERLINE"));
-  };
-
-  const handleTextAlignLeft = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'left'));
-  };
-  
-  const handleTextAlignCenter = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'center'));
-  };
-  
-  const handleTextAlignRight = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'right'));
-  };
-  
-  
-  
-
-const handleQuote = () => {
-  setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'));
-};
-
-const handleChatBubble = () => {
-  // Example: Inserting a custom chat bubble character
-  const contentState = editorState.getCurrentContent();
-  const selection = editorState.getSelection();
-  const newContentState = Modifier.insertText(
-    contentState,
-    selection,
-    '💬', // You can replace this with your preferred chat bubble character
-  );
-  const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
-  setEditorState(newEditorState);
-};
-
-
-  const handleListBullet = () => {
-    setEditorState(RichUtils.toggleBlockType(editorState, 'unordered-list-item'));
-  };
-
-
-  const handleTitleChange = (event: any) => {
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
@@ -131,110 +48,44 @@ const handleChatBubble = () => {
         value={title}
         onChange={handleTitleChange}
         placeholder="Title"
+        className="m-4"
       />
-
-      <div className="flex items-center justify-right p-4 bg-gray-200">
-        <Button
-          onClick={toggleBold}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Bold"
-          
-        >
-          <FontBoldIcon />
-        </Button>
-        <Button
-          onClick={toggleItalic}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Italic"
-        >
-          <FontItalicIcon />
-        </Button>
-        <Button
-          onClick={toggleUnderline}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Underline"
-        >
-          <UnderlineIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignLeft}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignLeft"
-        >
-          <TextAlignLeftIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignCenter}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignCenter"
-        >
-          <TextAlignCenterIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignRight}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignRight"
-        >
-          <TextAlignRightIcon />
-        </Button>
-        <Button
-          onClick={handleQuote}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Quote"
-        >
-          <QuoteIcon />
-        </Button>
-        <Button
-          onClick={handleChatBubble}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="ChatBubble"
-        >
-          <ChatBubbleIcon />
-        </Button>
-        <Button
-          onClick={handleListBullet}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="ListBullet"
-        >
-          <ListBulletIcon />
-        </Button>
-        
+      <div className="flex justify-center space-x-2 p-2">
+        <ToggleGroup type="multiple" aria-label="Text formatting">
+          <ToggleGroupItem
+            value="bold"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            aria-label="Bold"
+            className={editor.isActive("bold") ? "active-btn" : "btn"}
+          >
+            Bold
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="italic"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            aria-label="Italic"
+            className={editor.isActive("italic") ? "active-btn" : "btn"}
+          >
+            Italic
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="underline"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            aria-label="Underline"
+            className={editor.isActive("underline") ? "active-btn" : "btn"}
+          >
+            Underline
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
-      <main className="flex-grow p-6 lg:p-4 w-full">
-        <TimePicker input={time} />
-        <div className="max-w-full flex-grow overflow-auto">
-          <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-          <Textarea
-              value={editorState.getCurrentContent().getPlainText()}
-              onChange={(e) => {
-                const contentState = ContentState.createFromText(e.target.value);
-                const newEditorState = EditorState.push(editorState, contentState, 'insert-characters');
-                setEditorState(newEditorState);
-              }}
-              placeholder="Start writing your notes here . . ."
-              spellCheck={true}
-              aria-label="Text editor"
-              data-testid="editor"
-              // Add any additional props you need for the Textarea component
-              className="h-screen w-full p-4 border border-black"
-            />
-
+      <main className="flex-grow p-6">
+        <TimePicker initialDate={time || new Date()} />
+        <div className="overflow-auto">
+          <div className="mt-2 border border-black p-4 rounded-lg bg-white">
+            <EditorContent editor={editor} />
           </div>
         </div>
       </main>
     </div>
   );
-};
-
-
-const editorStyles = {
-  border: "1px solid black",
-  padding: "10px",
-  borderRadius: "4px",
-  minHeight: "300px",
-  width: "100%", 
-  color: "black",
-  backgroundColor: "white",
-  overflow: "auto", 
-};
-
+}
