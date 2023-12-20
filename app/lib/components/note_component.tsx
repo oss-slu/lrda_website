@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Input } from "@/components/ui/input";
+import { Underline } from '@tiptap/extension-underline';
 import { Note } from "@/app/types";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
@@ -13,7 +14,7 @@ type NoteEditorProps = {
 export default function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || '');
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, Underline],
     content: note?.text || '<p>Type your text...</p>',
   });
 
@@ -61,7 +62,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   </ToggleGroupItem>
   <ToggleGroupItem
     value="underline"
-    onClick={() => editor.chain().focus().toggleMark({ type: 'underline' }).run()}
+    onClick={() => editor.chain().focus().toggleUnderline().run()}
     aria-label="Underline"
     className={editor.isActive('underline') ? 'active-btn' : 'btn'}
   >
