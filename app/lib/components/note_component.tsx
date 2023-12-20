@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Underline } from '@tiptap/extension-underline';
 import { Note } from "@/app/types";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import TimePicker from "./time_picker";
 
 type NoteEditorProps = {
   note?: Note;
@@ -13,15 +14,26 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || '');
+  const [images, setImages] = useState<any>();
+  const [time, setTime] = useState<Date | undefined>();
+  const [longitude, setLongitude] = useState<string | undefined>();
+  const [latitude, setLatitude] = useState<string | undefined>();
+
   const editor = useEditor({
     extensions: [StarterKit, Underline],
     content: note?.text || '<p>Type your text...</p>',
   });
 
   useEffect(() => {
-    if (note && editor) {
+    if (note) {
       setTitle(note.title);
-      editor.commands.setContent(note.text);
+      setImages(note.media);
+      setTime(note.time);
+      setLongitude(note.longitude);
+      setLatitude(note.latitude);
+      if(editor){
+        editor.commands.setContent(note.text);
+      }
     }
   }, [note, editor]);
 
@@ -30,7 +42,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   };
 
   if (!editor) {
-    return null; // or a loading indicator
+    return null;
   }
 
   return (
@@ -72,6 +84,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
 
       </div>
       <main className="flex-grow p-6">
+        <TimePicker input={time}/>
         <div className="overflow-auto">
           <div className="mt-2 border border-black p-4 rounded-lg bg-white">
             <EditorContent editor={editor} />
