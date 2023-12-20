@@ -41,32 +41,34 @@ export default function NoteEditor({ note }: NoteEditorProps) {
         className="m-4"
       />
       <div className="flex justify-center space-x-2 p-2">
-      <ToggleGroup type="single" aria-label="Text formatting">
-    <ToggleGroupItem
-      value="bold"
-      onClick={() => editor.chain().focus().toggleBold().run()}
-      aria-label="Bold"
-      className="btn"
-    >
-      Bold
-    </ToggleGroupItem>
-    <ToggleGroupItem
-      value="italic"
-      onClick={() => editor.chain().focus().toggleItalic().run()}
-      aria-label="Italic"
-      className="btn"
-    >
-      Italic
-    </ToggleGroupItem>
-    <ToggleGroupItem
-      value="underline"
-      onClick={() => editor.chain().focus().toggleUnderline().run()}
-      aria-label="Underline"
-      className="btn"
-    >
-      Underline
-    </ToggleGroupItem>
-  </ToggleGroup>
+
+      <ToggleGroup type="multiple" aria-label="Text formatting">
+  <ToggleGroupItem
+    value="bold"
+    onClick={() => editor.chain().focus().toggleBold().run()}
+    aria-label="Bold"
+    className={editor.isActive('bold') ? 'active-btn' : 'btn'}
+  >
+    Bold
+  </ToggleGroupItem>
+  <ToggleGroupItem
+    value="italic"
+    onClick={() => editor.chain().focus().toggleItalic().run()}
+    aria-label="Italic"
+    className={editor.isActive('italic') ? 'active-btn' : 'btn'}
+  >
+    Italic
+  </ToggleGroupItem>
+  <ToggleGroupItem
+    value="underline"
+    onClick={() => editor.chain().focus().toggleMark({ type: 'underline' }).run()}
+    aria-label="Underline"
+    className={editor.isActive('underline') ? 'active-btn' : 'btn'}
+  >
+    Underline
+  </ToggleGroupItem>
+</ToggleGroup>
+
       </div>
       <main className="flex-grow p-6">
         <div className="overflow-auto">

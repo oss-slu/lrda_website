@@ -23,6 +23,7 @@
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.0.0",
+    "@tiptap/extension-underline": "^2.1.13",
     "@tiptap/react": "^2.1.13",
     "@tiptap/starter-kit": "^2.1.13",
     "@types/enzyme-adapter-react-16": "^1.0.7",
