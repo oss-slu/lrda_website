@@ -16,6 +16,7 @@ import History from "@tiptap/extension-history";
 import Bold from '@tiptap/extension-bold'
 import Italic from '@tiptap/extension-italic'
 import ToolBar from "./toolbar";
+import TagManager from "./tag_manager";
 
 type NoteEditorProps = {
   note?: Note;
@@ -24,6 +25,7 @@ type NoteEditorProps = {
 export default function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState<any>();
+  const [tags, setTags] = useState<string[] | undefined>(note?.tags);
   const [time, setTime] = useState<Date | undefined>();
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
@@ -49,6 +51,8 @@ export default function NoteEditor({ note }: NoteEditorProps) {
     content: note?.text || "<p>Type your text...</p>",
   });
 
+  console.log(note?.tags);
+
   useEffect(() => {
     if (note) {
       setTitle(note.title);
@@ -56,6 +60,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
       setTime(note.time);
       setLongitude(note.longitude);
       setLatitude(note.latitude);
+      setTags(note.tags);
       if (editor) {
         editor.commands.setContent(note.text);
       }
@@ -76,6 +81,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
       />
       <main className="flex-grow p-6">
         <TimePicker initialDate={time || new Date()} />
+        <TagManager inputTags={tags}/>
         <div className="overflow-auto">
           <ToolBar editor={editor}/>
           <div className="mt-2 border border-black p-4 rounded-lg bg-white">

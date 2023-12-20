@@ -39,7 +39,6 @@ export default function TimePicker({ initialDate }: TimePickerProps) {
   const [time, setTime] = useState(formatTime(initialDate));
 
   useEffect(() => {
-    console.log("INITIALDATE: ", initialDate);
     setTime(formatTime(initialDate));
 
     const newDate = new Date(initialDate);
