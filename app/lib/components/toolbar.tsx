@@ -18,6 +18,10 @@ const ToolBar: React.FC<ToolBarProps> = ({ editor }) => {
   if (!editor) {
     return null;
   }
+  const toggleBold = () => {
+    editor.chain().focus().toggleBold().run();
+  };
+  const isBoldActive = editor.isActive("bold");
   return (
     <div className="flex justify-center space-x-2 p-2">
       <ToggleGroup type="multiple" aria-label="Text formatting">
@@ -37,9 +41,9 @@ const ToolBar: React.FC<ToolBarProps> = ({ editor }) => {
         </ToggleGroupItem>
         <ToggleGroupItem
           value="bold"
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={toggleBold}
           aria-label="Bold"
-          className={editor.isActive("bold") ? "active-btn" : "btn"}
+          className={isBoldActive ? "active-btn" : "btn"}
         >
           <BoldIcon className="h-4 w-4" />
         </ToggleGroupItem>
