@@ -15,7 +15,7 @@ type NoteEditorProps = {
 export default function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState<any>();
-  const [time, setTime] = useState<Date | undefined>(note?.time);
+  const [time, setTime] = useState<Date | undefined>();
   const [longitude, setLongitude] = useState<string | undefined>();
   const [latitude, setLatitude] = useState<string | undefined>();
 
@@ -41,10 +41,13 @@ export default function NoteEditor({ note }: NoteEditorProps) {
     setTitle(event.target.value);
   };
 
+  if (!editor) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col h-screen">
       <Input
-        className="text-3xl font-bold custom-input"
         value={title}
         onChange={handleTitleChange}
         placeholder="Title"
