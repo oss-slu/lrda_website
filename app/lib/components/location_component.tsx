@@ -38,12 +38,14 @@ function getCurLocation(
   }
 }
 
+const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
+
 export default function LocationPicker({ long, lat }: LocationPickerProps) {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
-    googleMapsApiKey: "API Key Here",
+    googleMapsApiKey: mapAPIKey,
   });
 
   const handleGetCurrentLocation = useCallback(() => {
