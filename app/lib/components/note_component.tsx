@@ -13,6 +13,7 @@ import {
   type RichTextEditorRef,
 } from "mui-tiptap";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from '@tiptap/extension-underline';
 
 type NoteEditorProps = {
   note?: Note;
@@ -66,7 +67,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
         <div className="overflow-auto">
           <RichTextEditor
             ref={rteRef}
-            extensions={[StarterKit]}
+            extensions={[StarterKit, Underline,]}
             content= {"<p>Type your text...</p>"}
             renderControls={() => (
               <MenuControlsContainer>
@@ -74,6 +75,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                 <MenuDivider />
                 <MenuButtonBold />
                 <MenuButtonItalic />
+                {/* <MenuButtonUnderline />  */}
                 {/* Add more controls of your choosing here */}
               </MenuControlsContainer>
             )}
