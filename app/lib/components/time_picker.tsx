@@ -48,6 +48,7 @@ export default function TimePicker({ initialDate }: TimePickerProps) {
   };
 
   return (
+    <div className="min-w-[90px] max-w-[280px]">
     <Popover>
       <PopoverTrigger asChild>
         <Button
@@ -70,5 +71,6 @@ export default function TimePicker({ initialDate }: TimePickerProps) {
         />
       </PopoverContent>
     </Popover>
+    </div>
   );
 }
