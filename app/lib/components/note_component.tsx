@@ -17,6 +17,7 @@ import Bold from "@tiptap/extension-bold";
 import Italic from "@tiptap/extension-italic";
 import ToolBar from "./toolbar";
 import TagManager from "./tag_manager";
+import LocationPicker from "./location_component";
 
 type NoteEditorProps = {
   note?: Note;
@@ -90,6 +91,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
       <main className="flex-grow p-6">
         <div className="flex-grow flex-row">
           <TimePicker initialDate={time || new Date()} />
+          <LocationPicker long={longitude} lat={latitude} />
           <TagManager inputTags={tags} />
         </div>
         <div className="overflow-auto">
