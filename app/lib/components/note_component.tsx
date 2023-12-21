@@ -14,6 +14,9 @@ import {
   MenuButtonBulletedList,
   MenuButtonAlignLeft,
   MenuButtonAlignRight,
+  MenuButtonEditLinkProps,
+  LinkBubbleMenu,
+  LinkBubbleMenuHandler,
   MenuButtonAlignCenter,
   RichTextEditor,
   type RichTextEditorRef,
@@ -82,6 +85,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
             extensions={[
               StarterKit,
               Link,
+              LinkBubbleMenuHandler,
               TextAlign.configure({
                 types: ['heading', 'paragraph'],
               }),
@@ -105,6 +109,17 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                 <MenuButtonAlignRight />
               </MenuControlsContainer>
             )}
+            children={(editor) => {
+              // Make sure to check if the editor is not null
+              if (!editor) return null;
+          
+              return (
+                <LinkBubbleMenu editor={editor}>
+                  {/* This is where you can add additional elements that should appear in the bubble menu */}
+                  {/* For example, you could include a button or form here to update the link */}
+                </LinkBubbleMenu>
+              );
+            }}
           />
         </div>
       </main>
