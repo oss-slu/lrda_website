@@ -8,12 +8,24 @@ import {
   MenuButtonItalic,
   MenuControlsContainer,
   MenuDivider,
+  MenuButtonEditLink,
   MenuSelectHeading,
+  MenuButtonUnderline,
+  MenuButtonBulletedList,
+  MenuButtonAlignLeft,
+  MenuButtonAlignRight,
+  MenuButtonAlignCenter,
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
 import StarterKit from "@tiptap/starter-kit";
+import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
+import BulletList from '@tiptap/extension-bullet-list';
+import ListItem from '@tiptap/extension-list-item';
+import OrderedList from '@tiptap/extension-ordered-list';
+
 
 type NoteEditorProps = {
   note?: Note;
@@ -67,7 +79,17 @@ export default function NoteEditor({ note }: NoteEditorProps) {
         <div className="overflow-auto">
           <RichTextEditor
             ref={rteRef}
-            extensions={[StarterKit, Underline,]}
+            extensions={[
+              StarterKit,
+              Link,
+              TextAlign.configure({
+                types: ['heading', 'paragraph'],
+              }),
+              Underline,
+              BulletList,
+              ListItem,
+              OrderedList,
+            ]}
             content= {"<p>Type your text...</p>"}
             renderControls={() => (
               <MenuControlsContainer>
@@ -75,8 +97,12 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                 <MenuDivider />
                 <MenuButtonBold />
                 <MenuButtonItalic />
-                {/* <MenuButtonUnderline />  */}
-                {/* Add more controls of your choosing here */}
+                <MenuButtonUnderline /> 
+                <MenuButtonEditLink />
+                <MenuButtonBulletedList />
+                <MenuButtonAlignLeft />
+                <MenuButtonAlignCenter />
+                <MenuButtonAlignRight />
               </MenuControlsContainer>
             )}
           />
