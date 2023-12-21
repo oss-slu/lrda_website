@@ -77,6 +77,13 @@ export default function NoteEditor({ note }: NoteEditorProps) {
           onChange={handleTitleChange}
           placeholder="Title"
           className="m-4"
+          style={{
+            all: "unset",
+            fontSize: "1.5em",
+            fontWeight: "bold",
+            outline: "none",
+            marginLeft: "1rem"
+          }}
         />
         <main className="flex-grow p-6">
           <TimePicker initialDate={time || new Date()} />
