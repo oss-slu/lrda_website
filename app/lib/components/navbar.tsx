@@ -33,13 +33,18 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-gray-900 w-full h-20 flex flex-row justify-between items-center px-6 py-3 text-white">
+    <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
       <div className="w-full">
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
             Where's Religion?
           </a>
         </Link>
+        <Link legacyBehavior href="/lib/pages/map" passHref>
+        <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out ml-[10%]">
+          Explore
+        </a>
+      </Link>
       </div>
       <div className="">
         {name ? (
