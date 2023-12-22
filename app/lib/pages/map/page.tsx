@@ -49,7 +49,7 @@ const Page = () => {
         <ResizablePanel className="min-w-[300px] max-w-[70vw]">
           <>
             <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
-              <SearchBar />
+              <SearchBar onSearch={()=>{}}/>
               <div className="ml-10">
                 <Select>
                   <SelectTrigger className="w-[180px]">
