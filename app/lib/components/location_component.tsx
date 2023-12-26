@@ -77,50 +77,51 @@ export default function LocationPicker({ long, lat }: LocationPickerProps) {
       <Popover>
         <PopoverTrigger asChild>
           <button className="flex items-center justify-start w-full h-full text-sm">
-            <MapPin className="mr-2 h-5 w-5" />
-            <text>
+            <MapPin aria-label="map pin" className="mr-2 h-5 w-5" />
+            <div>
               {longitude.toPrecision(8)}
               {"_"}
-            </text>
-            <text>{latitude.toPrecision(8)}</text>
+            </div>
+            <div>{latitude.toPrecision(8)}</div>
           </button>
         </PopoverTrigger>
-          <PopoverContent className="z-30">
-            <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
-              {isLoaded && (
-                <GoogleMap
-                  mapContainerStyle={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "calc(var(--radius) - 2px)",
-                  }}
-                  center={{ lat: latitude, lng: longitude }}
-                  zoom={9}
-                  options={{
-                    streetViewControl: false,
-                    mapTypeControl: false,
-                    fullscreenControl: false,
-                  }}
-                >
-                  <MarkerF
-                    position={{ lat: latitude, lng: longitude }}
-                    draggable={true}
-                    onDragEnd={onMarkerDragEnd}
-                  />
-                </GoogleMap>
-              )}
-            </div>
+        <PopoverContent className="z-30">
+          <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
+            {isLoaded && (
+              <GoogleMap
+                mapContainerStyle={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "calc(var(--radius) - 2px)",
+                }}
+                center={{ lat: latitude, lng: longitude }}
+                zoom={9}
+                options={{
+                  streetViewControl: false,
+                  mapTypeControl: false,
+                  fullscreenControl: false,
+                }}
+              >
+                <MarkerF
+                  position={{ lat: latitude, lng: longitude }}
+                  draggable={true}
+                  onDragEnd={onMarkerDragEnd}
+                />
+              </GoogleMap>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div
+            <button
               onClick={handleGetCurrentLocation}
+              aria-label="compass"
               className="h-9 flex justify-center items-center cursor-pointer"
             >
               <Compass className="h-5 w-5" />
-            </div>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
             <p>Click to set as current location.</p>
