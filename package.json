@@ -59,6 +59,7 @@
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "add": "^2.0.6",
+    "appDir": "link:tss-react/next/appDir",
     "autoprefixer": "10.4.15",
     "axios": "^1.5.1",
     "babel-jest": "^29.7.0",
@@ -93,6 +94,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tooltip": "link:@/components/ui/tooltip",
     "ts-jest": "^29.1.1",
+    "tss-react": "^4.9.3",
     "typescript": "5.2.2"
   },
   "devDependencies": {
