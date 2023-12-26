@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,7 +46,7 @@ const Page = () => {
   return (
     <div className="flex flex-row w-screen h-[90vh] bg-background">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className="min-w-[300px] max-w-[70vw]">
+        <ResizablePanel className="min-w-[300px] max-w-[70vw]" defaultSize={2000}>
           <>
             <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
               <SearchBar onSearch={()=>{}}/>
@@ -84,7 +84,7 @@ const Page = () => {
           </>
         </ResizablePanel>
         <ResizableHandle withHandle/>
-        <ResizablePanel className="min-w-[400px] max-w-[70vw]">
+        <ResizablePanel className="min-w-[400px] max-w-[70vw]" defaultSize={2000}>
           <ScrollArea className="flex flex-col w-[100%] h-[90vh] bg-popover shadow-2xl items-center justify-center align-right">
             <div className="flex flex-col w-[100%] items-center justify-center pb-3">
               <RowTemp num={1} />
