@@ -4,27 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
-  MenuButtonBold,
-  MenuButtonItalic,
-  MenuControlsContainer,
-  MenuDivider,
-  MenuButtonEditLink,
-  MenuSelectHeading,
-  MenuButtonUnderline,
-  MenuButtonBulletedList,
-  MenuButtonAlignLeft,
-  MenuButtonAlignRight,
-  MenuButtonEditLinkProps,
   LinkBubbleMenu,
   LinkBubbleMenuHandler,
-  MenuButtonAlignCenter,
-  TableBubbleMenu,
-  MenuButtonColorPicker,
-  MenuButtonTextColor,
-  MenuButtonHighlightColor,
   RichTextEditor,
   type RichTextEditorRef,
-  ColorChangeSource,
 } from "mui-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -35,6 +18,7 @@ import ListItem from "@tiptap/extension-list-item";
 import OrderedList from "@tiptap/extension-ordered-list";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
+import EditorMenuControls from "./editor_menu_controls";
 
 type NoteEditorProps = {
   note?: Note;
@@ -111,35 +95,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                 
               ]}
               content={"<p>Type your text...</p>"}
-              renderControls={() => (
-                <MenuControlsContainer>
-                  <MenuSelectHeading />
-                  <MenuDivider />
-                  <MenuButtonBold />
-                  <MenuButtonItalic />
-                  <MenuButtonUnderline />
-                  <MenuButtonEditLink />
-                  <MenuButtonBulletedList />
-                  <MenuButtonAlignLeft />
-                  <MenuButtonAlignCenter />
-                  <MenuButtonAlignRight />
-                  <MenuButtonTextColor
-        defaultTextColor={theme.palette.text.primary}
-        swatchColors={[
-          { value: "#000000", label: "Black" },
-          { value: "#ffffff", label: "White" },
-          { value: "#888888", label: "Grey" },
-          { value: "#ff0000", label: "Red" },
-          { value: "#ff9900", label: "Orange" },
-          { value: "#ffff00", label: "Yellow" },
-          { value: "#00d000", label: "Green" },
-          { value: "#0000ff", label: "Blue" },
-        ]}
-      />
-                  <MenuButtonHighlightColor/>
-                  <TableBubbleMenu />
-                </MenuControlsContainer>
-              )}
+              renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
                 if (!editor) return null;
