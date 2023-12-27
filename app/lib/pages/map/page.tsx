@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { useState } from "react";
-import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, MarkerF, InfoWindow } from "@react-google-maps/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "../../components/search_bar";
 import {
@@ -32,6 +32,7 @@ const Page = () => {
   const user = User.getInstance();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [activeNote, setActiveNote] = useState<Note | null>(null);
 
   useEffect(() => {
     const fetchUserMessages = async () => {
@@ -133,8 +134,21 @@ const Page = () => {
                       lat: parseFloat(note.latitude),
                       lng: parseFloat(note.longitude),
                     }}
+                    onClick={() => setActiveNote(note)} // Set the active note here
                   />
                 ))}
+
+                {activeNote && (
+                  <InfoWindow
+                    position={{
+                      lat: parseFloat(activeNote.latitude),
+                      lng: parseFloat(activeNote.longitude),
+                    }}
+                    onCloseClick={() => setActiveNote(null)} // Clear the active note when InfoWindow is closed
+                  >
+                    <NoteCard note={activeNote} />
+                  </InfoWindow>
+                )}
               </GoogleMap>
             )}
           </>
