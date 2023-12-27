@@ -19,6 +19,7 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import EditorMenuControls from "./editor_menu_controls";
+import useExtensions from "../utils/use_extensions";
 
 type NoteEditorProps = {
   note?: Note;
@@ -33,6 +34,9 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   const [latitude, setLatitude] = useState(note?.latitude || "");
   const [tags, setTags] = useState(note?.tags || []);
   const rteRef = useRef<RichTextEditorRef>(null);
+  const extensions = useExtensions({
+    placeholder: "Add your own content here...",
+  });
 
   useEffect(() => {
     if (note) {
@@ -81,19 +85,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}
-              extensions={[
-                StarterKit,
-                Link,
-                LinkBubbleMenuHandler,
-                TextAlign.configure({
-                  types: ["heading", "paragraph"],
-                }),
-                Underline,
-                BulletList,
-                ListItem,
-                OrderedList,
-                
-              ]}
+              extensions= {extensions}
               content={"<p>Type your text...</p>"}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
