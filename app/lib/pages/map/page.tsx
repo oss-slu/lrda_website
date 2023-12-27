@@ -39,7 +39,9 @@ const Page = () => {
         if (userId) {
           const userNotes = await ApiService.fetchUserMessages(userId);
           setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
-          setFilteredNotes(DataConversion.convertMediaTypes(userNotes).reverse());
+          setFilteredNotes(
+            DataConversion.convertMediaTypes(userNotes).reverse()
+          );
         } else {
           console.error("User not logged in");
         }
@@ -51,13 +53,12 @@ const Page = () => {
     fetchUserMessages();
   }, []);
 
-
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: mapAPIKey,
   });
 
-  const RowTemp: React.FC<{num: number}> = ({ num }) => {
+  const RowTemp: React.FC<{ num: number }> = ({ num }) => {
     return (
       <div className="flex flex-row w-[95%] justify-between">
         <div className="bg-popover w-[48%] h-72 mt-3 rounded-md shadow-md flex items-center justify-center text-2xl font-bold">
@@ -73,10 +74,13 @@ const Page = () => {
   return (
     <div className="flex flex-row w-screen h-[90vh] bg-background">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className="min-w-[300px] max-w-[70vw]" defaultSize={2000}>
+        <ResizablePanel
+          className="min-w-[300px] max-w-[70vw]"
+          defaultSize={2000}
+        >
           <>
             <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
-              <SearchBar onSearch={()=>{}}/>
+              <SearchBar onSearch={() => {}} />
               <div className="ml-10">
                 <Select>
                   <SelectTrigger className="w-[180px]">
@@ -106,12 +110,25 @@ const Page = () => {
                   mapTypeControl: false,
                   fullscreenControl: false,
                 }}
-              />
+              >
+                {filteredNotes.map((note, index) => (
+                  <MarkerF
+                    key={index}
+                    position={{
+                      lat: parseFloat(note.latitude),
+                      lng: parseFloat(note.longitude),
+                    }}
+                  />
+                ))}
+              </GoogleMap>
             )}
           </>
         </ResizablePanel>
-        <ResizableHandle withHandle/>
-        <ResizablePanel className="min-w-[400px] max-w-[70vw]" defaultSize={2000}>
+        <ResizableHandle withHandle />
+        <ResizablePanel
+          className="min-w-[400px] max-w-[70vw]"
+          defaultSize={2000}
+        >
           <ScrollArea className="flex flex-col w-[100%] h-[90vh] bg-popover shadow-2xl items-center justify-center align-right">
             <div className="flex flex-col w-[100%] items-center justify-center pb-3">
               <RowTemp num={1} />
