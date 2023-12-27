@@ -22,7 +22,7 @@ import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
-import NoteCard from "../../components/note_component";
+import NoteCard from "../../components/note_card";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
