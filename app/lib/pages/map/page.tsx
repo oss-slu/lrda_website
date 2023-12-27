@@ -22,6 +22,7 @@ import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
+import NoteCard from "../../components/note_component";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
@@ -59,9 +60,10 @@ const Page = () => {
       return;
     }
     const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(note =>
-      note.title.toLowerCase().includes(query) || 
-      note.tags.some(tag => tag.toLowerCase().includes(query))
+    const filtered = notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   };
@@ -93,7 +95,7 @@ const Page = () => {
         >
           <>
             <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
-            <SearchBar onSearch={handleSearch} />
+              <SearchBar onSearch={handleSearch} />
               <div className="ml-10">
                 <Select>
                   <SelectTrigger className="w-[180px]">
@@ -144,13 +146,9 @@ const Page = () => {
         >
           <ScrollArea className="flex flex-col w-[100%] h-[90vh] bg-popover shadow-2xl items-center justify-center align-right">
             <div className="flex flex-col w-[100%] items-center justify-center pb-3">
-              <RowTemp num={1} />
-              <RowTemp num={3} />
-              <RowTemp num={5} />
-              <RowTemp num={7} />
-              <RowTemp num={9} />
-              <RowTemp num={11} />
-              <RowTemp num={13} />
+              {filteredNotes.map((note, index) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
             </div>
           </ScrollArea>
         </ResizablePanel>
