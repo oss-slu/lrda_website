@@ -30,6 +30,7 @@ import ListItem from "@tiptap/extension-list-item";
 import OrderedList from "@tiptap/extension-ordered-list";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
+import AudioPicker from "./audio_component";
 
 type NoteEditorProps = {
   note?: Note;
@@ -86,6 +87,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
           }}
         />
         <main className="flex-grow p-6">
+          <AudioPicker/>
           <TimePicker initialDate={time || new Date()} />
           <LocationPicker long={longitude} lat={latitude} />
           <TagManager inputTags={tags} />
