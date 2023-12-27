@@ -18,13 +18,39 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Note } from "@/app/types";
+import ApiService from "../../utils/api_service";
+import DataConversion from "../../utils/data_conversion";
+import { User } from "../../models/user_class";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
 const Page = () => {
   const longitude = -90.286021;
   const latitude = 38.637334;
-  
+  const user = User.getInstance();
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    const fetchUserMessages = async () => {
+      try {
+        const userId = await user.getId();
+        if (userId) {
+          const userNotes = await ApiService.fetchUserMessages(userId);
+          setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
+          setFilteredNotes(DataConversion.convertMediaTypes(userNotes).reverse());
+        } else {
+          console.error("User not logged in");
+        }
+      } catch (error) {
+        console.error("Error fetching user messages:", error);
+      }
+    };
+
+    fetchUserMessages();
+  }, []);
+
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
