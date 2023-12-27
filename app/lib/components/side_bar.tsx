@@ -47,8 +47,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       setFilteredNotes(notes);
       return;
     }
+    const query = searchQuery.toLowerCase();
     const filtered = notes.filter(note =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase())
+      note.title.toLowerCase().includes(query) || 
+      note.tags.some(tag => tag.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   };
