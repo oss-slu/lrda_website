@@ -18,8 +18,13 @@ import {
   LinkBubbleMenu,
   LinkBubbleMenuHandler,
   MenuButtonAlignCenter,
+  TableBubbleMenu,
+  MenuButtonColorPicker,
+  MenuButtonTextColor,
+  MenuButtonHighlightColor,
   RichTextEditor,
   type RichTextEditorRef,
+  ColorChangeSource,
 } from "mui-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -103,6 +108,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                 BulletList,
                 ListItem,
                 OrderedList,
+                
               ]}
               content={"<p>Type your text...</p>"}
               renderControls={() => (
@@ -117,6 +123,21 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                   <MenuButtonAlignLeft />
                   <MenuButtonAlignCenter />
                   <MenuButtonAlignRight />
+                  <MenuButtonTextColor
+        defaultTextColor={theme.palette.text.primary}
+        swatchColors={[
+          { value: "#000000", label: "Black" },
+          { value: "#ffffff", label: "White" },
+          { value: "#888888", label: "Grey" },
+          { value: "#ff0000", label: "Red" },
+          { value: "#ff9900", label: "Orange" },
+          { value: "#ffff00", label: "Yellow" },
+          { value: "#00d000", label: "Green" },
+          { value: "#0000ff", label: "Blue" },
+        ]}
+      />
+                  <MenuButtonHighlightColor/>
+                  <TableBubbleMenu />
                 </MenuControlsContainer>
               )}
               children={(editor) => {
