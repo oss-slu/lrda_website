@@ -53,6 +53,19 @@ const Page = () => {
     fetchUserMessages();
   }, []);
 
+  const handleSearch = (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setFilteredNotes(notes);
+      return;
+    }
+    const query = searchQuery.toLowerCase();
+    const filtered = notes.filter(note =>
+      note.title.toLowerCase().includes(query) || 
+      note.tags.some(tag => tag.toLowerCase().includes(query))
+    );
+    setFilteredNotes(filtered);
+  };
+
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: mapAPIKey,
@@ -80,7 +93,7 @@ const Page = () => {
         >
           <>
             <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
-              <SearchBar onSearch={() => {}} />
+            <SearchBar onSearch={handleSearch} />
               <div className="ml-10">
                 <Select>
                   <SelectTrigger className="w-[180px]">
