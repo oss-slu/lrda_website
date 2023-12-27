@@ -131,12 +131,6 @@ export default function EditorMenuControls() {
 
       <MenuDivider />
 
-      <MenuButtonCode />
-
-      <MenuButtonCodeBlock />
-
-      <MenuDivider />
-
       <MenuButtonImageUpload
         onUploadFiles={(files) =>
           // For the sake of a demo, we don't have a server to upload the files
