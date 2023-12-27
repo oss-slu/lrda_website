@@ -24,6 +24,7 @@ const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 const Page = () => {
   const longitude = -90.286021;
   const latitude = 38.637334;
+  
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
