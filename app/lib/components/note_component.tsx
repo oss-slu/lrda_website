@@ -9,13 +9,6 @@ import {
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
-import BulletList from "@tiptap/extension-bullet-list";
-import ListItem from "@tiptap/extension-list-item";
-import OrderedList from "@tiptap/extension-ordered-list";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import EditorMenuControls from "./editor_menu_controls";

@@ -1,4 +1,4 @@
-import { newNote } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
@@ -105,10 +105,10 @@ export default class ApiService {
 
   /**
    * Overwrites an existing note in the API.
-   * @param {any} note - The note object to be updated.
+   * @param {Note} note - The note object to be updated.
    * @returns {Promise<Response>} The response from the API.
    */
-  static async overwriteNote(note: any) {
+  static async overwriteNote(note: Note) {
     return await fetch("http://lived-religion-dev.rerum.io/deer-lr/overwrite", {
       method: "PUT",
       headers: {

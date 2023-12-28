@@ -6,22 +6,48 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import SearchBar from "./search_bar";
 import NoteListView from "./note_listview";
-import { Note } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
 
 type SidebarProps = {
-  onNoteSelect: (note: Note) => void;
+  onNoteSelect: (note: Note | newNote) => void;
 };
 
 const user = User.getInstance();
 const userId = user.getId();
 
-
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  
+  const handleAddNote = async () => {
+    // Since `userId` is a Promise, you have to await it
+    const userId = await user.getId();
+
+    // Make sure `userId` is not null before proceeding
+    if (userId) {
+      const newBlankNote: newNote = {
+        title: '',
+        text: '',
+        time: new Date(),
+        media: [],
+        audio: [],
+        creator: userId, // Now we have the userId correctly set
+        latitude: '',
+        longitude: '',
+        published: undefined,
+        tags: []
+      };
+
+      // Call `onNoteSelect` with the new blank note
+      onNoteSelect(newBlankNote);
+    } else {
+      console.error("User ID is null - cannot create a new note");
+    }
+  };
+
 
   useEffect(() => {
     const fetchUserMessages = async () => {
@@ -63,7 +89,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       <div>
         <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
       </div>
-      <Button data-testid="add-note-button">Add Note</Button>
+      <Button data-testid="add-note-button" onClick={handleAddNote}>
+        Add Note
+      </Button>
     </div>
   );
 };
