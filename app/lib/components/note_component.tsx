@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Note } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
@@ -15,7 +15,7 @@ import EditorMenuControls from "./editor_menu_controls";
 import useExtensions from "../utils/use_extensions";
 
 type NoteEditorProps = {
-  note?: Note;
+  note?: Note | newNote;
 };
 
 export default function NoteEditor({ note }: NoteEditorProps) {

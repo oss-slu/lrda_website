@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./lib/components/side_bar";
 import NoteEditor from "./lib/components/note_component";
-import { Note } from "./types";
+import { Note, newNote } from "./types";
 
 export default function Home() {
   const [isClient, setIsClient] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<Note>();
+  const [selectedNote, setSelectedNote] = useState<Note | newNote>();
 
-  const handleNoteSelect = (note: Note) => {
+  const handleNoteSelect = (note: Note | newNote) => {
     setSelectedNote(note);
   };
 

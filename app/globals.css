@@ -1,7 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
+
+@layer utilities {
+  .card-container {
+    @apply aspect-w-1 aspect-h-1 bg-white rounded-xl shadow-md overflow-hidden m-4;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -30,6 +30,7 @@
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@react-google-maps/api": "^2.19.2",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.0.0",
     "@tiptap/core": "^2.1.13",
