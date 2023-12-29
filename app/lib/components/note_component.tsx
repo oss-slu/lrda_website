@@ -67,7 +67,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   }, [initialNote]);
 
   const handleEditorChange = (content: string) => {
-    // setEditorContent(content); 
+    setEditorContent(content); 
   };
 
   // Call this when you're ready to update the note object, e.g., on blur or save
@@ -265,12 +265,12 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
               }}
             />
           </div>
-          <button
+          {/* <button
             onClick={printNote}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Print Note to Console
-          </button>
+          </button> */}
         </main>
       </div>
     )
