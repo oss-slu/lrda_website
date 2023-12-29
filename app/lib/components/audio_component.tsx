@@ -10,8 +10,6 @@ import { toast } from "sonner";
 import { uploadAudio } from "../utils/audioUpload";
 import { FileUp } from "lucide-react";
 
-// import 'react-h5-audio-player/lib/styles.css';
-
 import {
   Select,
   SelectContent,
@@ -76,13 +74,13 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
 
   async function handleFileChange(event: any) {
     toast("Status Update", {
-      description: "Audio upload in progress",
+      description: "Audio upload in progress.",
       duration: 2000,
     });
 
     const file = event.target.files[0];
     const location = await uploadAudio(file);
-    if (location) {
+    if (location != "error") {
       const newAudio = new AudioType({
         type: "audio",
         uuid: randomUUID.toString(),
@@ -93,8 +91,8 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
       });
 
       toast("Status Update", {
-        description: "Audio upload success",
-        duration: 2000,
+        description: "Audio upload success!",
+        duration: 4000,
       });
 
       setAudio([...audioArray, newAudio]);
@@ -102,7 +100,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
       console.log("UPLOAD FAILED");
       toast("Status Update", {
         description: "Audio Upload Failed! Please try again later.",
-        duration: 2000,
+        duration: 4000,
       });
     }
   }

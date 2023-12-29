@@ -17,7 +17,7 @@ export async function uploadAudio(file: File): Promise<string> {
       return location || "";
     } else {
       console.log("Server response body:", await response.text());
-      throw new Error("File upload failed");
+      return "error";
     }
   } catch (err) {
     console.error("Error:", err);

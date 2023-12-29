@@ -42,7 +42,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState(note?.media || []);
   const [time, setTime] = useState(note?.time || new Date());
-  const [audio, setAudio] = useState<AudioType[]>();
+  const [audio, setAudio] = useState<AudioType[]>([]);
   const [counter, setCounter] = useState(0);
   const [longitude, setLongitude] = useState(note?.longitude || "");
   const [latitude, setLatitude] = useState(note?.latitude || "");
@@ -88,14 +88,24 @@ export default function NoteEditor({ note }: NoteEditorProps) {
             fontSize: "1.5em",
             fontWeight: "bold",
             outline: "none",
-            marginLeft: "1rem"
+            marginLeft: "1rem",
           }}
         />
         <main className="flex-grow p-6">
-          <AudioPicker audioArray={audio || []}/>
-          <TimePicker initialDate={time || new Date()} />
-          <LocationPicker long={longitude} lat={latitude} />
-          <TagManager inputTags={tags} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-end gap-4 mb-4">
+            <div className="md:col-span-2 lg:col-span-1">
+              <AudioPicker audioArray={audio || []} setAudio={setAudio} />
+            </div>
+            <div>
+              <TimePicker initialDate={time || new Date()} />
+            </div>
+            <div>
+              <LocationPicker long={longitude} lat={latitude} />
+            </div>
+            <div className="md:col-span-2 lg:col-span-3">
+              <TagManager inputTags={tags} />
+            </div>
+          </div>
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}
