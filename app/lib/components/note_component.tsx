@@ -85,24 +85,22 @@ export default function NoteEditor({ note }: NoteEditorProps) {
           }}
         />
         <main className="flex-grow p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-end gap-4 mb-4">
-            <div className="md:col-span-2 lg:col-span-1">
-              <AudioPicker audioArray={audio || []} setAudio={setAudio} />
-            </div>
-            <div>
-              <TimePicker initialDate={time || new Date()} />
-            </div>
-            <div>
-              <LocationPicker long={longitude} lat={latitude} />
-            </div>
-            <div className="md:col-span-2 lg:col-span-3">
-              <TagManager inputTags={tags} />
-            </div>
+          <div className="mt-3">
+            <AudioPicker audioArray={audio || []} setAudio={setAudio} />
+          </div>
+          <div className="mt-3">
+            <TimePicker initialDate={time || new Date()} />
+          </div>
+          <div className="mt-3">
+            <LocationPicker long={longitude} lat={latitude} />
+          </div>
+          <div className="mt-3 mb-3">
+            <TagManager inputTags={tags} />
           </div>
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}
-              extensions= {extensions}
+              extensions={extensions}
               content={"<p>Type your text...</p>"}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
