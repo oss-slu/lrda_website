@@ -10,7 +10,6 @@ import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
-
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote) => void;
 };
@@ -82,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="absolute top-0 left-0 h-screen w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
+    <div className="absolute top-0 left-0 h-[90vh] w-64 bg-gray-200 p-4 overflow-y-auto flex flex-col">
       <div className="w-full">
         <SearchBar onSearch={handleSearch} />
       </div>

@@ -94,12 +94,11 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
       latitude: newLatitude.toString(),
     }));
   };
-  
 
   return (
     console.log("Body text: ", note?.text),
     (
-      <div className="flex flex-col h-screen" key={counter}>
+      <div className="flex flex-col w-[80vw]" key={counter}>
         <Input
           value={title}
           onChange={handleTitleChange}
