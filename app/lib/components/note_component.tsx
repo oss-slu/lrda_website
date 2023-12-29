@@ -67,7 +67,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   }, [initialNote]);
 
   const handleEditorChange = (content: string) => {
-    setEditorContent(content); // Update local state immediately for editor responsiveness
+    // setEditorContent(content); 
   };
 
   // Call this when you're ready to update the note object, e.g., on blur or save
@@ -113,45 +113,45 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   }, [note?.text]);
 
   const updateNoteTitle = () => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      title: title,
-    }));
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   title: title,
+    // }));
   };
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value); // This updates the local state for the title
+    // setTitle(event.target.value); 
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      longitude: newLongitude.toString(),
-      latitude: newLatitude.toString(),
-    }));
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   longitude: newLongitude.toString(),
+    //   latitude: newLatitude.toString(),
+    // }));
   };
 
   const handleTimeChange = (newDate: Date) => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      time: newDate,
-    }));
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   time: newDate,
+    // }));
   };
 
   const handleTagsChange = (newTags: string[]) => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      tags: newTags,
-    }));
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   tags: newTags,
+    // }));
   };
 
   const handleDeleteNote = async () => {
     console.log(note);
-    if (note.id) {
+    if (note!.id) {
       try {
         const userId = await user.getId();
         const success = await ApiService.deleteNoteFromAPI(
-          note.id,
+          note!.id,
           userId || ""
         );
         if (success) {
