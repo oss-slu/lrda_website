@@ -72,6 +72,15 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
       text: content
     }));
   };
+
+  const handleLocationChange = (newLongitude: number, newLatitude: number) => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      longitude: newLongitude.toString(),
+      latitude: newLatitude.toString(),
+    }));
+  };
+  
   
 
   return (
@@ -93,7 +102,7 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
         />
         <main className="flex-grow p-6">
           <TimePicker initialDate={time || new Date()} />
-          <LocationPicker long={longitude} lat={latitude} />
+          <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
           <TagManager inputTags={tags} />
           <div className="overflow-auto">
             <RichTextEditor

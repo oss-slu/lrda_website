@@ -17,17 +17,18 @@ import {
 interface LocationPickerProps {
   long?: string;
   lat?: string;
+  onLocationChange?: (newLongitude: number, newLatitude: number) => void;
 }
 
 function getCurLocation(
-  setLongitude: (value: number) => void,
-  setLatitude: (value: number) => void
+  updateLongitude: (value: number) => void,
+  updateLatitude: (value: number) => void
 ) {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        setLongitude(position.coords.longitude);
-        setLatitude(position.coords.latitude);
+        updateLongitude(position.coords.longitude);
+        updateLatitude(position.coords.latitude);
       },
       () => {
         console.log("Error fetching location");
@@ -40,21 +41,34 @@ function getCurLocation(
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
-export default function LocationPicker({ long, lat }: LocationPickerProps) {
+export default function LocationPicker({ long, lat, onLocationChange }: LocationPickerProps) {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
+
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: mapAPIKey,
   });
 
+  const updateLongitude = (newLongitude: number) => {
+    setLongitude(newLongitude);
+    onLocationChange && onLocationChange(newLongitude, latitude);
+  };
+
+  const updateLatitude = (newLatitude: number) => {
+    setLatitude(newLatitude);
+    onLocationChange && onLocationChange(longitude, newLatitude); 
+  };
+
   const handleGetCurrentLocation = useCallback(() => {
-    getCurLocation(setLongitude, setLatitude);
-  }, []);
+    getCurLocation(updateLongitude, updateLatitude);
+  }, [updateLongitude, updateLatitude]);
 
   const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
-    setLatitude(event?.latLng?.lat() || 0);
-    setLongitude(event?.latLng?.lng() || 0);
+    const newLat = event?.latLng?.lat() || 0;
+    const newLng = event?.latLng?.lng() || 0;
+    updateLatitude(newLat);
+    updateLongitude(newLng);
   };
 
   useEffect(() => {
