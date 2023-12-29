@@ -1,7 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/router";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import SearchBar from "./search_bar";

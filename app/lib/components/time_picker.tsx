@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 
 interface TimePickerProps {
   initialDate: Date;
-  
+  onTimeChange?: (date: Date) => void;
 }
 
 function formatDateTime(date: Date) {
@@ -24,7 +24,7 @@ function formatDateTime(date: Date) {
   return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
-export default function TimePicker({ initialDate }: TimePickerProps) {
+export default function TimePicker({ initialDate, onTimeChange }: TimePickerProps) {
   const [date, setDate] = useState(initialDate);
 
   useEffect(() => {
@@ -39,14 +39,17 @@ export default function TimePicker({ initialDate }: TimePickerProps) {
     const updatedDate = new Date(date);
     updatedDate.setFullYear(newDay.getFullYear(), newDay.getMonth(), newDay.getDate());
     setDate(updatedDate);
+    onTimeChange && onTimeChange(updatedDate); 
   };
-
+  
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const [hours, minutes] = event.target.value.split(':').map(Number);
     const updatedDate = new Date(date);
     updatedDate.setHours(hours, minutes);
     setDate(updatedDate);
+    onTimeChange && onTimeChange(updatedDate);
   };
+  
 
   return (
     <div className="min-w-[90px] max-w-[280px]">

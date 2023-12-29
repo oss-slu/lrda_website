@@ -87,11 +87,10 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
     }));
   };
   
-  const handleTimeChange = (newLongitude: number, newLatitude: number) => {
+  const handleTimeChange = (newDate: Date) => {
     setNote((prevNote: any) => ({
       ...prevNote,
-      longitude: newLongitude.toString(),
-      latitude: newLatitude.toString(),
+      time: newDate,
     }));
   };
   
@@ -118,7 +117,7 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
             <AudioPicker audioArray={audio || []} setAudio={setAudio} />
           </div>
           <div className="mt-3">
-            <TimePicker initialDate={time || new Date()} />
+            <TimePicker initialDate={time || new Date()} onTimeChange = {handleTimeChange} />
           </div>
           <div className="mt-3">
             <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
