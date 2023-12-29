@@ -1,15 +1,15 @@
 [
     {
         "@id": "https://devstore.rerum.io/v1/id/64ab8d3b40b330d665d8482b",
-        "title": "Note",
-        "BodyText": "This is a dog picture followed by a dog ssssss\nTest",
+        "title": "Ankor Wat Temple",
+        "BodyText": "This is an ancient temple \nTest",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Yash Bhatia",
         "media": [
             {
                 "uuid": "f2fbc481-a28c-4bdd-bd9c-47766878ae09",
                 "type": "image",
-                "uri": "https://livedreligion.s3.amazonaws.com/media-1688964400545.jpg"
+                "uri": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Ankor_Wat_temple.jpg/800px-Ankor_Wat_temple.jpg"
             },
             {
                 "uuid": "7ef4bc7e-f4fc-4dbe-86f3-e68b41c37ee3",
@@ -28,7 +28,7 @@
         "longitude": "-90.38246975269838",
         "audio": [],
         "published": false,
-        "tags": [],
+        "tags": ["Cambodia", "Temple", "Ancient"],
         "time": "2023-07-10T03:45:00.000Z",
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
@@ -53,15 +53,15 @@
     },
     {
         "@id": "https://devstore.rerum.io/v1/id/64af84cca3a722500eabdf9b",
-        "title": "Media",
+        "title": "Fourth of July",
         "BodyText": "Work on this noteses ",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Izak Robles",
         "media": [
             {
                 "uuid": "13864149-b1c6-45ac-a376-fb50e0e20817",
                 "type": "image",
-                "uri": "https://livedreligion.s3.amazonaws.com/media-1689224160022.jpg"
+                "uri": "https://resolutiondenver.com/wp-content/uploads/2021/11/History-of-New-Years-Eve.jpg"
             },
             {
                 "uuid": "2971f47b-9244-44b7-8d20-c6ef9a52a6e1",
@@ -75,7 +75,7 @@
         "longitude": "-90.3824680125983",
         "audio": [],
         "published": false,
-        "tags": [],
+        "tags": ["Forest Park", "Missouri", "St. Louis", "Fireworks"],
         "time": "2023-12-20T17:14:00.000Z",
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
@@ -100,15 +100,15 @@
     },
     {
         "@id": "https://devstore.rerum.io/v1/id/64b1fbf540b330d665d8484e",
-        "title": "Android tested",
+        "title": "Christmas tree note",
         "BodyText": "This note was made on an android phone \nEdit",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Stuart Ray",
         "media": [
             {
                 "uuid": "d45483f3-fdc7-4987-a0bb-259e7c868b4b",
                 "type": "image",
-                "uri": "https://livedreligion.s3.amazonaws.com/media-1689386021110.jpg"
+                "uri": "https://c.tadst.com/gfx/750w/istock-493559502.jpg"
             }
         ],
         "latitude": "38.551732",
@@ -132,7 +132,7 @@
             }
         ],
         "published": false,
-        "tags": [],
+        "tags": ["Christmas", "Tree", "Holiday"],
         "time": "2023-07-15T01:52:53.494Z",
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
@@ -160,7 +160,7 @@
         "title": "Mellow Mushroom",
         "BodyText": "Yay",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Adam Park",
         "media": [
             {
                 "uuid": "9b930fdf-1557-47d4-97d7-7290ba5e5a08",
@@ -172,7 +172,7 @@
         "longitude": "-90.40681839508613",
         "audio": [],
         "published": false,
-        "tags": [],
+        "tags": ["Working", "Pizza", "Young people"],
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
             "alpha": true,
@@ -199,7 +199,7 @@
         "title": "Urban Chestnut v13",
         "BodyText": "<div>LRDA Desktop Team working hard<img src=\"https://livedreligion.s3.amazonaws.com/media-1697078015827.jpg\" style=\"font-size: 1em;\"></div>",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Stuart Ray",
         "media": [
             {
                 "uuid": "6ed4213d-7675-45a9-9895-f6b284c6fe26",
@@ -211,7 +211,7 @@
         "longitude": "-90.26075651581964",
         "audio": [],
         "published": false,
-        "tags": [],
+        "tags": ["Hippie", "Hipster", "Downtown"],
         "time": "2023-10-12T02:30:29.905Z",
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
@@ -237,14 +237,14 @@
     {
         "@id": "https://devstore.rerum.io/v1/id/6562f1ccc8758d146d4288a4",
         "title": "Nov 23",
-        "BodyText": "<div>This is a note as of November 23rd</div><div>with advanced html elements such as:</div><div><br></div><blockquote>quote block</blockquote><div>emojis: ❤️😂😭🫡💪</div><div><br></div><div>bullet points:</div><div><ul><li>different text editor things</li><li><b>BOLD</b></li><li><i>ITALICS</i></li><li><u>UNDERLINE</u></li></ul></div><blockquote style=\"margin: 0 0 0 40px; border: none; padding: 0px;\"><div><div>TAB/Indent</div></div><div><br></div></blockquote><div>normal text</div><div><br></div><div>how about pictures?:</div><div><img src=\"https://livedreligion.s3.amazonaws.com/media-1700983196255.jpg\" style=\"\n      max-width: 50%;\n      height: auto; /* Maintain aspect ratio */\n      /* Additional CSS properties for sizing */\n    \"><br></div>",
+        "BodyText": "<div>This is a note as of November 23rd</div><div>with advanced html elements such as:</div><div><br></div><blockquote>quote block</blockquote><div>emojis: ❤️😂😭🫡💪</div><div><br></div><div>bullet points:</div><div><ul><li>different text editor things</li><li><b>BOLD</b></li><li><i>ITALICS</i></li><li><u>UNDERLINE</u></li></ul></div><blockquote style=\"margin: 0 0 0 40px; border: none; padding: 0px;\"><div><div>TAB/Indent</div></div><div><br></div></blockquote><div>normal text</div><div><br></div><div>how about pictures?:</div><div><img src=\"https://imageio.forbes.com/specials-images/dam/imageserve/1018473934/960x0.jpg?height=474&width=711&fit=bounds\" style=\"\n      max-width: 50%;\n      height: auto; /* Maintain aspect ratio */\n      /* Additional CSS properties for sizing */\n    \"><br></div>",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Yash Bhatia",
         "media": [
             {
                 "uuid": "69baa8f4-9678-4ee3-acd2-e1d97b2c34b9",
                 "type": "image",
-                "uri": "https://livedreligion.s3.amazonaws.com/media-1700983196255.jpg"
+                "uri": "https://imageio.forbes.com/specials-images/dam/imageserve/1018473934/960x0.jpg?height=474&width=711&fit=bounds"
             }
         ],
         "latitude": "38.551774401259344",
@@ -291,7 +291,7 @@
         "title": "Pizza Place",
         "BodyText": "<div>Audio from Mellow Mushroom<img src=\"https://livedreligion.s3.amazonaws.com/media-1703887866250.jpg\" style=\"font-size: 1em; max-width: 50%; height: auto;\"></div>",
         "type": "message",
-        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "creator": "Izak Robles",
         "media": [
             {
                 "uuid": "17b579a9-3923-4bbf-94f7-26932671912e",
@@ -312,7 +312,7 @@
             }
         ],
         "published": false,
-        "tags": [],
+        "tags": ["Pizza", "Beer", "Young people"],
         "time": "2023-12-29T22:06:12.111Z",
         "__rerum": {
             "@context": "http://store.rerum.io/v1/context.json",
