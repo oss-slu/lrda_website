@@ -254,6 +254,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
               extensions={extensions}
               content={editorContent}
               onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
+              // This needs to get permanently fixed because otherwise when a user clicks off of the editor it breaks
               // onBlur={updateNoteText}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
