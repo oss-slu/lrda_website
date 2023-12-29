@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./lib/components/side_bar";
 import NoteEditor from "./lib/components/note_component";
 import { Note, newNote } from "./types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Home() {
   const [isClient, setIsClient] = useState(false);
@@ -16,14 +17,14 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
-
   return (
-    <main className="relative flex h-screen flex-row p-4">
+    <main className="relative flex h-[90vh] flex-row p-4">
       <Sidebar onNoteSelect={handleNoteSelect} />
-      <div className="flex-1 ml-64">
-
-      {isClient && <NoteEditor note={selectedNote} />}
-      </div>
+      <ScrollArea>
+        <div className="flex-1 ml-64">
+          {isClient && <NoteEditor note={selectedNote} />}
+        </div>
+      </ScrollArea>
     </main>
   );
 }
