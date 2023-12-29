@@ -36,6 +36,10 @@ export default function EditorMenuControls() {
   const theme = useTheme();
   return (
     <MenuControlsContainer>
+      <MenuButtonUndo />
+      <MenuButtonRedo />
+      <MenuDivider />
+
       <MenuSelectFontFamily
         options={[
           { label: "Comic Sans", value: "Comic Sans MS, Comic Sans" },
@@ -158,9 +162,6 @@ export default function EditorMenuControls() {
       <MenuButtonRemoveFormatting />
 
       <MenuDivider />
-
-      <MenuButtonUndo />
-      <MenuButtonRedo />
     </MenuControlsContainer>
   );
 }
