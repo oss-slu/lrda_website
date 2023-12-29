@@ -10,6 +10,8 @@ import {
 } from "mui-tiptap";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
+import AudioPicker from "./audio_component";
+import { AudioType } from "../models/media_class";
 import EditorMenuControls from "./editor_menu_controls";
 import useExtensions from "../utils/use_extensions";
 
@@ -22,6 +24,8 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState(note?.media || []);
   const [time, setTime] = useState(note?.time || new Date());
+  const [audio, setAudio] = useState<AudioType[]>([]);
+  const [counter, setCounter] = useState(0);
   const [longitude, setLongitude] = useState(note?.longitude || "");
   const [latitude, setLatitude] = useState(note?.latitude || "");
   const [tags, setTags] = useState(note?.tags || []);
@@ -38,6 +42,8 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
       setLongitude(note.longitude);
       setLatitude(note.latitude);
       setTags(note.tags);
+      setAudio(note.audio);
+      setCounter(counter + 1);
     }
   }, [note]);
 
@@ -93,7 +99,7 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
   return (
     console.log("Body text: ", note?.text),
     (
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-screen" key={counter}>
         <Input
           value={title}
           onChange={handleTitleChange}
@@ -108,9 +114,18 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
           }}
         />
         <main className="flex-grow p-6">
-          <TimePicker initialDate={time || new Date()} />
-          <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
-          <TagManager inputTags={tags} />
+          <div className="mt-3">
+            <AudioPicker audioArray={audio || []} setAudio={setAudio} />
+          </div>
+          <div className="mt-3">
+            <TimePicker initialDate={time || new Date()} />
+          </div>
+          <div className="mt-3">
+            <LocationPicker long={longitude} lat={latitude} />
+          </div>
+          <div className="mt-3 mb-3">
+            <TagManager inputTags={tags} />
+          </div>
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}

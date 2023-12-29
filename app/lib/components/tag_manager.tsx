@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner"
 
 interface TagManagerProps {
   inputTags?: string[];
@@ -10,7 +10,6 @@ interface TagManagerProps {
 const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
   const [tags, setTags] = useState<string[]>(inputTags || []);
   const [tagInput, setTagInput] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     if (inputTags !== tags) {
@@ -20,23 +19,25 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
 
   const addTag = (tag: string) => {
     if (tag.includes(" ")) {
-      toast({
-        description: "Your tag must not contain spaces",
+      toast("Failed to add tag", {
+        description: "Your tag must not contain spaces.",
         duration: 2000,
-      });
+      })
       setTagInput("");
       return;
     }
     if (tag.length <= 2) {
-      toast({
-        description: "Tags must be longer than 2 characters",
-      });
+      toast("Failed to add tag", {
+        description: "Tags must be longer than 2 characters.",
+        duration: 2000,
+      })
       return;
     }
     if (tags.includes(tag)) {
-      toast({
-        description: "Duplicate tags are not allowed",
-      });
+      toast("Failed to add tag", {
+        description: "Duplicate tags are not allowed.",
+        duration: 2000,
+      })
       setTagInput("");
       return;
     }
