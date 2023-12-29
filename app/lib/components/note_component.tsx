@@ -14,11 +14,11 @@ import EditorMenuControls from "./editor_menu_controls";
 import useExtensions from "../utils/use_extensions";
 
 type NoteEditorProps = {
-  note?: Note | newNote;
+  note?: Note;
 };
 
-export default function NoteEditor({ note }: NoteEditorProps) {
-  console.log("Here is my note: ", note);
+export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
+  const [note, setNote] = useState(initialNote);
   const [title, setTitle] = useState(note?.title || "");
   const [images, setImages] = useState(note?.media || []);
   const [time, setTime] = useState(note?.time || new Date());
@@ -41,6 +41,12 @@ export default function NoteEditor({ note }: NoteEditorProps) {
     }
   }, [note]);
 
+  useEffect(() => {
+    if (initialNote) {
+      setNote(initialNote);
+    }
+  }, [initialNote]);
+
   const printNote = () => {
     console.log("Current note object:", note);
   };
@@ -54,7 +60,10 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   }, [note?.text]);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      title: event.target.value
+    }));
   };
 
   return (
