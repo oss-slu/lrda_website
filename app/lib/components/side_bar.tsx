@@ -7,6 +7,7 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
+import userDemoNotes from "../models/user_notes_demo.json";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote) => void;
@@ -51,7 +52,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       try {
         const userId = await user.getId();
         if (userId) {
-          const userNotes = await ApiService.fetchUserMessages(userId);
+          const userNotes = userDemoNotes;
+          console.log("User Notes: ", userNotes);
           setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
           setFilteredNotes(DataConversion.convertMediaTypes(userNotes).reverse());
         } else {
