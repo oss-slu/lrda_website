@@ -80,10 +80,10 @@ export default function LocationPicker({ long, lat, onLocationChange }: Location
       setLongitude(parseFloat(long));
       setLatitude(parseFloat(lat));
     }
-    console.log("lat: ", lat);
-    if (lat == "0" || long == "0" || long == "" || lat == "") {
-      handleGetCurrentLocation();
-    }
+    // console.log("lat: ", lat);
+    // if (lat == "0" || long == "0" || long == "" || lat == "") {
+    //   handleGetCurrentLocation();
+    // }
   }, [long, lat]);
 
   return (

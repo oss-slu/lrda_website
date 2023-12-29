@@ -121,7 +121,7 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
             <TimePicker initialDate={time || new Date()} />
           </div>
           <div className="mt-3">
-            <LocationPicker long={longitude} lat={latitude} />
+            <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
           </div>
           <div className="mt-3 mb-3">
             <TagManager inputTags={tags} />
