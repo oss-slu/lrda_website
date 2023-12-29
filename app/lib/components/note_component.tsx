@@ -101,16 +101,16 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     console.log("Current note object:", note);
   };
 
-  useEffect(() => {
-    if (rteRef.current?.editor) {
-      const currentContent = rteRef.current.editor.getHTML();
-      if (note?.text && currentContent !== note.text) {
-        rteRef.current.editor.commands.setContent(note.text);
-      } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
-        rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
-      }
-    }
-  }, [note?.text]);
+  // useEffect(() => {
+  //   if (rteRef.current?.editor) {
+  //     const currentContent = rteRef.current.editor.getHTML();
+  //     if (note?.text && currentContent !== note.text) {
+  //       rteRef.current.editor.commands.setContent(note.text);
+  //     } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
+  //       rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
+  //     }
+  //   }
+  // }, [note?.text]);
 
   // should probably fully delete this function
   const updateNoteTitle = () => {
