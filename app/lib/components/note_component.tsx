@@ -81,6 +81,13 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
     }));
   };
   
+  const handleTimeChange = (newLongitude: number, newLatitude: number) => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      longitude: newLongitude.toString(),
+      latitude: newLatitude.toString(),
+    }));
+  };
   
 
   return (
