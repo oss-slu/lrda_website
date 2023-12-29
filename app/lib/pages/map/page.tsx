@@ -95,7 +95,7 @@ const Page = () => {
           defaultSize={2000}
         >
           <>
-            <div className="flex flex-row h-[10%] bg-secondary items-center pl-5 pr-5">
+            <div className="flex flex-row h-[10%] bg-secondary items-center justify-center pl-5 pr-5">
               <SearchBar onSearch={handleSearch} />
               <div className="ml-10">
                 <Select>

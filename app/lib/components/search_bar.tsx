@@ -19,19 +19,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="flex flex-col w-full"> 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="🔍  Search..."
-          className="border border-gray-300 rounded-full p-4 w-full bg-white" 
-          value={searchText}
-          onChange={handleInputChange}
-        />
-      </div>
+    <div className="flex flex-col w-full">
+      <Input
+        type="text"
+        placeholder="🔍  Search..."
+        className="border border-gray-300 rounded-full p-4 w-full bg-white"
+        value={searchText}
+        onChange={handleInputChange}
+      />
     </div>
   );
-  
 };
 
 export default SearchBar;
