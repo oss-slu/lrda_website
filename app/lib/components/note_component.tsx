@@ -80,7 +80,17 @@ export default function NoteEditor({ note }: NoteEditorProps) {
               extensions= {extensions}
               content={"<p>Type your text...</p>"}
               renderControls={() => <EditorMenuControls />}
-              
+              children={(editor) => {
+                // Make sure to check if the editor is not null
+                if (!editor) return null;
+
+                return (
+                  <LinkBubbleMenu editor={editor}>
+                    {/* This is where you can add additional elements that should appear in the bubble menu */}
+                    {/* For example, you could include a button or form here to update the link */}
+                  </LinkBubbleMenu>
+                ); 
+              }}
             />
           </div>
         </main>
