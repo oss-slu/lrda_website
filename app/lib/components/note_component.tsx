@@ -147,7 +147,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
 
   const handleDeleteNote = async () => {
     console.log(note);
-    if (note!.id) {
+    if (note?.id) {
       try {
         const userId = await user.getId();
         const success = await ApiService.deleteNoteFromAPI(
@@ -155,6 +155,10 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           userId || ""
         );
         if (success) {
+          toast("Error", {
+            description: "Note successfully Deleted.",
+            duration: 4000,
+          });
           return true;
         }
       } catch (error) {
