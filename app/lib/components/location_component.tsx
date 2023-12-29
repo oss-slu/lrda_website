@@ -17,18 +17,17 @@ import {
 interface LocationPickerProps {
   long?: string;
   lat?: string;
-  onLocationChange?: (newLongitude: number, newLatitude: number) => void;
 }
 
 function getCurLocation(
-  updateLongitude: (value: number) => void,
-  updateLatitude: (value: number) => void
+  setLongitude: (value: number) => void,
+  setLatitude: (value: number) => void
 ) {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        updateLongitude(position.coords.longitude);
-        updateLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setLatitude(position.coords.latitude);
       },
       () => {
         console.log("Error fetching location");
@@ -41,34 +40,21 @@ function getCurLocation(
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
-export default function LocationPicker({ long, lat, onLocationChange }: LocationPickerProps) {
+export default function LocationPicker({ long, lat }: LocationPickerProps) {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
-
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: mapAPIKey,
   });
 
-  const updateLongitude = (newLongitude: number) => {
-    setLongitude(newLongitude);
-    onLocationChange && onLocationChange(newLongitude, latitude);
-  };
-
-  const updateLatitude = (newLatitude: number) => {
-    setLatitude(newLatitude);
-    onLocationChange && onLocationChange(longitude, newLatitude); 
-  };
-
   const handleGetCurrentLocation = useCallback(() => {
-    getCurLocation(updateLongitude, updateLatitude);
-  }, [updateLongitude, updateLatitude]);
+    getCurLocation(setLongitude, setLatitude);
+  }, []);
 
   const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
-    const newLat = event?.latLng?.lat() || 0;
-    const newLng = event?.latLng?.lng() || 0;
-    updateLatitude(newLat);
-    updateLongitude(newLng);
+    setLatitude(event?.latLng?.lat() || 0);
+    setLongitude(event?.latLng?.lng() || 0);
   };
 
   useEffect(() => {
@@ -80,10 +66,10 @@ export default function LocationPicker({ long, lat, onLocationChange }: Location
       setLongitude(parseFloat(long));
       setLatitude(parseFloat(lat));
     }
-    // console.log("lat: ", lat);
-    // if (lat == "0" || long == "0" || long == "" || lat == "") {
-    //   handleGetCurrentLocation();
-    // }
+    console.log("lat: ", lat);
+    if (lat == "0" || long == "0" || long == "" || lat == "") {
+      handleGetCurrentLocation();
+    }
   }, [long, lat]);
 
   return (
