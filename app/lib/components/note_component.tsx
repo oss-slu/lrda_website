@@ -67,7 +67,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   }, [initialNote]);
 
   const handleEditorChange = (content: string) => {
-    setEditorContent(content); 
+    setEditorContent(content);
   };
 
   // Call this when you're ready to update the note object, e.g., on blur or save
@@ -121,7 +121,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   };
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value); 
+    setTitle(event.target.value);
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
@@ -164,7 +164,8 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
         }
       } catch (error) {
         toast("Error", {
-          description: "Failed to delete note. System failure. Try again later.",
+          description:
+            "Failed to delete note. System failure. Try again later.",
           duration: 4000,
         });
         console.error("Error deleting note:", error);
@@ -198,14 +199,30 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             }}
           />
           <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
-            <button className="hover:text-green-500 flex justify-center items-center w-full">
+            <button
+              className="hover:text-green-500 flex justify-center items-center w-full"
+              onClick={() => {
+                toast("Demo Note", {
+                  description: "You cannot save in Demo Mode.",
+                  duration: 2000,
+                });
+              }}
+            >
               <SaveIcon className="text-current" />
               <div className="ml-2">Save</div>
             </button>
             <div className="w-1 h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-full">
+                <button
+                  className="hover:text-red-500 flex justify-center items-center w-full"
+                  onClick={() => {
+                    toast("Demo Note", {
+                      description: "You cannot delete in Demo Mode.",
+                      duration: 2000,
+                    });
+                  }}
+                >
                   <FileX2 className="text-current" />
                   <div className="ml-2">Delete</div>
                 </button>
@@ -240,13 +257,10 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             />
           </div>
           <div className="mt-3">
-            <LocationPicker
-              long={longitude}
-              lat={latitude}
-            />
+            <LocationPicker long={longitude} lat={latitude} />
           </div>
           <div className="mt-3 mb-3">
-            <TagManager inputTags={tags} onTagsChange={handleTagsChange}/>
+            <TagManager inputTags={tags} onTagsChange={handleTagsChange} />
           </div>
           <div className="overflow-auto">
             <RichTextEditor

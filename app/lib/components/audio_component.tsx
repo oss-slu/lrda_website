@@ -112,7 +112,15 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
       <div className="flex flex-row max-w-[280px] w-[100%] justify-evenly align-center items-center cursor-pointer h-10">
         <Popover>
           <PopoverTrigger asChild>
-            <FileUp className="" />
+            <FileUp
+              className=""
+              onClick={() => {
+                toast("Demo Note", {
+                  description: "You cannot upload audio in DEMO mode.",
+                  duration: 2000,
+                });
+              }}
+            />
           </PopoverTrigger>
           <PopoverContent className="z-30">
             <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">

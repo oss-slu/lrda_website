@@ -2,7 +2,12 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import userDemoNotes from "../../models/user_notes_demo.json";
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindow } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  useJsApiLoader,
+  MarkerF,
+  InfoWindow,
+} from "@react-google-maps/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "../../components/search_bar";
 import {
@@ -24,6 +29,7 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import NoteCard from "../../components/note_card";
+import { toast } from "sonner";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
@@ -39,9 +45,16 @@ const Page = () => {
     const fetchUserMessages = async () => {
       try {
         const userId = await user.getId();
-        if (userId) {
+        if (!userId) {
           const userNotes = userDemoNotes;
-          //const userNotes = await ApiService.fetchUserMessages(userId);
+          console.log("User Notes: ", userNotes);
+          setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
+          setFilteredNotes(
+            DataConversion.convertMediaTypes(userNotes).reverse()
+          );
+        } else if (userId) {
+          const userNotes = await ApiService.fetchUserMessages(userId);
+          console.log("User Notes: ", userNotes);
           setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
           setFilteredNotes(
             DataConversion.convertMediaTypes(userNotes).reverse()
@@ -101,7 +114,9 @@ const Page = () => {
               <SearchBar onSearch={handleSearch} />
               <div className="ml-10">
                 <Select>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger
+                    className="w-[180px]"
+                  >
                     <SelectValue placeholder="Event Filter" />
                   </SelectTrigger>
                   <SelectContent>
