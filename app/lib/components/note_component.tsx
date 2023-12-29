@@ -4,20 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
-  MenuButtonBold,
-  MenuButtonItalic,
-  MenuControlsContainer,
-  MenuDivider,
-  MenuButtonEditLink,
-  MenuSelectHeading,
-  MenuButtonUnderline,
-  MenuButtonBulletedList,
-  MenuButtonAlignLeft,
-  MenuButtonAlignRight,
-  MenuButtonEditLinkProps,
   LinkBubbleMenu,
   LinkBubbleMenuHandler,
-  MenuButtonAlignCenter,
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
@@ -32,6 +20,8 @@ import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import AudioPicker from "./audio_component";
 import { AudioType } from "../models/media_class";
+import EditorMenuControls from "./editor_menu_controls";
+import useExtensions from "../utils/use_extensions";
 
 type NoteEditorProps = {
   note?: Note;
@@ -48,6 +38,9 @@ export default function NoteEditor({ note }: NoteEditorProps) {
   const [latitude, setLatitude] = useState(note?.latitude || "");
   const [tags, setTags] = useState(note?.tags || []);
   const rteRef = useRef<RichTextEditorRef>(null);
+  const extensions = useExtensions({
+    placeholder: "Add your own content here...",
+  });
 
   useEffect(() => {
     if (note) {
@@ -109,33 +102,20 @@ export default function NoteEditor({ note }: NoteEditorProps) {
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}
-              extensions={[
-                StarterKit,
-                Link,
-                LinkBubbleMenuHandler,
-                TextAlign.configure({
-                  types: ["heading", "paragraph"],
-                }),
-                Underline,
-                BulletList,
-                ListItem,
-                OrderedList,
-              ]}
+              extensions= {extensions}
               content={"<p>Type your text...</p>"}
-              renderControls={() => (
-                <MenuControlsContainer>
-                  <MenuSelectHeading />
-                  <MenuDivider />
-                  <MenuButtonBold />
-                  <MenuButtonItalic />
-                  <MenuButtonUnderline />
-                  <MenuButtonEditLink />
-                  <MenuButtonBulletedList />
-                  <MenuButtonAlignLeft />
-                  <MenuButtonAlignCenter />
-                  <MenuButtonAlignRight />
-                </MenuControlsContainer>
-              )}
+              renderControls={() => <EditorMenuControls />}
+              children={(editor) => {
+                // Make sure to check if the editor is not null
+                if (!editor) return null;
+
+                return (
+                  <LinkBubbleMenu editor={editor}>
+                    {/* This is where you can add additional elements that should appear in the bubble menu */}
+                    {/* For example, you could include a button or form here to update the link */}
+                  </LinkBubbleMenu>
+                );
+              }}
             />
           </div>
         </main>
