@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { useState } from "react";
+import userDemoNotes from "../../models/user_notes_demo.json";
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindow } from "@react-google-maps/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "../../components/search_bar";
@@ -39,7 +40,8 @@ const Page = () => {
       try {
         const userId = await user.getId();
         if (userId) {
-          const userNotes = await ApiService.fetchUserMessages(userId);
+          const userNotes = userDemoNotes;
+          //const userNotes = await ApiService.fetchUserMessages(userId);
           setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
           setFilteredNotes(
             DataConversion.convertMediaTypes(userNotes).reverse()
