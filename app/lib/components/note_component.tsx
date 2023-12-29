@@ -66,6 +66,14 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
     }));
   };
 
+  const handleEditorChange = (content: string) => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      text: content
+    }));
+  };
+  
+
   return (
     console.log("Body text: ", note?.text),
     (
@@ -92,6 +100,7 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
               ref={rteRef}
               extensions= {extensions}
               content={note?.text}
+              onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
