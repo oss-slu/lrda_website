@@ -5,7 +5,6 @@ import { Note, newNote } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
-  LinkBubbleMenuHandler,
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
@@ -90,7 +89,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
                     {/* This is where you can add additional elements that should appear in the bubble menu */}
                     {/* For example, you could include a button or form here to update the link */}
                   </LinkBubbleMenu>
-                );
+                ); 
               }}
             />
           </div>
