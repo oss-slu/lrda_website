@@ -112,11 +112,15 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     }
   }, [note?.text]);
 
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const updateNoteTitle = () => {
     setNote((prevNote: any) => ({
       ...prevNote,
-      title: event.target.value,
+      title: title,
     }));
+  };
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value); // This updates the local state for the title
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
@@ -177,6 +181,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           <Input
             value={title}
             onChange={handleTitleChange}
+            onBlur={updateNoteTitle}
             placeholder="Title"
             style={{
               all: "unset",
@@ -184,7 +189,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
               fontWeight: "bold",
               outline: "none",
               marginLeft: "1.75rem",
-              maxWidth: "300px,",
+              maxWidth: "400px,",
             }}
           />
           <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
