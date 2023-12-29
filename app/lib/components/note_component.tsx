@@ -231,12 +231,12 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
 
         <main className="flex-grow p-6">
           <div className="mt-3">
-            <AudioPicker audioArray={audio || []} />
+            <AudioPicker audioArray={audio || []} setAudio={setAudio} />
           </div>
           <div className="mt-3">
             <TimePicker
               initialDate={time || new Date()}
-
+              onTimeChange={handleTimeChange}
             />
           </div>
           <div className="mt-3">
@@ -246,7 +246,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             />
           </div>
           <div className="mt-3 mb-3">
-            <TagManager inputTags={tags} />
+            <TagManager inputTags={tags} onTagsChange={handleTagsChange}/>
           </div>
           <div className="overflow-auto">
             <RichTextEditor
@@ -254,7 +254,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
               extensions={extensions}
               content={editorContent}
               onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
-              onBlur={updateNoteText}
+              // onBlur={updateNoteText}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
