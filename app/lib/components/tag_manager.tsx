@@ -5,9 +5,10 @@ import { toast } from "sonner"
 
 interface TagManagerProps {
   inputTags?: string[];
+  onTagsChange: (tags: string[]) => void,
 }
 
-const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
+const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
   const [tags, setTags] = useState<string[]>(inputTags || []);
   const [tagInput, setTagInput] = useState("");
 
@@ -42,13 +43,21 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags }) => {
       return;
     }
     if (tag && !tags.includes(tag) && tag.length > 2 && !tag.includes(" ")) {
-      setTags((prevTags) => [...prevTags, tag]);
+      setTags((prevTags) => {
+        const updatedTags = [...prevTags, tag];
+        onTagsChange(updatedTags);
+        return updatedTags;
+      });
       setTagInput("");
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setTags((prevTags) => prevTags.filter((tag) => tag !== tagToRemove));
+    setTags((prevTags) => {
+      const updatedTags = prevTags.filter((tag) => tag !== tagToRemove);
+      onTagsChange(updatedTags);
+      return updatedTags;
+    });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

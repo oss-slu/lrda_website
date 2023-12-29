@@ -38,7 +38,7 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   const [note, setNote] = useState<Note | undefined>(initialNote);
-  const [editorContent, setEditorContent] = useState<string>(note?.text || '');
+  const [editorContent, setEditorContent] = useState<string>(note?.text || "");
   const [title, setTitle] = useState<string>(note?.title || "");
   const [images, setImages] = useState<any[]>(note?.media || []);
   const [time, setTime] = useState<Date>(note?.time || new Date());
@@ -55,12 +55,12 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   useEffect(() => {
     if (initialNote) {
       setNote(initialNote);
-      setEditorContent(initialNote.text || '');
-      setTitle(initialNote.title || '');
+      setEditorContent(initialNote.text || "");
+      setTitle(initialNote.title || "");
       setImages(initialNote.media || []);
       setTime(initialNote.time || new Date());
-      setLongitude(initialNote.longitude || '');
-      setLatitude(initialNote.latitude || '');
+      setLongitude(initialNote.longitude || "");
+      setLatitude(initialNote.latitude || "");
       setTags(initialNote.tags || []);
       setAudio(initialNote.audio || []);
     }
@@ -77,7 +77,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       text: editorContent,
     }));
   };
-  
 
   useEffect(() => {
     if (note) {
@@ -112,7 +111,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       }
     }
   }, [note?.text]);
-  
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNote((prevNote: any) => ({
@@ -128,11 +126,18 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       latitude: newLatitude.toString(),
     }));
   };
-  
+
   const handleTimeChange = (newDate: Date) => {
     setNote((prevNote: any) => ({
       ...prevNote,
       time: newDate,
+    }));
+  };
+
+  const handleTagsChange = (newTags: string[]) => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      tags: newTags,
     }));
   };
 
@@ -149,14 +154,19 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           return true;
         }
       } catch (error) {
+        toast("Error", {
+          description: "Failed to delete note. System failure. Try again later.",
+          duration: 4000,
+        });
         console.error("Error deleting note:", error);
         return false;
       }
+    } else {
+      toast("Error", {
+        description: "You must first save your note, before deleting it.",
+        duration: 4000,
+      });
     }
-    toast("Error", {
-      description: "You must first save your note, before deleting it.",
-      duration: 4000,
-    });
   };
 
   return (
@@ -214,7 +224,10 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             <AudioPicker audioArray={audio || []} setAudio={setAudio} />
           </div>
           <div className="mt-3">
-            <TimePicker initialDate={time || new Date()} onTimeChange = {handleTimeChange} />
+            <TimePicker
+              initialDate={time || new Date()}
+              onTimeChange={handleTimeChange}
+            />
           </div>
           <div className="mt-3">
             <LocationPicker
@@ -224,15 +237,15 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             />
           </div>
           <div className="mt-3 mb-3">
-            <TagManager inputTags={tags} />
+            <TagManager inputTags={tags} onTagsChange={handleTagsChange}/>
           </div>
           <div className="overflow-auto">
             <RichTextEditor
               ref={rteRef}
-              extensions= {extensions}
+              extensions={extensions}
               content={editorContent}
               onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
-              onBlur={updateNoteText} 
+              onBlur={updateNoteText}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
