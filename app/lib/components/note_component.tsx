@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Note, newNote } from "@/app/types";
+import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
@@ -19,20 +19,48 @@ type NoteEditorProps = {
   note?: Note;
 };
 
-export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
-  const [note, setNote] = useState(initialNote);
-  const [title, setTitle] = useState(note?.title || "");
-  const [images, setImages] = useState(note?.media || []);
-  const [time, setTime] = useState(note?.time || new Date());
-  const [audio, setAudio] = useState<AudioType[]>([]);
+export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
+  const [note, setNote] = useState<Note | undefined>(initialNote);
+  const [editorContent, setEditorContent] = useState<string>(note?.text || '');
+  const [title, setTitle] = useState<string>(note?.title || "");
+  const [images, setImages] = useState<any[]>(note?.media || []);
+  const [time, setTime] = useState<Date>(note?.time || new Date());
+  const [audio, setAudio] = useState<AudioType[]>(note?.audio || []);
   const [counter, setCounter] = useState(0);
-  const [longitude, setLongitude] = useState(note?.longitude || "");
-  const [latitude, setLatitude] = useState(note?.latitude || "");
-  const [tags, setTags] = useState(note?.tags || []);
+  const [longitude, setLongitude] = useState<string>(note?.longitude || "");
+  const [latitude, setLatitude] = useState<string>(note?.latitude || "");
+  const [tags, setTags] = useState<any[]>(note?.tags || []);
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
   });
+
+  useEffect(() => {
+    if (initialNote) {
+      setNote(initialNote);
+      setEditorContent(initialNote.text || '');
+      setTitle(initialNote.title || '');
+      setImages(initialNote.media || []);
+      setTime(initialNote.time || new Date());
+      setLongitude(initialNote.longitude || '');
+      setLatitude(initialNote.latitude || '');
+      setTags(initialNote.tags || []);
+      setAudio(initialNote.audio || []);
+    }
+  }, [initialNote]);
+
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content); // Update local state immediately for editor responsiveness
+  };
+
+  // Call this when you're ready to update the note object, e.g., on blur or save
+  const updateNoteText = () => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      text: editorContent,
+    }));
+  };
+  
 
   useEffect(() => {
     if (note) {
@@ -58,24 +86,21 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
   };
 
   useEffect(() => {
-    if (rteRef.current?.editor && note?.text) {
-      rteRef.current.editor.commands.setContent(note.text);
-    } else if (rteRef.current?.editor && !note?.text) {
-      rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
+    if (rteRef.current?.editor) {
+      const currentContent = rteRef.current.editor.getHTML();
+      if (note?.text && currentContent !== note.text) {
+        rteRef.current.editor.commands.setContent(note.text);
+      } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
+        rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
+      }
     }
   }, [note?.text]);
+  
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNote((prevNote: any) => ({
       ...prevNote,
       title: event.target.value
-    }));
-  };
-
-  const handleEditorChange = (content: string) => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      text: content
     }));
   };
 
@@ -129,8 +154,9 @@ export default function NoteEditor({ note : initialNote }: NoteEditorProps) {
             <RichTextEditor
               ref={rteRef}
               extensions= {extensions}
-              content={note?.text}
+              content={editorContent}
               onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
+              onBlur={updateNoteText} 
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
