@@ -35,8 +35,6 @@
     --radius: 0.5rem;
   }
 
-
- 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -351,5 +349,4 @@
 
 .rhap_button-clear:focus:not(:focus-visible) {
   outline: 0;
-}
 }
