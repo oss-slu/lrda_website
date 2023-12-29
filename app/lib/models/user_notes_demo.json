@@ -465,5 +465,54 @@
             "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
             "slug": ""
         }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/658f4339719d8bd8cc243eaa",
+        "title": "Pizza Place",
+        "BodyText": "<div>Audio from Mellow Mushroom<img src=\"https://livedreligion.s3.amazonaws.com/media-1703887866250.jpg\" style=\"font-size: 1em; max-width: 50%; height: auto;\"></div>",
+        "type": "message",
+        "creator": "https://devstore.rerum.io/v1/id/645a6dc3b9ec8aaf4e9a308a",
+        "media": [
+            {
+                "uuid": "17b579a9-3923-4bbf-94f7-26932671912e",
+                "type": "image",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1703887866250.jpg"
+            }
+        ],
+        "latitude": "38.54924163021233",
+        "longitude": "-90.4066996560266",
+        "audio": [
+            {
+                "uuid": "a009c95c-48c6-419b-853e-d11d906faaef",
+                "type": "audio",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1703887633465.3gp",
+                "duration": "0:13",
+                "name": "Recording 1",
+                "isPlaying": false
+            }
+        ],
+        "published": false,
+        "tags": [],
+        "time": "2023-12-29T22:06:12.111Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-12-29T22:07:53.763",
+            "isOverwritten": "2023-12-29T22:11:30.840",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
     }
 ]

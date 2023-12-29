@@ -53,6 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         const userId = await user.getId();
         if (userId) {
           const userNotes = userDemoNotes;
+          // const userNotes = await ApiService.fetchUserMessages(userId);
           console.log("User Notes: ", userNotes);
           setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
           setFilteredNotes(DataConversion.convertMediaTypes(userNotes).reverse());
