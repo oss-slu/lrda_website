@@ -112,6 +112,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     }
   }, [note?.text]);
 
+  // should probably fully delete this function
   const updateNoteTitle = () => {
     // setNote((prevNote: any) => ({
     //   ...prevNote,
@@ -120,7 +121,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   };
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // setTitle(event.target.value); 
+    setTitle(event.target.value); 
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
@@ -242,7 +243,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             <LocationPicker
               long={longitude}
               lat={latitude}
-              onLocationChange={handleLocationChange}
             />
           </div>
           <div className="mt-3 mb-3">
