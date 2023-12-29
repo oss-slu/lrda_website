@@ -86,12 +86,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       <div className="w-full">
         <SearchBar onSearch={handleSearch} />
       </div>
-      <div>
-        <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
-      </div>
       <Button data-testid="add-note-button" onClick={handleAddNote}>
         Add Note
       </Button>
+      <div>
+        <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
+      </div>
+      
     </div>
   );
 };
