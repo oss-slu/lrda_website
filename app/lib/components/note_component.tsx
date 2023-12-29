@@ -41,6 +41,10 @@ export default function NoteEditor({ note }: NoteEditorProps) {
     }
   }, [note]);
 
+  const printNote = () => {
+    console.log("Current note object:", note);
+  };
+
   useEffect(() => {
     if (rteRef.current?.editor && note?.text) {
       rteRef.current.editor.commands.setContent(note.text);
@@ -67,7 +71,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
             fontSize: "1.5em",
             fontWeight: "bold",
             outline: "none",
-            marginLeft: "1rem"
+            marginLeft: "1.75rem"
           }}
         />
         <main className="flex-grow p-6">
@@ -78,7 +82,7 @@ export default function NoteEditor({ note }: NoteEditorProps) {
             <RichTextEditor
               ref={rteRef}
               extensions= {extensions}
-              content={"<p>Type your text...</p>"}
+              content={note?.text}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
                 // Make sure to check if the editor is not null
@@ -93,6 +97,12 @@ export default function NoteEditor({ note }: NoteEditorProps) {
               }}
             />
           </div>
+          <button
+          onClick={printNote}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Print Note to Console
+        </button>
         </main>
       </div>
     )
