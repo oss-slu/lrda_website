@@ -1,24 +1,30 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./lib/components/side_bar";
-import ToolPage from "./lib/components/note_component";
-import { Note } from "./types";
+import NoteEditor from "./lib/components/note_component";
+import { Note, newNote } from "./types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Home component
 export default function Home() {
-  const [selectedNote, setSelectedNote] = useState<Note>();
+  const [isClient, setIsClient] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | newNote>();
 
-  const handleNoteSelect = (note: Note) => {
+  const handleNoteSelect = (note: Note | newNote) => {
     setSelectedNote(note);
   };
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
-    <main className="relative flex h-screen flex-row p-4">
+    <main className="relative flex h-[90vh] flex-row p-4">
       <Sidebar onNoteSelect={handleNoteSelect} />
-      <div className="flex-1 ml-64">
-        <ToolPage note={selectedNote} />
-      </div>
+      <ScrollArea>
+        <div className="flex-1 ml-64">
+          {isClient && <NoteEditor note={selectedNote} />}
+        </div>
+      </ScrollArea>
     </main>
   );
 }
-

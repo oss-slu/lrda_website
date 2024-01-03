@@ -1,54 +1,60 @@
 import { UserData } from "../../types";
-import { getItem } from "../utils/async_storage";
+import { getItem, setItem } from "../utils/async_storage";
 
 export class User {
-    private static instance: User;
-    private userData: UserData | null = null;
-    private callback: ((isLoggedIn: boolean) => void) | null = null;
-  
-    public static getInstance(): User {
+  private static instance: User;
+  private userData: UserData | null = null;
+  private callback: ((isLoggedIn: boolean) => void) | null = null;
+
+  public static getInstance(): User {
       if (!User.instance) {
-        User.instance = new User();
+          User.instance = new User();
       }
       return User.instance;
-    }
-  
-    private persistUser(userData: UserData) {
-      try {
-        localStorage.setItem("userData", JSON.stringify(userData));
-      } catch (error) {
-        console.log(error);
+  }
+
+  private persistUser(userData: UserData) {
+      if (typeof window !== 'undefined') {
+          try {
+              localStorage.setItem("userData", JSON.stringify(userData));
+          } catch (error) {
+              console.log(error);
+          }
       }
-    }
+  }
 
   public setLoginCallback(callback: (isLoggedIn: boolean) => void) {
-    this.callback = callback;
+      this.callback = callback;
   }
 
   private notifyLoginState() {
-    if (this.callback) {
-      this.callback(this.userData !== null);
-    }
+      if (this.callback) {
+          this.callback(this.userData !== null);
+      }
   }
 
   private async loadUser(): Promise<UserData | null> {
-    try {
-      const value = await localStorage.getItem("userData");
-      if (value !== null) {
-        return JSON.parse(value);
+      if (typeof window !== 'undefined') {
+          try {
+              const value = await localStorage.getItem("userData");
+              if (value !== null) {
+                  return JSON.parse(value);
+              }
+          } catch (error) {
+              console.log(error);
+          }
       }
-    } catch (error) {
-      console.log(error);
-    }
-    return null;
+      return null;
   }
 
   private async clearUser() {
-    try {
-      await localStorage.removeItem("userData");
-    } catch (error) {
-      console.log(error);
-    }
+      if (typeof window !== 'undefined') {
+          try {
+              await localStorage.removeItem("userData");
+          } catch (error) {
+              console.log(error);
+          }
+      }
   }
 
   public async login(username: string, password: string): Promise<string> {

@@ -18,7 +18,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => 
     if (notes.length > 0 && fresh) {
       onNoteSelect(notes[0]);
       setFresh(false);
-      console.log("NoteListView: useEffect: onNoteSelect", notes[0])
     }
   }, [notes, onNoteSelect]);
 
@@ -32,7 +31,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => 
         return (
           <Button
             key={note.id}
-            className="bg-secondary text-primary p-2 m-1"
+            className="bg-secondary text-primary p-2 m-1 z-10"
             onClick={() => handleLoadText(note)}
           >
             <h3 className="text-lg font-semibold">{note.title}</h3>

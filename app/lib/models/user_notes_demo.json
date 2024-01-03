@@ -1,0 +1,338 @@
+[
+    {
+        "@id": "https://devstore.rerum.io/v1/id/64ab8d3b40b330d665d8482b",
+        "title": "Ankor Wat Temple",
+        "BodyText": "This is an ancient temple \nTest",
+        "type": "message",
+        "creator": "Yash Bhatia",
+        "media": [
+            {
+                "uuid": "f2fbc481-a28c-4bdd-bd9c-47766878ae09",
+                "type": "image",
+                "uri": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Ankor_Wat_temple.jpg/800px-Ankor_Wat_temple.jpg"
+            },
+            {
+                "uuid": "7ef4bc7e-f4fc-4dbe-86f3-e68b41c37ee3",
+                "type": "video",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1688964613601.mp4",
+                "thumbnail": "file:///var/mobile/Containers/Data/Application/DD32FE66-BDA5-4389-B9CE-9951CCA07020/Library/Caches/ExponentExperienceData/%2540anonymous%252Flrda-b2974126-ca47-44e3-92ca-c435571efd51/VideoThumbnails/5521B39B-B271-4805-A8FF-E4BD98BFC01F.jpg"
+            },
+            {
+                "uuid": "2e3e42af-3c7c-43d7-91ee-3fd5fd299252",
+                "type": "video",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1689000402406.mp4",
+                "thumbnail": "file:///var/mobile/Containers/Data/Application/DD32FE66-BDA5-4389-B9CE-9951CCA07020/Library/Caches/ExponentExperienceData/%2540anonymous%252Flrda-b2974126-ca47-44e3-92ca-c435571efd51/VideoThumbnails/93C7C135-74BD-4B7B-8724-457A4413C8A2.jpg"
+            }
+        ],
+        "latitude": "38.5517371983081",
+        "longitude": "-90.38246975269838",
+        "audio": [],
+        "published": false,
+        "tags": ["Cambodia", "Temple", "Ancient"],
+        "time": "2023-07-10T03:45:00.000Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-07-10T04:46:51.361",
+            "isOverwritten": "2023-12-20T17:26:58.848",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/64af84cca3a722500eabdf9b",
+        "title": "Fourth of July",
+        "BodyText": "Work on this noteses ",
+        "type": "message",
+        "creator": "Izak Robles",
+        "media": [
+            {
+                "uuid": "13864149-b1c6-45ac-a376-fb50e0e20817",
+                "type": "image",
+                "uri": "https://resolutiondenver.com/wp-content/uploads/2021/11/History-of-New-Years-Eve.jpg"
+            },
+            {
+                "uuid": "2971f47b-9244-44b7-8d20-c6ef9a52a6e1",
+                "type": "video",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1689224338065.mp4",
+                "thumbnail": "https://livedreligion.s3.amazonaws.com/media-1689224364215.jpg",
+                "duration": "0:00"
+            }
+        ],
+        "latitude": "38.551737372127924",
+        "longitude": "-90.3824680125983",
+        "audio": [],
+        "published": false,
+        "tags": ["Forest Park", "Missouri", "St. Louis", "Fireworks"],
+        "time": "2023-12-20T17:14:00.000Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-07-13T04:59:56.550",
+            "isOverwritten": "2023-12-20T17:14:49.143",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/64b1fbf540b330d665d8484e",
+        "title": "Christmas tree note",
+        "BodyText": "This note was made on an android phone \nEdit",
+        "type": "message",
+        "creator": "Stuart Ray",
+        "media": [
+            {
+                "uuid": "d45483f3-fdc7-4987-a0bb-259e7c868b4b",
+                "type": "image",
+                "uri": "https://c.tadst.com/gfx/750w/istock-493559502.jpg"
+            }
+        ],
+        "latitude": "38.551732",
+        "longitude": "-90.3824728",
+        "audio": [
+            {
+                "uuid": "2b7c6192-bf83-4f41-9a11-440e478b2557",
+                "type": "audio",
+                "uri": {},
+                "duration": "0:03",
+                "name": "Recording 1",
+                "isPlaying": false
+            },
+            {
+                "uuid": "31aea570-99f2-4fb3-81ac-02f941502ac7",
+                "type": "audio",
+                "uri": {},
+                "duration": "0:03",
+                "name": "Recording 2",
+                "isPlaying": false
+            }
+        ],
+        "published": false,
+        "tags": ["Christmas", "Tree", "Holiday"],
+        "time": "2023-07-15T01:52:53.494Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-07-15T01:52:53.494",
+            "isOverwritten": "2023-08-03T17:15:04.988",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/64b32507e82876ea1e049299",
+        "title": "Mellow Mushroom",
+        "BodyText": "Yay",
+        "type": "message",
+        "creator": "Adam Park",
+        "media": [
+            {
+                "uuid": "9b930fdf-1557-47d4-97d7-7290ba5e5a08",
+                "type": "image",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1689462001309.jpg"
+            }
+        ],
+        "latitude": "38.549163331077196",
+        "longitude": "-90.40681839508613",
+        "audio": [],
+        "published": false,
+        "tags": ["Working", "Pizza", "Young people"],
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-07-15T23:00:23.779",
+            "isOverwritten": "2023-07-25T00:51:43.225",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/65275a6d596c42f4d2e82900",
+        "title": "Urban Chestnut v13",
+        "BodyText": "<div>LRDA Desktop Team working hard<img src=\"https://livedreligion.s3.amazonaws.com/media-1697078015827.jpg\" style=\"font-size: 1em;\"></div>",
+        "type": "message",
+        "creator": "Stuart Ray",
+        "media": [
+            {
+                "uuid": "6ed4213d-7675-45a9-9895-f6b284c6fe26",
+                "type": "image",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1697078015827.jpg"
+            }
+        ],
+        "latitude": "38.626473566438406",
+        "longitude": "-90.26075651581964",
+        "audio": [],
+        "published": false,
+        "tags": ["Hippie", "Hipster", "Downtown"],
+        "time": "2023-10-12T02:30:29.905Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-10-12T02:31:09.484",
+            "isOverwritten": "2023-12-20T17:21:19.604",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/6562f1ccc8758d146d4288a4",
+        "title": "Nov 23",
+        "BodyText": "<div>This is a note as of November 23rd</div><div>with advanced html elements such as:</div><div><br></div><blockquote>quote block</blockquote><div>emojis: ❤️😂😭🫡💪</div><div><br></div><div>bullet points:</div><div><ul><li>different text editor things</li><li><b>BOLD</b></li><li><i>ITALICS</i></li><li><u>UNDERLINE</u></li></ul></div><blockquote style=\"margin: 0 0 0 40px; border: none; padding: 0px;\"><div><div>TAB/Indent</div></div><div><br></div></blockquote><div>normal text</div><div><br></div><div>how about pictures?:</div><div><img src=\"https://imageio.forbes.com/specials-images/dam/imageserve/1018473934/960x0.jpg?height=474&width=711&fit=bounds\" style=\"\n      max-width: 50%;\n      height: auto; /* Maintain aspect ratio */\n      /* Additional CSS properties for sizing */\n    \"><br></div>",
+        "type": "message",
+        "creator": "Yash Bhatia",
+        "media": [
+            {
+                "uuid": "69baa8f4-9678-4ee3-acd2-e1d97b2c34b9",
+                "type": "image",
+                "uri": "https://imageio.forbes.com/specials-images/dam/imageserve/1018473934/960x0.jpg?height=474&width=711&fit=bounds"
+            }
+        ],
+        "latitude": "38.551774401259344",
+        "longitude": "-90.38245528295954",
+        "audio": [
+            {
+                "uuid": "b9973077-6891-44c5-a8a3-1bd770ac2b96",
+                "type": "audio",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1703783171019.3gp",
+                "duration": "0:12",
+                "name": "Recording 1",
+                "isPlaying": false
+            }
+        ],
+        "published": false,
+        "tags": [
+            "Test",
+            "Wow"
+        ],
+        "time": "2023-11-23T18:45:00.000Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-11-26T07:20:44.913",
+            "isOverwritten": "2023-12-29T00:45:20.783",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    },
+    {
+        "@id": "https://devstore.rerum.io/v1/id/658f4339719d8bd8cc243eaa",
+        "title": "Pizza Place",
+        "BodyText": "<div>Audio from Mellow Mushroom<img src=\"https://livedreligion.s3.amazonaws.com/media-1703887866250.jpg\" style=\"font-size: 1em; max-width: 50%; height: auto;\"></div>",
+        "type": "message",
+        "creator": "Izak Robles",
+        "media": [
+            {
+                "uuid": "17b579a9-3923-4bbf-94f7-26932671912e",
+                "type": "image",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1703887866250.jpg"
+            }
+        ],
+        "latitude": "38.54924163021233",
+        "longitude": "-90.4066996560266",
+        "audio": [
+            {
+                "uuid": "a009c95c-48c6-419b-853e-d11d906faaef",
+                "type": "audio",
+                "uri": "https://livedreligion.s3.amazonaws.com/media-1703887633465.3gp",
+                "duration": "0:13",
+                "name": "Recording 1",
+                "isPlaying": false
+            }
+        ],
+        "published": false,
+        "tags": ["Pizza", "Beer", "Young people"],
+        "time": "2023-12-29T22:06:12.111Z",
+        "__rerum": {
+            "@context": "http://store.rerum.io/v1/context.json",
+            "alpha": true,
+            "APIversion": "1.0.0",
+            "createdAt": "2023-12-29T22:07:53.763",
+            "isOverwritten": "2023-12-29T22:11:30.840",
+            "isReleased": "",
+            "history": {
+                "next": [],
+                "previous": "",
+                "prime": "root"
+            },
+            "releases": {
+                "next": [],
+                "previous": "",
+                "replaces": ""
+            },
+            "generatedBy": "http://devstore.rerum.io/v1/id/5afeebf3e4b0b0d588705d90",
+            "slug": ""
+        }
+    }
+]

@@ -1,36 +1,82 @@
 "use client";
-import {
-  FontBoldIcon,
-  FontItalicIcon,
-  UnderlineIcon,
-  TextAlignLeftIcon,
-  TextAlignCenterIcon,
-  TextAlignRightIcon,
-  QuoteIcon,
-  ChatBubbleIcon,
-  ListBulletIcon,
-} from "@radix-ui/react-icons";
-import { ContentState, Editor, EditorState, Modifier, RichUtils } from "draft-js";
-import { Textarea } from "@/components/ui/textarea"
-import "draft-js/dist/Draft.css";
-import { useState, useEffect } from "react";
-import { stateFromHTML } from "draft-js-import-html";
-import { stateToHTML } from "draft-js-export-html";
-import { Button } from "@/components/ui/button";
-import { Note } from "@/app/types";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Note } from "@/app/types";
+import TimePicker from "./time_picker";
+import {
+  LinkBubbleMenu,
+  RichTextEditor,
+  type RichTextEditorRef,
+} from "mui-tiptap";
+import TagManager from "./tag_manager";
+import LocationPicker from "./location_component";
+import AudioPicker from "./audio_component";
+import { AudioType } from "../models/media_class";
+import EditorMenuControls from "./editor_menu_controls";
+import useExtensions from "../utils/use_extensions";
+import { User } from "../models/user_class";
+import ApiService from "../utils/api_service";
+import { FileX2, SaveIcon, Save } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-type ToolPageProps = {
+const user = User.getInstance();
+
+type NoteEditorProps = {
   note?: Note;
 };
 
-export default function ToolPage({ note }: ToolPageProps) {
-  const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [title, setTitle] = useState("");
-  const [images, setImages] = useState<any>();
-  const [time, setTime] = useState<Date | undefined>();
-  const [longitude, setLongitude] = useState<string | undefined>();
-  const [latitude, setLatitude] = useState<string | undefined>();
+export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
+  const [note, setNote] = useState<Note | undefined>(initialNote);
+  const [editorContent, setEditorContent] = useState<string>(note?.text || "");
+  const [title, setTitle] = useState<string>(note?.title || "");
+  const [images, setImages] = useState<any[]>(note?.media || []);
+  const [time, setTime] = useState<Date>(note?.time || new Date());
+  const [audio, setAudio] = useState<AudioType[]>(note?.audio || []);
+  const [counter, setCounter] = useState(0);
+  const [longitude, setLongitude] = useState<string>(note?.longitude || "");
+  const [latitude, setLatitude] = useState<string>(note?.latitude || "");
+  const [tags, setTags] = useState<any[]>(note?.tags || []);
+  const rteRef = useRef<RichTextEditorRef>(null);
+  const extensions = useExtensions({
+    placeholder: "Add your own content here...",
+  });
+
+  useEffect(() => {
+    if (initialNote) {
+      setNote(initialNote);
+      setEditorContent(initialNote.text || "");
+      setTitle(initialNote.title || "");
+      setImages(initialNote.media || []);
+      setTime(initialNote.time || new Date());
+      setLongitude(initialNote.longitude || "");
+      setLatitude(initialNote.latitude || "");
+      setTags(initialNote.tags || []);
+      setAudio(initialNote.audio || []);
+    }
+  }, [initialNote]);
+
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
+  };
+
+  // Call this when you're ready to update the note object, e.g., on blur or save
+  const updateNoteText = () => {
+    setNote((prevNote: any) => ({
+      ...prevNote,
+      text: editorContent,
+    }));
+  };
 
   useEffect(() => {
     if (note) {
@@ -39,203 +85,213 @@ export default function ToolPage({ note }: ToolPageProps) {
       setTime(note.time);
       setLongitude(note.longitude);
       setLatitude(note.latitude);
-
-      const contentState = stateFromHTML(note.text);
-      const newEditorState = EditorState.createWithContent(contentState);
-      setEditorState(newEditorState);
+      setTags(note.tags);
+      setAudio(note.audio);
+      setCounter(counter + 1);
     }
   }, [note]);
 
-  
-
-  const handleKeyCommand = (command: string) => {
-    const newState = RichUtils.handleKeyCommand(editorState, command);
-    if (newState) {
-      setEditorState(newState);
-      return "handled";
+  useEffect(() => {
+    if (initialNote) {
+      setNote(initialNote);
     }
-    return "not-handled";
+  }, [initialNote]);
+
+  const printNote = () => {
+    console.log("Current note object:", note);
   };
 
-  const toggleBold = () => {
-    // Check if the current selection is bold
-    const currentStyle = editorState.getCurrentInlineStyle();
-    const isBold = currentStyle.has("BOLD");
-  
-    // Toggle the "BOLD" style
-    let newEditorState = RichUtils.toggleInlineStyle(editorState, "BOLD");
-  
-    // If the selection was already bold, remove the "BOLD" style
-    if (isBold) {
-      newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
-    }
-  
-    // Set the new editor state
-    setEditorState(newEditorState);
-  };
-  
+  // useEffect(() => {
+  //   if (rteRef.current?.editor) {
+  //     const currentContent = rteRef.current.editor.getHTML();
+  //     if (note?.text && currentContent !== note.text) {
+  //       rteRef.current.editor.commands.setContent(note.text);
+  //     } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
+  //       rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
+  //     }
+  //   }
+  // }, [note?.text]);
 
-  const toggleItalic = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "ITALIC"));
+  // should probably fully delete this function
+  const updateNoteTitle = () => {
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   title: title,
+    // }));
   };
 
-  const toggleUnderline = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, "UNDERLINE"));
-  };
-
-  const handleTextAlignLeft = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'left'));
-  };
-  
-  const handleTextAlignCenter = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'center'));
-  };
-  
-  const handleTextAlignRight = () => {
-    setEditorState(RichUtils.toggleInlineStyle(editorState, 'right'));
-  };
-  
-  
-  
-
-const handleQuote = () => {
-  setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'));
-};
-
-const handleChatBubble = () => {
-  // Example: Inserting a custom chat bubble character
-  const contentState = editorState.getCurrentContent();
-  const selection = editorState.getSelection();
-  const newContentState = Modifier.insertText(
-    contentState,
-    selection,
-    '💬', // You can replace this with your preferred chat bubble character
-  );
-  const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
-  setEditorState(newEditorState);
-};
-
-
-  const handleListBullet = () => {
-    setEditorState(RichUtils.toggleBlockType(editorState, 'unordered-list-item'));
-  };
-
-
-  const handleTitleChange = (event: any) => {
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
+  const handleLocationChange = (newLongitude: number, newLatitude: number) => {
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   longitude: newLongitude.toString(),
+    //   latitude: newLatitude.toString(),
+    // }));
+  };
+
+  const handleTimeChange = (newDate: Date) => {
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   time: newDate,
+    // }));
+  };
+
+  const handleTagsChange = (newTags: string[]) => {
+    // setNote((prevNote: any) => ({
+    //   ...prevNote,
+    //   tags: newTags,
+    // }));
+  };
+
+  const handleDeleteNote = async () => {
+    console.log(note);
+    if (note?.id) {
+      try {
+        const userId = await user.getId();
+        const success = await ApiService.deleteNoteFromAPI(
+          note!.id,
+          userId || ""
+        );
+        if (success) {
+          toast("Error", {
+            description: "Note successfully Deleted.",
+            duration: 4000,
+          });
+          return true;
+        }
+      } catch (error) {
+        toast("Error", {
+          description:
+            "Failed to delete note. System failure. Try again later.",
+          duration: 4000,
+        });
+        console.error("Error deleting note:", error);
+        return false;
+      }
+    } else {
+      toast("Error", {
+        description: "You must first save your note, before deleting it.",
+        duration: 4000,
+      });
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen">
-      <Input
-        className="text-3xl font-bold custom-input"
-        value={title}
-        onChange={handleTitleChange}
-        placeholder="Title"
-      />
-
-      <div className="flex items-center justify-right p-4 bg-gray-200">
-        <Button
-          onClick={toggleBold}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Bold"
-          
-        >
-          <FontBoldIcon />
-        </Button>
-        <Button
-          onClick={toggleItalic}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Italic"
-        >
-          <FontItalicIcon />
-        </Button>
-        <Button
-          onClick={toggleUnderline}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Underline"
-        >
-          <UnderlineIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignLeft}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignLeft"
-        >
-          <TextAlignLeftIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignCenter}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignCenter"
-        >
-          <TextAlignCenterIcon />
-        </Button>
-        <Button
-          onClick={handleTextAlignRight}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="TextAlignRight"
-        >
-          <TextAlignRightIcon />
-        </Button>
-        <Button
-          onClick={handleQuote}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="Quote"
-        >
-          <QuoteIcon />
-        </Button>
-        <Button
-          onClick={handleChatBubble}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="ChatBubble"
-        >
-          <ChatBubbleIcon />
-        </Button>
-        <Button
-          onClick={handleListBullet}
-          className="mx-2 w-10 h-10 bg-secondary border-black rounded-full text-black"
-          data-testid="ListBullet"
-        >
-          <ListBulletIcon />
-        </Button>
-        
-      </div>
-      <main className="flex-grow p-6 lg:p-4 w-full">
-        <div className="max-w-full flex-grow overflow-auto">
-          <div className="mt-2 border border-black p-4 rounded-lg w-full bg-white">
-          <Textarea
-              value={editorState.getCurrentContent().getPlainText()}
-              onChange={(e) => {
-                const contentState = ContentState.createFromText(e.target.value);
-                const newEditorState = EditorState.push(editorState, contentState, 'insert-characters');
-                setEditorState(newEditorState);
+    console.log("Body text: ", note?.text),
+    (
+      <div className="flex flex-col w-[100%]" key={counter}>
+        <div className="flex items-center justify-between mr-6">
+          <Input
+            value={title}
+            onChange={handleTitleChange}
+            onBlur={updateNoteTitle}
+            placeholder="Title"
+            style={{
+              all: "unset",
+              fontSize: "1.5em",
+              fontWeight: "bold",
+              outline: "none",
+              marginLeft: "1.75rem",
+              maxWidth: "400px,",
+            }}
+          />
+          <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
+            <button
+              className="hover:text-green-500 flex justify-center items-center w-full"
+              onClick={() => {
+                toast("Demo Note", {
+                  description: "You cannot save in Demo Mode.",
+                  duration: 2000,
+                });
               }}
-              placeholder="Start writing your notes here . . ."
-              spellCheck={true}
-              aria-label="Text editor"
-              data-testid="editor"
-              // Add any additional props you need for the Textarea component
-              className="h-screen w-full p-4 border border-black"
-            />
-
+            >
+              <SaveIcon className="text-current" />
+              <div className="ml-2">Save</div>
+            </button>
+            <div className="w-1 h-9 bg-border" />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="hover:text-red-500 flex justify-center items-center w-full"
+                  onClick={() => {
+                    toast("Demo Note", {
+                      description: "You cannot delete in Demo Mode.",
+                      duration: 2000,
+                    });
+                  }}
+                >
+                  <FileX2 className="text-current" />
+                  <div className="ml-2">Delete</div>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    this note.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDeleteNote()}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
-      </main>
 
-    </div>
+        <main className="flex-grow p-6">
+          <div className="mt-3">
+            <AudioPicker audioArray={audio || []} setAudio={setAudio} />
+          </div>
+          <div className="mt-3">
+            <TimePicker
+              initialDate={time || new Date()}
+              onTimeChange={handleTimeChange}
+            />
+          </div>
+          <div className="mt-3">
+            <LocationPicker long={longitude} lat={latitude} />
+          </div>
+          <div className="mt-3 mb-3">
+            <TagManager inputTags={tags} onTagsChange={handleTagsChange} />
+          </div>
+          <div className="overflow-auto">
+            <RichTextEditor
+              ref={rteRef}
+              extensions={extensions}
+              content={editorContent}
+              onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
+              // This needs to get permanently fixed because otherwise when a user clicks off of the editor it breaks
+              // onBlur={updateNoteText}
+              renderControls={() => <EditorMenuControls />}
+              children={(editor) => {
+                // Make sure to check if the editor is not null
+                if (!editor) return null;
+
+                return (
+                  <LinkBubbleMenu editor={editor}>
+                    {/* This is where you can add additional elements that should appear in the bubble menu */}
+                    {/* For example, you could include a button or form here to update the link */}
+                  </LinkBubbleMenu>
+                );
+              }}
+            />
+          </div>
+          {/* <button
+            onClick={printNote}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Print Note to Console
+          </button> */}
+        </main>
+      </div>
+    )
   );
-};
-
-
-const editorStyles = {
-  border: "1px solid black",
-  padding: "10px",
-  borderRadius: "4px",
-  minHeight: "300px",
-  width: "100%", 
-  color: "black",
-  backgroundColor: "white",
-  overflow: "auto", 
-};
-
+}

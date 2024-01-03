@@ -2,6 +2,8 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import Navbar from "./lib/components/navbar";
+import { NextAppDirEmotionCacheProvider } from "tss-react/next/appDir";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +19,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head />
       <body>
         <Navbar />
-        {children}
+        <NextAppDirEmotionCacheProvider options={{ key: "css" }}>
+          {children}
+        </NextAppDirEmotionCacheProvider>
+        <Toaster />
       </body>
     </html>
   );

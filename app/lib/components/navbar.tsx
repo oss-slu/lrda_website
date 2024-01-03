@@ -33,11 +33,20 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-gray-900 w-full h-20 flex flex-row justify-between items-center px-6 py-3 text-white">
+    <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
+      <div className="flex justify-center items-center mr-3 w-48 h-14 bg-red-600 rounded-xl shadow-2xl text-center text-2xl">
+        Demo Mode
+      </div>
+
       <div className="w-full">
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
             Where's Religion?
+          </a>
+        </Link>
+        <Link legacyBehavior href="/lib/pages/map" passHref>
+          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out ml-[10%]">
+            Explore
           </a>
         </Link>
       </div>
@@ -54,7 +63,7 @@ export default function Navbar() {
           </div>
         ) : (
           <Button
-            onClick={() => (window.location.href = "lib/pages/loginPage")}
+            onClick={() => (window.location.href = "/lib/pages/loginPage")}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
           >
             Login

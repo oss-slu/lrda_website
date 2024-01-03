@@ -34,6 +34,19 @@ import {
     published: boolean | undefined;
     tags: string[];
   };
+
+  export type newNote = {
+    title: string;
+    text: string;
+    time: Date;
+    media: (VideoType | PhotoType)[];
+    audio: AudioType[];
+    creator: string;
+    latitude: string;
+    longitude: string;
+    published: boolean | undefined;
+    tags: string[];
+  };
   
   export type RootStackParamList = {
     Home: undefined;
@@ -91,7 +104,7 @@ import {
   };
   
   export type GoogleMapProps = {
-    route: any; // substitute any with the actual type if you know it
-    updateCounter: any; // substitute any with the actual type if you know it
+    route: any; 
+    updateCounter: any; 
     user: User;
   };
