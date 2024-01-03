@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 interface TagManagerProps {
   inputTags?: string[];
-  onTagsChang?: (tags: string[]) => void,
+  onTagsChange: (tags: string[]) => void,
 }
 
 const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
