@@ -82,7 +82,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
     if (location != "error") {
       const newAudio = new AudioType({
         type: "audio",
-        uuid: randomUUID.toString(),
+        uuid: randomUUID().toString(),
         uri: location,
         name: file.name,
         isPlaying: false,
@@ -94,7 +94,9 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
         duration: 4000,
       });
 
-      setAudio([...audioArray, newAudio]);
+      if (setAudio) {
+        setAudio([...audioArray, newAudio]);
+      }
     } else {
       console.log("UPLOAD FAILED");
       toast("Status Update", {

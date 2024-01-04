@@ -263,26 +263,13 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             <TagManager inputTags={tags} onTagsChange={handleTagsChange} />
           </div>
           <div className="overflow-auto">
-            <RichTextEditor
-              ref={rteRef}
-              extensions={extensions}
-              content={editorContent}
-              onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
-              // This needs to get permanently fixed because otherwise when a user clicks off of the editor it breaks
-              // onBlur={updateNoteText}
-              renderControls={() => <EditorMenuControls />}
-              children={(editor) => {
-                // Make sure to check if the editor is not null
-                if (!editor) return null;
-
-                return (
-                  <LinkBubbleMenu editor={editor}>
-                    {/* This is where you can add additional elements that should appear in the bubble menu */}
-                    {/* For example, you could include a button or form here to update the link */}
-                  </LinkBubbleMenu>
-                );
-              }}
-            />
+          <RichTextEditor
+            ref={rteRef}
+            extensions={extensions}
+            content={editorContent}
+            onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
+            renderControls={() => <EditorMenuControls />}
+          />
           </div>
           {/* <button
             onClick={printNote}

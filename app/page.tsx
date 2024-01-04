@@ -17,12 +17,16 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
+  const isNote = (note: Note | newNote): note is Note => {
+    return (note as Note).id !== undefined;
+  };
+
   return (
     <main className="relative flex h-[90vh] flex-row p-4">
       <Sidebar onNoteSelect={handleNoteSelect} />
       <ScrollArea>
         <div className="flex-1 ml-64">
-          {isClient && <NoteEditor note={selectedNote} />}
+          {isClient && selectedNote && isNote(selectedNote) && <NoteEditor note={selectedNote} />}
         </div>
       </ScrollArea>
     </main>
