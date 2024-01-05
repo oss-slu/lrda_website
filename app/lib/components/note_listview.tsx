@@ -1,10 +1,8 @@
 // note_listview.tsx
 import React, { useState, useEffect } from "react";
-import { User } from "../models/user_class";
-import ApiService from "../utils/api_service";
 import { Note } from "../../types";
 import { Button } from "@/components/ui/button";
-import DataConversion from "../utils/data_conversion";
+
 
 type NoteListViewProps = {
   notes: Note[];
