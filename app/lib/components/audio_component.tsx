@@ -94,7 +94,9 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
         duration: 4000,
       });
 
-      setAudio([...audioArray, newAudio]);
+      if (setAudio) {
+        setAudio([...audioArray, newAudio]);
+      }
     } else {
       console.log("UPLOAD FAILED");
       toast("Status Update", {
@@ -136,6 +138,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
         </Popover>
 
         <Select
+          data-testid="audio-select"
           onValueChange={handleSelectChange}
           key={currentUUID}
           defaultValue={curRec}
@@ -150,7 +153,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
             <SelectGroup>
               {audioArray.length >= 1 ? (
                 audioArray.map((audio) => (
-                  <SelectItem key={audio.uuid} value={audio.uri}>
+                  <SelectItem key={audio.uuid} value={audio.uri} data-testid="audio-option">
                     {audio.name}
                   </SelectItem>
                 ))
@@ -163,6 +166,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
       </div>
       <AudioPlayer
         ref={audioPlayerRef}
+        data-testid="audio-player"
         src={curRec}
         onPlay={(e) => console.log("onPlay")}
         className="flex flex-row p-3 rounded-md w-[90]"

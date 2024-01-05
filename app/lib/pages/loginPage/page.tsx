@@ -9,12 +9,7 @@ const Page = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  useEffect(()=>{
-    toast("Demo Note", {
-      description: "Unfortunately you cannot login, but feel free to look around!",
-      duration: 4000,
-    });
-  },[username, password])
+  
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD]">

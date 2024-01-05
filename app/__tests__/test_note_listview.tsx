@@ -5,9 +5,9 @@ import NoteListView from '../lib/components/note_listview';
 
 describe('NoteListView', () => {
   const mockNotes = [
-    { id: 1, title: 'Note 1', content: 'Content 1' },
-    { id: 2, title: 'Note 2', content: 'Content 2' },
-    { id: 3, title: 'Note 3', content: 'Content 3' },
+    { id: 1, title: 'Note 1', text: 'Content 1' },
+    { id: 2, title: 'Note 2', text: 'Content 2' },
+    { id: 3, title: 'Note 3', text: 'Content 3' },
   ];
 
   it('renders without crashing', () => {
