@@ -15,7 +15,6 @@ type SidebarProps = {
 };
 
 const user = User.getInstance();
-const userId = user.getId();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -33,14 +32,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         time: new Date(),
         media: [],
         audio: [],
-        creator: userId, // Now we have the userId correctly set
+        creator: userId, 
         latitude: '',
         longitude: '',
         published: undefined,
         tags: []
       };
 
-      // Call `onNoteSelect` with the new blank note
       onNoteSelect(newBlankNote);
     } else {
       console.error("User ID is null - cannot create a new note");
