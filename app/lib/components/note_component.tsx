@@ -70,13 +70,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     setEditorContent(content);
   };
 
-  
-  const updateNoteText = () => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      text: editorContent,
-    }));
-  };
 
   useEffect(() => {
     if (note) {
@@ -126,29 +119,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
         duration: 4000,
       });
     }
-  };
-
-  const printNote = () => {
-    console.log("Current note object:", note);
-  };
-
-  // useEffect(() => {
-  //   if (rteRef.current?.editor) {
-  //     const currentContent = rteRef.current.editor.getHTML();
-  //     if (note?.text && currentContent !== note.text) {
-  //       rteRef.current.editor.commands.setContent(note.text);
-  //     } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
-  //       rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
-  //     }
-  //   }
-  // }, [note?.text]);
-
-  // should probably fully delete this function
-  const updateNoteTitle = () => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   title: title,
-    // }));
   };
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +179,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           <Input
             value={title}
             onChange={handleTitleChange}
-            onBlur={updateNoteTitle}
             placeholder="Title"
             style={{
               all: "unset",
@@ -286,28 +255,19 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
               extensions={extensions}
               content={editorContent}
               onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
-              // This needs to get permanently fixed because otherwise when a user clicks off of the editor it breaks
-              // onBlur={updateNoteText}
               renderControls={() => <EditorMenuControls />}
               children={(editor) => {
-                // Make sure to check if the editor is not null
                 if (!editor) return null;
-
                 return (
                   <LinkBubbleMenu editor={editor}>
                     {/* This is where you can add additional elements that should appear in the bubble menu */}
-                    {/* For example, you could include a button or form here to update the link */}
+                    {/* For example, you could include pedagogical comments here */}
                   </LinkBubbleMenu>
                 );
               }}
             />
           </div>
-          {/* <button
-            onClick={printNote}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Print Note to Console
-          </button> */}
+         
         </main>
       </div>
     )
