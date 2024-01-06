@@ -70,7 +70,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     setEditorContent(content);
   };
 
-  // Call this when you're ready to update the note object, e.g., on blur or save
+  
   const updateNoteText = () => {
     setNote((prevNote: any) => ({
       ...prevNote,
@@ -96,6 +96,37 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       setNote(initialNote);
     }
   }, [initialNote]);
+
+  const onSave = async () => {
+    // Create an updated note object from the current state
+    const updatedNote: Note = {
+      ...note, // Spread the existing note properties
+      text: editorContent,
+      title,
+      media: images,
+      time,
+      longitude,
+      latitude,
+      tags,
+      audio,
+      id: note?.id || "", // Ensure id is always a string
+      creator: note?.creator || "", // Ensure creator is always a string
+    };
+
+    try {
+      await ApiService.overwriteNote(updatedNote);
+      toast("Note Saved", {
+        description: "Your note has been successfully saved.",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast("Error", {
+        description: "Failed to save note. Try again later.",
+        duration: 4000,
+      });
+    }
+  };
 
   const printNote = () => {
     console.log("Current note object:", note);
@@ -125,25 +156,16 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   longitude: newLongitude.toString(),
-    //   latitude: newLatitude.toString(),
-    // }));
+    setLatitude(newLatitude.toString());
+    setLongitude(newLongitude.toString());
   };
 
   const handleTimeChange = (newDate: Date) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   time: newDate,
-    // }));
+    setTime(newDate);
   };
 
   const handleTagsChange = (newTags: string[]) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   tags: newTags,
-    // }));
+    setTags(newTags);
   };
 
   const handleDeleteNote = async () => {
@@ -201,12 +223,8 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
             <button
               className="hover:text-green-500 flex justify-center items-center w-full"
-              onClick={() => {
-                toast("Demo Note", {
-                  description: "You cannot save in Demo Mode.",
-                  duration: 2000,
-                });
-              }}
+              onClick={onSave}
+            
             >
               <SaveIcon className="text-current" />
               <div className="ml-2">Save</div>
@@ -257,7 +275,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             />
           </div>
           <div className="mt-3">
-            <LocationPicker long={longitude} lat={latitude} />
+            <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
           </div>
           <div className="mt-3 mb-3">
             <TagManager inputTags={tags} onTagsChange={handleTagsChange} />
