@@ -46,13 +46,16 @@ export const handleEditorChange = (
 export const handleDeleteNote = async (
   note: Note | undefined,
   user: User,
-  setNote: React.Dispatch<React.SetStateAction<Note | undefined>>,
+  setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
 ) => {
   console.log(note);
   if (note?.id) {
     try {
       const userId = await user.getId();
-      const success = await ApiService.deleteNoteFromAPI(note!.id, userId || "");
+      const success = await ApiService.deleteNoteFromAPI(
+        note!.id,
+        userId || ""
+      );
       if (success) {
         toast("Error", {
           description: "Note successfully Deleted.",
