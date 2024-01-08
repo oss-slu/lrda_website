@@ -29,7 +29,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import useNoteState from "./note_state";
 import { toast } from "sonner";
-import { handleTitleChange, handleDeleteNote, handleEditorChange, handleLocationChange, handleTagsChange, handleTimeChange } from "./note_handler";
+import {
+  handleTitleChange,
+  handleDeleteNote,
+  handleEditorChange,
+  handleLocationChange,
+  handleTagsChange,
+  handleTimeChange,
+} from "./note_handler";
 
 const user = User.getInstance();
 
@@ -38,7 +45,10 @@ type NoteEditorProps = {
   isNewNote: boolean;
 };
 
-export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
+export default function NoteEditor({
+  note: initialNote,
+  isNewNote,
+}: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote);
 
   const rteRef = useRef<RichTextEditorRef>(null);
@@ -60,7 +70,7 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
     }
   }, [initialNote]);
-  
+
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote);
@@ -81,7 +91,7 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       id: noteState.note?.id || "",
       creator: noteState.note?.creator || "",
     };
-  
+
     try {
       if (isNewNote) {
         await ApiService.writeNewNote(updatedNote);
@@ -104,9 +114,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       });
     }
   };
-  
-
-
 
   return (
     <div className="flex flex-col w-[100%]" key={noteState.counter}>
@@ -158,7 +165,11 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDeleteNote(noteState.note, user, noteHandlers.setNote)}>
+                <AlertDialogAction
+                  onClick={() =>
+                    handleDeleteNote(noteState.note, user, noteHandlers.setNote)
+                  }
+                >
                   Continue
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -169,30 +180,52 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
 
       <main className="flex-grow p-6">
         <div className="mt-3">
-          <AudioPicker audioArray={noteState.audio || []} setAudio={noteHandlers.setAudio} />
+          <AudioPicker
+            audioArray={noteState.audio || []}
+            setAudio={noteHandlers.setAudio}
+          />
         </div>
         <div className="mt-3">
           <TimePicker
             initialDate={noteState.time || new Date()}
-            onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
+            onTimeChange={(newDate) =>
+              handleTimeChange(noteHandlers.setTime, newDate)
+            }
           />
         </div>
         <div className="mt-3">
           <LocationPicker
             long={noteState.longitude}
             lat={noteState.latitude}
-            onLocationChange={(newLong, newLat) => handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)}
+            onLocationChange={(newLong, newLat) =>
+              handleLocationChange(
+                noteHandlers.setLongitude,
+                noteHandlers.setLatitude,
+                newLong,
+                newLat
+              )
+            }
           />
         </div>
         <div className="mt-3 mb-3">
-          <TagManager inputTags={noteState.tags} onTagsChange={(newTags) => handleTagsChange(noteHandlers.setTags, newTags)} />
+          <TagManager
+            inputTags={noteState.tags}
+            onTagsChange={(newTags) =>
+              handleTagsChange(noteHandlers.setTags, newTags)
+            }
+          />
         </div>
         <div className="overflow-auto">
           <RichTextEditor
             ref={rteRef}
             extensions={extensions}
             content={noteState.editorContent}
-            onUpdate={({ editor }) => handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())}
+            onUpdate={({ editor }) =>
+              handleEditorChange(
+                noteHandlers.setEditorContent,
+                editor.getHTML()
+              )
+            }
             renderControls={() => <EditorMenuControls />}
             children={(editor) => {
               if (!editor) return null;
