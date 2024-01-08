@@ -34,9 +34,10 @@ const user = User.getInstance();
 
 type NoteEditorProps = {
   note?: Note;
+  isNewNote: boolean;
 };
 
-export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
+export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
   const [note, setNote] = useState<Note | undefined>(initialNote);
   const [editorContent, setEditorContent] = useState<string>(note?.text || "");
   const [title, setTitle] = useState<string>(note?.title || "");
@@ -70,13 +71,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     setEditorContent(content);
   };
 
-  // Call this when you're ready to update the note object, e.g., on blur or save
-  const updateNoteText = () => {
-    setNote((prevNote: any) => ({
-      ...prevNote,
-      text: editorContent,
-    }));
-  };
 
   useEffect(() => {
     if (note) {
@@ -97,53 +91,60 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
     }
   }, [initialNote]);
 
-  const printNote = () => {
-    console.log("Current note object:", note);
+  const onSave = async () => {
+    // Create an updated note object from the current state
+    const updatedNote: Note = {
+      ...note, // Spread the existing note properties
+      text: editorContent,
+      title,
+      media: images,
+      time,
+      longitude,
+      latitude,
+      tags,
+      audio,
+      id: note?.id || "", 
+      creator: note?.creator || "", 
+    };
+  
+    try {
+      if (isNewNote) {
+        await ApiService.writeNewNote(updatedNote); 
+        toast("Note Created", {
+          description: "Your new note has been successfully created.",
+          duration: 2000,
+        });
+      } else {
+        await ApiService.overwriteNote(updatedNote);
+        toast("Note Saved", {
+          description: "Your note has been successfully saved.",
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast("Error", {
+        description: "Failed to save note. Try again later.",
+        duration: 4000,
+      });
+    }
   };
-
-  // useEffect(() => {
-  //   if (rteRef.current?.editor) {
-  //     const currentContent = rteRef.current.editor.getHTML();
-  //     if (note?.text && currentContent !== note.text) {
-  //       rteRef.current.editor.commands.setContent(note.text);
-  //     } else if (!note?.text && currentContent !== "<p>Type your text...</p>") {
-  //       rteRef.current.editor.commands.setContent("<p>Type your text...</p>");
-  //     }
-  //   }
-  // }, [note?.text]);
-
-  // should probably fully delete this function
-  const updateNoteTitle = () => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   title: title,
-    // }));
-  };
-
+  
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
   const handleLocationChange = (newLongitude: number, newLatitude: number) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   longitude: newLongitude.toString(),
-    //   latitude: newLatitude.toString(),
-    // }));
+    setLatitude(newLatitude.toString());
+    setLongitude(newLongitude.toString());
   };
 
   const handleTimeChange = (newDate: Date) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   time: newDate,
-    // }));
+    setTime(newDate);
   };
 
   const handleTagsChange = (newTags: string[]) => {
-    // setNote((prevNote: any) => ({
-    //   ...prevNote,
-    //   tags: newTags,
-    // }));
+    setTags(newTags);
   };
 
   const handleDeleteNote = async () => {
@@ -187,7 +188,6 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           <Input
             value={title}
             onChange={handleTitleChange}
-            onBlur={updateNoteTitle}
             placeholder="Title"
             style={{
               all: "unset",
@@ -201,12 +201,8 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
             <button
               className="hover:text-green-500 flex justify-center items-center w-full"
-              onClick={() => {
-                toast("Demo Note", {
-                  description: "You cannot save in Demo Mode.",
-                  duration: 2000,
-                });
-              }}
+              onClick={onSave}
+            
             >
               <SaveIcon className="text-current" />
               <div className="ml-2">Save</div>
@@ -257,26 +253,30 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
             />
           </div>
           <div className="mt-3">
-            <LocationPicker long={longitude} lat={latitude} />
+            <LocationPicker long={longitude} lat={latitude} onLocationChange={handleLocationChange} />
           </div>
           <div className="mt-3 mb-3">
             <TagManager inputTags={tags} onTagsChange={handleTagsChange} />
           </div>
           <div className="overflow-auto">
-          <RichTextEditor
-            ref={rteRef}
-            extensions={extensions}
-            content={editorContent}
-            onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
-            renderControls={() => <EditorMenuControls />}
-          />
+            <RichTextEditor
+              ref={rteRef}
+              extensions={extensions}
+              content={editorContent}
+              onUpdate={({ editor }) => handleEditorChange(editor.getHTML())}
+              renderControls={() => <EditorMenuControls />}
+              children={(editor) => {
+                if (!editor) return null;
+                return (
+                  <LinkBubbleMenu editor={editor}>
+                    {/* This is where you can add additional elements that should appear in the bubble menu */}
+                    {/* For example, you could include pedagogical comments here */}
+                  </LinkBubbleMenu>
+                );
+              }}
+            />
           </div>
-          {/* <button
-            onClick={printNote}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Print Note to Console
-          </button> */}
+         
         </main>
       </div>
     )

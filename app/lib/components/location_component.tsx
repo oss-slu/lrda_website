@@ -14,33 +14,20 @@ import {
   TooltipTrigger,
 } from "@/components/tooltip";
 
+// Including onLocationChange in the props interface
 interface LocationPickerProps {
   long?: string;
   lat?: string;
-}
-
-function getCurLocation(
-  setLongitude: (value: number) => void,
-  setLatitude: (value: number) => void
-) {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function (position) {
-        setLongitude(position.coords.longitude);
-        setLatitude(position.coords.latitude);
-      },
-      () => {
-        console.log("Error fetching location");
-      }
-    );
-  } else {
-    console.log("Geolocation is not supported by this browser.");
-  }
+  onLocationChange: (newLongitude: number, newLatitude: number) => void; // This is the callback function
 }
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
-export default function LocationPicker({ long, lat }: LocationPickerProps) {
+export default function LocationPicker({
+  long,
+  lat,
+  onLocationChange, // Destructuring the onLocationChange from props
+}: LocationPickerProps) {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
   const { isLoaded } = useJsApiLoader({
@@ -49,17 +36,34 @@ export default function LocationPicker({ long, lat }: LocationPickerProps) {
   });
 
   const handleGetCurrentLocation = useCallback(() => {
-    getCurLocation(setLongitude, setLatitude);
-  }, []);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          const newLongitude = position.coords.longitude;
+          const newLatitude = position.coords.latitude;
+          setLongitude(newLongitude);
+          setLatitude(newLatitude);
+          onLocationChange(newLongitude, newLatitude); // Notify parent about the change
+        },
+        () => {
+          console.log("Error fetching location");
+        }
+      );
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+    }
+  }, [onLocationChange]); // Adding onLocationChange to dependency array
 
   const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
-    setLatitude(event?.latLng?.lat() || 0);
-    setLongitude(event?.latLng?.lng() || 0);
+    const newLat = event?.latLng?.lat() || 0;
+    const newLng = event?.latLng?.lng() || 0;
+    setLatitude(newLat);
+    setLongitude(newLng);
+    onLocationChange(newLng, newLat); // Notify parent component about the change
   };
 
   useEffect(() => {
-    const validLong =
-      long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
+    const validLong = long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
     const validLat = lat && !isNaN(parseFloat(lat)) && parseFloat(lat) !== 0;
 
     if (validLong && validLat) {
@@ -70,8 +74,8 @@ export default function LocationPicker({ long, lat }: LocationPickerProps) {
     if (lat == "0" || long == "0" || long == "" || lat == "") {
       handleGetCurrentLocation();
     }
-  }, [long, lat]);
-
+  }, [long, lat, handleGetCurrentLocation]); 
+  
   return (
     <div className="flex flex-row items-center p-2 h-9 min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
       <Popover>
