@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
-import TagManager from '../lib/components/tag_manager';
+import TagManager from '../lib/components/noteElements/tag_manager';
 
 describe('TagManager', () => {
   it('renders without crashing', () => {

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import AudioPicker from '../lib/components/audio_component';
+import AudioPicker from '../lib/components/noteElements/audio_component';
 import { AudioType } from '../lib/models/media_class';
 
 describe('AudioPicker', () => {

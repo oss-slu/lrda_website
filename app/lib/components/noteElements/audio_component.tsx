@@ -7,7 +7,7 @@ import {
 } from "@radix-ui/react-popover";
 import { randomUUID } from "crypto";
 import { toast } from "sonner";
-import { uploadAudio } from "../utils/audioUpload";
+import { uploadAudio } from "../../utils/audioUpload";
 import { FileUp } from "lucide-react";
 import {
   Select,
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AudioType } from "../models/media_class";
+import { AudioType } from "../../models/media_class";
 import { Input } from "@/components/ui/input";
 
 type AudioPickerProps = {
