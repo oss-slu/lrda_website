@@ -8,9 +8,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
+  const [isNewNote, setIsNewNote] = useState(false); 
 
-  const handleNoteSelect = (note: Note | newNote) => {
+  const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
+    setIsNewNote(isNew);
   };
 
   useEffect(() => {
@@ -22,7 +24,9 @@ export default function Home() {
       <Sidebar onNoteSelect={handleNoteSelect} />
       <ScrollArea>
         <div className="flex-1 ml-64">
-          {isClient && <NoteEditor note={selectedNote} />}
+          {isClient && selectedNote && (
+            <NoteEditor note={selectedNote} isNewNote={isNewNote} />
+          )}
         </div>
       </ScrollArea>
     </main>

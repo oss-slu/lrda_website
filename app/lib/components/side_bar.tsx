@@ -7,11 +7,10 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
-import userDemoNotes from "../models/user_notes_demo.json";
 import { toast } from "sonner";
 
 type SidebarProps = {
-  onNoteSelect: (note: Note | newNote) => void;
+  onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
 };
 
 const user = User.getInstance();
@@ -19,12 +18,9 @@ const user = User.getInstance();
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  
-  const handleAddNote = async () => {
-    // Since `userId` is a Promise, you have to await it
-    const userId = await user.getId();
 
-    // Make sure `userId` is not null before proceeding
+  const handleAddNote = async () => {
+    const userId = await user.getId();
     if (userId) {
       const newBlankNote: newNote = {
         title: '',
@@ -38,24 +34,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         published: undefined,
         tags: []
       };
-
-      onNoteSelect(newBlankNote);
+      onNoteSelect(newBlankNote, true); // Notify that a new note is being added
     } else {
       console.error("User ID is null - cannot create a new note");
     }
   };
 
-
   useEffect(() => {
     const fetchUserMessages = async () => {
       try {
         const userId = await user.getId();
-        if (userId){
+        if (userId) {
           const userNotes = await ApiService.fetchUserMessages(userId);
-          console.log("User Notes: ", userNotes);
-          setNotes(DataConversion.convertMediaTypes(userNotes).reverse());
-          setFilteredNotes(DataConversion.convertMediaTypes(userNotes).reverse());
-        }else{ console.error("User not logged in");
+          const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
+          setNotes(convertedNotes);
+          setFilteredNotes(convertedNotes);
+        } else { 
+          console.error("User not logged in");
         }
       } catch (error) {
         console.error("Error fetching user messages:", error);
@@ -66,14 +61,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   }, []);
 
   const handleSearch = (searchQuery: string) => {
-      toast("Demo Note", {
-        description: "Reminder you cannot save in Demo mode.",
-        duration: 4000,
-      });
-      toast("Demo Note", {
-        description: "Feel free to play around all you like!",
-        duration: 4000,
-      });
+    toast("Demo Note", {
+      description: "Reminder you cannot save in Demo mode.",
+      duration: 4000,
+    });
+    toast("Demo Note", {
+      description: "Feel free to play around all you like!",
+      duration: 4000,
+    });
     
     if (!searchQuery.trim()) {
       setFilteredNotes(notes);
@@ -96,13 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         Add Note
       </Button>
       <div>
-        <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
+        <NoteListView notes={filteredNotes} onNoteSelect={(note) => onNoteSelect(note, false)} />
       </div>
-      
     </div>
   );
 };
 
-
 export default Sidebar;
-

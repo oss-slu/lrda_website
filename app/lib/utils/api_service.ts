@@ -78,10 +78,10 @@ export default class ApiService {
 
   /**
    * Writes a new note to the API.
-   * @param {newNote} note - The note object to be written.
+   * @param {Note} note - The note object to be written.
    * @returns {Promise<Response>} The response from the API.
    */
-  static async writeNewNote(note: newNote) {
+  static async writeNewNote(note: Note) {
     return fetch("http://lived-religion-dev.rerum.io/deer-lr/create", {
       method: "POST",
       headers: {

@@ -34,9 +34,10 @@ const user = User.getInstance();
 
 type NoteEditorProps = {
   note?: Note;
+  isNewNote: boolean;
 };
 
-export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
+export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
   const [note, setNote] = useState<Note | undefined>(initialNote);
   const [editorContent, setEditorContent] = useState<string>(note?.text || "");
   const [title, setTitle] = useState<string>(note?.title || "");
@@ -102,16 +103,24 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       latitude,
       tags,
       audio,
-      id: note?.id || "", // Ensure id is always a string
-      creator: note?.creator || "", // Ensure creator is always a string
+      id: note?.id || "", 
+      creator: note?.creator || "", 
     };
-
+  
     try {
-      await ApiService.overwriteNote(updatedNote);
-      toast("Note Saved", {
-        description: "Your note has been successfully saved.",
-        duration: 2000,
-      });
+      if (isNewNote) {
+        await ApiService.writeNewNote(updatedNote); 
+        toast("Note Created", {
+          description: "Your new note has been successfully created.",
+          duration: 2000,
+        });
+      } else {
+        await ApiService.overwriteNote(updatedNote);
+        toast("Note Saved", {
+          description: "Your note has been successfully saved.",
+          duration: 2000,
+        });
+      }
     } catch (error) {
       console.error("Error saving note:", error);
       toast("Error", {
@@ -120,7 +129,7 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       });
     }
   };
-
+  
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };

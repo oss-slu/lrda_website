@@ -3,24 +3,23 @@ import React, { useState, useEffect } from "react";
 import { Note } from "../../types";
 import { Button } from "@/components/ui/button";
 
-
 type NoteListViewProps = {
   notes: Note[];
-  onNoteSelect: (note: Note) => void;
+  onNoteSelect: (note: Note, isNewNote: boolean) => void; // Add the isNewNote boolean to the callback
 };
 
-const NoteListView: React.FC<NoteListViewProps> = ({  notes, onNoteSelect }) => {
+const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [fresh, setFresh] = useState(true);
 
   useEffect(() => {
     if (notes.length > 0 && fresh) {
-      onNoteSelect(notes[0]);
+      onNoteSelect(notes[0], false); 
       setFresh(false);
     }
-  }, [notes, onNoteSelect]);
+  }, [notes, onNoteSelect, fresh]);
 
   const handleLoadText = (note: Note) => {
-    onNoteSelect(note);
+    onNoteSelect(note, false); 
   };
 
   return (
