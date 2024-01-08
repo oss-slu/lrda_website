@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Note } from "@/app/types";
 import { AudioType } from "../../models/media_class";
 

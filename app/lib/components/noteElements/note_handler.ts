@@ -1,6 +1,5 @@
 import React from "react";
 import { Note } from "@/app/types";
-import { AudioType } from "../../models/media_class";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
 import { User } from "../../models/user_class";
