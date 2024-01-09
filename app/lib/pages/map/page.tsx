@@ -14,7 +14,7 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import NoteCard from "../../components/note_card";
-import mapPin from 'public/3d-map-pin.jpeg';
+import mapPin from "public/3d-map-pin.jpeg";
 import { toast } from "sonner";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
@@ -76,11 +76,11 @@ const Page = () => {
     return label.length > 10 ? label.substring(0, 10) + "..." : label;
   };
 
-  const getMarkerIcon = (labelText) => {
+  const getMarkerIcon = () => {
     return {
-      url: mapPin, 
-      labelOrigin: new window.google.maps.Point(0, 0), 
-      scaledSize: new window.google.maps.Size(25, 35), 
+      url: '/3d-map-pin.jpeg',
+      labelOrigin: new window.google.maps.Point(45, -10),
+      scaledSize: new window.google.maps.Size(25, 35),
     };
   };
 
@@ -116,14 +116,13 @@ const Page = () => {
                   lng: parseFloat(note.longitude),
                 }}
                 onClick={() => setActiveNote(note)}
-                icon={getMarkerIcon(getMarkerLabel(note))}
+                icon={getMarkerIcon()}
                 label={{
-                  text: getMarkerLabel(note), // Your label text here
-                  color: "#555", // Label text color
-                  fontWeight: "bold",
-                  fontSize: "14px", // Adjust font size as needed
+                  text: getMarkerLabel(note),
+                  color: "white",
+                  className: 'custom-marker-label',
                 }}
-                zIndex={index} // Ensures that markers are stacked in the order they are created
+                zIndex={index}
               />
             ))}
 
