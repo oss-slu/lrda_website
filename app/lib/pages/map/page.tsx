@@ -78,8 +78,9 @@ const Page = () => {
 
   const getMarkerIcon = () => {
     return {
-      url: '/3d-map-pin.jpeg',
-      labelOrigin: new window.google.maps.Point(45, -10),
+      // '/3d-map-pin.jpeg' looks better without this
+      url: mapPin,
+      labelOrigin: new window.google.maps.Point(15, -10),
       scaledSize: new window.google.maps.Size(25, 35),
     };
   };
@@ -117,11 +118,11 @@ const Page = () => {
                 }}
                 onClick={() => setActiveNote(note)}
                 icon={getMarkerIcon()}
-                label={{
-                  text: getMarkerLabel(note),
-                  color: "white",
-                  className: 'custom-marker-label',
-                }}
+                // label={{
+                //   text: getMarkerLabel(note),
+                //   color: "white",
+                //   className: 'custom-marker-label',
+                // }}
                 zIndex={index}
               />
             ))}
