@@ -37,31 +37,32 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
       });
   }, [note.creator]);
 
-  return (
-    <div className="w-64 h-64 bg-white rounded-xl shadow-md overflow-hidden m-4 flex flex-col">
-      <div className="h-32">
-        {imageMedia ? (
-          <img src={imageMedia.uri} alt={note.title} className="w-full h-full object-cover" />
-        ) : (
-          <img src={placeholderImage.src} alt="Placeholder" className="w-full h-full object-cover" />
-        )}
-      </div>
-      <div className="p-4 flex flex-col justify-between">
-        <h3 className="text-lg font-semibold truncate">{title}</h3>
-        <p className="text-sm text-gray-500">{date.toString()}</p>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag, index) => (
-            <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div className="mt-2">
-          <p className="text-lg font-bold">{creator}</p>
-        </div>
-      </div>
+
+return (
+  <div className="w-64 bg-white rounded-xl shadow-md overflow-hidden m-4 flex flex-col">
+    <div className="h-32">
+      {imageMedia ? (
+        <img src={imageMedia.uri} alt={note.title} className="w-full h-full object-cover" />
+      ) : (
+        <img src={placeholderImage.src} alt="Placeholder" className="w-full h-full object-cover" />
+      )}
     </div>
-  );  
+    <div className="p-4 flex flex-col justify-between">
+      <h3 className="text-lg font-semibold truncate">{title}</h3>
+      <p className="text-sm text-gray-500 mb-2">{date.toString()}</p>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {tags.slice(0, 4).map((tag, index) => (
+          <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+            {tag}
+          </span>
+        ))}
+      </div>
+      <p className="text-lg font-bold truncate">{creator}</p>
+    </div>
+  </div>
+);
+
+
 };
 
 export default NoteCard;
