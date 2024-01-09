@@ -70,7 +70,6 @@ export default function LocationPicker({
       setLongitude(parseFloat(long));
       setLatitude(parseFloat(lat));
     }
-    console.log("lat: ", lat);
     if (lat == "0" || long == "0" || long == "" || lat == "") {
       handleGetCurrentLocation();
     }

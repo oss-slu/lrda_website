@@ -31,9 +31,17 @@ import {
   MenuSelectTextAlign,
   isTouchDevice,
 } from "mui-tiptap";
+import { uploadMedia } from "../utils/s3_proxy";
 
 export default function EditorMenuControls() {
   const theme = useTheme();
+
+  async function uploadImage(file: any) {
+    const address = await uploadMedia(file, "image");
+    console.log(address);
+    return address;
+  }
+
   return (
     <MenuControlsContainer>
       <MenuButtonUndo />
@@ -136,19 +144,20 @@ export default function EditorMenuControls() {
       <MenuDivider />
 
       <MenuButtonImageUpload
-        onUploadFiles={(files) =>
-          // For the sake of a demo, we don't have a server to upload the files
-          // to, so we'll instead convert each one to a local "temporary" object
-          // URL. This will not persist properly in a production setting. You
-          // should instead upload the image files to your server, or perhaps
-          // convert the images to bas64 if you would like to encode the image
-          // data directly into the editor content, though that can make the
-          // editor content very large.
-          files.map((file) => ({
-            src: URL.createObjectURL(file),
-            alt: file.name,
-          }))
-        }
+        onUploadFiles={async (files): Promise<any[]> => {
+          const uploadPromises = files.map(async (file): Promise<any> => {
+            console.log("from file", file);
+            const imageSrc = await uploadImage(file);
+            return {
+              src: imageSrc,
+              alt: file.name,
+            };
+          });
+        
+          const images = await Promise.all(uploadPromises);
+          return images;
+        }}
+        
       />
 
       <MenuDivider />
