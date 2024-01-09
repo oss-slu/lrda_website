@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
 import { useState } from "react";
-import userDemoNotes from "../../models/user_notes_demo.json";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -10,25 +9,12 @@ import {
 } from "@react-google-maps/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "../../components/search_bar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import NoteCard from "../../components/note_card";
+import mapPin from 'public/3d-map-pin.jpeg';
 import { toast } from "sonner";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
@@ -82,21 +68,29 @@ const Page = () => {
     googleMapsApiKey: mapAPIKey,
   });
 
-  const RowTemp: React.FC<{ num: number }> = ({ num }) => {
-    return (
-      <div className="flex flex-row w-[95%] justify-between">
-        <div className="bg-popover w-[48%] h-72 mt-3 rounded-md shadow-md flex items-center justify-center text-2xl font-bold">
-          Note #{num}
-        </div>
-        <div className="bg-popover w-[48%] h-72 mt-3 rounded-md shadow-md flex items-center justify-center text-2xl font-bold">
-          Note #{num + 1}
-        </div>
-      </div>
-    );
+  const getMarkerLabel = (note: Note): string => {
+    const label =
+      note.tags && note.tags.length > 0
+        ? note.tags[0]
+        : note.title.split(" ")[0];
+    return label.length > 10 ? label.substring(0, 10) + "..." : label;
+  };
+
+  const getMarkerIcon = (labelText) => {
+    return {
+      url: mapPin, 
+      labelOrigin: new window.google.maps.Point(0, 0), 
+      scaledSize: new window.google.maps.Size(25, 35), 
+    };
   };
 
   return (
     <div className="flex flex-row w-screen h-[90vh]">
+      {/* Search bar and event filter */}
+      <div className="absolute top-30 left-0 z-10 m-5">
+        <SearchBar onSearch={handleSearch} />
+      </div>
+
       {/* Main area for the map */}
       <div className="flex-grow">
         {isLoaded && (
@@ -122,9 +116,17 @@ const Page = () => {
                   lng: parseFloat(note.longitude),
                 }}
                 onClick={() => setActiveNote(note)}
+                icon={getMarkerIcon(getMarkerLabel(note))}
+                label={{
+                  text: getMarkerLabel(note), // Your label text here
+                  color: "#555", // Label text color
+                  fontWeight: "bold",
+                  fontSize: "14px", // Adjust font size as needed
+                }}
+                zIndex={index} // Ensures that markers are stacked in the order they are created
               />
             ))}
-  
+
             {/* Info Window */}
             {activeNote && (
               <InfoWindow
@@ -140,7 +142,7 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
-  
+
       {/* Scrollable column for the note cards */}
       <div className="w-74 h-full overflow-y-auto bg-white">
         {filteredNotes.map((note, index) => (
@@ -149,7 +151,6 @@ const Page = () => {
       </div>
     </div>
   );
-  
 };
 
 export default Page;
