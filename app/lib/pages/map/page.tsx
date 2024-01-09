@@ -96,89 +96,60 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-row w-screen h-[90vh] bg-background">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel
-          className="min-w-[300px] max-w-[70vw]"
-          defaultSize={2000}
-        >
-          <>
-            <div className="flex flex-row h-[10%] bg-secondary items-center justify-center pl-5 pr-5">
-              <SearchBar onSearch={handleSearch} />
-              <div className="ml-10">
-                <Select>
-                  <SelectTrigger
-                    className="w-[180px]"
-                  >
-                    <SelectValue placeholder="Event Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Event Filter</SelectLabel>
-                      <SelectItem value="Religious">Religious</SelectItem>
-                      <SelectItem value="Cultural">Cultural</SelectItem>
-                      <SelectItem value="Sporting">Sporting</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {isLoaded && (
-              <GoogleMap
-                mapContainerStyle={{
-                  width: "100%",
-                  height: "90%",
+    <div className="flex flex-row w-screen h-[90vh]">
+      {/* Main area for the map */}
+      <div className="flex-grow">
+        {isLoaded && (
+          <GoogleMap
+            mapContainerStyle={{
+              width: "100%",
+              height: "100%",
+            }}
+            center={{ lat: latitude, lng: longitude }}
+            zoom={10}
+            options={{
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false,
+            }}
+          >
+            {/* Markers */}
+            {filteredNotes.map((note, index) => (
+              <MarkerF
+                key={index}
+                position={{
+                  lat: parseFloat(note.latitude),
+                  lng: parseFloat(note.longitude),
                 }}
-                center={{ lat: latitude, lng: longitude }}
-                zoom={10}
-                options={{
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
+                onClick={() => setActiveNote(note)}
+              />
+            ))}
+  
+            {/* Info Window */}
+            {activeNote && (
+              <InfoWindow
+                position={{
+                  lat: parseFloat(activeNote.latitude),
+                  lng: parseFloat(activeNote.longitude),
                 }}
+                onCloseClick={() => setActiveNote(null)}
               >
-                {filteredNotes.map((note, index) => (
-                  <MarkerF
-                    key={index}
-                    position={{
-                      lat: parseFloat(note.latitude),
-                      lng: parseFloat(note.longitude),
-                    }}
-                    onClick={() => setActiveNote(note)} // Set the active note here
-                  />
-                ))}
-
-                {activeNote && (
-                  <InfoWindow
-                    position={{
-                      lat: parseFloat(activeNote.latitude),
-                      lng: parseFloat(activeNote.longitude),
-                    }}
-                    onCloseClick={() => setActiveNote(null)} // Clear the active note when InfoWindow is closed
-                  >
-                    <NoteCard note={activeNote} />
-                  </InfoWindow>
-                )}
-              </GoogleMap>
+                <NoteCard note={activeNote} />
+              </InfoWindow>
             )}
-          </>
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel
-          className="min-w-[400px] max-w-[70vw]"
-          defaultSize={2000}
-        >
-          <ScrollArea className="flex flex-col w-[100%] h-[90vh] bg-popover shadow-2xl items-center justify-center align-right">
-            <div className="flex flex-col w-[100%] items-center justify-center pb-3">
-              {filteredNotes.map((note, index) => (
-                <NoteCard key={note.id} note={note} />
-              ))}
-            </div>
-          </ScrollArea>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          </GoogleMap>
+        )}
+      </div>
+  
+      {/* Scrollable column for the note cards */}
+      <div className="w-74 h-full overflow-y-auto bg-white">
+        {filteredNotes.map((note, index) => (
+          <NoteCard key={note.id} note={note} />
+        ))}
+      </div>
     </div>
   );
+  
 };
 
 export default Page;
