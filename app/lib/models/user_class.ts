@@ -1,5 +1,6 @@
 import { UserData } from "../../types";
 import { getItem, setItem } from "../utils/async_storage";
+const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
 export class User {
   private static instance: User;
@@ -7,73 +8,70 @@ export class User {
   private callback: ((isLoggedIn: boolean) => void) | null = null;
 
   public static getInstance(): User {
-      if (!User.instance) {
-          User.instance = new User();
-      }
-      return User.instance;
+    if (!User.instance) {
+      User.instance = new User();
+    }
+    return User.instance;
   }
 
   private persistUser(userData: UserData) {
-      if (typeof window !== 'undefined') {
-          try {
-              localStorage.setItem("userData", JSON.stringify(userData));
-          } catch (error) {
-              console.log(error);
-          }
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("userData", JSON.stringify(userData));
+      } catch (error) {
+        console.log(error);
       }
+    }
   }
 
   public setLoginCallback(callback: (isLoggedIn: boolean) => void) {
-      this.callback = callback;
+    this.callback = callback;
   }
 
   private notifyLoginState() {
-      if (this.callback) {
-          this.callback(this.userData !== null);
-      }
+    if (this.callback) {
+      this.callback(this.userData !== null);
+    }
   }
 
   private async loadUser(): Promise<UserData | null> {
-      if (typeof window !== 'undefined') {
-          try {
-              const value = await localStorage.getItem("userData");
-              if (value !== null) {
-                  return JSON.parse(value);
-              }
-          } catch (error) {
-              console.log(error);
-          }
+    if (typeof window !== "undefined") {
+      try {
+        const value = await localStorage.getItem("userData");
+        if (value !== null) {
+          return JSON.parse(value);
+        }
+      } catch (error) {
+        console.log(error);
       }
-      return null;
+    }
+    return null;
   }
 
   private async clearUser() {
-      if (typeof window !== 'undefined') {
-          try {
-              await localStorage.removeItem("userData");
-          } catch (error) {
-              console.log(error);
-          }
+    if (typeof window !== "undefined") {
+      try {
+        await localStorage.removeItem("userData");
+      } catch (error) {
+        console.log(error);
       }
+    }
   }
 
   public async login(username: string, password: string): Promise<string> {
     try {
-      const response = await fetch(
-        "http://lived-religion-dev.rerum.io/deer-lr/login",
-        {
-          method: "POST",
-          mode: "cors",
-          cache: "no-cache",
-          headers: {
-            "Content-Type": "application/json;charset=utf-8",
-          },
-          body: JSON.stringify({
-            username: username,
-            password: password,
-          }),
-        }
-      );
+      const response = await fetch(RERUM_PREFIX + "login", {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -94,7 +92,7 @@ export class User {
 
   public async logout() {
     try {
-      await fetch("http://lived-religion-dev.rerum.io/deer-lr/logout", {
+      await fetch(RERUM_PREFIX + "logout", {
         method: "POST",
         mode: "cors",
         headers: {
@@ -132,10 +130,9 @@ export class User {
   }
 
   public async hasOnboarded(): Promise<boolean> {
-    const onboarded = await getItem('onboarded');
-    return onboarded === '1';
+    const onboarded = await getItem("onboarded");
+    return onboarded === "1";
   }
-  
 
   public async getRoles(): Promise<{
     administrator: boolean;
