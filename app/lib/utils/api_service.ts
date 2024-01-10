@@ -1,4 +1,5 @@
-import { Note, newNote } from "@/app/types";
+import { Note } from "@/app/types";
+const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
@@ -10,15 +11,21 @@ export default class ApiService {
    * @param {string} userId - The ID of the user for user-specific messages.
    * @returns {Promise<any[]>} The array of messages fetched from the API.
    */
-  static async fetchMessages(global: boolean, published: boolean, userId: string): Promise<any[]> {
+  static async fetchMessages(
+    global: boolean,
+    published: boolean,
+    userId: string
+  ): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
 
-      let body: { type: string, published?: boolean, creator?: string } = { type: "message" };
-  
+      let body: { type: string; published?: boolean; creator?: string } = {
+        type: "message",
+      };
+
       if (global) {
         body = { type: "message" };
       } else if (published) {
@@ -26,13 +33,13 @@ export default class ApiService {
       } else {
         body = { type: "message", creator: userId };
       }
-  
+
       const response = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
-  
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -40,7 +47,7 @@ export default class ApiService {
       throw error;
     }
   }
-  
+
   /**
    * Deletes a note from the API.
    * @param {string} id - The ID of the note to delete.
@@ -49,7 +56,7 @@ export default class ApiService {
    */
   static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/delete";
+      const url = RERUM_PREFIX + "delete";
       const headers = {
         "Content-Type": "text/plain; charset=utf-8",
       };
@@ -82,7 +89,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async writeNewNote(note: Note) {
-    return fetch("http://lived-religion-dev.rerum.io/deer-lr/create", {
+    return fetch(RERUM_PREFIX + "create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +105,7 @@ export default class ApiService {
         audio: note.audio,
         published: note.published,
         tags: note.tags,
-        time: note.time || new Date (),
+        time: note.time || new Date(),
       }),
     });
   }
@@ -109,7 +116,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
-    return await fetch("http://lived-religion-dev.rerum.io/deer-lr/overwrite", {
+    return await fetch(RERUM_PREFIX + "overwrite", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -133,81 +140,86 @@ export default class ApiService {
 
   static async searchMessages(query: string): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
-  
+
       // Request body for retrieving messages of type "message"
       const body = {
         type: "message",
       };
-  
+
       const response = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
-  
+
       let data = await response.json();
-  
+
       // Convert the query to lowercase for case-insensitive matching
       const lowerCaseQuery = query.toLowerCase();
-  
+
       // Filter the messages by title or tags containing the query string
       data = data.filter((message: any) => {
         // Check if title contains the query string
-        if (message.title && message.title.toLowerCase().includes(lowerCaseQuery)) {
+        if (
+          message.title &&
+          message.title.toLowerCase().includes(lowerCaseQuery)
+        ) {
           return true;
         }
-  
+
         // Check if any tags contain the query string
-        if (message.tags && message.tags.some((tag: string) => tag.toLowerCase().includes(lowerCaseQuery))) {
+        if (
+          message.tags &&
+          message.tags.some((tag: string) =>
+            tag.toLowerCase().includes(lowerCaseQuery)
+          )
+        ) {
           return true;
         }
-  
+
         return false;
       });
-  
+
       return data;
     } catch (error) {
       console.error("Error searching messages:", error);
       throw error;
     }
   }
-  
- /**
+
+  /**
    * Fetches all messages for a specific user.
    * @param {string} userId - The ID of the user whose messages are to be fetched.
    * @returns {Promise<any[]>} - The array of messages fetched from the API.
    */
- static async fetchUserMessages(userId: string): Promise<any[]> {
-  try {
-    const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
-    const headers = {
-      "Content-Type": "application/json",
-    };
+  static async fetchUserMessages(userId: string): Promise<any[]> {
+    try {
+      const url = RERUM_PREFIX + "query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
 
-    // Body for the request: fetch messages of type 'message' created by the specified user
-    const body = {
-      type: "message",
-      creator: userId
-    };
+      // Body for the request: fetch messages of type 'message' created by the specified user
+      const body = {
+        type: "message",
+        creator: userId,
+      };
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching user messages:", error);
-    throw error;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      throw error;
+    }
   }
-}
-
-  
-  
 }
