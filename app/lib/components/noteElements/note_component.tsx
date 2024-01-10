@@ -37,6 +37,9 @@ import {
   handleTagsChange,
   handleTimeChange,
 } from "./note_handler";
+import { PhotoType } from "../../models/media_class";
+import { v4 as uuidv4 } from 'uuid';
+
 
 const user = User.getInstance();
 
@@ -76,7 +79,7 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote);
     }
   }, [initialNote]);
-
+  console.log(initialNote);
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -115,6 +118,21 @@ export default function NoteEditor({
     }
   };
 
+  const addImageToNote = (imageUrl: string) => {
+    console.log("Before updating images", noteState.images);
+    const newImage = new PhotoType({
+      uuid: uuidv4(),
+      uri: imageUrl,
+      type: "image",
+    });
+
+    noteHandlers.setImages((prevImages) => {
+      const newImages = [...prevImages, newImage];
+      console.log("After updating images", newImages);
+      return newImages;
+    });
+  };
+
   return (
     <div className="flex flex-col w-[100%]" key={noteState.counter}>
       <div className="flex items-center justify-between mr-6">
@@ -144,12 +162,6 @@ export default function NoteEditor({
             <AlertDialogTrigger asChild>
               <button
                 className="hover:text-red-500 flex justify-center items-center w-full"
-                onClick={() => {
-                  toast("Demo Note", {
-                    description: "You cannot delete in Demo Mode.",
-                    duration: 2000,
-                  });
-                }}
               >
                 <FileX2 className="text-current" />
                 <div className="ml-2">Delete</div>
@@ -226,7 +238,9 @@ export default function NoteEditor({
                 editor.getHTML()
               )
             }
-            renderControls={() => <EditorMenuControls />}
+            renderControls={() => (
+              <EditorMenuControls onImageUpload={addImageToNote} />
+            )}
             children={(editor) => {
               if (!editor) return null;
               return (

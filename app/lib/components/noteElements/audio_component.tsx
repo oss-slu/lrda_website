@@ -5,9 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@radix-ui/react-popover";
-import { randomUUID } from "crypto";
 import { toast } from "sonner";
-import { uploadAudio } from "../../utils/audioUpload";
 import { FileUp } from "lucide-react";
 import {
   Select,
@@ -20,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { AudioType } from "../../models/media_class";
 import { Input } from "@/components/ui/input";
+import { v4 as uuidv4 } from 'uuid';
+import { uploadAudio } from "../../utils/s3_proxy";
 
 type AudioPickerProps = {
   audioArray: AudioType[];
@@ -30,7 +30,6 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [curRec, setCurRec] = useState<string | undefined>();
   const [placeVal, setPlaceVal] = useState<string>("No Recordings");
-  const [selectedFile, setSelectedFile] = useState(null);
   const audioPlayerRef = useRef<AudioPlayer>(null);
 
   useEffect(() => {
@@ -82,7 +81,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
     if (location != "error") {
       const newAudio = new AudioType({
         type: "audio",
-        uuid: randomUUID().toString(),
+        uuid: uuidv4(),
         uri: location,
         name: file.name,
         isPlaying: false,
@@ -116,13 +115,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
           <PopoverTrigger asChild>
             <FileUp
               className=""
-              onClick={() => {
-                toast("Demo Note", {
-                  description: "You cannot upload audio in DEMO mode.",
-                  duration: 2000,
-                });
-              }}
-            />
+              />
           </PopoverTrigger>
           <PopoverContent className="z-30">
             <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
@@ -136,7 +129,6 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
             </div>
           </PopoverContent>
         </Popover>
-
         <Select
           data-testid="audio-select"
           onValueChange={handleSelectChange}
@@ -168,7 +160,6 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
         ref={audioPlayerRef}
         data-testid="audio-player"
         src={curRec}
-        onPlay={(e) => console.log("onPlay")}
         className="flex flex-row p-3 rounded-md w-[90]"
         onClickNext={handleIncrementRecs}
         onClickPrevious={handleDecrementRecs}

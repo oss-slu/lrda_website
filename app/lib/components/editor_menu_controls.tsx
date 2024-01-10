@@ -33,12 +33,15 @@ import {
 } from "mui-tiptap";
 import { uploadMedia } from "../utils/s3_proxy";
 
-export default function EditorMenuControls() {
+type EditorMenuControlsProps = {
+  onImageUpload: any;
+};
+
+export default function EditorMenuControls({ onImageUpload }: EditorMenuControlsProps) {
   const theme = useTheme();
 
   async function uploadImage(file: any) {
     const address = await uploadMedia(file, "image");
-    console.log(address);
     return address;
   }
 
@@ -148,6 +151,7 @@ export default function EditorMenuControls() {
           const uploadPromises = files.map(async (file): Promise<any> => {
             console.log("from file", file);
             const imageSrc = await uploadImage(file);
+            onImageUpload(imageSrc);
             return {
               src: imageSrc,
               alt: file.name,
