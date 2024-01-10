@@ -37,7 +37,9 @@ type EditorMenuControlsProps = {
   onImageUpload: any;
 };
 
-export default function EditorMenuControls({ onImageUpload }: EditorMenuControlsProps) {
+export default function EditorMenuControls({
+  onImageUpload,
+}: EditorMenuControlsProps) {
   const theme = useTheme();
 
   async function uploadImage(file: any) {
@@ -149,7 +151,6 @@ export default function EditorMenuControls({ onImageUpload }: EditorMenuControls
       <MenuButtonImageUpload
         onUploadFiles={async (files): Promise<any[]> => {
           const uploadPromises = files.map(async (file): Promise<any> => {
-            console.log("from file", file);
             const imageSrc = await uploadImage(file);
             onImageUpload(imageSrc);
             return {
@@ -157,11 +158,10 @@ export default function EditorMenuControls({ onImageUpload }: EditorMenuControls
               alt: file.name,
             };
           });
-        
+
           const images = await Promise.all(uploadPromises);
           return images;
         }}
-        
       />
 
       <MenuDivider />

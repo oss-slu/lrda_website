@@ -38,8 +38,7 @@ import {
   handleTimeChange,
 } from "./note_handler";
 import { PhotoType } from "../../models/media_class";
-import { v4 as uuidv4 } from 'uuid';
-
+import { v4 as uuidv4 } from "uuid";
 
 const user = User.getInstance();
 
@@ -79,7 +78,6 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote);
     }
   }, [initialNote]);
-  console.log(initialNote);
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -160,9 +158,7 @@ export default function NoteEditor({
           <div className="w-1 h-9 bg-border" />
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button
-                className="hover:text-red-500 flex justify-center items-center w-full"
-              >
+              <button className="hover:text-red-500 flex justify-center items-center w-full">
                 <FileX2 className="text-current" />
                 <div className="ml-2">Delete</div>
               </button>

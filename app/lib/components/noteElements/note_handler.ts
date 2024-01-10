@@ -47,7 +47,6 @@ export const handleDeleteNote = async (
   user: User,
   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
 ) => {
-  console.log(note);
   if (note?.id) {
     try {
       const userId = await user.getId();

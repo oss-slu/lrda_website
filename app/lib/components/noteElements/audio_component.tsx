@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { AudioType } from "../../models/media_class";
 import { Input } from "@/components/ui/input";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { uploadAudio } from "../../utils/s3_proxy";
 
 type AudioPickerProps = {
@@ -113,9 +113,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
       <div className="flex flex-row max-w-[280px] w-[100%] justify-evenly align-center items-center cursor-pointer h-10">
         <Popover>
           <PopoverTrigger asChild>
-            <FileUp
-              className=""
-              />
+            <FileUp className="" />
           </PopoverTrigger>
           <PopoverContent className="z-30">
             <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
@@ -145,7 +143,11 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
             <SelectGroup>
               {audioArray.length >= 1 ? (
                 audioArray.map((audio) => (
-                  <SelectItem key={audio.uuid} value={audio.uri} data-testid="audio-option">
+                  <SelectItem
+                    key={audio.uuid}
+                    value={audio.uri}
+                    data-testid="audio-option"
+                  >
                     {audio.name}
                   </SelectItem>
                 ))
