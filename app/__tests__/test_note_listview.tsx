@@ -17,17 +17,24 @@ describe('NoteListView', () => {
   it('displays the list of notes', () => {
     render(<NoteListView notes={mockNotes} onNoteSelect={jest.fn()} />);
 
-    expect(screen.getByText('Note 1')).toBeInTheDocument();
-    expect(screen.getByText('Note 2')).toBeInTheDocument();
-    expect(screen.getByText('Note 3')).toBeInTheDocument();
+    mockNotes.forEach(note => {
+      expect(screen.getByText(note.title)).toBeInTheDocument();
+    });
   });
 
-  it('calls the onNoteSelect function when a note is selected', () => {
+  it('calls the onNoteSelect function with false for isNewNote when a note is clicked', () => {
     const mockOnNoteSelect = jest.fn();
     render(<NoteListView notes={mockNotes} onNoteSelect={mockOnNoteSelect} />);
 
     fireEvent.click(screen.getByText('Note 1'));
 
-    expect(mockOnNoteSelect).toHaveBeenCalledWith(mockNotes[0]);
+    expect(mockOnNoteSelect).toHaveBeenCalledWith(mockNotes[0], false);
+  });
+
+  it('calls the onNoteSelect function with the first note and false for isNewNote on initial render', () => {
+    const mockOnNoteSelect = jest.fn();
+    render(<NoteListView notes={mockNotes} onNoteSelect={mockOnNoteSelect} />);
+
+    expect(mockOnNoteSelect).toHaveBeenCalledWith(mockNotes[0], false);
   });
 });

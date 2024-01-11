@@ -118,11 +118,11 @@ const Page = () => {
                 }}
                 onClick={() => setActiveNote(note)}
                 icon={getMarkerIcon()}
-                // label={{
-                //   text: getMarkerLabel(note),
-                //   color: "white",
-                //   className: 'custom-marker-label',
-                // }}
+                label={{
+                  text: getMarkerLabel(note),
+                  color: "white",
+                  className: 'custom-marker-label',
+                }}
                 zIndex={index}
               />
             ))}
