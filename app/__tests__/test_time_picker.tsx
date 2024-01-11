@@ -1,36 +1,53 @@
-import React from 'react';
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
-import TagManager from '../lib/components/noteElements/tag_manager';
+import React from "react";
+import "@testing-library/jest-dom";
+import { render, screen, fireEvent } from "@testing-library/react";
+import TimePicker from "../lib/components/noteElements/time_picker";
 
-describe('TagManager', () => {
-  it('renders without crashing', () => {
-    render(<TagManager onTagsChange={function (tags: string[]): void {
-      throw new Error('Function not implemented.');
-    } } />);
+describe("TimePicker", () => {
+  const initialDate = new Date(2022, 5, 10, 15, 30); // June 10, 2022, 15:30
+
+  it("initializes with the provided date", () => {
+    render(<TimePicker initialDate={initialDate} />);
+    expect(screen.getByText(/Fri Jun 10 2022 3:30 PM/)).toBeInTheDocument();
   });
 
-  it('adds a new tag when a valid tag is entered', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} />);
+  it("updates the date when a new day is selected", () => {
+    const mockOnTimeChange = jest.fn();
+    render(
+      <TimePicker initialDate={initialDate} onTimeChange={mockOnTimeChange} />
+    );
 
-    const input = screen.getByPlaceholderText('Add tags...');
-    fireEvent.change(input, { target: { value: 'NewTag' } });
-    fireEvent.keyDown(input, { key: 'Enter', code: 13 });
+    // Open the popover
+    const button = screen.getByRole("button", {
+      name: /Fri Jun 10 2022 3:30 PM/,
+    });
+    fireEvent.click(button);
 
-    expect(screen.getByText('NewTag')).toBeInTheDocument();
-    expect(mockOnTagsChange).toHaveBeenCalledWith(['NewTag']);
+    // Find the day cell and click it
+    // This assumes the calendar day cells contain the day number as text content
+    const newDayCell = screen.getByText("11", {
+      selector: "[role='gridcell']",
+    });
+    fireEvent.click(newDayCell);
+
+    expect(mockOnTimeChange).toHaveBeenCalled();
+    expect(mockOnTimeChange.mock.calls[0][0]).toBeInstanceOf(Date);
   });
 
-  it('does not add a new tag when an invalid tag is entered', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} />);
+  it("updates the time when the time input is changed", () => {
+    const mockOnTimeChange = jest.fn();
+    render(
+      <TimePicker initialDate={initialDate} onTimeChange={mockOnTimeChange} />
+    );
 
-    const input = screen.getByPlaceholderText('Add tags...');
-    fireEvent.change(input, { target: { value: 'InvalidTag' } });
-    fireEvent.keyDown(input, { key: 'Enter', code: 13 });
+    // Open the popover
+    const button = screen.getByRole("button");
+    fireEvent.click(button);
 
-    expect(screen.queryByText('InvalidTag')).not.toBeInTheDocument();
-    expect(mockOnTagsChange).not.toHaveBeenCalled();
+    const timeInput = screen.getByDisplayValue(/15:30/);
+    fireEvent.change(timeInput, { target: { value: "16:45" } });
+
+    expect(mockOnTimeChange).toHaveBeenCalled();
+    expect(mockOnTimeChange.mock.calls[0][0]).toBeInstanceOf(Date);
   });
 });
