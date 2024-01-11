@@ -8,6 +8,7 @@ import {
   ThumbsDown,
   Tags,
   Clock3,
+  FileAudio,
 } from "lucide-react";
 import {
   Dialog,
@@ -18,8 +19,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import NoteCard from "./note_card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import AudioPicker from "./noteElements/audio_component";
 
 function formatDate(date: Date) {
   if (!date) return "Pick a date";
@@ -127,6 +134,16 @@ const ClickableNote: React.FC<{
             </button>
             {disLikes}
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <div className="flex absolute bottom-4 left-4 shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                <FileAudio />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent>
+              <AudioPicker audioArray={note.audio} editable={false} />
+            </PopoverContent>
+          </Popover>
         </DialogFooter>
       </DialogContent>
     </Dialog>

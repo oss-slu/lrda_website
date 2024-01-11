@@ -116,12 +116,12 @@ const Page = () => {
                   lng: parseFloat(note.longitude),
                 }}
                 onClick={() => setActiveNote(note)}
-                icon={getMarkerIcon()}
-                label={{
-                  text: getMarkerLabel(note),
-                  color: "white",
-                  className: 'custom-marker-label',
-                }}
+                // icon={getMarkerIcon()}
+                // label={{
+                //   text: getMarkerLabel(note),
+                //   color: "white",
+                //   className: 'custom-marker-label',
+                // }}
                 zIndex={index}
               />
             ))}

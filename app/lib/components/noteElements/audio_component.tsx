@@ -24,9 +24,10 @@ import { Input } from "@/components/ui/input";
 type AudioPickerProps = {
   audioArray: AudioType[];
   setAudio?: React.Dispatch<React.SetStateAction<AudioType[]>>;
+  editable?: boolean;
 };
 
-const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
+const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [curRec, setCurRec] = useState<string | undefined>();
   const [placeVal, setPlaceVal] = useState<string>("No Recordings");
@@ -112,31 +113,32 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
   return (
     <div className="flex flex-col items-center p-2 h-min min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
       <div className="flex flex-row max-w-[280px] w-[100%] justify-evenly align-center items-center cursor-pointer h-10">
-        <Popover>
-          <PopoverTrigger asChild>
-            <FileUp
-              className=""
-              onClick={() => {
-                toast("Demo Note", {
-                  description: "You cannot upload audio in DEMO mode.",
-                  duration: 2000,
-                });
-              }}
-            />
-          </PopoverTrigger>
-          <PopoverContent className="z-30">
-            <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
-              <div className="px-4">Upload Media Here.</div>
-              <div className="px-4 mb-3">It must be of type '.mp3'</div>
-              <Input
-                type="file"
-                accept=".mp3"
-                onChange={(e) => handleFileChange(e)}
+        {editable ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <FileUp
+                className=""
+                onClick={() => {
+                  toast("Demo Note", {
+                    description: "You cannot upload audio in DEMO mode.",
+                    duration: 2000,
+                  });
+                }}
               />
-            </div>
-          </PopoverContent>
-        </Popover>
-
+            </PopoverTrigger>
+            <PopoverContent className="z-30">
+              <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
+                <div className="px-4">Upload Media Here.</div>
+                <div className="px-4 mb-3">It must be of type '.mp3'</div>
+                <Input
+                  type="file"
+                  accept=".mp3"
+                  onChange={(e) => handleFileChange(e)}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : null}
         <Select
           data-testid="audio-select"
           onValueChange={handleSelectChange}
@@ -153,7 +155,11 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio }) => {
             <SelectGroup>
               {audioArray.length >= 1 ? (
                 audioArray.map((audio) => (
-                  <SelectItem key={audio.uuid} value={audio.uri} data-testid="audio-option">
+                  <SelectItem
+                    key={audio.uuid}
+                    value={audio.uri}
+                    data-testid="audio-option"
+                  >
                     {audio.name}
                   </SelectItem>
                 ))

@@ -50,7 +50,7 @@ return (
       <h3 className="text-lg font-semibold truncate">{title}</h3>
       <p className="text-sm text-gray-500 mb-2">{date.toString()}</p>
       <div className="flex flex-wrap gap-2 mb-2 items-center">
-        {tags.slice(0, 4).map((tag, index) => (
+        {tags.slice(0, 3).map((tag, index) => (
           <span key={index} className="bg-blue-100 text-blue-800 h-5 text-xs px-2 font-semibold rounded flex justify-center items-center">
             {tag}
           </span>
