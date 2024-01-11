@@ -1,5 +1,8 @@
 import { Note } from "@/app/types";
+<<<<<<< HEAD
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
+=======
+>>>>>>> deliverable-2-map
 
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
@@ -223,3 +226,29 @@ export default class ApiService {
     }
   }
 }
+<<<<<<< HEAD
+=======
+
+/**
+   * Fetches the name of the creator from a given URL.
+   * @param {string} creatorUrl - The URL pointing to the creator's information.
+   * @returns {Promise<string>} The name of the creator.
+   */
+static async fetchCreatorName(creatorUrl: string): Promise<string> {
+  try {
+    const response = await fetch(creatorUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.name;
+  } catch (error) {
+    console.error('Error fetching creator name:', error);
+    throw error;
+  }
+}
+
+  
+  
+}
+>>>>>>> deliverable-2-map

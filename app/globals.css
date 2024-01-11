@@ -357,3 +357,14 @@
 .rhap_button-clear:focus:not(:focus-visible) {
   outline: 0;
 }
+
+.custom-marker-label {
+  background-color: #555; 
+  padding: 2px 4px; 
+  border-radius: 3px; 
+  border: 1px solid #fff; 
+  font-size: 14px; 
+  font-weight: bold;
+  text-align: center; 
+  white-space: nowrap; 
+}
