@@ -7,13 +7,12 @@ import {
   MarkerF,
   InfoWindow,
 } from "@react-google-maps/api";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "../../components/search_bar";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
-import NoteCard from "../../components/note_card";
+import ClickableNote from "../../components/click_note_card";
 import mapPin from "public/3d-map-pin.jpeg";
 import { toast } from "sonner";
 
@@ -136,7 +135,7 @@ const Page = () => {
                 }}
                 onCloseClick={() => setActiveNote(null)}
               >
-                <NoteCard note={activeNote} />
+                <ClickableNote note={activeNote} />
               </InfoWindow>
             )}
           </GoogleMap>
@@ -146,7 +145,7 @@ const Page = () => {
       {/* Scrollable column for the note cards */}
       <div className="w-74 h-full overflow-y-auto bg-white">
         {filteredNotes.map((note, index) => (
-          <NoteCard key={note.id} note={note} />
+          <ClickableNote key={note.id} note={note} />
         ))}
       </div>
     </div>
