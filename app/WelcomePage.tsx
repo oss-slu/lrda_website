@@ -48,7 +48,7 @@ const WelcomePage: React.FC = () => {
         >
           Where's Religion?
         </span>
-        Where's Religion?
+        <span className="from-pink-500 to-yellow-500">Where's Religion?</span> 
       </h1>
     </div>
   );
