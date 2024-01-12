@@ -368,3 +368,7 @@
   text-align: center; 
   white-space: nowrap; 
 }
+
+.text-gradient {
+  @apply bg-clip-text text-transparent;
+}

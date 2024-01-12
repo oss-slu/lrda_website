@@ -1,38 +1,42 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import Sidebar from "./lib/components/side_bar";
-import NoteEditor from "./lib/components/noteElements/note_component";
-import { Note, newNote } from "./types";
-import { ScrollArea } from "@/components/ui/scroll-area";
+'use client'
+import React, { useState } from 'react';
 
-export default function Home() {
-  const [isClient, setIsClient] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<Note | newNote>();
-  const [isNewNote, setIsNewNote] = useState(false); 
+interface MousePosition {
+  x: number;
+  y: number;
+}
 
-  const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
-    setSelectedNote(note);
-    setIsNewNote(isNew);
-  };
+const WelcomePage: React.FC = () => {
+  const [cursorPos, setCursorPos] = useState<MousePosition>({ x: 0, y: 0 });
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const isNote = (note: Note | newNote): note is Note => {
-    return (note as Note).id !== undefined;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCursorPos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
   };
 
   return (
-    <main className="relative flex h-[90vh] flex-row p-4">
-      <Sidebar onNoteSelect={handleNoteSelect} />
-      <ScrollArea>
-        <div className="flex-1 ml-64">
-          {isClient && selectedNote && (
-            <NoteEditor note={selectedNote} isNewNote={isNewNote} />
-          )}
-        </div>
-      </ScrollArea>
-    </main>
+    <div className="flex justify-center items-center h-screen"
+         onMouseMove={handleMouseMove}>
+      <h1 className="text-9xl font-bold relative">
+        <span className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to right, cyan, blue)',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 30%, black 100%)`,
+                WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 30%, black 100%)`
+              }}>
+          Where's Religion?
+        </span>
+        Where's Religion?
+      </h1>
+    </div>
   );
-}
+};
+
+export default WelcomePage;
+
+

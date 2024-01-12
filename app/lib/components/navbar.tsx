@@ -38,7 +38,7 @@ export default function Navbar() {
       <div className="w-full">
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
-            Where's Religion?
+            Create a Note
           </a>
         </Link>
         <Link legacyBehavior href="/lib/pages/map" passHref>
