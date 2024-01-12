@@ -22,7 +22,6 @@ export default class ApiService {
       const headers = {
         "Content-Type": "application/json",
       };
-
       let body: { type: string; published?: boolean; creator?: string } = {
         type: "message",
       };
@@ -223,6 +222,38 @@ export default class ApiService {
       throw error;
     }
   }
+
+  /**
+   * Fetches all Published Notes.
+   * @returns {Promise<any[]>} - The array of messages fetched from the API.
+   */
+  static async fetchPublishedNotes(): Promise<any[]> {
+    try {
+      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // Body for the request: fetch messages of type 'message' created by the specified user
+      const body = {
+        type: "message",
+        published: true,
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      throw error;
+    }
+  }
+
   /**
    * Fetches the name of the creator from a given URL.
    * @param {string} creatorUrl - The URL pointing to the creator's information.
@@ -241,5 +272,4 @@ export default class ApiService {
       throw error;
     }
   }
-  
 }

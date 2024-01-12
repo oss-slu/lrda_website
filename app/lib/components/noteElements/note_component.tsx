@@ -191,6 +191,7 @@ export default function NoteEditor({
           <AudioPicker
             audioArray={noteState.audio || []}
             setAudio={noteHandlers.setAudio}
+            editable={true}
           />
         </div>
         <div className="mt-3">
