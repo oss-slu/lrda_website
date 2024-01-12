@@ -25,7 +25,7 @@ const WelcomePage: React.FC = () => {
       className="flex justify-center items-center h-screen bg-black overflow-hidden"
       onMouseMove={handleMouseMove}
     >
-      <h1 ref={textRef} className="text-9xl font-bold relative px-4">
+      <h1 ref={textRef} className="text-9xl font-bold relative px-3">
         <span
           className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
           style={{
@@ -42,8 +42,8 @@ const WelcomePage: React.FC = () => {
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent',
-            mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 1%, black 100%)`,
-            WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 1%, black 100%)`,
+            mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
+            WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
           }}
         >
           Where's Religion?
