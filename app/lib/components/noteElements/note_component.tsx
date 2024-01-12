@@ -242,10 +242,7 @@ export default function NoteEditor({
             children={(editor) => {
               if (!editor) return null;
               return (
-                <LinkBubbleMenu>
-                  {/* This is where you can add additional elements that should appear in the bubble menu */}
-                  {/* For example, you could include pedagogical comments here */}
-                </LinkBubbleMenu>
+                <LinkBubbleMenu/>
               );
             }}
           />
