@@ -9,11 +9,16 @@ const user = User.getInstance();
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem(name || "");
-    user.logout();
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
+  const handleLogout = async () => {
+    try {
+      await user.logout();
+      localStorage.removeItem(name || "");
+
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    } catch (error) {
+      console.error("Logout failed", error);
     }
   };
 
@@ -22,10 +27,15 @@ export default function Navbar() {
       try {
         const userName = await user.getName();
         setName(userName);
-        const item = userName ? localStorage.getItem(userName) : null;
-        await user.login(userName || "", item || "");
+
+        if (userName) {
+          const item = localStorage.getItem(userName);
+          if (item) {
+            await user.login(userName, item);
+          }
+        }
       } catch (error) {
-        console.log("No user cached");
+        console.log("No user cached or login failed");
       }
     };
 
@@ -34,7 +44,6 @@ export default function Navbar() {
 
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
-
       <div className="w-full">
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
