@@ -25,7 +25,7 @@ const WelcomePage: React.FC = () => {
       className="flex justify-center items-center h-screen bg-black overflow-visible"
       onMouseMove={handleMouseMove}
     >
-      <h1 ref={textRef} className="text-9xl font-bold relative px-2 pb-4">
+      <h1 ref={textRef} className="text-9xl font-bold relative px-1 pb-4 whitespace-nowrap" style={{ maxWidth: '100%' }}>
         <span
           className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
           style={{
