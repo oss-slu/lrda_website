@@ -25,7 +25,7 @@ const WelcomePage: React.FC = () => {
       className="flex justify-center items-center h-screen bg-black overflow-visible"
       onMouseMove={handleMouseMove}
     >
-      <h1 ref={textRef} className="text-9xl font-bold relative px-3 pb-4">
+      <h1 ref={textRef} className="text-9xl font-bold relative px-2 pb-4">
         <span
           className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
           style={{
@@ -48,7 +48,7 @@ const WelcomePage: React.FC = () => {
         >
           Where's Religion?
         </span>
-        <span className="from-pink-500 to-yellow-500">Where's Religion?</span> 
+        <span className="text-gray-800">Where's Religion?</span> 
       </h1>
     </div>
   );
