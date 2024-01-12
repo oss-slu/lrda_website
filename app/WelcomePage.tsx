@@ -42,8 +42,8 @@ const WelcomePage: React.FC = () => {
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
-            mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
-            WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
+            mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 15px, black 30%)`,
+            WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 15px, black 30%)`,
           }}
         >
           Where's Religion?
