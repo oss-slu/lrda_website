@@ -12,7 +12,7 @@ export default class ApiService {
    */
   static async fetchMessages(global: boolean, published: boolean, userId: string): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = "https://lived-religion-dev.rerum.io/deer-lr/query";
       const headers = {
         "Content-Type": "application/json",
       };
@@ -49,7 +49,7 @@ export default class ApiService {
    */
   static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/delete";
+      const url = "https://lived-religion-dev.rerum.io/deer-lr/delete";
       const headers = {
         "Content-Type": "text/plain; charset=utf-8",
       };
@@ -82,7 +82,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async writeNewNote(note: newNote) {
-    return fetch("http://lived-religion-dev.rerum.io/deer-lr/create", {
+    return fetch("https://lived-religion-dev.rerum.io/deer-lr/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
-    return await fetch("http://lived-religion-dev.rerum.io/deer-lr/overwrite", {
+    return await fetch("https://lived-religion-dev.rerum.io/deer-lr/overwrite", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -133,7 +133,7 @@ export default class ApiService {
 
   static async searchMessages(query: string): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = "https://lived-religion-dev.rerum.io/deer-lr/query";
       const headers = {
         "Content-Type": "application/json",
       };
@@ -183,7 +183,7 @@ export default class ApiService {
    */
  static async fetchUserMessages(userId: string): Promise<any[]> {
   try {
-    const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+    const url = "https://lived-religion-dev.rerum.io/deer-lr/query";
     const headers = {
       "Content-Type": "application/json",
     };
