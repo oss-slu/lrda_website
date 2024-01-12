@@ -39,11 +39,12 @@ import {
 } from "./note_handler";
 import { PhotoType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
+import { newNote } from "@/app/types";
 
 const user = User.getInstance();
 
 type NoteEditorProps = {
-  note?: Note;
+  note?: Note | newNote;
   isNewNote: boolean;
 };
 
@@ -51,7 +52,7 @@ export default function NoteEditor({
   note: initialNote,
   isNewNote,
 }: NoteEditorProps) {
-  const { noteState, noteHandlers } = useNoteState(initialNote);
+  const { noteState, noteHandlers } = useNoteState(initialNote as Note);
 
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
@@ -60,7 +61,7 @@ export default function NoteEditor({
 
   useEffect(() => {
     if (initialNote) {
-      noteHandlers.setNote(initialNote);
+      noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
       noteHandlers.setImages(initialNote.media || []);
@@ -75,7 +76,7 @@ export default function NoteEditor({
 
   useEffect(() => {
     if (initialNote) {
-      noteHandlers.setNote(initialNote);
+      noteHandlers.setNote(initialNote as Note);
     }
   }, [initialNote]);
   const onSave = async () => {
