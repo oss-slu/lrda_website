@@ -229,7 +229,7 @@ export default class ApiService {
    */
   static async fetchPublishedNotes(): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
