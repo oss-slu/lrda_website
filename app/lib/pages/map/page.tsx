@@ -181,7 +181,7 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
-      <div className="w-74 h-full overflow-y-auto bg-white">
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
         {filteredNotes.map((note) => (
           <ClickableNote key={note.id} note={note} />
         ))}
