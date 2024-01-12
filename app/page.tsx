@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 
 interface MousePosition {
   x: number;
@@ -19,19 +19,19 @@ const WelcomePage: React.FC = () => {
       });
     }
   };
-
+  // the px-3 in the h1 is what makes it 3D
   return (
     <div
-      className="flex justify-center items-center h-screen bg-black overflow-hidden"
+      className="flex justify-center items-center h-screen bg-black overflow-visible"
       onMouseMove={handleMouseMove}
     >
-      <h1 ref={textRef} className="text-9xl font-bold relative px-3">
+      <h1 ref={textRef} className="text-9xl font-bold relative px-3 pb-4">
         <span
           className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
           style={{
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
           }}
         >
           Where's Religion?
@@ -39,9 +39,9 @@ const WelcomePage: React.FC = () => {
         <span
           className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500"
           style={{
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
             mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
             WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent .1%, black 100%)`,
           }}
