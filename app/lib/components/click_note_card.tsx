@@ -9,6 +9,8 @@ import {
   Tags,
   Clock3,
   FileAudio,
+  ImageIcon,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -27,6 +29,8 @@ import {
 import NoteCard from "./note_card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AudioPicker from "./noteElements/audio_component";
+import MediaViewer from "./media_viewer";
+import { PopoverClose } from "@radix-ui/react-popover";
 
 function formatDate(date: Date) {
   if (!date) return "Pick a date";
@@ -138,18 +142,33 @@ const ClickableNote: React.FC<{
             </button>
             {disLikes}
           </div>
-          {note.audio.length > 0 ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <div className="flex absolute bottom-4 left-4 shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
-                  <FileAudio />
-                </div>
-              </PopoverTrigger>
-              <PopoverContent>
-                <AudioPicker audioArray={note.audio} editable={false} />
-              </PopoverContent>
-            </Popover>
-          ) : null}
+          <div className="flex flex-row w-28 absolute left-4 bottom-4">
+            {note.audio.length > 0 ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                    <FileAudio />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <AudioPicker audioArray={note.audio} editable={false} />
+                </PopoverContent>
+              </Popover>
+            ) : null}
+            {note.media.length > 0 ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                    <ImageIcon />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="bg-white overflow-auto rounded-lg shadow-lg w-[450px] max-w-full px-16 align-middle justify-center items-center">
+                  <PopoverClose className="absolute right-4"><X/></PopoverClose>
+                  <MediaViewer mediaArray={note.media} />
+                </PopoverContent>
+              </Popover>
+            ) : null}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
