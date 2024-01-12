@@ -26,8 +26,23 @@ const Page = () => {
   const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
   const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
+  const [mapCenter, setMapCenter] = useState(defaultLocation);
+  const [mapZoom, setMapZoom] = useState(10);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const user = User.getInstance();
+
+  const onMapLoad = (map: any) => {
+    map.addListener("dragend", () => {
+      setMapCenter({
+        lat: map.getCenter().lat(),
+        lng: map.getCenter().lng(),
+      });
+    });
+
+    map.addListener("zoom_changed", () => {
+      setMapZoom(map.getZoom());
+    });
+  };
 
   useEffect(() => {
     async function fetchNotes() {
@@ -95,8 +110,6 @@ const Page = () => {
     setFilteredNotes(notesToUse);
   };
 
-  console.log(isLoggedIn);
-
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
@@ -115,8 +128,9 @@ const Page = () => {
         {isLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={defaultLocation}
-            zoom={10}
+            center={mapCenter}
+            zoom={mapZoom}
+            onLoad={onMapLoad}
             options={{
               streetViewControl: false,
               mapTypeControl: false,
@@ -125,12 +139,22 @@ const Page = () => {
           >
             {filteredNotes.map((note, index) => (
               <MarkerF
-                key={note.id}
+                key={note.id + new Date().getMilliseconds()}
                 position={{
                   lat: parseFloat(note.latitude),
                   lng: parseFloat(note.longitude),
                 }}
-                onClick={() => setActiveNote(note)}
+                onClick={() => {
+                  console.log("Marker clicked:", note.id);
+                  if (activeNote?.id !== note.id) {
+                    setActiveNote(note);
+                  } else {
+                    console.log(
+                      "Attempt to set the same active note:",
+                      note.id
+                    );
+                  }
+                }}
                 // icon={getMarkerIcon()}
                 // label={{
                 //   text: getMarkerLabel(note),
@@ -142,12 +166,14 @@ const Page = () => {
             ))}
             {activeNote && (
               <InfoWindow
-                key={activeNote.id}
+                key={new Date().getMilliseconds() + new Date().getTime()}
                 position={{
                   lat: parseFloat(activeNote.latitude),
                   lng: parseFloat(activeNote.longitude),
                 }}
-                onCloseClick={() => setActiveNote(null)}
+                onCloseClick={() => {
+                  setActiveNote(null);
+                }}
               >
                 <ClickableNote note={activeNote} />
               </InfoWindow>
