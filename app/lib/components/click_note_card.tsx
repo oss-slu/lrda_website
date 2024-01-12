@@ -71,6 +71,8 @@ const ClickableNote: React.FC<{
 
   const data = note.text;
 
+  focus();
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -119,6 +121,7 @@ const ClickableNote: React.FC<{
         <DialogFooter>
           <div className=" absolute bottom-4 right-4 flex w-[220px] h-10 bg-popup shadow-sm rounded-full border border-border bg-white pt-2 pb-2 justify-around items-center">
             <button
+              tabIndex={-1}
               className="hover:text-green-500 flex justify-center items-center w-10"
               onClick={() => setLikes(likes + 1)}
             >
@@ -127,6 +130,7 @@ const ClickableNote: React.FC<{
             {likes}
             <div className="w-1 h-7 bg-border" />
             <button
+              tabIndex={-1}
               className="hover:text-red-500 flex justify-center items-center w-10"
               onClick={() => setDisLikes(disLikes - 1)}
             >
@@ -134,16 +138,18 @@ const ClickableNote: React.FC<{
             </button>
             {disLikes}
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <div className="flex absolute bottom-4 left-4 shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
-                <FileAudio />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent>
-              <AudioPicker audioArray={note.audio} editable={false} />
-            </PopoverContent>
-          </Popover>
+          {note.audio.length > 0 ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="flex absolute bottom-4 left-4 shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                  <FileAudio />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent>
+                <AudioPicker audioArray={note.audio} editable={false} />
+              </PopoverContent>
+            </Popover>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>
