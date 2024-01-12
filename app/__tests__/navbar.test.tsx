@@ -79,7 +79,7 @@ describe("Navbar Component", () => {
     await act(async () => {
       render(<Navbar />);
     });
-    expect(screen.getByText(/where's religion?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Create a note/i)).toBeInTheDocument();
     expect(screen.getByRole("navigation")).toBeInTheDocument();
   });
 });
