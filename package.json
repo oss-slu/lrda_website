@@ -90,6 +90,7 @@
     "clsx": "^2.0.0",
     "create-next-app": "^13.4.19",
     "date-fns": "^3.0.0",
+    "embla-carousel": "8.0.0-rc19",
     "embla-carousel-react": "8.0.0-rc19",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.7",
