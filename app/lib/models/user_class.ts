@@ -72,7 +72,6 @@ export class User {
           password: password,
         }),
       });
-
       if (response.ok) {
         const data = await response.json();
         this.userData = data;

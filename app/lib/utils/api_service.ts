@@ -19,6 +19,7 @@ export default class ApiService {
   ): Promise<any[]> {
     try {
       const url = RERUM_PREFIX + "query";
+
       const headers = {
         "Content-Type": "application/json",
       };
@@ -56,7 +57,9 @@ export default class ApiService {
    */
   static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
     try {
+
       const url = RERUM_PREFIX + "delete";
+
       const headers = {
         "Content-Type": "text/plain; charset=utf-8",
       };
@@ -196,6 +199,7 @@ export default class ApiService {
    * @param {string} userId - The ID of the user whose messages are to be fetched.
    * @returns {Promise<any[]>} - The array of messages fetched from the API.
    */
+
   static async fetchUserMessages(userId: string): Promise<any[]> {
     try {
       const url = RERUM_PREFIX + "query";
@@ -208,7 +212,6 @@ export default class ApiService {
         type: "message",
         creator: userId,
       };
-
       const response = await fetch(url, {
         method: "POST",
         headers,
@@ -229,7 +232,7 @@ export default class ApiService {
    */
   static async fetchPublishedNotes(): Promise<any[]> {
     try {
-      const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+      const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
