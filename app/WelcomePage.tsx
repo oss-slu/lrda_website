@@ -24,6 +24,7 @@ const WelcomePage: React.FC = () => {
     <div
       className="flex justify-center items-center h-screen bg-black overflow-visible"
       onMouseMove={handleMouseMove}
+      style={{ cursor: 'url(/pin.png), auto'}}
     >
       <h1 ref={textRef} className="text-9xl font-bold relative px-1 pb-4 whitespace-nowrap" style={{ maxWidth: '100%' }}>
         <span
