@@ -48,6 +48,8 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
   const [latitude, setLatitude] = useState<string>(note?.latitude || "");
   const [tags, setTags] = useState<any[]>(note?.tags || []);
   const rteRef = useRef<RichTextEditorRef>(null);
+  const [unSavedTextChangesFlag, setUnSavedTextChangesFlag] = useState<boolean>(false);
+  const [initialEditorContent, setInitialEditorContent] = useState<string | null>(null);
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
   });
@@ -63,11 +65,15 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       setLatitude(initialNote.latitude || "");
       setTags(initialNote.tags || []);
       setAudio(initialNote.audio || []);
+      setInitialEditorContent(editorContent);
     }
   }, [initialNote]);
 
   const handleEditorChange = (content: string) => {
     setEditorContent(content);
+    if(editorContent!=initialEditorContent){
+      setUnSavedTextChangesFlag(true);
+    }
   };
 
   // Call this when you're ready to update the note object, e.g., on blur or save
@@ -88,6 +94,8 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
       setTags(note.tags);
       setAudio(note.audio);
       setCounter(counter + 1);
+      setInitialEditorContent(note.text);
+      setUnSavedTextChangesFlag(false);
     }
   }, [note]);
 
@@ -200,8 +208,9 @@ export default function NoteEditor({ note: initialNote }: NoteEditorProps) {
           />
           <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
             <button
-              className="hover:text-green-500 flex justify-center items-center w-full"
+              className= {`flex justify-center items-center w-full ${unSavedTextChangesFlag ? 'text-green-500' : 'hover:text-green-500'}`}
               onClick={() => {
+                setUnSavedTextChangesFlag(false); //this is done here as it is in demo mode else can be done after the save operation is success
                 toast("Demo Note", {
                   description: "You cannot save in Demo Mode.",
                   duration: 2000,
