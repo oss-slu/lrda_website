@@ -101,11 +101,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       </div>
       <Button data-testid="add-note-button" onClick={handleAddNote}>
         Add Note
-      </Button>
+      </Button>      
+      
       <div>
         <NoteListView notes={filteredNotes} onNoteSelect={onNoteSelect} />
       </div>
-      
+
+      <Button
+            onClick={() => (window.location.href = "/lib/pages/Rendering")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+          >
+            MapPage
+          </Button>
+          
     </div>
   );
 };
