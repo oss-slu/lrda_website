@@ -21,7 +21,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Install pnpm
+        run: npm install -g pnpm
       - name: Install dependencies
-        run: npm install --f # or 'npm install' if you're using npm
+        run: pnpm install # Replace 'npm install' with 'pnpm install'
       - name: Run tests
-        run: npm test # or 'npm test' if you're using npm
+        run: pnpm test # or 'npm test' if you're using npm
