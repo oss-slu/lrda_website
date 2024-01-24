@@ -22,6 +22,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: yarn install # or 'npm install' if you're using npm
+        run: npm install --f # or 'npm install' if you're using npm
       - name: Run tests
-        run: yarn test # or 'npm test' if you're using npm
+        run: npm test # or 'npm test' if you're using npm
