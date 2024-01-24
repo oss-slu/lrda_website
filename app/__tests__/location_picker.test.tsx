@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import LocationPicker from "../lib/components/location_component";
+import LocationPicker from "../lib/components/noteElements/location_component";
 import "@testing-library/jest-dom";
 
 jest.mock("@react-google-maps/api", () => ({

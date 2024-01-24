@@ -13,7 +13,6 @@ describe('Sidebar Component', () => {
   let originalConsoleError: jest.Mock;
 
   beforeEach(() => {
-    // Install Moxios before each test
     moxios.install();
 
     mockPush = jest.fn();
@@ -50,7 +49,5 @@ describe('Sidebar Component', () => {
     const linkElement = screen.getByText('Add Note');
     expect(linkElement).toBeInTheDocument();
   });
-
-  // ... any other tests ...
 
 });

@@ -3,7 +3,7 @@ name: lrda_desktop CI
 on:
   push:
     branches:
-      - main # replace with the name of your default branch if different
+      - main, deliverable-2 # replace with the name of your default branch if different
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
@@ -21,7 +21,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Install pnpm
+        run: npm install -g pnpm
       - name: Install dependencies
-        run: yarn install # or 'npm install' if you're using npm
+        run: pnpm install # Replace 'npm install' with 'pnpm install'
       - name: Run tests
-        run: yarn test # or 'npm test' if you're using npm
+        run: pnpm test # or 'npm test' if you're using npm
