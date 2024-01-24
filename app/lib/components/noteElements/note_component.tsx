@@ -240,25 +240,12 @@ export default function NoteEditor({
             renderControls={() => (
               <EditorMenuControls onImageUpload={addImageToNote} />
             )}
-<<<<<<< HEAD
-            // this is causing build errors
-            // children={(editor) => {
-            //   if (!editor) return null;
-            //   return (
-            //     <LinkBubbleMenu>
-            //       {/* This is where you can add additional elements that should appear in the bubble menu */}
-            //       {/* For example, you could include pedagogical comments here */}
-            //     </LinkBubbleMenu>
-            //   );
-            // }}
-=======
             children={(editor) => {
               if (!editor) return null;
               return (
                 <LinkBubbleMenu/>
               );
             }}
->>>>>>> e2ade6a (pulling recent changes)
           />
         </div>
       </main>
