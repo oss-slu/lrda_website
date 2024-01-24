@@ -5,6 +5,7 @@ import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
+  MenuButtonEditLink,
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
@@ -239,6 +240,7 @@ export default function NoteEditor({
             renderControls={() => (
               <EditorMenuControls onImageUpload={addImageToNote} />
             )}
+<<<<<<< HEAD
             // this is causing build errors
             // children={(editor) => {
             //   if (!editor) return null;
@@ -249,6 +251,14 @@ export default function NoteEditor({
             //     </LinkBubbleMenu>
             //   );
             // }}
+=======
+            children={(editor) => {
+              if (!editor) return null;
+              return (
+                <LinkBubbleMenu/>
+              );
+            }}
+>>>>>>> e2ade6a (pulling recent changes)
           />
         </div>
       </main>
