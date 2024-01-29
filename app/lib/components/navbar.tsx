@@ -59,7 +59,7 @@ export default function Navbar() {
       <div className="">
         {name ? (
           <div className="flex items-center gap-6 w-full">
-            <span className="text-lg font-semibold min-w-max">Hi, {name}!</span>
+            <span className="text-lg font-semibold min-w-max truncate max-w-[150px] hover:underline cursor-pointer" title={name}>Hi, {name}!</span>
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
               onClick={handleLogout}
