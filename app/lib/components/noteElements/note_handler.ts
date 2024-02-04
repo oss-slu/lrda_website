@@ -28,6 +28,13 @@ export const handleTimeChange = (
   setTime(newDate);
 };
 
+export const handlePublishChange = (
+  setIsPublished: React.Dispatch<React.SetStateAction<boolean>>,
+  published: boolean
+) => {
+  setIsPublished(published);
+};
+
 export const handleTagsChange = (
   setTags: React.Dispatch<React.SetStateAction<string[]>>,
   newTags: string[]
