@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { User } from "./lib/models/user_class";
 import WelcomePage from "./WelcomePage";
 import Home from "./Home";
+import AboutPage from "./AboutPage";
 
 const IndexPage: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
