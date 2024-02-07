@@ -3,7 +3,7 @@ name: lrda_desktop CI
 on:
   push:
     branches:
-      - main, deliverable-2 # replace with the name of your default branch if different
+      - main # replace with the name of your default branch if different
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
