@@ -84,7 +84,7 @@ const ClickableNote: React.FC<{
           <NoteCard note={note} />
         </div>
       </DialogTrigger>
-      <DialogContent className="h-[100vh]">
+      <DialogContent className="sm:max-w-[80%] h-[100vh]">
         <DialogHeader>
           <DialogTitle className="text-3xl">{note.title}</DialogTitle>
           <DialogDescription className="flex flex-row align-center items-center">
@@ -123,7 +123,7 @@ const ClickableNote: React.FC<{
           )}
         </ScrollArea>
         <DialogFooter>
-          <div className=" absolute bottom-4 right-4 flex w-[220px] h-10 bg-popup shadow-sm rounded-full border border-border bg-white pt-2 pb-2 justify-around items-center">
+          {/* <div className=" absolute bottom-4 right-4 flex w-[220px] h-10 bg-popup shadow-sm rounded-full border border-border bg-white pt-2 pb-2 justify-around items-center">
             <button
               tabIndex={-1}
               className="hover:text-green-500 flex justify-center items-center w-10"
@@ -141,7 +141,7 @@ const ClickableNote: React.FC<{
               <ThumbsDown className="text-current" />
             </button>
             {disLikes}
-          </div>
+          </div> */}
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (
               <Popover>
