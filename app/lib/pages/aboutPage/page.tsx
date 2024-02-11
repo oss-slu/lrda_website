@@ -51,8 +51,9 @@ const Page = () => {
         </div>
   
         {/* Additional content section */}
-        <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
-        {/* Team section inspired by the provided image */}
+        {/* Team section */}
+       {/* Team section */}
+       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
         <div className="text-center py-16">
           <h2 className="text-4xl font-bold mb-8">
             The Team
@@ -60,23 +61,58 @@ const Page = () => {
           <p className="mb-8">
             Our project team is based out of Saint Louis University. Working together, our collaborations help organize a variety of public forums, exhibits, conferences, pedagogical resources, research support, and digital publications.
           </p>
-          <div className="flex justify-center flex-wrap gap-10 mb-8">
-            {/* Repeat this structure for each team member */}
+          
+          {/* Team Lead */}
+          <div className="flex justify-center mb-8">
             <div>
               <img
                 className="w-32 h-32 rounded-full mx-auto"
-                src="/path-to-team-member-image.jpg"
-                alt="Team Member Name"
+                src="/yash.jpg" // Path to Yash Bhatia's image
+                alt="Yash Bhatia"
               />
-              <p className="mt-2 font-semibold">Team Member Name</p>
+              <p className="mt-2 font-semibold">Yash Bhatia - Tech Lead</p>
             </div>
-            {/* ... other team members */}
           </div>
-          <button className="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded">
+
+          {/* Team Members */}
+          <div className="grid grid-cols-3 gap-10 justify-items-center">
+            {/* Josh Hogan */}
+            <div>
+              <img
+                className="w-32 h-32 rounded-full"
+                src="/F-22.jpg" // Path to Josh Hogan's image
+                alt="Josh Hogan"
+              />
+              <p className="mt-2 font-semibold">Josh Hogan</p>
+            </div>
+            
+            {/* Izak Robles */}
+            <div>
+              <img
+                className="w-32 h-32 rounded-full"
+                src="/Izak.jpg" // Path to Izak Robles's image
+                alt="Izak Robles"
+              />
+              <p className="mt-2 font-semibold">Izak Robles</p>
+            </div>
+
+            {/* Stuart Ray */}
+            <div>
+              <img
+                className="w-32 h-32 rounded-full"
+                src="/Stuart.jpg" // Path to Stuart Ray's image
+                alt="Stuart Ray"
+              />
+              <p className="mt-2 font-semibold">Stuart Ray</p>
+            </div>
+          </div>
+          
+          <button className="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded mt-8">
             About Us
           </button>
         </div>
-        </main>
+      </main>
+
   
         {/* Section with study.jpg */}
         <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/study.jpg")' }}>
