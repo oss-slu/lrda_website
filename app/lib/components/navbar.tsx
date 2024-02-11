@@ -45,28 +45,23 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
       <div className="flex w-full justify-start">
-        {/* Create a Note Link */}
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
             Create a Note
           </a>
         </Link>
-
-        {/* About Link */}
-        <Link legacyBehavior href="/lib/components/AboutPage.tsx" passHref>
+        <Link legacyBehavior href="/lib/pages/aboutPage" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
             About
           </a>
         </Link>
-
-        {/* Explore Link */}
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
             Explore
           </a>
         </Link>
       </div>
-      
+
       <div className="">
         {name ? (
           <div className="flex items-center gap-6 w-full">

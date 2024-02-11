@@ -1,7 +1,7 @@
 // About.tsx
 "use client";
 import React, { useState, useRef } from "react";
-import './AboutPage.css'; // Make sure the path matches where your CSS file is located
+
 
 const AboutPage = () => {
   return (
