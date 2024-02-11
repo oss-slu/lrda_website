@@ -7,13 +7,23 @@ const Page = () => {
     return (
       <div className="font-sans leading-6">
         {/* Section with culture.jpg */}
-        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/culture.jpg")' }}>
-          <header className="py-4 mb-8 text-center">
-            <h1 className="text-5xl font-bold text-black">
-              About Us
-            </h1>
-          </header>
+        <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/culture.jpg")' }}>
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-end items-center">
+            <div className="text-left text-white p-10 max-w-xl ml-auto"> {/* Text is now left aligned and container is pushed to the right */}
+              <h1 className="text-5xl font-bold mb-4">
+                Where is Religion in The Digital Age?
+              </h1>
+              <p className="mb-4">
+                Seeking to better understand the sights, sounds, tastes, rituals, beliefs, and overall experiences of religion in the everyday lives of practitioners.
+              </p>
+              
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Learn More
+              </button>
+            </div>
+          </div>
         </div>
+    
   
         {/* Main content section */}
         <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
@@ -46,20 +56,19 @@ const Page = () => {
         </main>
   
         {/* Section with festival.jpg */}
-        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/festival.jpg")' }}>
+        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/festival.jpg")' }}>
           {/* You can add additional content or leave it just as a visual section */}
         </div>
   
         {/* Additional content section */}
-        {/* Team section */}
        {/* Team section */}
-       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
+      <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
         <div className="text-center py-16">
           <h2 className="text-4xl font-bold mb-8">
             The Team
           </h2>
           <p className="mb-8">
-            Our project team is based out of Saint Louis University. Working together, our collaborations help organize a variety of public forums, exhibits, conferences, pedagogical resources, research support, and digital publications.
+          Driven by the vision of Dr. Adam Park, our dynamic team at Saint Louis University is united by a shared passion for exploring and understanding the diverse landscape of religion. With a spirit of innovation and collaboration, we are dedicated to creating engaging public forums, immersive exhibits, and comprehensive pedagogical resources. Our multifaceted approach includes organizing conferences, offering research support, and producing thought-provoking digital publications, all aimed at enriching the discourse on religion's role in society.
           </p>
           
           {/* Team Lead */}
@@ -67,10 +76,11 @@ const Page = () => {
             <div>
               <img
                 className="w-32 h-32 rounded-full mx-auto"
-                src="/yash.jpg" // Path to Yash Bhatia's image
+                src="/aboutPageImages/yash.jpg" // Updated path to Yash Bhatia's image
                 alt="Yash Bhatia"
               />
-              <p className="mt-2 font-semibold">Yash Bhatia - Tech Lead</p>
+              <p className="mt-2 font-semibold">Yash Bhatia</p>
+              <p className="mt-2 font-semibold">Tech Lead</p>
             </div>
           </div>
 
@@ -80,30 +90,33 @@ const Page = () => {
             <div>
               <img
                 className="w-32 h-32 rounded-full"
-                src="/F-22.jpg" // Path to Josh Hogan's image
+                src="/aboutPageImages/F-22.jpg" // Updated path to Josh Hogan's image
                 alt="Josh Hogan"
               />
               <p className="mt-2 font-semibold">Josh Hogan</p>
+              <p className="mt-2 font-semibold">Developer</p>
             </div>
             
             {/* Izak Robles */}
             <div>
               <img
                 className="w-32 h-32 rounded-full"
-                src="/Izak.jpg" // Path to Izak Robles's image
+                src="/aboutPageImages/Izak.jpg" // Updated path to Izak Robles's image
                 alt="Izak Robles"
               />
               <p className="mt-2 font-semibold">Izak Robles</p>
+              <p className="mt-2 font-semibold">Developer</p>
             </div>
 
             {/* Stuart Ray */}
             <div>
               <img
                 className="w-32 h-32 rounded-full"
-                src="/Stuart.jpg" // Path to Stuart Ray's image
+                src="/aboutPageImages/Stuart.jpg" // Updated path to Stuart Ray's image
                 alt="Stuart Ray"
               />
               <p className="mt-2 font-semibold">Stuart Ray</p>
+              <p className="mt-2 font-semibold">Developer</p>
             </div>
           </div>
           
@@ -115,7 +128,7 @@ const Page = () => {
 
   
         {/* Section with study.jpg */}
-        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/study.jpg")' }}>
+        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
           {/* You can add additional content or leave it just as a visual section */}
         </div>
   
