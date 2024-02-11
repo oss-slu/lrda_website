@@ -54,6 +54,7 @@ const CardDescription = React.forwardRef<
     {...props}
   />
 ))
+
 CardDescription.displayName = "CardDescription"
 
 const CardContent = React.forwardRef<
@@ -63,7 +64,7 @@ const CardContent = React.forwardRef<
   <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
-/*
+
 const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -76,8 +77,8 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-CardFooter will be commented out until a final decision of whether or not to keep the tags at the bottom of the tile are made
-*/
 
 
-export { Card, CardHeader, /*CardFooter,*/ CardTitle, CardDescription, CardContent }
+
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
