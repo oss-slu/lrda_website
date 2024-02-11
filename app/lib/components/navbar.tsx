@@ -50,11 +50,13 @@ export default function Navbar() {
             Create a Note
           </a>
         </Link>
+
         <Link legacyBehavior href="/lib/pages/aboutPage" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
             About
           </a>
         </Link>
+        
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
             Explore
