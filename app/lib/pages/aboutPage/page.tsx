@@ -124,7 +124,7 @@ const teamImages = [
   <div className="hover:scale-110 transition-transform duration-300">
     <img
       className="w-32 h-32 rounded-full mx-auto"
-      src="/aboutPageImages/yash.jpg"
+      src="/aboutPageImages/Yash.jpg"
       alt="Yash Bhatia"
     />
     <p className="mt-2 font-semibold">Yash Bhatia</p>

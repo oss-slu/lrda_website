@@ -29,6 +29,8 @@ const Page = () => {
   const [mapCenter, setMapCenter] = useState(defaultLocation);
   const [mapZoom, setMapZoom] = useState(10);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
+  const [markers, setMarkers] = useState(new Map());
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -92,11 +94,21 @@ const Page = () => {
     googleMapsApiKey: mapAPIKey,
   });
 
-  const getMarkerIcon = () => ({
-    url: mapPin,
-    labelOrigin: new window.google.maps.Point(15, -10),
-    scaledSize: new window.google.maps.Size(25, 35),
-  });
+  function createMarkerIcon(isHighlighted: boolean) {
+    if (isHighlighted) {
+      // Change the color to a highlighted color and increase the scale by 20%
+      return {
+        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png", // A green icon URL
+        scaledSize: new window.google.maps.Size(48, 48), // 20% larger than the default size (40, 40)
+      };
+    } else {
+      // Return the default red marker icon
+      return {
+        url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Default red icon URL
+        scaledSize: new window.google.maps.Size(40, 40), // Default icon size
+      };
+    }
+  }
 
   const getMarkerLabel = (note: Note) => {
     const label = note.tags?.[0] ?? note.title.split(" ")[0];
@@ -109,6 +121,14 @@ const Page = () => {
     setNotes(notesToUse);
     setFilteredNotes(notesToUse);
   };
+
+  useEffect(() => {
+    markers.forEach((marker, noteId) => {
+      const isHovered = hoveredNoteId === noteId;
+      marker.setIcon(createMarkerIcon(isHovered));
+      marker.setZIndex(isHovered ? google.maps.Marker.MAX_ZINDEX + 1 : null);
+    });
+  }, [hoveredNoteId, markers]);
 
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
@@ -137,33 +157,25 @@ const Page = () => {
               fullscreenControl: false,
             }}
           >
-            {filteredNotes.map((note, index) => (
-              <MarkerF
-                key={note.id + new Date().getMilliseconds()}
-                position={{
-                  lat: parseFloat(note.latitude),
-                  lng: parseFloat(note.longitude),
-                }}
-                onClick={() => {
-                  console.log("Marker clicked:", note.id);
-                  if (activeNote?.id !== note.id) {
-                    setActiveNote(note);
-                  } else {
-                    console.log(
-                      "Attempt to set the same active note:",
-                      note.id
-                    );
-                  }
-                }}
-                // icon={getMarkerIcon()}
-                // label={{
-                //   text: getMarkerLabel(note),
-                //   color: "white",
-                //   className: 'custom-marker-label',
-                // }}
-                zIndex={index}
-              />
-            ))}
+            {filteredNotes.map((note, index) => {
+              const isNoteHovered = hoveredNoteId === note.id;
+              return (
+                <MarkerF
+                  key={note.id}
+                  position={{
+                    lat: parseFloat(note.latitude),
+                    lng: parseFloat(note.longitude),
+                  }}
+                  onClick={() => setActiveNote(note)}
+                  icon={createMarkerIcon(isNoteHovered)}
+                  zIndex={isNoteHovered ? 1 : 0}
+                  onLoad={(marker) => {
+                    setMarkers((prev) => new Map(prev).set(note.id, marker));
+                  }}
+                />
+              );
+            })}
+
             {activeNote && (
               <InfoWindow
                 key={new Date().getMilliseconds() + new Date().getTime()}
@@ -175,7 +187,9 @@ const Page = () => {
                   setActiveNote(null);
                 }}
               >
-                <ClickableNote note={activeNote} />
+                <div className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+                  <ClickableNote note={activeNote} />
+                </div>
               </InfoWindow>
             )}
           </GoogleMap>
@@ -183,7 +197,14 @@ const Page = () => {
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
         {filteredNotes.map((note) => (
-          <ClickableNote key={note.id} note={note} />
+          <div
+            className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
+            onMouseEnter={() => setHoveredNoteId(note.id)}
+            onMouseLeave={() => setHoveredNoteId(null)}
+            key={note.id}
+          >
+            <ClickableNote note={note} />
+          </div>
         ))}
       </div>
     </div>
