@@ -29,7 +29,7 @@ const Page = () => {
   const [mapCenter, setMapCenter] = useState(defaultLocation);
   const [mapZoom, setMapZoom] = useState(10);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [hoveredNoteId, setHoveredNoteId] = useState(null);
+  const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const user = User.getInstance();
 
@@ -94,7 +94,7 @@ const Page = () => {
     googleMapsApiKey: mapAPIKey,
   });
 
-  function createMarkerIcon(isHighlighted) {
+  function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
       // Change the color to a highlighted color and increase the scale by 20%
       return {
