@@ -1,9 +1,30 @@
+"use client"
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import background from '../public/background.jpg'; // Make sure the path matches where you saved your image
 
+const teamImages = [
+    '/aboutPageImages/Scrolling/one.jpg',
+    '/aboutPageImages/Scrolling/two.jpg',
+    '/aboutPageImages/Scrolling/three.jpg',
+    '/aboutPageImages/Scrolling/four.jpg',
+    '/aboutPageImages/Scrolling/five.jpg',
+    '/aboutPageImages/Scrolling/six.jpg',
+    '/aboutPageImages/Scrolling/seven.jpg',
+    '/aboutPageImages/Scrolling/eight.jpg',
+  ];
 
-const Page = () => {
+  const Page = () => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+    useEffect(() => {
+      const intervalId = setInterval(() => {
+        setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % teamImages.length);
+      }, 3000); // Change image every 3 seconds
+  
+      return () => clearInterval(intervalId); // Clean up on unmount
+    }, []);
+
     return (
       <div className="font-sans leading-6">
         {/* Section with culture.jpg */}
@@ -124,7 +145,24 @@ const Page = () => {
             About Us
           </button>
         </div>
+
+      {/* Auto-cycling image gallery */}
+      <div className="mt-8">
+            {teamImages.map((image, index) => (
+              <img
+                key={index}
+                src={image}
+                alt={`Gallery image ${index + 1}`}
+                className={`mx-auto transition-opacity duration-500 ease-in-out ${currentImageIndex === index ? 'opacity-100' : 'opacity-0'}`}
+                style={{ maxHeight: '200px' }} // Adjust the size as needed
+              />
+            ))}
+          </div>
       </main>
+
+
+      
+
 
   
         {/* Section with study.jpg */}
