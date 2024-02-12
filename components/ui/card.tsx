@@ -54,6 +54,7 @@ const CardDescription = React.forwardRef<
     {...props}
   />
 ))
+
 CardDescription.displayName = "CardDescription"
 
 const CardContent = React.forwardRef<
@@ -75,5 +76,9 @@ const CardFooter = React.forwardRef<
   />
 ))
 CardFooter.displayName = "CardFooter"
+
+
+
+
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
