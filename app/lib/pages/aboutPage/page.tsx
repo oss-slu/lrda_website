@@ -81,7 +81,7 @@ const teamImages = [
               Our Mission
             </h2>
             <p>
-              Our mission is to explore the intersection of religion and the public sphere, examining how faith traditions shape and are shaped by the modern world.
+              *This will be updated with Dr. Park's input.*
             </p>
           </section>
   
@@ -90,7 +90,7 @@ const teamImages = [
               What We Do
             </h2>
             <p>
-              We offer insights through articles, research, and community dialogue, providing a platform for a deeper understanding of religious diversity.
+            *This will be updated with Dr. Park's input.*
             </p>
           </section>
   
@@ -99,7 +99,7 @@ const teamImages = [
               Who We Are
             </h2>
             <p>
-              We're a team of scholars, writers, and community leaders passionate about promoting religious literacy and interfaith engagement.
+            *This will be updated with Dr. Park's input.*
             </p>
           </section>
         </main>
@@ -195,34 +195,24 @@ const teamImages = [
         </div>
   
         {/* Footer or final content section */}
-        <footer className="max-w-4xl mx-auto px-4 py-16 flex justify-between items-center">
-  <div> {/* Left side */}
+        <footer className="w-full py-16 bg-white-100"> {/* Adjust the background color as needed */}
+  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> {/* Increased space-x-20 for more spacing */}
     <img 
-      src="/aboutPageImages/FooterImages/one.jpg" // Path for "Lived Religion in the Digital Age"
+      src="/LivedReligion.png" // Path for the first image
       alt="Lived Religion in the Digital Age"
-      className="h-16" // Adjust the size as needed
+      className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
+    />
+    <img 
+      src="/OpenSourceWithSLU.png" // Path for the second image
+      alt="Open Source with SLU"
+      className="object-cover h-56 w-auto" // Same as above
+    />
+    <img 
+      src="/three.jpg" // Path for the third image
+      alt="Third Image"
+      className="object-cover h-72 w-auto" // Larger height if necessary, with width auto
     />
   </div>
-  
-  <div className="text-center"> {/* Center */}
-    <h2 className="text-5xl font-bold text-gray-700 mb-4">Lived Religion in the Digital Age</h2>
-    <p className="text-sm text-gray-600">website by Adam Park</p>
-    <p className="text-xs text-gray-500">Photo credits: ...</p>
-    {/* Add more lines as needed */}
-  </div>
-  
-  {/* <div className="flex flex-col items-end"> {/* Right side */}
-  {/* <img 
-    src="/aboutPageImages/FooterImages/two.jpg" // Path for "Open Source with SLU"
-    alt="Open Source with SLU"
-    className="h-8 mb-2" // Adjust the size as needed
-  /> */}
-  {/* <img 
-    src="/aboutPageImages/FooterImages/three.jpg" // Path for "SLU School of Science and Engineering"
-    alt="SLU School of Science and Engineering"
-    className="h-8" // Adjust the size as needed
-  /> */}
-{/* </div> */}
 </footer>
       </div>
     );
