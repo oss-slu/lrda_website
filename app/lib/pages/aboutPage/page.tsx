@@ -19,28 +19,27 @@ const teamImages = [
 
   const Page = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
+
+  
     useEffect(() => {
-        const step = 1; // Pixels to move per interval
-        const interval = 20; // Milliseconds between each interval
-      
-        const performScroll = () => {
+        const intervalId = setInterval(() => {
           if (scrollRef.current) {
-            const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-            const nextScrollLeft = scrollLeft + step;
+            const currentScroll = scrollRef.current.scrollLeft;
+            const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
       
-            scrollRef.current.scrollLeft = nextScrollLeft;
-      
-            // Adjust the condition to reset the scroll position more smoothly
-            if (scrollLeft + clientWidth >= scrollWidth - 1) {
+            // Auto-scroll to the start if we've reached the end
+            if (currentScroll >= maxScroll) {
               scrollRef.current.scrollLeft = 0;
+            } else {
+              // Otherwise, scroll a bit more
+              scrollRef.current.scrollLeft += 10;
             }
           }
-        };
-      
-        const intervalId = setInterval(performScroll, interval);
+        }, 100); // Adjust the timing to control the speed
       
         return () => clearInterval(intervalId);
       }, []);
+  
     
     return (
 <div className="font-sans leading-6">
@@ -122,71 +121,68 @@ const teamImages = [
           
           {/* Team Lead */}
           <div className="flex justify-center mb-8">
-            <div>
-              <img
-                className="w-32 h-32 rounded-full mx-auto"
-                src="/aboutPageImages/yash.jpg" // Updated path to Yash Bhatia's image
-                alt="Yash Bhatia"
-              />
-              <p className="mt-2 font-semibold">Yash Bhatia</p>
-              <p className="mt-2 font-semibold">Tech Lead</p>
-            </div>
-          </div>
+  <div className="hover:scale-110 transition-transform duration-300">
+    <img
+      className="w-32 h-32 rounded-full mx-auto"
+      src="/aboutPageImages/yash.jpg"
+      alt="Yash Bhatia"
+    />
+    <p className="mt-2 font-semibold">Yash Bhatia</p>
+    <p className="mt-2 font-semibold">Tech Lead</p>
+  </div>
+</div>
 
-          {/* Team Members */}
-          <div className="grid grid-cols-3 gap-10 justify-items-center">
-            {/* Josh Hogan */}
-            <div>
-              <img
-                className="w-32 h-32 rounded-full"
-                src="/aboutPageImages/F-22.jpg" // Updated path to Josh Hogan's image
-                alt="Josh Hogan"
-              />
-              <p className="mt-2 font-semibold">Josh Hogan</p>
-              <p className="mt-2 font-semibold">Developer</p>
-            </div>
-            
-            {/* Izak Robles */}
-            <div>
-              <img
-                className="w-32 h-32 rounded-full"
-                src="/aboutPageImages/Izak.jpg" // Updated path to Izak Robles's image
-                alt="Izak Robles"
-              />
-              <p className="mt-2 font-semibold">Izak Robles</p>
-              <p className="mt-2 font-semibold">Developer</p>
-            </div>
+{/* Team Members */}
+<div className="grid grid-cols-3 gap-10 justify-items-center">
+  {/* Josh Hogan */}
+  <div className="hover:scale-110 transition-transform duration-300">
+    <img
+      className="w-32 h-32 rounded-full"
+      src="/aboutPageImages/F-22.jpg"
+      alt="Josh Hogan"
+    />
+    <p className="mt-2 font-semibold">Josh Hogan</p>
+    <p className="mt-2 font-semibold">Developer</p>
+  </div>
+  
+  {/* Izak Robles */}
+  <div className="hover:scale-110 transition-transform duration-300">
+    <img
+      className="w-32 h-32 rounded-full"
+      src="/aboutPageImages/Izak.jpg"
+      alt="Izak Robles"
+    />
+    <p className="mt-2 font-semibold">Izak Robles</p>
+    <p className="mt-2 font-semibold">Developer</p>
+  </div>
 
-            {/* Stuart Ray */}
-            <div>
-              <img
-                className="w-32 h-32 rounded-full"
-                src="/aboutPageImages/Stuart.jpg" // Updated path to Stuart Ray's image
-                alt="Stuart Ray"
-              />
-              <p className="mt-2 font-semibold">Stuart Ray</p>
-              <p className="mt-2 font-semibold">Developer</p>
-            </div>
-          </div>
-          
-          <button className="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded mt-8">
-            About Us
-          </button>
+  {/* Stuart Ray */}
+  <div className="hover:scale-110 transition-transform duration-300">
+    <img
+      className="w-32 h-32 rounded-full"
+      src="/aboutPageImages/Stuart.jpg"
+      alt="Stuart Ray"
+    />
+    <p className="mt-2 font-semibold">Stuart Ray</p>
+    <p className="mt-2 font-semibold">Developer</p>
+  </div>
+</div>
         </div>
 
-     {/* Horizontally scrolling gallery */}
-     <div ref={scrollRef} className="flex overflow-hidden whitespace-nowrap scroll-smooth">
-      {/* Loop twice through images for a continuous effect */}
-      {[...teamImages, ...teamImages].map((image, index) => (
-        <img
-          key={index}
-          src={image}
-          alt={`Gallery image ${index % teamImages.length + 1}`}
-          className="inline-block h-48 w-auto mr-2" // Added margin-right for spacing between images
-          style={{ minWidth: '200px' }} // Ensure a minimum width for each image
-        />
-      ))}
-    </div>
+       {/* Horizontally scrolling gallery */}
+       <div ref={scrollRef} className="flex overflow-hidden whitespace-nowrap" style={{ gap: '20px' }}>
+  {/* Duplicate the set of images to facilitate the loop */}
+  {[...teamImages, ...teamImages].map((image, index) => (
+    <img 
+      key={index} 
+      src={image} 
+      alt={`Gallery image ${index % teamImages.length + 1}`} 
+      className="inline-block h-48" // You can adjust the height here
+      style={{ width: 'auto', flex: 'none' }} // width auto for maintaining aspect ratio, flex none to avoid stretching
+    />
+  ))}
+</div>
+
       </main>
 
         {/* Section with study.jpg */}
