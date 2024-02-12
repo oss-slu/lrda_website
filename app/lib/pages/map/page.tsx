@@ -185,12 +185,13 @@ const Page = () => {
         )}
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {filteredNotes.map((note) => (
-          <div className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
-          <ClickableNote key={note.id} note={note} />
-          </div>
-        ))}
-      </div>
+  {filteredNotes.map((note) => (
+    <div className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color]">
+      <ClickableNote key={note.id} note={note} />
+    </div>
+  ))}
+</div>
+
     </div>
   );
 };
