@@ -184,11 +184,18 @@ const teamImages = [
 </div>
 
       </main>
-
-        {/* Section with study.jpg */}
-        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
-          {/* You can add additional content or leave it just as a visual section */}
-        </div>
+      <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
+  <div className="absolute inset-0 flex justify-center items-center">
+    <div className="bg-gray-200 text-black p-4 max-w-lg mx-auto rounded" style={{ backgroundColor: 'rgba(211, 211, 211, 0.8)', maxWidth: '90%' }}>
+      <p className="text-xl font-semibold">
+        "Culture or civilization, taken in its wide ethnographic sense, is that complex whole which includes knowledge, belief, art, morals, law, custom, and any other capabilities and habits acquired by man as a member of society."
+      </p>
+      <p className="text-right">
+        - Edward B. Tylor, Primitive Culture 1871
+      </p>
+    </div>
+  </div>
+</div>
   
         {/* Footer or final content section */}
         <footer className="w-full py-16 bg-white-100"> {/* Adjust the background color as needed */}
