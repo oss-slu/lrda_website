@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import background from '../public/background.jpg'; // Make sure the path matches where you saved your image
 
@@ -15,14 +15,21 @@ const teamImages = [
   ];
 
   const Page = () => {
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const scrollRef = useRef(null);
   
     useEffect(() => {
       const intervalId = setInterval(() => {
-        setCurrentImageIndex((currentImageIndex) => (currentImageIndex + 1) % teamImages.length);
-      }, 3000); // Change image every 3 seconds
+        if (scrollRef.current) {
+          const maxScrollLeft = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+          if (scrollRef.current.scrollLeft < maxScrollLeft) {
+            scrollRef.current.scrollLeft += 10; // Scroll step in pixels
+          } else {
+            scrollRef.current.scrollLeft = 0;
+          }
+        }
+      }, 100); // Adjust the timing for scrolling speed
   
-      return () => clearInterval(intervalId); // Clean up on unmount
+      return () => clearInterval(intervalId);
     }, []);
 
     return (
@@ -146,25 +153,20 @@ const teamImages = [
           </button>
         </div>
 
-      {/* Auto-cycling image gallery */}
-      <div className="mt-8">
-            {teamImages.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Gallery image ${index + 1}`}
-                className={`mx-auto transition-opacity duration-500 ease-in-out ${currentImageIndex === index ? 'opacity-100' : 'opacity-0'}`}
-                style={{ maxHeight: '200px' }} // Adjust the size as needed
-              />
-            ))}
-          </div>
+     {/* Horizontally scrolling gallery */}
+     <div className="mt-8 overflow-hidden" ref={scrollRef} style={{ display: 'flex', overflowX: 'auto' }}>
+          {teamImages.map((image, index) => (
+            <img
+              key={index}
+              src={image}
+              alt={`Gallery image ${index + 1}`}
+              className="mx-auto"
+              style={{ width: '200px', height: '200px', flex: 'none' }} // Adjust the size as needed
+            />
+          ))}
+        </div>
       </main>
 
-
-      
-
-
-  
         {/* Section with study.jpg */}
         <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
           {/* You can add additional content or leave it just as a visual section */}
