@@ -37,10 +37,12 @@ import {
   handleLocationChange,
   handleTagsChange,
   handleTimeChange,
+  handlePublishChange,
 } from "./note_handler";
 import { PhotoType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
+import PublishToggle from "./publish_toggle";
 
 const user = User.getInstance();
 
@@ -71,6 +73,7 @@ export default function NoteEditor({
       noteHandlers.setLatitude(initialNote.latitude || "");
       noteHandlers.setTags(initialNote.tags || []);
       noteHandlers.setAudio(initialNote.audio || []);
+      noteHandlers.setIsPublished(initialNote.published || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
     }
   }, [initialNote]);
@@ -86,6 +89,7 @@ export default function NoteEditor({
       text: noteState.editorContent,
       title: noteState.title,
       media: noteState.images,
+      published: noteState.isPublished,
       time: noteState.time,
       longitude: noteState.longitude,
       latitude: noteState.latitude,
@@ -149,7 +153,11 @@ export default function NoteEditor({
             maxWidth: "400px,",
           }}
         />
-        <div className="flex w-[220px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
+        <div className="flex w-[380px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
+          <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
+              handlePublishChange(noteHandlers.setIsPublished, bool)
+            } />
+          <div className="w-1 h-9 bg-border" />
           <button
             className="hover:text-green-500 flex justify-center items-center w-full"
             onClick={onSave}
