@@ -1,4 +1,7 @@
 "use client"
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import background from '../public/background.jpg'; // Make sure the path matches where you saved your image
@@ -18,27 +21,17 @@ const teamImages = [
   ];
 
   const Page = () => {
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-  
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-          if (scrollRef.current) {
-            const currentScroll = scrollRef.current.scrollLeft;
-            const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-      
-            // Auto-scroll to the start if we've reached the end
-            if (currentScroll >= maxScroll) {
-              scrollRef.current.scrollLeft = 0;
-            } else {
-              // Otherwise, scroll a bit more
-              scrollRef.current.scrollLeft += 10;
-            }
-          }
-        }, 100); // Adjust the timing to control the speed
-      
-        return () => clearInterval(intervalId);
-      }, []);
+    // Settings for the slider
+    const settings = {
+      dots: true,
+      infinite: true,
+      speed: 800,
+      slidesToShow: 3, // You can adjust this number to the number of images you want to show at once
+      slidesToScroll: 1,
+      autoplay: true,
+      autoplaySpeed: 7000,
+      cssEase: "linear"
+    };
   
     
     return (
@@ -174,19 +167,20 @@ const teamImages = [
 </div>
         </div>
 
-       {/* Horizontally scrolling gallery */}
-       <div ref={scrollRef} className="flex overflow-hidden whitespace-nowrap" style={{ gap: '20px' }}>
-  {/* Duplicate the set of images to facilitate the loop */}
-  {[...teamImages, ...teamImages].map((image, index) => (
-    <img 
-      key={index} 
-      src={image} 
-      alt={`Gallery image ${index % teamImages.length + 1}`} 
-      className="inline-block h-48" // You can adjust the height here
-      style={{ width: 'auto', flex: 'none' }} // width auto for maintaining aspect ratio, flex none to avoid stretching
-    />
-  ))}
-</div>
+       {/* Horizontally scrolling gallery with react-slick */}
+       <div className="max-w-4xl mx-auto px-4 py-16">
+        <Slider {...settings}>
+          {teamImages.map((image, index) => (
+            <div key={index}>
+              <img
+                src={image}
+                alt={`Gallery image ${index + 1}`}
+                style={{ width: '100%', height: 'auto' }} // Adjust the height and width as needed
+              />
+            </div>
+          ))}
+        </Slider>
+      </div>
 
       </main>
       <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
