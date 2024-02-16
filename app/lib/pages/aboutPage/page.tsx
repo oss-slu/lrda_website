@@ -57,16 +57,21 @@ const teamImages = [
           Learn More
         </button>
         <div> {/* Container for logos */}
+        <a href="https://www.instagram.com/livedreligion/" target="_blank" rel="noopener noreferrer">
+         <img
+              src="/instagram.jpg" // Make sure this path points to your Instagram logo
+              alt="Instagram"
+               className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
+           />
+         </a>
+        <a href="https://twitter.com/livedreligion" target="_blank" rel="noopener noreferrer">
           <img
-            src="/instagram.jpg" // Replace with your Instagram logo path
-            alt="Instagram"
-            className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
-          />
-          <img
-            src="/X.jpg" // Replace with your Twitter logo path
-            alt="Twitter"
-            className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
-          />
+          src="/X.jpg" // Make sure this path points to your Twitter logo
+          alt="Twitter"
+          className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
+        />
+           </a>
+
         </div>
       </div>
     </div>
