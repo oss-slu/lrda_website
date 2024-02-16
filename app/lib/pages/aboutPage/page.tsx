@@ -46,9 +46,11 @@ const teamImages = [
         <p className="mb-4">
           Seeking to better understand the sights, sounds, tastes, rituals, beliefs, and overall experiences of religion in the everyday lives of practitioners.
         </p>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
-          Learn More
-        </button>
+        <a href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale." target="_blank" rel="noopener noreferrer">
+  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+    Learn More
+  </button>
+</a>
         <div> {/* Container for logos */}
         <a href="https://www.instagram.com/livedreligion/" target="_blank" rel="noopener noreferrer">
          <img
