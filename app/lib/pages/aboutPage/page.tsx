@@ -205,21 +205,27 @@ const teamImages = [
         {/* Footer or final content section */}
         <footer className="w-full py-16 bg-white-100"> {/* Adjust the background color as needed */}
   <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> {/* Increased space-x-20 for more spacing */}
-    <img 
-      src="/LivedReligion.png" // Path for the first image
-      alt="Lived Religion in the Digital Age"
-      className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
-    />
-    <img 
-      src="/OpenSourceWithSLU.png" // Path for the second image
-      alt="Open Source with SLU"
-      className="object-cover h-56 w-auto" // Same as above
-    />
-    <img 
-      src="/three.jpg" // Path for the third image
-      alt="Third Image"
-      className="object-cover h-72 w-auto" // Larger height if necessary, with width auto
-    />
+  <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
+      <img 
+        src="/LivedReligion.png" // Path for the first image
+        alt="Lived Religion in the Digital Age"
+        className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
+      />
+    </a>
+    <a href="https://oss-slu.github.io/" target="_blank" rel="noopener noreferrer">
+  <img 
+    src="/OpenSourceWithSLU.png" // Path for the second image
+    alt="Open Source with SLU"
+    className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
+  />
+</a>
+<a href="https://www.slu.edu/science-and-engineering/index.php" target="_blank" rel="noopener noreferrer">
+  <img 
+    src="/three.jpg" // Path for the third image
+    alt="Third Image"
+    className="object-cover h-72 w-auto" // Larger height if necessary, with width auto
+  />
+</a>
   </div>
 </footer>
       </div>
