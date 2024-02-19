@@ -43,6 +43,7 @@ import { PhotoType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
+import VideoComponent from "./videoComponent";
 
 const user = User.getInstance();
 
@@ -203,6 +204,9 @@ export default function NoteEditor({
             setAudio={noteHandlers.setAudio}
             editable={true}
           />
+        </div>
+        <div className="mt-3">
+          <VideoComponent/>
         </div>
         <div className="mt-3">
           <TimePicker

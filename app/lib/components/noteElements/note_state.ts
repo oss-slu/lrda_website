@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Note } from "@/app/types";
 import { AudioType } from "../../models/media_class";
+import VideoComponent from "./videoComponent";
 
 const useNoteState = (initialNote: Note | undefined) => {
   const [note, setNote] = useState<Note | undefined>(initialNote);
