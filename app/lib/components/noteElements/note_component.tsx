@@ -220,10 +220,6 @@ export default function NoteEditor({
           />
         </div>
 
-
-
-
-
         <div className="mt-3">
           <AudioPicker
             audioArray={noteState.audio || []}
