@@ -36,6 +36,7 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -44,7 +45,12 @@ const Page = () => {
         lat: map.getCenter().lat(),
         lng: map.getCenter().lng(),
       };
+
+      const newBounds = map.getBounds();
+
+      
       setMapCenter(newCenter);
+      setMapBounds(newBounds);
       updateFilteredNotes(newCenter, map.getBounds(), notes);
     };
 
@@ -84,34 +90,43 @@ const Page = () => {
     setFilteredNotes(visibleNotes);
   };
 
-  useEffect(() => {
-    async function fetchNotes() {
-      try {
-        const userId = await user.getId();
+  const fetchNotes = async () => {
+    try {
+      const userId = await user.getId();
 
-        let personalNotes: any[] | ((prevState: Note[]) => Note[]) = [];
-        let globalNotes = [];
-        if (userId) {
-          setIsLoggedIn(true);
-          personalNotes = await ApiService.fetchUserMessages(userId);
-          personalNotes =
-            DataConversion.convertMediaTypes(personalNotes).reverse();
-        }
-        globalNotes = await ApiService.fetchPublishedNotes();
-        globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
-
-        setPersonalNotes(personalNotes);
-        setGlobalNotes(globalNotes);
-
-        setNotes(global ? globalNotes : personalNotes);
-        setFilteredNotes(global ? globalNotes : personalNotes);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
+      let personalNotes: Note[] = [];
+      let globalNotes: Note[] = [];
+      if (userId) {
+        setIsLoggedIn(true);
+        personalNotes = await ApiService.fetchUserMessages(userId);
+        personalNotes = DataConversion.convertMediaTypes(personalNotes).reverse();
       }
-    }
+      globalNotes = await ApiService.fetchPublishedNotes();
+      globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
 
-    fetchNotes();
-  }, []);
+      return { personalNotes, globalNotes };
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return { personalNotes: [], globalNotes: [] };
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes().then(({ personalNotes, globalNotes }) => {
+      setPersonalNotes(personalNotes);
+      setGlobalNotes(globalNotes);
+
+      const initialNotes = global ? globalNotes : personalNotes;
+      setNotes(initialNotes);
+      setFilteredNotes(initialNotes); // Initially, filteredNotes are the same as notes
+    });
+  }, [global]);
+
+  // New useEffect hook for map bounds changes
+  useEffect(() => {
+    const currentNotes = global ? globalNotes : personalNotes;
+    updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
