@@ -197,6 +197,33 @@ export default function NoteEditor({
       </div>
 
       <main className="flex-grow p-6">
+      <div className="overflow-auto">
+          <RichTextEditor
+            ref={rteRef}
+            extensions={extensions}
+            content={noteState.editorContent}
+            onUpdate={({ editor }) =>
+              handleEditorChange(
+                noteHandlers.setEditorContent,
+                editor.getHTML()
+              )
+            }
+            renderControls={() => (
+              <EditorMenuControls onImageUpload={addImageToNote} />
+            )}
+            children={(editor) => {
+              if (!editor) return null;
+              return (
+                <LinkBubbleMenu/>
+              );
+            }}
+          />
+        </div>
+
+
+
+
+
         <div className="mt-3">
           <AudioPicker
             audioArray={noteState.audio || []}
@@ -232,28 +259,6 @@ export default function NoteEditor({
             onTagsChange={(newTags) =>
               handleTagsChange(noteHandlers.setTags, newTags)
             }
-          />
-        </div>
-        <div className="overflow-auto">
-          <RichTextEditor
-            ref={rteRef}
-            extensions={extensions}
-            content={noteState.editorContent}
-            onUpdate={({ editor }) =>
-              handleEditorChange(
-                noteHandlers.setEditorContent,
-                editor.getHTML()
-              )
-            }
-            renderControls={() => (
-              <EditorMenuControls onImageUpload={addImageToNote} />
-            )}
-            children={(editor) => {
-              if (!editor) return null;
-              return (
-                <LinkBubbleMenu/>
-              );
-            }}
           />
         </div>
       </main>

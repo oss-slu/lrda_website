@@ -4,10 +4,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import background from '../public/background.jpg'; // Make sure the path matches where you saved your image
+import background from '../public/background.jpg'; 
 
-
-// ... rest of your imports and code ...
 
 const teamImages = [
     '/aboutPageImages/Scrolling/one.jpg',
@@ -26,7 +24,7 @@ const teamImages = [
       dots: true,
       infinite: true,
       speed: 800,
-      slidesToShow: 3, // You can adjust this number to the number of images you want to show at once
+      slidesToShow: 3, 
       slidesToScroll: 1,
       autoplay: true,
       autoplaySpeed: 7000,
@@ -54,16 +52,16 @@ const teamImages = [
         <div> {/* Container for logos */}
         <a href="https://www.instagram.com/livedreligion/" target="_blank" rel="noopener noreferrer">
          <img
-              src="/instagram.jpg" // Make sure this path points to your Instagram logo
+              src="/instagram.jpg" 
               alt="Instagram"
-               className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
+               className="h-8 mx-2 inline-block" 
            />
          </a>
         <a href="https://twitter.com/livedreligion" target="_blank" rel="noopener noreferrer">
           <img
-          src="/X.jpg" // Make sure this path points to your Twitter logo
+          src="/X.jpg" 
           alt="Twitter"
-          className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
+          className="h-8 mx-2 inline-block" 
         />
            </a>
 
@@ -199,27 +197,27 @@ const teamImages = [
 </div>
   
         {/* Footer or final content section */}
-        <footer className="w-full py-16 bg-white-100"> {/* Adjust the background color as needed */}
-  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> {/* Increased space-x-20 for more spacing */}
+        <footer className="w-full py-16 bg-white-100"> 
+  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> 
   <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
       <img 
-        src="/LivedReligion.png" // Path for the first image
+        src="/LivedReligion.png" 
         alt="Lived Religion in the Digital Age"
-        className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
+        className="object-cover h-56 w-auto" 
       />
     </a>
     <a href="https://oss-slu.github.io/" target="_blank" rel="noopener noreferrer">
   <img 
-    src="/OpenSourceWithSLU.png" // Path for the second image
+    src="/OpenSourceWithSLU.png" 
     alt="Open Source with SLU"
-    className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
+    className="object-cover h-56 w-auto" 
   />
 </a>
 <a href="https://www.slu.edu/science-and-engineering/index.php" target="_blank" rel="noopener noreferrer">
   <img 
-    src="/three.jpg" // Path for the third image
+    src="/three.jpg" 
     alt="Third Image"
-    className="object-cover h-72 w-auto" // Larger height if necessary, with width auto
+    className="object-cover h-72 w-auto" 
   />
 </a>
   </div>
