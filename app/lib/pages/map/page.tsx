@@ -18,6 +18,11 @@ import { GlobeIcon, UserIcon } from "lucide-react";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
+interface Location {
+  lat: number;
+  lng: number;
+}
+
 const Page = () => {
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
@@ -34,16 +39,49 @@ const Page = () => {
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
-    map.addListener("dragend", () => {
-      setMapCenter({
+    const updateBounds = () => {
+      const newCenter: Location = {
         lat: map.getCenter().lat(),
         lng: map.getCenter().lng(),
-      });
-    });
+      };
+      setMapCenter(newCenter);
+      updateFilteredNotes(newCenter, map.getBounds(), notes);
+    };
 
-    map.addListener("zoom_changed", () => {
-      setMapZoom(map.getZoom());
+    map.addListener("dragend", updateBounds);
+    map.addListener("zoom_changed", updateBounds);
+  };
+
+  // Filter function
+  const filterNotesByMapBounds = (
+    bounds: google.maps.LatLngBounds | undefined,
+    notes: Note[]
+  ): Note[] => {
+    if (!bounds) return notes;
+
+    const ne = bounds.getNorthEast(); // North East corner
+    const sw = bounds.getSouthWest(); // South West corner
+
+    return notes.filter((note) => {
+      const lat = parseFloat(note.latitude);
+      const lng = parseFloat(note.longitude);
+      return (
+        lat >= sw.lat() &&
+        lat <= ne.lat() &&
+        lng >= sw.lng() &&
+        lng <= ne.lng()
+      );
     });
+  };
+
+  // Update filtered notes based on map view
+  const updateFilteredNotes = (
+    center: Location,
+    bounds: google.maps.LatLngBounds | null,
+    allNotes: Note[]
+  ) => {
+    const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
+    setFilteredNotes(visibleNotes);
   };
 
   useEffect(() => {
