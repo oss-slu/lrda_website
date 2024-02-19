@@ -39,7 +39,7 @@ import {
   handleTimeChange,
   handlePublishChange,
 } from "./note_handler";
-import { PhotoType } from "../../models/media_class";
+import { PhotoType, VideoType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
@@ -68,7 +68,7 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
-      noteHandlers.setImages(initialNote.media || []);
+      noteHandlers.setImages(initialNote.media.filter(item => item.getType() === 'image') as PhotoType[] || []);
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
       noteHandlers.setLatitude(initialNote.latitude || "");
@@ -76,6 +76,7 @@ export default function NoteEditor({
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+      noteHandlers.setVideos(initialNote.media.filter(item => item.getType() === 'video') as VideoType[] || [])
     }
   }, [initialNote]);
 
@@ -206,7 +207,8 @@ export default function NoteEditor({
           />
         </div>
         <div className="mt-3">
-          <VideoComponent/>
+          <VideoComponent videoArray={noteState.videos || []}
+            setVideo={noteHandlers.setVideos} />
         </div>
         <div className="mt-3">
           <TimePicker
