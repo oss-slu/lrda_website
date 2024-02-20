@@ -358,6 +358,9 @@ devDependencies:
   '@types/draft-js':
     specifier: ^0.11.13
     version: 0.11.16
+  '@types/react-slick':
+    specifier: ^0.23.13
+    version: 0.23.13
   '@types/uuid':
     specifier: ^9.0.7
     version: 9.0.7
@@ -4154,6 +4157,12 @@ packages:
     resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
     dependencies:
       '@types/react': 18.2.22
+
+  /@types/react-slick@0.23.13:
+    resolution: {integrity: sha512-bNZfDhe/L8t5OQzIyhrRhBr/61pfBcWaYJoq6UDqFtv5LMwfg4NsVDD2J8N01JqdAdxLjOt66OZEp6PX+dGs/A==}
+    dependencies:
+      '@types/react': 18.2.22
+    dev: true
 
   /@types/react-transition-group@4.4.10:
     resolution: {integrity: sha512-hT/+s0VQs2ojCX823m60m5f0sL5idt9SO6Tj6Dg+rdphGPIeJbJ6CxvBYkgkGKrYeDjvIpKTR38UzmtHJOGW3Q==}
