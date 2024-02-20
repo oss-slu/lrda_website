@@ -44,6 +44,7 @@ import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 
+
 const user = User.getInstance();
 
 type NoteEditorProps = {
@@ -138,47 +139,61 @@ export default function NoteEditor({
   };
 
   return (
-    <div className="flex flex-col w-full" key={noteState.counter}>
+    <div 
+      className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat" 
+      key={noteState.counter}
+      style={{ backgroundImage: `url('/note_background.jpg')` }}
+    >
       <div className="flex items-start justify-between gap-4 p-4">
-        <Input
-          value={noteState.title}
-          onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-          placeholder="Title"
-          style={{
-            all: "unset",
-            fontSize: "1.5em",
-            fontWeight: "bold",
-            outline: "none",
-            maxWidth: "400px",
-          }}
-          className="self-center" // Center the input vertically
-        />
-        <div className="flex flex-col gap-4">
-          <TimePicker
-            initialDate={noteState.time || new Date()}
-            onTimeChange={(newDate) =>
-              handleTimeChange(noteHandlers.setTime, newDate)
-            }
-          />
-          <LocationPicker
-            long={noteState.longitude}
-            lat={noteState.latitude}
-            onLocationChange={(newLong, newLat) =>
-              handleLocationChange(
-                noteHandlers.setLongitude,
-                noteHandlers.setLatitude,
-                newLong,
-                newLat
-              )
-            }
-          />
-          <TagManager
-            inputTags={noteState.tags}
-            onTagsChange={(newTags) =>
-              handleTagsChange(noteHandlers.setTags, newTags)
-            }
+        <div className="bg-white p-2 rounded"> {/* Wrap the Input component */}
+          <Input
+            value={noteState.title}
+            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+            placeholder="Title"
+            style={{
+              all: "unset",
+              fontSize: "1.5em",
+              fontWeight: "bold",
+              outline: "none",
+              maxWidth: "400px",
+            }}
+            className="w-full" 
           />
         </div>
+  
+        <div className="flex flex-col gap-4">
+          <div className="bg-white p-2 rounded border-none"> 
+            <TimePicker
+              initialDate={noteState.time || new Date()}
+              onTimeChange={(newDate) =>
+                handleTimeChange(noteHandlers.setTime, newDate)
+              }
+            />
+          </div>
+          <div className="bg-white p-2 rounded"> 
+            <LocationPicker
+              long={noteState.longitude}
+              lat={noteState.latitude}
+              onLocationChange={(newLong, newLat) =>
+                handleLocationChange(
+                  noteHandlers.setLongitude,
+                  noteHandlers.setLatitude,
+                  newLong,
+                  newLat
+                )
+              }
+            />
+          </div>
+          <div className="bg-white p-2 rounded"> 
+            <TagManager
+              inputTags={noteState.tags}
+              onTagsChange={(newTags) =>
+                handleTagsChange(noteHandlers.setTags, newTags)
+              }
+            />
+          </div>
+        </div>
+  
         <AudioPicker
           audioArray={noteState.audio || []}
           setAudio={noteHandlers.setAudio}
@@ -229,7 +244,7 @@ export default function NoteEditor({
       </div>
 
       <main className="flex-grow p-6">
-      <div className="overflow-auto">
+      <div className="overflow-auto bg-white">
           <RichTextEditor
             ref={rteRef}
             extensions={extensions}
