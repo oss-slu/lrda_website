@@ -56,13 +56,6 @@ export default function Navbar() {
             About
           </a>
         </Link> }
-
-        {/* New Note Creation Button */}
-        <Link legacyBehavior href="/lib/pages/notePage" passHref>
-          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-            Note Creation
-          </a>
-        </Link>
         
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">

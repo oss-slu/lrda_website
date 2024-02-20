@@ -138,8 +138,8 @@ export default function NoteEditor({
   };
 
   return (
-    <div className="flex flex-col w-[100%]" key={noteState.counter}>
-      <div className="flex items-center justify-between mr-6">
+    <div className="flex flex-col w-full" key={noteState.counter}>
+      <div className="flex items-start justify-between gap-4 p-4">
         <Input
           value={noteState.title}
           onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
@@ -149,10 +149,42 @@ export default function NoteEditor({
             fontSize: "1.5em",
             fontWeight: "bold",
             outline: "none",
-            marginLeft: "1.75rem",
-            maxWidth: "400px,",
+            maxWidth: "400px",
           }}
+          className="self-center" // Center the input vertically
         />
+        <div className="flex flex-col gap-4">
+          <TimePicker
+            initialDate={noteState.time || new Date()}
+            onTimeChange={(newDate) =>
+              handleTimeChange(noteHandlers.setTime, newDate)
+            }
+          />
+          <LocationPicker
+            long={noteState.longitude}
+            lat={noteState.latitude}
+            onLocationChange={(newLong, newLat) =>
+              handleLocationChange(
+                noteHandlers.setLongitude,
+                noteHandlers.setLatitude,
+                newLong,
+                newLat
+              )
+            }
+          />
+          <TagManager
+            inputTags={noteState.tags}
+            onTagsChange={(newTags) =>
+              handleTagsChange(noteHandlers.setTags, newTags)
+            }
+          />
+        </div>
+        <AudioPicker
+          audioArray={noteState.audio || []}
+          setAudio={noteHandlers.setAudio}
+          editable={true}
+        />
+      
         <div className="flex w-[380px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
           <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
               handlePublishChange(noteHandlers.setIsPublished, bool)
@@ -217,44 +249,6 @@ export default function NoteEditor({
                 <LinkBubbleMenu/>
               );
             }}
-          />
-        </div>
-
-        <div className="mt-3">
-          <AudioPicker
-            audioArray={noteState.audio || []}
-            setAudio={noteHandlers.setAudio}
-            editable={true}
-          />
-        </div>
-        <div className="mt-3">
-          <TimePicker
-            initialDate={noteState.time || new Date()}
-            onTimeChange={(newDate) =>
-              handleTimeChange(noteHandlers.setTime, newDate)
-            }
-          />
-        </div>
-        <div className="mt-3">
-          <LocationPicker
-            long={noteState.longitude}
-            lat={noteState.latitude}
-            onLocationChange={(newLong, newLat) =>
-              handleLocationChange(
-                noteHandlers.setLongitude,
-                noteHandlers.setLatitude,
-                newLong,
-                newLat
-              )
-            }
-          />
-        </div>
-        <div className="mt-3 mb-3">
-          <TagManager
-            inputTags={noteState.tags}
-            onTagsChange={(newTags) =>
-              handleTagsChange(noteHandlers.setTags, newTags)
-            }
           />
         </div>
       </main>
