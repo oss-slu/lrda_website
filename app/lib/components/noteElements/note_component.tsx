@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Calendar, MapPin, Music } from 'lucide-react';
 import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
@@ -52,6 +53,7 @@ type NoteEditorProps = {
   isNewNote: boolean;
 };
 
+
 export default function NoteEditor({
   note: initialNote,
   isNewNote,
@@ -62,6 +64,7 @@ export default function NoteEditor({
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
   });
+
 
   useEffect(() => {
     if (initialNote) {
@@ -140,11 +143,13 @@ export default function NoteEditor({
 
   return (
     <div 
-      className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat" 
-      key={noteState.counter}
-      style={{ backgroundImage: `url('/note_background.jpg')` }}
-    >
-      <div className="flex items-start justify-between gap-4 p-4">
+    className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
+    key={noteState.counter}
+    style={{ backgroundImage: `url('/note_background.jpg')`, width: 'calc(100vw - 285px)' }}
+  >
+
+    
+    <div className="flex w-full items-start justify-between gap-4 p-4">
         <div className="bg-white p-2 rounded"> {/* Wrap the Input component */}
           <Input
             value={noteState.title}
@@ -184,7 +189,7 @@ export default function NoteEditor({
               }
             />
           </div>
-          <div className="bg-white p-2 rounded"> 
+          <div className="bg-white p-2 rounded "> 
             <TagManager
               inputTags={noteState.tags}
               onTagsChange={(newTags) =>
@@ -243,8 +248,8 @@ export default function NoteEditor({
         </div>
       </div>
 
-      <main className="flex-grow p-6">
-      <div className="overflow-auto bg-white">
+      <main className="flex-grow w-full p-6">
+      <div className="overflow-auto bg-white w-full">
           <RichTextEditor
             ref={rteRef}
             extensions={extensions}
@@ -258,6 +263,8 @@ export default function NoteEditor({
             renderControls={() => (
               <EditorMenuControls onImageUpload={addImageToNote} />
             )}
+
+            
             children={(editor) => {
               if (!editor) return null;
               return (
