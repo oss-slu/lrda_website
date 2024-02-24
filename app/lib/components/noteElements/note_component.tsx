@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Calendar, MapPin, Music } from 'lucide-react';
 import { Note } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
@@ -18,7 +17,7 @@ import NoteToolbar from "./note_toolbar";
 import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
-import { FileX2, SaveIcon } from "lucide-react";
+import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -144,25 +143,102 @@ export default function NoteEditor({
 
 return (
   <div 
-    className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
-    key={noteState.counter}
-    style={{ backgroundImage: `url('/note_background.jpg')`, width: 'calc(100vw - 285px)' }}
-  >
-    <div className="w-full"> {/* This div is for the title input component */}
-      <div className="bg-white p-2 rounded m-4" style={{ maxWidth: '330px' }}> {/* Adjusted maxWidth here */}
-        <Input
-          value={noteState.title}
-          onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-          placeholder="Title"
-          style={{
-            all: "unset",
-            fontSize: "1.5em",
-            fontWeight: "bold",
-            outline: "none",
-          }}
-        />
-      </div>
+  className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
+  key={noteState.counter}
+  style={{ backgroundImage: `url('/note_background.jpg')`, width: 'calc(100vw - 285px)' }}
+>
+  <div className="w-full flex flex-row items-center"> {/* Adjusted for horizontal alignment */}
+
+    {/* Title Input Container */}
+    <div className="bg-white p-2 rounded m-4 flex-grow" style={{ maxWidth: '330px' }}> {/* Keep the title input here */}
+      <Input
+        value={noteState.title}
+        onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+        placeholder="Title"
+        style={{
+          all: "unset",
+          fontSize: "1.5em",
+          fontWeight: "bold",
+          outline: "none",
+          width: '100%', // Ensure input takes the full width of its container
+        }}
+      />
     </div>
+
+    {/* Buttons Container */}
+    <div className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full" style={{ maxWidth: '700px' }}>
+          <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
+              handlePublishChange(noteHandlers.setIsPublished, bool)
+            } />
+          <div className="w-1 h-9 bg-border" />
+          <button
+            className="hover:text-green-500 flex justify-center items-center w-full"
+            onClick={onSave}
+          >
+            <SaveIcon className="text-current" />
+            <div className="ml-2">Save</div>
+          </button>
+          <div className="w-1 h-9 bg-border" />
+          <AlertDialog> {/* AlertDialog */}
+            <AlertDialogTrigger asChild>
+              <button className="hover:text-red-500 flex justify-center items-center w-full">
+                <FileX2 className="text-current" />
+                <div className="ml-2">Delete</div>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  this note.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() =>
+                    handleDeleteNote(noteState.note, user, noteHandlers.setNote)
+                  }
+                >
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+        {/* Calendar Button */}
+  <button
+    className="hover:text-blue-500 flex justify-center items-center w-full"
+    onClick={() => {/* handler for calendar */}}
+  >
+    <Calendar className="text-current" />
+    <div className="ml-2">Calendar</div>
+  </button>
+  
+  <div className="w-1 h-9 bg-border" /> {/* Divider */}
+  
+  {/* Map Pin Button */}
+  <button
+    className="hover:text-purple-500 flex justify-center items-center w-full"
+    onClick={() => {/* handler for map pin */}}
+  >
+    <MapPin className="text-current" />
+    <div className="ml-2">Location</div>
+  </button>
+  
+  <div className="w-1 h-9 bg-border" /> {/* Divider */}
+  
+  {/* Music Button */}
+  <button
+    className="hover:text-orange-500 flex justify-center items-center w-full"
+    onClick={() => {/* handler for music */}}
+  >
+    <Music className="text-current" />
+    <div className="ml-2">Audio</div>
+  </button>
+        </div>
+      </div>
 
     <div className="w-full flex justify-between items-start gap-4 p-4"> {/* This div wraps the time picker, location picker, and tag manager */}
       <div className="flex flex-col gap-4">
@@ -205,51 +281,8 @@ return (
           editable={true}
         />
       </div>
-
-      <div className="flex w-full justify-between items-center m-4"> {/* This div is for the publish toggle and save/delete buttons */}
-        <div className="flex w-[380px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
-          <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
-              handlePublishChange(noteHandlers.setIsPublished, bool)
-            } />
-          <div className="w-1 h-9 bg-border" />
-          <button
-            className="hover:text-green-500 flex justify-center items-center w-full"
-            onClick={onSave}
-          >
-            <SaveIcon className="text-current" />
-            <div className="ml-2">Save</div>
-          </button>
-          <div className="w-1 h-9 bg-border" />
-          <AlertDialog> {/* AlertDialog */}
-            <AlertDialogTrigger asChild>
-              <button className="hover:text-red-500 flex justify-center items-center w-full">
-                <FileX2 className="text-current" />
-                <div className="ml-2">Delete</div>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  this note.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() =>
-                    handleDeleteNote(noteState.note, user, noteHandlers.setNote)
-                  }
-                >
-                  Continue
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
       </div>
-    </div>
+
 
     <main className="flex-grow w-full p-6"> {/* Main content area */}
       <div className="overflow-auto bg-white w-full -ml-2">
