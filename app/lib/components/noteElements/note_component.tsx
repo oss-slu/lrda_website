@@ -142,15 +142,13 @@ export default function NoteEditor({
   };
 
 return (
-  <div 
-  className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
+  <div className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
   key={noteState.counter}
   style={{ backgroundImage: `url('/note_background.jpg')`, width: 'calc(100vw - 285px)' }}
 >
   <div className="w-full flex flex-row items-center"> {/* Adjusted for horizontal alignment */}
-
     {/* Title Input Container */}
-    <div className="bg-white p-2 rounded m-4 flex-grow" style={{ maxWidth: '330px' }}> {/* Keep the title input here */}
+    <div className="bg-white p-4 rounded m-4 flex-grow" style={{ maxWidth: '330px' }}> {/* Keep the title input here */}
       <Input
         value={noteState.title}
         onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
@@ -164,127 +162,97 @@ return (
         }}
       />
     </div>
-
     {/* Buttons Container */}
-    <div className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full" style={{ maxWidth: '700px' }}>
-          <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
-              handlePublishChange(noteHandlers.setIsPublished, bool)
-            } />
-          <div className="w-1 h-9 bg-border" />
-          <button
-            className="hover:text-green-500 flex justify-center items-center w-full"
-            onClick={onSave}
-          >
-            <SaveIcon className="text-current" />
-            <div className="ml-2">Save</div>
+    <div className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full" style={{ maxWidth: '1100px' }}>
+      <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
+          handlePublishChange(noteHandlers.setIsPublished, bool)
+        } />
+      <div className="w-1 h-9 bg-border" />
+      <button
+        className="hover:text-green-500 flex justify-center items-center w-full"
+        onClick={onSave}
+      >
+        <SaveIcon className="text-current" />
+        <div className="ml-2">Save</div>
+      </button>
+      <div className="w-1 h-9 bg-border" />
+      <AlertDialog> {/* AlertDialog */}
+        <AlertDialogTrigger asChild>
+          <button className="hover:text-red-500 flex justify-center items-center w-full">
+            <FileX2 className="text-current" />
+            <div className="ml-2">Delete</div>
           </button>
-          <div className="w-1 h-9 bg-border" />
-          <AlertDialog> {/* AlertDialog */}
-            <AlertDialogTrigger asChild>
-              <button className="hover:text-red-500 flex justify-center items-center w-full">
-                <FileX2 className="text-current" />
-                <div className="ml-2">Delete</div>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  this note.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() =>
-                    handleDeleteNote(noteState.note, user, noteHandlers.setNote)
-                  }
-                >
-                  Continue
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-        {/* Calendar Button */}
-  <button
-    className="hover:text-blue-500 flex justify-center items-center w-full"
-    onClick={() => {/* handler for calendar */}}
-  >
-    <Calendar className="text-current" />
-    <div className="ml-2">Calendar</div>
-  </button>
-  
-  <div className="w-1 h-9 bg-border" /> {/* Divider */}
-  
-  {/* Map Pin Button */}
-  <button
-    className="hover:text-purple-500 flex justify-center items-center w-full"
-    onClick={() => {/* handler for map pin */}}
-  >
-    <MapPin className="text-current" />
-    <div className="ml-2">Location</div>
-  </button>
-  
-  <div className="w-1 h-9 bg-border" /> {/* Divider */}
-  
-  {/* Music Button */}
-  <button
-    className="hover:text-orange-500 flex justify-center items-center w-full"
-    onClick={() => {/* handler for music */}}
-  >
-    <Music className="text-current" />
-    <div className="ml-2">Audio</div>
-  </button>
-        </div>
-      </div>
-
-    <div className="w-full flex justify-between items-start gap-4 p-4"> {/* This div wraps the time picker, location picker, and tag manager */}
-      <div className="flex flex-col gap-4">
-        <div className="bg-white p-2 rounded border-none"> {/* TimePicker */}
-          <TimePicker
-            initialDate={noteState.time || new Date()}
-            onTimeChange={(newDate) =>
-              handleTimeChange(noteHandlers.setTime, newDate)
-            }
-          />
-        </div>
-        <div className="bg-white p-2 rounded"> {/* LocationPicker */}
-          <LocationPicker
-            long={noteState.longitude}
-            lat={noteState.latitude}
-            onLocationChange={(newLong, newLat) =>
-              handleLocationChange(
-                noteHandlers.setLongitude,
-                noteHandlers.setLatitude,
-                newLong,
-                newLat
-              )
-            }
-          />
-        </div>
-        <div className="bg-white p-2 rounded "> {/* TagManager */}
-          <TagManager
-            inputTags={noteState.tags}
-            onTagsChange={(newTags) =>
-              handleTagsChange(noteHandlers.setTags, newTags)
-            }
-          />
-        </div>
-      </div>
-
-      <div className="w-full"> {/* This div is for the AudioPicker */}
-        <AudioPicker
-          audioArray={noteState.audio || []}
-          setAudio={noteHandlers.setAudio}
-          editable={true}
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete
+              this note.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                handleDeleteNote(noteState.note, user, noteHandlers.setNote)
+              }
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Replace the Calendar button with the TimePicker */}
+      <div className="flex-grow"> {/* Adjust this wrapper as needed */}
+        <TimePicker
+          initialDate={noteState.time || new Date()}
+          onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
         />
       </div>
+      <div className="w-1 h-9 bg-border" /> {/* Divider */}
+      <div className="bg-white p-2 rounded"> {/* LocationPicker */}
+        <LocationPicker
+          long={noteState.longitude}
+          lat={noteState.latitude}
+          onLocationChange={(newLong, newLat) =>
+            handleLocationChange(
+              noteHandlers.setLongitude,
+              noteHandlers.setLatitude,
+              newLong,
+              newLat
+            )
+          }
+        />
       </div>
-
-
-    <main className="flex-grow w-full p-6"> {/* Main content area */}
+      <div className="w-1 h-9 bg-border" /> {/* Divider */}
+        {/* Audio Button */}
+        <button
+          className="hover:text-orange-500 flex justify-center items-center w-full"
+          onClick={() => {/* handler for audio */}}
+        >
+          <Music className="text-current" />
+          <div className="ml-2">Audio</div>
+        </button>
+      </div>
+    </div>
+  <div className="bg-white p-2 rounded "> {/* TagManager */}
+    <TagManager
+      inputTags={noteState.tags}
+      onTagsChange={(newTags) =>
+        handleTagsChange(noteHandlers.setTags, newTags)
+      }
+    />
+  </div>
+  <div className="w-full"> {/* This div is for the AudioPicker */}
+    <AudioPicker
+      audioArray={noteState.audio || []}
+      setAudio={noteHandlers.setAudio}
+      editable={true}
+    />
+  </div>
+  <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat">
+    <main className="flex-grow w-full p-6 flex flex-col"> {/* Main content area */}
       <div className="overflow-auto bg-white w-full -ml-2">
         <RichTextEditor
           ref={rteRef}
@@ -309,5 +277,6 @@ return (
       </div>
     </main>
   </div>
+</div>
 );
         }
