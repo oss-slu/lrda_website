@@ -18,6 +18,11 @@ import { GlobeIcon, UserIcon } from "lucide-react";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
+interface Location {
+  lat: number;
+  lng: number;
+}
+
 const Page = () => {
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
@@ -31,49 +36,104 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
-    map.addListener("dragend", () => {
-      setMapCenter({
+    const updateBounds = () => {
+      const newCenter: Location = {
         lat: map.getCenter().lat(),
         lng: map.getCenter().lng(),
-      });
-    });
+      };
+      const newBounds = map.getBounds();
+      
+      setMapCenter(newCenter);
+      setMapBounds(newBounds);
+      updateFilteredNotes(newCenter, newBounds, notes);
+    };
+  
+    map.addListener("dragend", updateBounds);
+    map.addListener("zoom_changed", updateBounds);
+  
+    setTimeout(() => {
+      updateBounds();
+    }, 100);
+  };
 
-    map.addListener("zoom_changed", () => {
-      setMapZoom(map.getZoom());
+  
+
+  // Filter function
+  const filterNotesByMapBounds = (
+    bounds: google.maps.LatLngBounds | null,
+    notes: Note[]
+  ): Note[] => {
+    if (!bounds) return notes;
+
+    const ne = bounds.getNorthEast(); // North East corner
+    const sw = bounds.getSouthWest(); // South West corner
+
+    return notes.filter((note) => {
+      const lat = parseFloat(note.latitude);
+      const lng = parseFloat(note.longitude);
+      return (
+        lat >= sw.lat() &&
+        lat <= ne.lat() &&
+        lng >= sw.lng() &&
+        lng <= ne.lng()
+      );
     });
   };
 
-  useEffect(() => {
-    async function fetchNotes() {
-      try {
-        const userId = await user.getId();
+  
+  const updateFilteredNotes = async (
+    center: Location,
+    bounds: google.maps.LatLngBounds | null,
+    allNotes: Note[]
+  ) => {
+    setIsLoading(true);
+    const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
+    setFilteredNotes(visibleNotes);
+    setIsLoading(false);
+  };
 
-        let personalNotes: any[] | ((prevState: Note[]) => Note[]) = [];
-        let globalNotes = [];
-        if (userId) {
-          setIsLoggedIn(true);
-          personalNotes = await ApiService.fetchUserMessages(userId);
-          personalNotes =
-            DataConversion.convertMediaTypes(personalNotes).reverse();
-        }
-        globalNotes = await ApiService.fetchPublishedNotes();
-        globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
+  const fetchNotes = async () => {
+    try {
+      const userId = await user.getId();
 
-        setPersonalNotes(personalNotes);
-        setGlobalNotes(globalNotes);
-
-        setNotes(global ? globalNotes : personalNotes);
-        setFilteredNotes(global ? globalNotes : personalNotes);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
+      let personalNotes: Note[] = [];
+      let globalNotes: Note[] = [];
+      if (userId) {
+        setIsLoggedIn(true);
+        personalNotes = await ApiService.fetchUserMessages(userId);
+        personalNotes = DataConversion.convertMediaTypes(personalNotes).reverse();
       }
-    }
+      globalNotes = await ApiService.fetchPublishedNotes();
+      globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
 
-    fetchNotes();
-  }, []);
+      return { personalNotes, globalNotes };
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return { personalNotes: [], globalNotes: [] };
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes().then(({ personalNotes, globalNotes }) => {
+      setPersonalNotes(personalNotes);
+      setGlobalNotes(globalNotes);
+
+      const initialNotes = global ? globalNotes : personalNotes;
+      setNotes(initialNotes);
+      setFilteredNotes(initialNotes); // Initially, filteredNotes are the same as notes
+    });
+  }, [global]);
+
+  // New useEffect hook for map bounds changes
+  useEffect(() => {
+    const currentNotes = global ? globalNotes : personalNotes;
+    updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -196,7 +256,10 @@ const Page = () => {
         )}
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {filteredNotes.map((note) => (
+      {isLoading ? (
+          <div>Loading...</div> // Placeholder for loading state
+        ) : (
+        filteredNotes.map((note) => (
           <div
             className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
             onMouseEnter={() => setHoveredNoteId(note.id)}
@@ -205,7 +268,7 @@ const Page = () => {
           >
             <ClickableNote note={note} />
           </div>
-        ))}
+        )))}
       </div>
     </div>
   );
