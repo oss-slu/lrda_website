@@ -44,7 +44,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       console.log("Login status:", status);
       if (status == "success") {
         localStorage.setItem(username, password);
-        window.location.href = "/";
+        window.location.href = "/lib/pages/map";
       }
       setIsLoading(false);
     } catch (error) {
