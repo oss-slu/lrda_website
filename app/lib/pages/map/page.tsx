@@ -37,6 +37,7 @@ const Page = () => {
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -45,17 +46,19 @@ const Page = () => {
         lat: map.getCenter().lat(),
         lng: map.getCenter().lng(),
       };
-
       const newBounds = map.getBounds();
-
       
       setMapCenter(newCenter);
       setMapBounds(newBounds);
-      updateFilteredNotes(newCenter, map.getBounds(), notes);
+      updateFilteredNotes(newCenter, newBounds, notes);
     };
-
+  
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", updateBounds);
+  
+    setTimeout(() => {
+      updateBounds();
+    }, 100);
   };
 
   // Filter function
