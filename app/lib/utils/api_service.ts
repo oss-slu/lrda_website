@@ -276,3 +276,74 @@ export default class ApiService {
     }
   }
 }
+
+export function getVideoThumbnail(file: File, seekTo = 0.0) {
+  console.log("getting video cover for file: ", file);
+  return new Promise((resolve, reject) => {
+      const videoPlayer = document.createElement('video');
+      videoPlayer.setAttribute('src', URL.createObjectURL(file));
+      videoPlayer.load();
+      videoPlayer.addEventListener('error', (ex) => {
+          reject("error when loading video file", ex);
+      });
+      videoPlayer.addEventListener('loadedmetadata', () => {
+          if (videoPlayer.duration < seekTo) {
+              reject("video is too short.");
+              return;
+          }
+          setTimeout(() => {
+            videoPlayer.currentTime = seekTo;
+          }, 200);
+          videoPlayer.addEventListener('seeked', () => {
+              console.log('video is now paused at %ss.', seekTo);
+              const canvas = document.createElement("canvas");
+              canvas.width = videoPlayer.videoWidth;
+              canvas.height = videoPlayer.videoHeight;
+              const ctx = canvas.getContext("2d");
+              if (ctx){
+                ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                ctx.canvas.toBlob(
+                    blob => {
+                        resolve(blob);
+                    },
+                    "image/jpeg",
+                    0.75 /* quality */
+                );
+              }
+          });
+      });
+  });
+}
+
+function formatDuration(duration: number) {
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  const seconds = Math.floor(duration % 60);
+
+  const parts = [];
+  if (hours > 0) parts.push(hours);
+  parts.push(minutes < 10 && hours > 0 ? `0${minutes}` : minutes);
+  parts.push(seconds < 10 ? `0${seconds}` : seconds);
+
+  return parts.join(":");
+}
+
+export function getVideoDuration(file: File) {
+  return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+
+      video.onloadedmetadata = function() {
+          window.URL.revokeObjectURL(video.src);
+          const durationInSeconds = video.duration;
+          const formattedDuration = formatDuration(durationInSeconds);
+          resolve(formattedDuration);
+      };
+
+      video.onerror = function() {
+          reject("Failed to load video metadata");
+      };
+
+      video.src = URL.createObjectURL(file);
+  });
+}

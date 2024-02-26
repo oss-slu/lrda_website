@@ -44,6 +44,7 @@ import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 const user = User.getInstance();
 
@@ -80,6 +81,8 @@ export default function NoteEditor({
     }
   }, [initialNote]);
 
+  console.log("initial Note", initialNote)
+
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
@@ -90,7 +93,7 @@ export default function NoteEditor({
       ...noteState.note,
       text: noteState.editorContent,
       title: noteState.title,
-      media: noteState.images,
+      media: [...noteState.images, ...noteState.videos],
       published: noteState.isPublished,
       time: noteState.time,
       longitude: noteState.longitude,
@@ -114,6 +117,7 @@ export default function NoteEditor({
           description: "Your note has been successfully saved.",
           duration: 2000,
         });
+        console.log("SAVED NOTE HERE: ",updatedNote)
       }
     } catch (error) {
       console.error("Error saving note:", error);

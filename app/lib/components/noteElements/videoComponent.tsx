@@ -16,10 +16,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { uploadMedia } from "../../utils/s3_proxy";
+import { uploadMedia, } from "../../utils/s3_proxy";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import MediaViewer from "../media_viewer";
+import { getVideoThumbnail, getVideoDuration } from "../../utils/api_service";
 
 type VideoPickerProps = {
   videoArray: VideoType[];
@@ -37,32 +38,54 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
     });
 
     const file = event.target.files[0];
-    const location = await uploadMedia(file, "video");
-    if (location != "error") {
-      const newVideo = new VideoType({
-        type: "audio",
-        uuid: uuidv4(),
-        uri: location,
-        thumbnail: "", // Get thumbnail from the uploaded video and add it here
-        duration: "0:00",
-      });
 
-      toast("Status Update", {
-        description: "Audio upload success!",
-        duration: 4000,
-      });
+    try {
+      const location = await uploadMedia(file, "video");
+      if (location !== "error") {
+        const thumbnailBlob = await getVideoThumbnail(file);
+        console.log("Thumbnail blob", thumbnailBlob)
+        const thumbnailLocation = await uploadMedia(thumbnailBlob as File, "thumbnail");
+        const duration = await getVideoDuration(file);
+        console.log("Duration", duration);
+        if (thumbnailLocation !== "error") {
+          const newVideo = new VideoType({
+            type: "video",
+            uuid: uuidv4(),
+            uri: location,
+            thumbnail: thumbnailLocation,
+            duration: duration as string || "0:00",
+          });
 
-      if (setVideo) {
-        setVideo([...videoArray, newVideo]);
+          toast("Status Update", {
+            description: "Video upload success! Don't forget to save!",
+            duration: 4000,
+          });
+
+          if (setVideo) {
+            setVideo((prevVideos) => [...prevVideos, newVideo]);
+          }
+        } else {
+          console.error("Thumbnail upload failed");
+          toast("Status Update", {
+            description: "Thumbnail Upload Failed! Please try again later.",
+            duration: 4000,
+          });
+        }
+      } else {
+        console.error("Video upload failed");
+        toast("Status Update", {
+          description: "Video Upload Failed! Please try again later.",
+          duration: 4000,
+        });
       }
-    } else {
-      console.log("UPLOAD FAILED");
+    } catch (error) {
+      console.error("Error processing video", error);
       toast("Status Update", {
-        description: "Audio Upload Failed! Please try again later.",
+        description: "Error processing video. Please try again later.",
         duration: 4000,
       });
     }
-  }
+  };
 
   return (
     <div className="flex flex-row items-center p-2 h-9 min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white justify-between">
@@ -87,15 +110,21 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
         <DialogTrigger asChild>
           <span className="cursor-pointer">Videos</span>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[80%] h-[100vh]">
+        <DialogContent className="w-full sm:max-w-[70%] h-[100vh] px-20 overflow-auto">
           <DialogHeader>
             <DialogTitle className="text-3xl">Videos</DialogTitle>
-
-            <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
+            <div className="h-1 w-full bg-black bg-opacity-70 rounded-full" />
           </DialogHeader>
 
-          <MediaViewer mediaArray={videoArray} />
-
+          {videoArray.length > 0 ? (
+            <div className="flex flex-col items-center justify-center max-w-full h-full object-fit">
+              <MediaViewer mediaArray={videoArray} />
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p>No Videos</p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
