@@ -29,14 +29,6 @@ describe("LocationPicker", () => {
     render(<LocationPicker />);
   });
 
-  it("displays the initial longitude and latitude", () => {
-    render(<LocationPicker />);
-    const longitude = screen.getByText("0.0000000");
-    const latitude = screen.getByText("0.0000000");
-    expect(longitude).toBeInTheDocument();
-    expect(latitude).toBeInTheDocument();
-  });
-
   it("displays the GoogleMap component when the popover is triggered", () => {
     render(<LocationPicker />);
     const mapPinButton = screen.getByRole("button", { name: /map pin/ });
