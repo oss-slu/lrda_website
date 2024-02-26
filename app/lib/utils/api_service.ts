@@ -347,3 +347,7 @@ export function getVideoDuration(file: File) {
       video.src = URL.createObjectURL(file);
   });
 }
+export function uploadMedia(uploadMedia: any) {
+    throw new Error('Function not implemented.');
+}
+

@@ -101,6 +101,7 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
               type="file"
               accept=".mp4"
               onChange={(e) => handleFileChange(e)}
+              data-testid="file-input"
             />
           </div>
         </PopoverContent>
