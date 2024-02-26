@@ -145,7 +145,7 @@ export default function NoteEditor({
 
 
 return (
-  <div className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
+  <div className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat flex-grow" 
   key={noteState.counter}
   style={{ backgroundImage: `url('/note_background.jpg')`, width: 'calc(100vw - 285px)' }}
 >
@@ -239,38 +239,39 @@ return (
 </button>
       </div>
     </div>
-  <div className="bg-white p-2 rounded "> {/* TagManager */}
-    <TagManager
-      inputTags={noteState.tags}
-      onTagsChange={(newTags) =>
-        handleTagsChange(noteHandlers.setTags, newTags)
-      }
-    />
-  </div>
+{/* This div is for the TagManager */}
+<div className="bg-white p-2 rounded m-4 flex items-center overflow-auto" style={{ maxWidth: '600px' }}>
+  <TagManager
+    inputTags={noteState.tags}
+    onTagsChange={(newTags) => handleTagsChange(noteHandlers.setTags, newTags)}
+  />
+</div>
  
- {/* Conditional Rendering of the Audio Modal */}
- {isAudioModalOpen && (
-      <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div className="bg-white p-4 rounded-lg shadow-lg max-w-md w-full">
-          {/* Modal content */}
-          <h2 className="text-lg font-semibold">Select Audio</h2>
-          
-          {/* Here we include the AudioPicker component */}
-          <AudioPicker
-            audioArray={noteState.audio || []}
-            setAudio={noteHandlers.setAudio}
-            editable={true}
-          />
-
-          <button
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-            onClick={() => setIsAudioModalOpen(false)} // Close the modal
-          >
-            Close
-          </button>
-        </div>
+{/* Conditional Rendering of the Audio Modal */}
+{isAudioModalOpen && (
+  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+      {/* Modal content */}
+      <h2 className="text-lg font-semibold mb-2 text-center">Select Audio</h2>
+      
+      {/* Here we include the AudioPicker component */}
+      {/* Use available space more efficiently within the modal */}
+      <div className="flex flex-col justify-between h-auto">
+        <AudioPicker
+          audioArray={noteState.audio || []}
+          setAudio={noteHandlers.setAudio}
+          editable={true}
+        />
+        <button
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
+          onClick={() => setIsAudioModalOpen(false)} // Close the modal
+        >
+          Close
+        </button>
       </div>
-    )}
+    </div>
+  </div>
+)}
   <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat">
     <main className="flex-grow w-full p-6 flex flex-col"> {/* Main content area */}
       <div className="overflow-auto bg-white w-full -ml-2">
