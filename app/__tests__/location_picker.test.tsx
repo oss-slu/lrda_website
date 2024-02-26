@@ -26,19 +26,15 @@ const mockGeolocation = {
 
 describe("LocationPicker", () => {
   it("renders without crashing", () => {
-    render(<LocationPicker />);
-  });
-
-  it("displays the initial longitude and latitude", () => {
-    render(<LocationPicker />);
-    const longitude = screen.getByText("0.0000000");
-    const latitude = screen.getByText("0.0000000");
-    expect(longitude).toBeInTheDocument();
-    expect(latitude).toBeInTheDocument();
+    render(<LocationPicker onLocationChange={function (newLongitude: number, newLatitude: number): void {
+      throw new Error("Function not implemented.");
+    } } />);
   });
 
   it("displays the GoogleMap component when the popover is triggered", () => {
-    render(<LocationPicker />);
+    render(<LocationPicker onLocationChange={function (newLongitude: number, newLatitude: number): void {
+      throw new Error("Function not implemented.");
+    } } />);
     const mapPinButton = screen.getByRole("button", { name: /map pin/ });
     fireEvent.click(mapPinButton);
     expect(screen.getByTestId("google-map")).toBeInTheDocument();

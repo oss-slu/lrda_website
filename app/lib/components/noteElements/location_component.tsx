@@ -76,16 +76,17 @@ export default function LocationPicker({
   }, [long, lat, handleGetCurrentLocation]); 
   
   return (
-    <div className="flex flex-row items-center p-2 h-9 min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
+    <div className="flex flex-row items-center p-2 h-9">
       <Popover>
         <PopoverTrigger asChild>
           <button className="flex items-center justify-start w-full h-full text-sm">
-            <MapPin aria-label="map pin" className="mr-2 h-5 w-5" />
-            <div>
+            <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
+            <div>Location</div>
+            {/* <div>
               {longitude.toPrecision(8)}
               {"_"}
             </div>
-            <div>{latitude.toPrecision(8)}</div>
+            <div>{latitude.toPrecision(8)}</div> */}
           </button>
         </PopoverTrigger>
         <PopoverContent className="z-30">
@@ -123,7 +124,7 @@ export default function LocationPicker({
               aria-label="compass"
               className="h-9 flex justify-center items-center cursor-pointer"
             >
-              <Compass className="h-5 w-5" />
+              <Compass className="h-5 w-5 mx-2" />
             </button>
           </TooltipTrigger>
           <TooltipContent>

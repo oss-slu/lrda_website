@@ -1,10 +1,11 @@
 "use client"
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import background from '../public/background.jpg'; // Make sure the path matches where you saved your image
+import background from '../public/background.jpg'; 
 
-
-// ... rest of your imports and code ...
 
 const teamImages = [
     '/aboutPageImages/Scrolling/one.jpg',
@@ -18,27 +19,17 @@ const teamImages = [
   ];
 
   const Page = () => {
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-  
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-          if (scrollRef.current) {
-            const currentScroll = scrollRef.current.scrollLeft;
-            const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-      
-            // Auto-scroll to the start if we've reached the end
-            if (currentScroll >= maxScroll) {
-              scrollRef.current.scrollLeft = 0;
-            } else {
-              // Otherwise, scroll a bit more
-              scrollRef.current.scrollLeft += 10;
-            }
-          }
-        }, 100); // Adjust the timing to control the speed
-      
-        return () => clearInterval(intervalId);
-      }, []);
+    // Settings for the slider
+    const settings = {
+      dots: true,
+      infinite: true,
+      speed: 800,
+      slidesToShow: 3, 
+      slidesToScroll: 1,
+      autoplay: true,
+      autoplaySpeed: 7000,
+      cssEase: "linear"
+    };
   
     
     return (
@@ -53,20 +44,27 @@ const teamImages = [
         <p className="mb-4">
           Seeking to better understand the sights, sounds, tastes, rituals, beliefs, and overall experiences of religion in the everyday lives of practitioners.
         </p>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
-          Learn More
-        </button>
+        <a href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale." target="_blank" rel="noopener noreferrer">
+  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+    Learn More
+  </button>
+</a>
         <div> {/* Container for logos */}
+        <a href="https://www.instagram.com/livedreligion/" target="_blank" rel="noopener noreferrer">
+         <img
+              src="/instagram.jpg" 
+              alt="Instagram"
+               className="h-8 mx-2 inline-block" 
+           />
+         </a>
+        <a href="https://twitter.com/livedreligion" target="_blank" rel="noopener noreferrer">
           <img
-            src="/instagram.jpg" // Replace with your Instagram logo path
-            alt="Instagram"
-            className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
-          />
-          <img
-            src="/X.jpg" // Replace with your Twitter logo path
-            alt="Twitter"
-            className="h-8 mx-2 inline-block" // Adjust the size and spacing as needed
-          />
+          src="/X.jpg" 
+          alt="Twitter"
+          className="h-8 mx-2 inline-block" 
+        />
+           </a>
+
         </div>
       </div>
     </div>
@@ -169,19 +167,20 @@ const teamImages = [
 </div>
         </div>
 
-       {/* Horizontally scrolling gallery */}
-       <div ref={scrollRef} className="flex overflow-hidden whitespace-nowrap" style={{ gap: '20px' }}>
-  {/* Duplicate the set of images to facilitate the loop */}
-  {[...teamImages, ...teamImages].map((image, index) => (
-    <img 
-      key={index} 
-      src={image} 
-      alt={`Gallery image ${index % teamImages.length + 1}`} 
-      className="inline-block h-48" // You can adjust the height here
-      style={{ width: 'auto', flex: 'none' }} // width auto for maintaining aspect ratio, flex none to avoid stretching
-    />
-  ))}
-</div>
+       {/* Horizontally scrolling gallery with react-slick */}
+       <div className="max-w-4xl mx-auto px-4 py-16">
+        <Slider {...settings}>
+          {teamImages.map((image, index) => (
+            <div key={index}>
+              <img
+                src={image}
+                alt={`Gallery image ${index + 1}`}
+                style={{ width: '100%', height: 'auto' }} // Adjust the height and width as needed
+              />
+            </div>
+          ))}
+        </Slider>
+      </div>
 
       </main>
       <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
@@ -198,23 +197,29 @@ const teamImages = [
 </div>
   
         {/* Footer or final content section */}
-        <footer className="w-full py-16 bg-white-100"> {/* Adjust the background color as needed */}
-  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> {/* Increased space-x-20 for more spacing */}
-    <img 
-      src="/LivedReligion.png" // Path for the first image
-      alt="Lived Religion in the Digital Age"
-      className="object-cover h-56 w-auto" // Ensure width auto for maintaining aspect ratio along with height
-    />
-    <img 
-      src="/OpenSourceWithSLU.png" // Path for the second image
-      alt="Open Source with SLU"
-      className="object-cover h-56 w-auto" // Same as above
-    />
-    <img 
-      src="/three.jpg" // Path for the third image
-      alt="Third Image"
-      className="object-cover h-72 w-auto" // Larger height if necessary, with width auto
-    />
+        <footer className="w-full py-16 bg-white-100"> 
+  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> 
+  <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
+      <img 
+        src="/LivedReligion.png" 
+        alt="Lived Religion in the Digital Age"
+        className="object-cover h-56 w-auto" 
+      />
+    </a>
+    <a href="https://oss-slu.github.io/" target="_blank" rel="noopener noreferrer">
+  <img 
+    src="/OpenSourceWithSLU.png" 
+    alt="Open Source with SLU"
+    className="object-cover h-56 w-auto" 
+  />
+</a>
+<a href="https://www.slu.edu/science-and-engineering/index.php" target="_blank" rel="noopener noreferrer">
+  <img 
+    src="/three.jpg" 
+    alt="Third Image"
+    className="object-cover h-72 w-auto" 
+  />
+</a>
   </div>
 </footer>
       </div>
