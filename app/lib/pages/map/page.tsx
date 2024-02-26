@@ -65,7 +65,7 @@ const Page = () => {
 
   // Filter function
   const filterNotesByMapBounds = (
-    bounds: google.maps.LatLngBounds | undefined,
+    bounds: google.maps.LatLngBounds | null,
     notes: Note[]
   ): Note[] => {
     if (!bounds) return notes;
