@@ -65,11 +65,48 @@ export default function NoteEditor({
   });
 
   useEffect(() => {
+    const editor = rteRef.current?.editor;
+    if (noteState.videos.length > 0 && editor) {
+      const newVideo = noteState.videos[noteState.videos.length - 1];
+      const videoIndex = noteState.videos.length;
+      const videoLink = `Video ${videoIndex}`;
+      const videoUri = newVideo.uri;
+
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, dispatch }) => {
+          if (dispatch) {
+            const endPos = tr.doc.content.size;
+            const paragraphNodeForNewLine = editor.schema.node("paragraph");
+            const textNode = editor.schema.text(videoLink, [
+              editor.schema.marks.link.create({ href: videoUri }),
+            ]);
+            const paragraphNodeForLink = editor.schema.node("paragraph", null, [
+              textNode,
+            ]);
+
+            const transaction = tr
+              .insert(endPos, paragraphNodeForNewLine)
+              .insert(endPos + 1, paragraphNodeForLink);
+            dispatch(transaction);
+          }
+          return true;
+        })
+        .run();
+    }
+  }, [noteState.videos]);
+
+  useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
-      noteHandlers.setImages(initialNote.media.filter(item => item.getType() === 'image') as PhotoType[] || []);
+      noteHandlers.setImages(
+        (initialNote.media.filter(
+          (item) => item.getType() === "image"
+        ) as PhotoType[]) || []
+      );
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
       noteHandlers.setLatitude(initialNote.latitude || "");
@@ -77,11 +114,15 @@ export default function NoteEditor({
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
-      noteHandlers.setVideos(initialNote.media.filter(item => item.getType() === 'video') as VideoType[] || [])
+      noteHandlers.setVideos(
+        (initialNote.media.filter(
+          (item) => item.getType() === "video"
+        ) as VideoType[]) || []
+      );
     }
   }, [initialNote]);
 
-  console.log("initial Note", initialNote)
+  console.log("initial Note", initialNote);
 
   useEffect(() => {
     if (initialNote) {
@@ -117,7 +158,7 @@ export default function NoteEditor({
           description: "Your note has been successfully saved.",
           duration: 2000,
         });
-        console.log("SAVED NOTE HERE: ",updatedNote)
+        console.log("SAVED NOTE HERE: ", updatedNote);
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -160,9 +201,12 @@ export default function NoteEditor({
           }}
         />
         <div className="flex w-[380px] bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center">
-          <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
+          <PublishToggle
+            isPublished={noteState.isPublished}
+            onPublishChange={(bool) =>
               handlePublishChange(noteHandlers.setIsPublished, bool)
-            } />
+            }
+          />
           <div className="w-1 h-9 bg-border" />
           <button
             className="hover:text-green-500 flex justify-center items-center w-full"
@@ -211,8 +255,10 @@ export default function NoteEditor({
           />
         </div>
         <div className="mt-3">
-          <VideoComponent videoArray={noteState.videos || []}
-            setVideo={noteHandlers.setVideos} />
+          <VideoComponent
+            videoArray={noteState.videos || []}
+            setVideo={noteHandlers.setVideos}
+          />
         </div>
         <div className="mt-3">
           <TimePicker
@@ -260,9 +306,7 @@ export default function NoteEditor({
             )}
             children={(editor) => {
               if (!editor) return null;
-              return (
-                <LinkBubbleMenu/>
-              );
+              return <LinkBubbleMenu />;
             }}
           />
         </div>
