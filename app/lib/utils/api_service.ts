@@ -284,11 +284,13 @@ export function getVideoThumbnail(file: File, seekTo = 0.0) {
       videoPlayer.setAttribute('src', URL.createObjectURL(file));
       videoPlayer.load();
       videoPlayer.addEventListener('error', (ex) => {
-          reject("error when loading video file", ex);
+          // Adjust this line to include only one argument for reject
+          reject(new Error(`Error when loading video file: ${ex.message || ex.toString()}`));
       });
       videoPlayer.addEventListener('loadedmetadata', () => {
           if (videoPlayer.duration < seekTo) {
-              reject("video is too short.");
+              // Adjust this line as well
+              reject(new Error("Video is too short."));
               return;
           }
           setTimeout(() => {
@@ -307,13 +309,14 @@ export function getVideoThumbnail(file: File, seekTo = 0.0) {
                         resolve(blob);
                     },
                     "image/jpeg",
-                    0.75 /* quality */
+                    0.75 // quality
                 );
               }
           });
       });
   });
 }
+
 
 function formatDuration(duration: number) {
   const hours = Math.floor(duration / 3600);
