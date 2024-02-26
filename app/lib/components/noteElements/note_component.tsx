@@ -141,6 +141,9 @@ export default function NoteEditor({
     });
   };
 
+  const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
+
+
 return (
   <div className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat" 
   key={noteState.counter}
@@ -163,7 +166,7 @@ return (
       />
     </div>
     {/* Buttons Container */}
-    <div className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full" style={{ maxWidth: '1100px' }}>
+    <div className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full" style={{ maxWidth: '1700px' }}>
       <PublishToggle isPublished={noteState.isPublished} onPublishChange={(bool) =>
           handlePublishChange(noteHandlers.setIsPublished, bool)
         } />
@@ -228,12 +231,12 @@ return (
       <div className="w-1 h-9 bg-border" /> {/* Divider */}
         {/* Audio Button */}
         <button
-          className="hover:text-orange-500 flex justify-center items-center w-full"
-          onClick={() => {/* handler for audio */}}
-        >
-          <Music className="text-current" />
-          <div className="ml-2">Audio</div>
-        </button>
+  className="hover:text-orange-500 flex justify-center items-center w-full"
+  onClick={() => setIsAudioModalOpen(true)} // Set to true to open the modal
+>
+  <Music className="text-current" />
+  <div className="ml-2">Audio</div>
+</button>
       </div>
     </div>
   <div className="bg-white p-2 rounded "> {/* TagManager */}
@@ -251,6 +254,23 @@ return (
       editable={true}
     />
   </div>
+
+    {/* Conditional Rendering of the Audio Modal - placed outside the main content div */}
+    {isAudioModalOpen && (
+    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white p-4 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-lg font-semibold">Select Audio</h2>
+        <p>Here you can add functionality to let users choose or upload audio.</p>
+        {/* Add your components or functionality for handling audio here */}
+        <button
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
+          onClick={() => setIsAudioModalOpen(false)} // Close the modal
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  )}
   <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat">
     <main className="flex-grow w-full p-6 flex flex-col"> {/* Main content area */}
       <div className="overflow-auto bg-white w-full -ml-2">
