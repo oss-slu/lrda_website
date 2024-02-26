@@ -52,19 +52,18 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
   
 
   return (
-    <div className="min-w-[90px] max-w-[280px]">
     <Popover>
       <PopoverTrigger asChild>
-        <Button
+        {/* <Button
           variant={'outline'}
           className={cn(
             'w-[280px] justify-start text-left font-normal',
             !date && 'text-muted-foreground'
           )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {formatDateTime(date)}
-        </Button>
+        > */}
+          <CalendarIcon className="mx-2 h-7 w-7" />
+          {/* {formatDateTime(date)} */}
+        {/* </Button> */}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 bg-white shadow-lg z-30">
         <Calendar mode="single" selected={date} onDayClick={handleDayClick} />
@@ -75,6 +74,5 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
         />
       </PopoverContent>
     </Popover>
-    </div>
   );
 }

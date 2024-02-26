@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { uploadMedia, } from "../../utils/s3_proxy";
+import { uploadMedia } from "../../utils/s3_proxy";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import MediaViewer from "../media_viewer";
@@ -43,8 +43,11 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
       const location = await uploadMedia(file, "video");
       if (location !== "error") {
         const thumbnailBlob = await getVideoThumbnail(file);
-        console.log("Thumbnail blob", thumbnailBlob)
-        const thumbnailLocation = await uploadMedia(thumbnailBlob as File, "thumbnail");
+        console.log("Thumbnail blob", thumbnailBlob);
+        const thumbnailLocation = await uploadMedia(
+          thumbnailBlob as File,
+          "thumbnail"
+        );
         const duration = await getVideoDuration(file);
         console.log("Duration", duration);
         if (thumbnailLocation !== "error") {
@@ -53,7 +56,7 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
             uuid: uuidv4(),
             uri: location,
             thumbnail: thumbnailLocation,
-            duration: duration as string || "0:00",
+            duration: (duration as string) || "0:00",
           });
 
           toast("Status Update", {
@@ -85,31 +88,15 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
         duration: 4000,
       });
     }
-  };
+  }
 
   return (
-    <div className="flex flex-row items-center p-2 h-9 min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white justify-between">
-      <Popover>
-        <PopoverTrigger asChild>
-          <UploadIcon className="primary cursor-pointer" />
-        </PopoverTrigger>
-        <PopoverContent className="z-30">
-          <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
-            <div className="px-4">Upload Videos Here.</div>
-            <div className="px-4 mb-3">It must be of type '.mp4'</div>
-            <Input
-              type="file"
-              accept=".mp4"
-              onChange={(e) => handleFileChange(e)}
-              data-testid="file-input"
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
-
+    <div className="flex flex-row items-center p-3 justify-between">
       <Dialog>
         <DialogTrigger asChild>
-          <span className="cursor-pointer">Videos</span>
+          <div>
+            <VideoIcon className="hover:text-green-500 cursor-pointer h-6 w-6 mx-2" />
+          </div>
         </DialogTrigger>
         <DialogContent className="w-full sm:max-w-[70%] h-[100vh] px-20 overflow-auto">
           <DialogHeader>
@@ -128,8 +115,24 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
           )}
         </DialogContent>
       </Dialog>
-
-      <VideoIcon />
+      <div>Video</div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <UploadIcon className="hover:text-green-500 cursor-pointer h-5 w-5 mx-2" />
+        </PopoverTrigger>
+        <PopoverContent className="z-30">
+          <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
+            <div className="px-4">Upload Videos Here.</div>
+            <div className="px-4 mb-3">It must be of type '.mp4'</div>
+            <Input
+              type="file"
+              accept=".mp4"
+              onChange={(e) => handleFileChange(e)}
+              data-testid="file-input"
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
