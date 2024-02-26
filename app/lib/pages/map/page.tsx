@@ -61,6 +61,8 @@ const Page = () => {
     }, 100);
   };
 
+  
+
   // Filter function
   const filterNotesByMapBounds = (
     bounds: google.maps.LatLngBounds | undefined,
@@ -83,14 +85,16 @@ const Page = () => {
     });
   };
 
-  // Update filtered notes based on map view
-  const updateFilteredNotes = (
+  
+  const updateFilteredNotes = async (
     center: Location,
     bounds: google.maps.LatLngBounds | null,
     allNotes: Note[]
   ) => {
+    setIsLoading(true);
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
+    setIsLoading(false);
   };
 
   const fetchNotes = async () => {
@@ -252,7 +256,10 @@ const Page = () => {
         )}
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {filteredNotes.map((note) => (
+      {isLoading ? (
+          <div>Loading...</div> // Placeholder for loading state
+        ) : (
+        filteredNotes.map((note) => (
           <div
             className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
             onMouseEnter={() => setHoveredNoteId(note.id)}
@@ -261,7 +268,7 @@ const Page = () => {
           >
             <ClickableNote note={note} />
           </div>
-        ))}
+        )))}
       </div>
     </div>
   );
