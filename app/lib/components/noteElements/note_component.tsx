@@ -304,7 +304,7 @@ export default function NoteEditor({
           </button>
         </div>
       </div>
-      <div className="p-2 rounded m-4 flex items-center overflow-auto">
+      <div className="p-2 rounded mx-4 flex items-center overflow-auto">
         <TagManager
           inputTags={noteState.tags}
           onTagsChange={(newTags) =>
