@@ -71,13 +71,13 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
   };
 
   return (
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 bg-none">
         <Input
           value={tagInput}
           placeholder="Add tags..."
           onKeyDown={handleKeyDown}
           onChange={handleInputChange}
-          className="flex-1 min-w-[90px] max-w-[280px]"
+          className="flex-1 min-w-[90px] max-w-[280px] bg-white"
         />
         {tags.map((tag, index) => (
           <div
