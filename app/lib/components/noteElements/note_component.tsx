@@ -198,26 +198,29 @@ export default function NoteEditor({
     >
       <div className="w-full flex flex-row items-center">
         <div
-          className="bg-white p-4 rounded m-4 flex-grow"
-          style={{ maxWidth: "330px" }}
-        >
-          <Input
-            value={noteState.title}
-            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-            placeholder="Title"
-            style={{
-              all: "unset",
-              fontSize: "1.5em",
-              fontWeight: "bold",
-              outline: "none",
-              width: "100%",
-            }}
-          />
-        </div>
-        <div
-          className="flex bg-popup shadow-sm rounded-md border border-border bg-white pt-2 pb-2 justify-around items-center m-4 w-full"
+          className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
           style={{ maxWidth: "1700px" }}
         >
+          <div
+            className="bg-white p-4 rounded m-4 flex-grow"
+            style={{ maxWidth: "330px" }}
+          >
+            <Input
+              value={noteState.title}
+              onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+              placeholder="Title"
+              style={{
+                all: "unset",
+                fontSize: "1.5em",
+                fontWeight: "bold",
+                outline: "none",
+                width: "100%",
+                minWidth: "150px",
+              }}
+            />
+          </div>
+          <div className="w-2 h-9 bg-border" />
+
           <PublishToggle
             isPublished={noteState.isPublished}
             onPublishChange={(bool) =>
@@ -301,10 +304,7 @@ export default function NoteEditor({
           </button>
         </div>
       </div>
-      <div
-        className="bg-white p-2 rounded m-4 flex items-center overflow-auto"
-        style={{ maxWidth: "600px" }}
-      >
+      <div className="p-2 rounded mx-4 flex items-center overflow-auto">
         <TagManager
           inputTags={noteState.tags}
           onTagsChange={(newTags) =>
@@ -340,6 +340,7 @@ export default function NoteEditor({
           <div className="overflow-auto bg-white w-full -ml-2">
             <RichTextEditor
               ref={rteRef}
+              className="min-h-[700px]"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) =>

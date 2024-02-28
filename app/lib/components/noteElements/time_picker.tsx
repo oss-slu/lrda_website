@@ -72,7 +72,7 @@ export default function TimePicker({
           aria-label="Open Calendar"
           type="button"
         >
-          <CalendarIcon className="mx-2 h-7 w-7" />
+          <CalendarIcon className="mx-2 h-5 w-5" />
           {formatDateTime(date)}
         </button>
       </PopoverTrigger>
