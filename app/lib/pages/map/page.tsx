@@ -236,22 +236,25 @@ const Page = () => {
               );
             })}
 
-            {activeNote && (
-              <InfoWindow
-                key={new Date().getMilliseconds() + new Date().getTime()}
-                position={{
-                  lat: parseFloat(activeNote.latitude),
-                  lng: parseFloat(activeNote.longitude),
-                }}
-                onCloseClick={() => {
-                  setActiveNote(null);
-                }}
-              >
-                <div className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
-                  <ClickableNote note={activeNote} />
-                </div>
-              </InfoWindow>
-            )}
+{activeNote && (
+  <InfoWindow
+    key={new Date().getMilliseconds() + new Date().getTime()}
+    position={{
+      lat: parseFloat(activeNote.latitude),
+      lng: parseFloat(activeNote.longitude),
+    }}
+    onCloseClick={() => {
+      setActiveNote(null);
+    }}
+  >
+    <div
+      className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
+      onMouseLeave={() => setActiveNote(null)} // This handles mouse leave event
+    >
+      <ClickableNote note={activeNote} />
+    </div>
+  </InfoWindow>
+)}
           </GoogleMap>
         )}
       </div>
