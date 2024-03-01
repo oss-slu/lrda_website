@@ -62,6 +62,11 @@ export default function Navbar() {
             Explore
           </a>
         </Link>
+        <Link legacyBehavior href="/lib/pages/adminPanel" passHref>
+          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
+            Admin Panel
+          </a>
+        </Link>
       </div>
 
       <div className="">
