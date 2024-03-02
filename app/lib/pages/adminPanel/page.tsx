@@ -13,7 +13,7 @@ interface noteTemplate {
 }
 
 export default function AdminPanel() {
-  const [noteTemplate, setnoteTemplate] = useState<noteTemplate | null>(null);
+  const [noteTemplate, setnoteTemplate] = useState<noteTemplate | string>('fetching...');
   const [userTemplate, setuserTemplate] = useState<noteTemplate | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +23,7 @@ export default function AdminPanel() {
     const contentType = "Content-Type: application/json";
     const jsonNoteBody = {
       type: "message",
-      published: true,
+      creator: "https://devstore.rerum.io/v1/id/5f284ecfe4b00e5e099907c1"
     };
 
     fetch(url, {
@@ -36,6 +36,7 @@ export default function AdminPanel() {
       .then((response) => response.json())
       .then((data) => {
         const template = generateCustomTemplate(data);
+        console.log(data);
         setnoteTemplate(template);
       })
       .catch((error) => {
@@ -95,8 +96,8 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="flex h-screen justify-center p-4">
-      <ScrollArea className="w-full max-w-4xl">
+    <div className="flex h-[90vh] justify-center p-4">
+      <div className="w-full max-w-4xl">
         <h1 className="text-4xl font-bold text-center">Admin Panel</h1>
         <h2 className="text-xl text-center my-4">
           This is the admin panel. Here you can make modifications to the
@@ -112,7 +113,7 @@ export default function AdminPanel() {
             </div>
             <TabsContent value="account" className="w-full p-3">
               <div className="text-lg font-semibold mb-2">
-                This is the current schema:
+                View Account Structure here:
               </div>
               {!userTemplate ? (
                 <div className="flex flex-col items-center">
@@ -132,18 +133,13 @@ export default function AdminPanel() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <Button onClick={handleLogin}>Login</Button>
+                  <Button onClick={handleLogin}>Get Structure</Button>
                 </div>
               ) : (
                 <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
                   {JSON.stringify(userTemplate, null, 2)}
                 </pre>
               )}
-
-              <div className="text-lg font-semibold mt-4">
-                Make changes here:
-              </div>
-              {/* Add your input fields for making changes here */}
             </TabsContent>
 
             <TabsContent value="note" className="w-full p-3">
@@ -153,14 +149,19 @@ export default function AdminPanel() {
               <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
                 {JSON.stringify(noteTemplate, null, 2)}
               </pre>
+
               <div className="text-lg font-semibold mt-4">
-                Make changes here:
+                You can add or remove a field here, however, any change made will only be reflected on the backend
+                and will not be reflected in our codebase. If you add or remove a parameter,
+                <div className="text-lg font-semibold text-red-600">the code must be modified for changes to stick!</div>
               </div>
-              {/* Add your input fields for making changes here */}
+              <div>
+
+              </div>
             </TabsContent>
           </Tabs>
         </Card>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
