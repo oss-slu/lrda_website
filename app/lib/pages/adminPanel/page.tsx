@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
+
 interface noteTemplate {
   [key: string]: string | Array<string> | object | boolean;
 }
@@ -17,13 +19,9 @@ export default function AdminPanel() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    const url = "http://lived-religion-dev.rerum.io/deer-lr/query";
+    const url = `${RERUM_PREFIX}query`;
     const contentType = "Content-Type: application/json";
     const jsonNoteBody = {
-      type: "message",
-      published: true,
-    };
-    const jsonAccountBody = {
       type: "message",
       published: true,
     };
@@ -39,22 +37,6 @@ export default function AdminPanel() {
       .then((data) => {
         const template = generateCustomTemplate(data);
         setnoteTemplate(template);
-      })
-      .catch((error) => {
-        console.error("Error fetching schema:", error);
-      });
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": contentType,
-      },
-      body: JSON.stringify(jsonAccountBody),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        const template = generateCustomTemplate(data);
-        setuserTemplate(template);
       })
       .catch((error) => {
         console.error("Error fetching schema:", error);
@@ -88,64 +70,93 @@ export default function AdminPanel() {
   }
 
   const handleLogin = async () => {
-    // get the userResponse
+    try {
+      const response = await fetch(RERUM_PREFIX + "login", {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setuserTemplate(data);
+      } else {
+        throw new Error("There was a server error logging in.");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
-    <div className="relative flex h-[90vh] flex-row p-4 justify-center">
-      <ScrollArea>
-        <div className="p-4 self-center w-full">Admin Panel</div>
-        <span>
+    <div className="flex h-screen justify-center p-4">
+      <ScrollArea className="w-full max-w-4xl">
+        <h1 className="text-4xl font-bold text-center">Admin Panel</h1>
+        <h2 className="text-xl text-center my-4">
           This is the admin panel. Here you can make modifications to the
           backend schema
-        </span>
-        <Card className="flex flex-col items-center p-5 w-[60vw] h-[70vh]">
-          <Tabs defaultValue="note" className="w-full md:w-[20vw]">
-            <TabsList>
-              <TabsTrigger value="note">Note Schema</TabsTrigger>
-              <TabsTrigger value="account">Account Schema</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="account">
-              <div>
-                <div>This is the current schema:</div>
-                {!userTemplate ? (
-                  <div>
-                    <div>
-                      Enter the credentials for the account you wish to view:
-                    </div>
-                    <div>
-                      <Input
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                      />
-                      <Input
-                        placeholder="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                      <Button onClick={handleLogin}>Login</Button>
-                    </div>
+        </h2>
+        <Card className="flex flex-col items-center p-5">
+          <Tabs defaultValue="note" className="w-full">
+            <div className="flex flex-row justify-center">
+              <TabsList className="justify-center">
+                <TabsTrigger value="note">Note Schema</TabsTrigger>
+                <TabsTrigger value="account">Account Schema</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="account" className="w-full p-3">
+              <div className="text-lg font-semibold mb-2">
+                This is the current schema:
+              </div>
+              {!userTemplate ? (
+                <div className="flex flex-col items-center">
+                  <div className="mb-4">
+                    Enter the credentials for the account you wish to view:
                   </div>
-                ) : (
-                  <pre className="border-border rounded-md border-2">
-                    {JSON.stringify(userTemplate, null, 2)}
-                  </pre>
-                )}
-
-                <div>Make changes here:</div>
-              </div>
-            </TabsContent>
-            <TabsContent value="note">
-              <div>
-                <div>This is the current schema</div>
-                <pre className="border-border rounded-md border-2">
-                  {JSON.stringify(noteTemplate, null, 2)}
+                  <Input
+                    className="mb-2"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                  <Input
+                    className="mb-2"
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Button onClick={handleLogin}>Login</Button>
+                </div>
+              ) : (
+                <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
+                  {JSON.stringify(userTemplate, null, 2)}
                 </pre>
-                <div>Make changes here:</div>
+              )}
+
+              <div className="text-lg font-semibold mt-4">
+                Make changes here:
               </div>
+              {/* Add your input fields for making changes here */}
+            </TabsContent>
+
+            <TabsContent value="note" className="w-full p-3">
+              <div className="text-lg font-semibold mb-2">
+                This is the current schema:
+              </div>
+              <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
+                {JSON.stringify(noteTemplate, null, 2)}
+              </pre>
+              <div className="text-lg font-semibold mt-4">
+                Make changes here:
+              </div>
+              {/* Add your input fields for making changes here */}
             </TabsContent>
           </Tabs>
         </Card>
