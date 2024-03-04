@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -38,6 +38,8 @@ const Page = () => {
   const [markers, setMarkers] = useState(new Map());
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const noteRefs = useRef({});
+  
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -182,6 +184,14 @@ const Page = () => {
     setFilteredNotes(notesToUse);
   };
 
+  
+  const scrollToNoteTile = (noteId) => {
+    const noteTile = noteRefs.current[noteId];
+    if (noteTile) {
+      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
   useEffect(() => {
     markers.forEach((marker, noteId) => {
       const isHovered = hoveredNoteId === noteId;
@@ -226,7 +236,10 @@ const Page = () => {
                     lat: parseFloat(note.latitude),
                     lng: parseFloat(note.longitude),
                   }}
-                  onClick={() => setActiveNote(note)}
+                  onClick={() => {
+                    setActiveNote(note);
+                    scrollToNoteTile(note.id);
+                  }}
                   icon={createMarkerIcon(isNoteHovered)}
                   zIndex={isNoteHovered ? 1 : 0}
                   onLoad={(marker) => {
@@ -261,6 +274,8 @@ const Page = () => {
         ) : (
         filteredNotes.map((note) => (
           <div
+          ref={(el) => (noteRefs.current[note.id] = el)}
+
             className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
             onMouseEnter={() => setHoveredNoteId(note.id)}
             onMouseLeave={() => setHoveredNoteId(null)}
