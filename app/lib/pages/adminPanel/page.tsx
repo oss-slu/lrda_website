@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { getTestNote, handleLogin } from "../../utils/admin_utils";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const paskey = process.env.NEXT_PUBLIC_ADMIN_PASKEY;
@@ -49,29 +50,14 @@ export default function AdminPanel() {
   }, [pasVal]);
 
   useEffect(() => {
-    const url = `${RERUM_PREFIX}query`;
-    const contentType = "Content-Type: application/json";
-    const jsonNoteBody = {
-      type: "message",
-      creator: "https://devstore.rerum.io/v1/id/5f284ecfe4b00e5e099907c1",
-    };
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": contentType,
-      },
-      body: JSON.stringify(jsonNoteBody),
-    })
-      .then((response) => response.json())
-      .then((data) => {
+    async function fetchDataAndUpdateState() {
+      const data = await getTestNote();
+      if (data) {
         const template = generateCustomTemplate(data);
-        console.log(data);
         setnoteTemplate(template);
-      })
-      .catch((error) => {
-        console.error("Error fetching schema:", error);
-      });
+      }
+    }
+    fetchDataAndUpdateState();
   }, []);
 
   function generateCustomTemplate(dataArray: any[]): noteTemplate {
@@ -99,31 +85,6 @@ export default function AdminPanel() {
     }
     return template;
   }
-
-  const handleLogin = async () => {
-    try {
-      const response = await fetch(RERUM_PREFIX + "login", {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        headers: {
-          "Content-Type": "application/json;charset=utf-8",
-        },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setuserTemplate(data);
-      } else {
-        throw new Error("There was a server error logging in.");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <div className="flex flex-col justify-center w-screen p-4 py-8 overflow-auto">
@@ -179,7 +140,23 @@ export default function AdminPanel() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button onClick={handleLogin}>Get Structure</Button>
+                    <Button
+                      onClick={() => {
+                        (async () => {
+                          try {
+                            const userTemplateData = await handleLogin(
+                              username,
+                              password
+                            );
+                            setuserTemplate(userTemplateData);
+                          } catch (error) {
+                            console.error("Login failed:", error);
+                          }
+                        })();
+                      }}
+                    >
+                      Get Structure
+                    </Button>
                   </div>
                 ) : (
                   <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
@@ -236,28 +213,27 @@ export default function AdminPanel() {
                           </SelectContent>
                         </Select>
                       </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger className="mt-3">
-                            <Button>Submit</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Are you absolutely sure?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently add {newValue} to every single Note
-                                object.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-
+                      <AlertDialog>
+                        <AlertDialogTrigger className="mt-3">
+                          <Button>Submit</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently add {newValue} to every single Note
+                              object.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TabsContent>
                     <TabsContent value="remove">
                       <div className="text-lg font-semibold mt-4 mb-5">
@@ -276,26 +252,26 @@ export default function AdminPanel() {
                         </SelectContent>
                       </Select>
                       <AlertDialog>
-                          <AlertDialogTrigger className="mt-5">
-                            <Button>Submit</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Are you absolutely sure?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently add {newValue} to every single Note
-                                object.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <AlertDialogTrigger className="mt-5">
+                          <Button>Submit</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently add {newValue} to every single Note
+                              object.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TabsContent>
                   </Tabs>
                 </Card>
