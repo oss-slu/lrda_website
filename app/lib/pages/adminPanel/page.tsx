@@ -23,7 +23,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getTestNote, handleLogin } from "../../utils/admin_utils";
+import {
+  getTestNote,
+  handleAddParameter,
+  handleLogin,
+  handleRemoveParameter,
+} from "../../utils/admin_utils";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const paskey = process.env.NEXT_PUBLIC_ADMIN_PASKEY;
@@ -40,6 +45,8 @@ export default function AdminPanel() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [newValueType, setNewValueType] = useState("");
+  const [deleteValue, setDeleteValue] = useState("");
   const [isUnlocked, setUnlocked] = useState(false);
   const [pasVal, setPasVal] = useState("");
 
@@ -182,7 +189,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <Card className="flex flex-col items-center p-5">
+                <Card className="flex flex-col items-center p-5 mt-5">
                   <Tabs defaultValue="add" className="w-full">
                     <div className="flex flex-row justify-center">
                       <TabsList className="justify-center">
@@ -199,7 +206,11 @@ export default function AdminPanel() {
                           value={newValue}
                           onChange={(e) => setNewValue(e.target.value)}
                         />
-                        <Select>
+                        <Select
+                          onValueChange={(val) => {
+                            setNewValueType(val);
+                          }}
+                        >
                           <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Type" />
                           </SelectTrigger>
@@ -207,9 +218,7 @@ export default function AdminPanel() {
                             <SelectItem value="string">String</SelectItem>
                             <SelectItem value="boolean">Boolean</SelectItem>
                             <SelectItem value="float">Float</SelectItem>
-                            <SelectItem value="stringList">
-                              List of strings
-                            </SelectItem>
+                            <SelectItem value="array">Array</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -224,13 +233,22 @@ export default function AdminPanel() {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently add {newValue} to every single Note
-                              object.
+                              permanently add {newValue} as a/an {newValueType}{" "}
+                              to every single Note Object.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction>Continue</AlertDialogAction>
+                            <AlertDialogAction
+                              onClick={async () => {
+                                console.log(
+                                  `should attempt to delete ${newValue} as a/an ${newValueType}`
+                                );
+                                await handleAddParameter(newValue, newValueType);
+                              }}
+                            >
+                              Continue
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -240,15 +258,27 @@ export default function AdminPanel() {
                         Select the parameter that you would like to permanently
                         remove!
                       </div>
-                      <Select>
+                      <Select
+                        onValueChange={(val) => {
+                          setDeleteValue(val);
+                        }}
+                      >
                         <SelectTrigger className="w-[180px]">
                           <SelectValue placeholder="Parameter" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="name">Name</SelectItem>
-                          <SelectItem value="location">Location</SelectItem>
-                          {/* To Do */}
-                          {/* Automate a list of all parameters on the note to which can be deleted */}
+                          {typeof noteTemplate === "object" &&
+                            noteTemplate !== null &&
+                            Object.keys(noteTemplate).map((key) => {
+                              if (key !== "@id" && key !== "__rerum") {
+                                return (
+                                  <SelectItem key={key} value={key}>
+                                    {key}
+                                  </SelectItem>
+                                );
+                              }
+                              return null;
+                            })}
                         </SelectContent>
                       </Select>
                       <AlertDialog>
@@ -262,13 +292,22 @@ export default function AdminPanel() {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently add {newValue} to every single Note
-                              object.
+                              permanently remove {deleteValue} from every single
+                              Note Object.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction>Continue</AlertDialogAction>
+                            <AlertDialogAction
+                              onClick={ async () => {
+                                console.log(
+                                  `should attempt to delete ${deleteValue}`
+                                );
+                                await handleRemoveParameter(deleteValue);
+                              }}
+                            >
+                              Continue
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
