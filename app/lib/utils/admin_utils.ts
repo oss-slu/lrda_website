@@ -1,8 +1,13 @@
 import { Note } from "@/app/types";
+import { JSONContent } from "@tiptap/core";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress"
+import { useState } from "react";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
 // creator: "https://devstore.rerum.io/v1/id/5f284ecfe4b00e5e099907c1", // Test User Account
+
 
 export async function getTestNote(): Promise<any> {
   const url = `${RERUM_PREFIX}query`;
@@ -78,10 +83,17 @@ export const handleLogin = async (username: string, password: string) => {
   }
 };
 
-export const handleAddParameter = async (parameterName: string, parameterType: string) => {
+export const handleAddParameter = async (parameterName: string, parameterType: string, setProgress: (value: number) => void) => {
   const allNotes = await getEveryNote();
+  toast("Request Is being run. Please Wait. This can take a while.", {
+    description: `${parameterName} is being added to ${(allNotes).length} notes. Please Wait.`,
+    duration: 2000,
+  });
 
-  const updatePromises = allNotes.map(async (note: any) => {
+  let counter = 0;
+  const totalNotes = allNotes.length;
+
+  const updatePromises = allNotes.map(async (note: any, index: number) => {
     if (parameterType === "string") {
       note[parameterName] = "";
     } else if (parameterType === "array") {
@@ -92,8 +104,6 @@ export const handleAddParameter = async (parameterName: string, parameterType: s
       note[parameterName] = false;
     }
 
-    console.log("updated note ",note);
-
     try {
       const val = await fetch(`${RERUM_PREFIX}overwrite`, {
         method: "PUT",
@@ -102,22 +112,35 @@ export const handleAddParameter = async (parameterName: string, parameterType: s
         },
         body: JSON.stringify(note),
       });
-      console.log('return val ',val);
+      counter++;
+      setProgress((counter / totalNotes) * 100);
+      console.log((counter / totalNotes) * 100);
     } catch (error) {
       console.error(`Failed to update note ${note["@id"]}:`, error);
     }
   });
+
   await Promise.all(updatePromises);
+  toast(`Request is complete.`, {
+    description: `${parameterName} has been added to all Notes.`,
+    duration: 2000,
+  });
   return "no errors"
 };
 
 
-export const handleRemoveParameter = async (parameterName: string) => {
+export const handleRemoveParameter = async (parameterName: string, setProgress: (value: number) => void) => {
   const allNotes = await getEveryNote();
+  toast("Request Is being run. Please Wait. This can take a while.", {
+    description: `${parameterName} is being removed from ${(allNotes).length} notes. Please Wait.`,
+    duration: 2000,
+  });
 
-  const updatePromises = allNotes.map(async (note: any) => {
+  let counter = 0;
+  const totalNotes = allNotes.length;
+
+  const updatePromises = allNotes.map(async (note: any, index: number) => {
     delete note[parameterName];
-    console.log("new note object with deleted parameter");
 
     try {
       const val = await fetch(`${RERUM_PREFIX}overwrite`, {
@@ -127,12 +150,18 @@ export const handleRemoveParameter = async (parameterName: string) => {
         },
         body: JSON.stringify(note),
       });
-      console.log('return val ',val);
+      counter++;
+      setProgress((counter / totalNotes) * 100); 
     } catch (error) {
       console.error(`Failed to update note ${note["@id"]}:`, error);
     }
   });
+  
   await Promise.all(updatePromises);
+  toast(`Request is complete.`, {
+    description: `${parameterName} has been removed from all Notes.`,
+    duration: 2000,
+  });
   return "no errors"
 };
 

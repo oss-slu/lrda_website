@@ -29,6 +29,7 @@ import {
   handleLogin,
   handleRemoveParameter,
 } from "../../utils/admin_utils";
+import { Progress } from "@/components/ui/progress";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const paskey = process.env.NEXT_PUBLIC_ADMIN_PASKEY;
@@ -45,6 +46,8 @@ export default function AdminPanel() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [progress, setProgress] = useState(0.0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [newValueType, setNewValueType] = useState("");
   const [deleteValue, setDeleteValue] = useState("");
   const [isUnlocked, setUnlocked] = useState(false);
@@ -56,14 +59,16 @@ export default function AdminPanel() {
     }
   }, [pasVal]);
 
-  useEffect(() => {
-    async function fetchDataAndUpdateState() {
-      const data = await getTestNote();
-      if (data) {
-        const template = generateCustomTemplate(data);
-        setnoteTemplate(template);
-      }
+  async function fetchDataAndUpdateState() {
+    const data = await getTestNote();
+    if (data) {
+      const template = generateCustomTemplate(data);
+      setnoteTemplate(template);
     }
+    setRefreshKey(refreshKey + 1);
+  }
+
+  useEffect(() => {
     fetchDataAndUpdateState();
   }, []);
 
@@ -176,7 +181,10 @@ export default function AdminPanel() {
                 <div className="text-lg font-semibold mb-2">
                   This is the current schema:
                 </div>
-                <pre className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300">
+                <pre
+                  key={refreshKey}
+                  className="w-full p-2 overflow-auto text-sm bg-gray-100 border rounded-md border-gray-300"
+                >
                   {JSON.stringify(noteTemplate, null, 2)}
                 </pre>
 
@@ -188,7 +196,14 @@ export default function AdminPanel() {
                     the code must be modified for changes to stick!
                   </div>
                 </div>
-
+                {progress == 0 || progress == 100 ? null : (
+                  <div className="mt-5">
+                    <div className="text-lg font-semibold text-red-600">
+                      Do NOT close this tab until this script is complete!
+                    </div>
+                    <Progress value={progress} />
+                  </div>
+                )}
                 <Card className="flex flex-col items-center p-5 mt-5">
                   <Tabs defaultValue="add" className="w-full">
                     <div className="flex flex-row justify-center">
@@ -244,7 +259,12 @@ export default function AdminPanel() {
                                 console.log(
                                   `should attempt to delete ${newValue} as a/an ${newValueType}`
                                 );
-                                await handleAddParameter(newValue, newValueType);
+                                await handleAddParameter(
+                                  newValue,
+                                  newValueType,
+                                  setProgress
+                                );
+                                fetchDataAndUpdateState();
                               }}
                             >
                               Continue
@@ -299,11 +319,15 @@ export default function AdminPanel() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={ async () => {
+                              onClick={async () => {
                                 console.log(
                                   `should attempt to delete ${deleteValue}`
                                 );
-                                await handleRemoveParameter(deleteValue);
+                                await handleRemoveParameter(
+                                  deleteValue,
+                                  setProgress
+                                );
+                                fetchDataAndUpdateState();
                               }}
                             >
                               Continue
