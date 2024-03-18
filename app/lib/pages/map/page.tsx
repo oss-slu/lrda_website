@@ -275,7 +275,7 @@ const Page = () => {
               className={`transition-transform duration-300 ease-in-out cursor-pointer ${
                 note.id === activeNote?.id
                   ? "active-note"
-                  : "hover:scale-105 hover:shadow-lg"
+                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
               }`}
               onMouseEnter={() => setHoveredNoteId(note.id)}
               onMouseLeave={() => setHoveredNoteId(null)}
