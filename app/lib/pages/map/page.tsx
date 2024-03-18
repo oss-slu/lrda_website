@@ -23,6 +23,11 @@ interface Location {
   lng: number;
 }
 
+interface Refs {
+  [key: string]: HTMLElement | undefined;
+}
+
+
 const Page = () => {
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
@@ -40,7 +45,7 @@ const Page = () => {
     null
   );
   const [isLoading, setIsLoading] = useState(false);
-  const noteRefs = useRef({});
+  const noteRefs = useRef<Refs>({});
 
   const user = User.getInstance();
 
@@ -181,10 +186,10 @@ const Page = () => {
     setFilteredNotes(notesToUse);
   };
 
-  const scrollToNoteTile = (noteId) => {
+  const scrollToNoteTile = (noteId: string) => {
     const noteTile = noteRefs.current[noteId];
     if (noteTile) {
-      noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
 
@@ -269,8 +274,11 @@ const Page = () => {
           <div>Loading...</div>
         ) : (
           filteredNotes.map((note) => (
-            <div
-              ref={(el) => (noteRefs.current[note.id] = el)}
+            <div ref={(el: HTMLElement | null) => {
+              if (el) {
+                noteRefs.current[note.id] = el;
+              }
+            }}
               // within here I need to change the hover;scale-105 to a different class
               className={`transition-transform duration-300 ease-in-out cursor-pointer ${
                 note.id === activeNote?.id
