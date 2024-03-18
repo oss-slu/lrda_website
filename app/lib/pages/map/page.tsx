@@ -201,15 +201,6 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
-  useEffect(() => {
-    if (activeNote === null) {
-      markers.forEach((marker, noteId) => {
-        marker.setIcon(createMarkerIcon(hoveredNoteId === noteId));
-      });
-    }
-  }, [activeNote, hoveredNoteId, markers]);
-
-  
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
@@ -236,6 +227,7 @@ const Page = () => {
               mapTypeControl: false,
               fullscreenControl: false,
             }}
+          >
             {filteredNotes.map((note, index) => {
               const isNoteHovered = hoveredNoteId === note.id;
               return (

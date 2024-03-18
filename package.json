@@ -137,5 +137,6 @@
     "postcss-nesting": "^12.0.2",
     "react-test-renderer": "^18.2.0",
     "typescript": "5.2.2"
-  }
+  },
+  "packageManager": "pnpm@8.11.0+sha256.5858806c3b292cbec89b5533662168a957358e2bbd86431516d441dc1aface89"
 }
