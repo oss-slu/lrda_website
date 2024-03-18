@@ -386,12 +386,21 @@
   @apply text-transparent;
 }
 
-.clickableNote {
-  /* existing styles */
+.clickable-note {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
+  background-color: #e2e2e2;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
 }
 
 .clickableNote:hover {
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+  background-color: #e2e2e2;
   transform: scale(1.05);
+}
+
+
+.active-note {
+  transform: scale(1.05);
+  background-color: #e2e2e2; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }

@@ -36,10 +36,12 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
-  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const noteRefs = useRef({});
-  
+
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -49,21 +51,19 @@ const Page = () => {
         lng: map.getCenter().lng(),
       };
       const newBounds = map.getBounds();
-      
+
       setMapCenter(newCenter);
       setMapBounds(newBounds);
       updateFilteredNotes(newCenter, newBounds, notes);
     };
-  
+
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", updateBounds);
-  
+
     setTimeout(() => {
       updateBounds();
     }, 100);
   };
-
-  
 
   // Filter function
   const filterNotesByMapBounds = (
@@ -79,15 +79,11 @@ const Page = () => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
       return (
-        lat >= sw.lat() &&
-        lat <= ne.lat() &&
-        lng >= sw.lng() &&
-        lng <= ne.lng()
+        lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
       );
     });
   };
 
-  
   const updateFilteredNotes = async (
     center: Location,
     bounds: google.maps.LatLngBounds | null,
@@ -108,7 +104,8 @@ const Page = () => {
       if (userId) {
         setIsLoggedIn(true);
         personalNotes = await ApiService.fetchUserMessages(userId);
-        personalNotes = DataConversion.convertMediaTypes(personalNotes).reverse();
+        personalNotes =
+          DataConversion.convertMediaTypes(personalNotes).reverse();
       }
       globalNotes = await ApiService.fetchPublishedNotes();
       globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
@@ -184,11 +181,10 @@ const Page = () => {
     setFilteredNotes(notesToUse);
   };
 
-  
   const scrollToNoteTile = (noteId) => {
     const noteTile = noteRefs.current[noteId];
     if (noteTile) {
-      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
 
@@ -260,7 +256,7 @@ const Page = () => {
                   setActiveNote(null);
                 }}
               >
-                <div className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+                <div className="transition-transform duration-300 ease-in-out">
                   <ClickableNote note={activeNote} />
                 </div>
               </InfoWindow>
@@ -269,21 +265,26 @@ const Page = () => {
         )}
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-      {isLoading ? (
-          <div>Loading...</div> // Placeholder for loading state
+        {isLoading ? (
+          <div>Loading...</div>
         ) : (
-        filteredNotes.map((note) => (
-          <div
-          ref={(el) => (noteRefs.current[note.id] = el)}
-
-            className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
-            onMouseEnter={() => setHoveredNoteId(note.id)}
-            onMouseLeave={() => setHoveredNoteId(null)}
-            key={note.id}
-          >
-            <ClickableNote note={note} />
-          </div>
-        )))}
+          filteredNotes.map((note) => (
+            <div
+              ref={(el) => (noteRefs.current[note.id] = el)}
+              // within here I need to change the hover;scale-105 to a different class
+              className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+                note.id === activeNote?.id
+                  ? "active-note"
+                  : "hover:scale-105 hover:shadow-lg"
+              }`}
+              onMouseEnter={() => setHoveredNoteId(note.id)}
+              onMouseLeave={() => setHoveredNoteId(null)}
+              key={note.id}
+            >
+              <ClickableNote note={note} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
