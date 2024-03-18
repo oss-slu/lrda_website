@@ -190,6 +190,15 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
+  useEffect(() => {
+    if (activeNote === null) {
+      markers.forEach((marker, noteId) => {
+        marker.setIcon(createMarkerIcon(hoveredNoteId === noteId));
+      });
+    }
+  }, [activeNote, hoveredNoteId, markers]);
+
+  
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
@@ -217,28 +226,32 @@ const Page = () => {
               fullscreenControl: false,
             }}
           >
-            {filteredNotes.map((note, index) => {
-              const isNoteHovered = hoveredNoteId === note.id;
-              return (
-                <MarkerF
-                  key={note.id}
-                  position={{
-                    lat: parseFloat(note.latitude),
-                    lng: parseFloat(note.longitude),
-                  }}
-                  onClick={() => setActiveNote(note)}
-                  icon={createMarkerIcon(isNoteHovered)}
-                  zIndex={isNoteHovered ? 1 : 0}
-                  onLoad={(marker) => {
-                    setMarkers((prev) => new Map(prev).set(note.id, marker));
-                  }}
-                />
-              );
-            })}
+         {filteredNotes.map((note, index) => {
+  const isNoteHovered = hoveredNoteId === note.id;
+  return (
+    <MarkerF
+      key={note.id}
+      position={{
+        lat: parseFloat(note.latitude),
+        lng: parseFloat(note.longitude),
+      }}
+      onClick={() => setActiveNote(note)}
+      icon={createMarkerIcon(isNoteHovered)}
+      zIndex={isNoteHovered ? 1 : 0}
+      onLoad={(marker) => {
+        setMarkers((prev) => {
+          const newMarkers = new Map(prev);
+          newMarkers.set(note.id, marker);
+          return newMarkers;
+        });
+      }}
+    />
+  );
+})}
 
 {activeNote && (
   <InfoWindow
-    key={new Date().getMilliseconds() + new Date().getTime()}
+    key={activeNote.id}  // Use activeNote.id as a stable key
     position={{
       lat: parseFloat(activeNote.latitude),
       lng: parseFloat(activeNote.longitude),
