@@ -340,7 +340,7 @@ export default function NoteEditor({
           <div className="overflow-auto bg-white w-full -ml-2">
             <RichTextEditor
               ref={rteRef}
-              className="min-h-[700px]"
+              className="min-h-[875px]"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) =>
