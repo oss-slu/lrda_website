@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -23,6 +23,11 @@ interface Location {
   lng: number;
 }
 
+interface Refs {
+  [key: string]: HTMLElement | undefined;
+}
+
+
 const Page = () => {
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
@@ -36,8 +41,12 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
-  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const noteRefs = useRef<Refs>({});
+
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
@@ -47,21 +56,19 @@ const Page = () => {
         lng: map.getCenter().lng(),
       };
       const newBounds = map.getBounds();
-      
+
       setMapCenter(newCenter);
       setMapBounds(newBounds);
       updateFilteredNotes(newCenter, newBounds, notes);
     };
-  
+
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", updateBounds);
-  
+
     setTimeout(() => {
       updateBounds();
     }, 100);
   };
-
-  
 
   // Filter function
   const filterNotesByMapBounds = (
@@ -77,15 +84,11 @@ const Page = () => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
       return (
-        lat >= sw.lat() &&
-        lat <= ne.lat() &&
-        lng >= sw.lng() &&
-        lng <= ne.lng()
+        lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
       );
     });
   };
 
-  
   const updateFilteredNotes = async (
     center: Location,
     bounds: google.maps.LatLngBounds | null,
@@ -106,7 +109,8 @@ const Page = () => {
       if (userId) {
         setIsLoggedIn(true);
         personalNotes = await ApiService.fetchUserMessages(userId);
-        personalNotes = DataConversion.convertMediaTypes(personalNotes).reverse();
+        personalNotes =
+          DataConversion.convertMediaTypes(personalNotes).reverse();
       }
       globalNotes = await ApiService.fetchPublishedNotes();
       globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
@@ -182,6 +186,13 @@ const Page = () => {
     setFilteredNotes(notesToUse);
   };
 
+  const scrollToNoteTile = (noteId: string) => {
+    const noteTile = noteRefs.current[noteId];
+    if (noteTile) {
+      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
   useEffect(() => {
     markers.forEach((marker, noteId) => {
       const isHovered = hoveredNoteId === noteId;
@@ -190,15 +201,6 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
-  useEffect(() => {
-    if (activeNote === null) {
-      markers.forEach((marker, noteId) => {
-        marker.setIcon(createMarkerIcon(hoveredNoteId === noteId));
-      });
-    }
-  }, [activeNote, hoveredNoteId, markers]);
-
-  
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
@@ -226,65 +228,71 @@ const Page = () => {
               fullscreenControl: false,
             }}
           >
-         {filteredNotes.map((note, index) => {
-  const isNoteHovered = hoveredNoteId === note.id;
-  return (
-    <MarkerF
-      key={note.id}
-      position={{
-        lat: parseFloat(note.latitude),
-        lng: parseFloat(note.longitude),
-      }}
-      onClick={() => setActiveNote(note)}
-      icon={createMarkerIcon(isNoteHovered)}
-      zIndex={isNoteHovered ? 1 : 0}
-      onLoad={(marker) => {
-        setMarkers((prev) => {
-          const newMarkers = new Map(prev);
-          newMarkers.set(note.id, marker);
-          return newMarkers;
-        });
-      }}
-    />
-  );
-})}
+            {filteredNotes.map((note, index) => {
+              const isNoteHovered = hoveredNoteId === note.id;
+              return (
+                <MarkerF
+                  key={note.id}
+                  position={{
+                    lat: parseFloat(note.latitude),
+                    lng: parseFloat(note.longitude),
+                  }}
+                  onClick={() => {
+                    setActiveNote(note);
+                    scrollToNoteTile(note.id);
+                  }}
+                  icon={createMarkerIcon(isNoteHovered)}
+                  zIndex={isNoteHovered ? 1 : 0}
+                  onLoad={(marker) => {
+                    setMarkers((prev) => new Map(prev).set(note.id, marker));
+                  }}
+                />
+              );
+            })}
 
-{activeNote && (
-  <InfoWindow
-    key={activeNote.id}  // Use activeNote.id as a stable key
-    position={{
-      lat: parseFloat(activeNote.latitude),
-      lng: parseFloat(activeNote.longitude),
-    }}
-    onCloseClick={() => {
-      setActiveNote(null);
-    }}
-  >
-    <div
-      className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-      onMouseLeave={() => setActiveNote(null)} // This handles mouse leave event
-    >
-      <ClickableNote note={activeNote} />
-    </div>
-  </InfoWindow>
-)}
+            {activeNote && (
+              <InfoWindow
+                key={new Date().getMilliseconds() + new Date().getTime()}
+                position={{
+                  lat: parseFloat(activeNote.latitude),
+                  lng: parseFloat(activeNote.longitude),
+                }}
+                onCloseClick={() => {
+                  setActiveNote(null);
+                }}
+              >
+                <div className="transition-transform duration-300 ease-in-out">
+                  <ClickableNote note={activeNote} />
+                </div>
+              </InfoWindow>
+            )}
           </GoogleMap>
         )}
       </div>
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-      {isLoading ? (
-          <div>Loading...</div> // Placeholder for loading state
+        {isLoading ? (
+          <div>Loading...</div>
         ) : (
-        filteredNotes.map((note) => (
-          <div
-            className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[color] cursor-pointer"
-            onMouseEnter={() => setHoveredNoteId(note.id)}
-            onMouseLeave={() => setHoveredNoteId(null)}
-            key={note.id}
-          >
-            <ClickableNote note={note} />
-          </div>
-        )))}
+          filteredNotes.map((note) => (
+            <div ref={(el: HTMLElement | null) => {
+              if (el) {
+                noteRefs.current[note.id] = el;
+              }
+            }}
+              // within here I need to change the hover;scale-105 to a different class
+              className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+                note.id === activeNote?.id
+                  ? "active-note"
+                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+              }`}
+              onMouseEnter={() => setHoveredNoteId(note.id)}
+              onMouseLeave={() => setHoveredNoteId(null)}
+              key={note.id}
+            >
+              <ClickableNote note={note} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
