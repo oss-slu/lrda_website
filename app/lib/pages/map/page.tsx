@@ -261,8 +261,11 @@ const Page = () => {
                   setActiveNote(null);
                 }}
               >
-                <div className="transition-transform duration-300 ease-in-out">
-                  <ClickableNote note={activeNote} />
+                 <div
+                    className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
+                    onMouseLeave={() => setActiveNote(null)} // This handles mouse leave event
+                >
+                    <ClickableNote note={activeNote} />
                 </div>
               </InfoWindow>
             )}
