@@ -69,34 +69,44 @@ export default function NoteEditor({
     const editor = rteRef.current?.editor;
     if (noteState.videos.length > 0 && editor) {
       const newVideo = noteState.videos[noteState.videos.length - 1];
-      const videoIndex = noteState.videos.length;
-      const videoLink = `Video ${videoIndex}`;
       const videoUri = newVideo.uri;
-
-      editor
-        .chain()
-        .focus()
-        .command(({ tr, dispatch }) => {
-          if (dispatch) {
-            const endPos = tr.doc.content.size;
-            const paragraphNodeForNewLine = editor.schema.node("paragraph");
-            const textNode = editor.schema.text(videoLink, [
-              editor.schema.marks.link.create({ href: videoUri }),
-            ]);
-            const paragraphNodeForLink = editor.schema.node("paragraph", null, [
-              textNode,
-            ]);
-
-            const transaction = tr
-              .insert(endPos, paragraphNodeForNewLine)
-              .insert(endPos + 1, paragraphNodeForLink);
-            dispatch(transaction);
-          }
-          return true;
-        })
-        .run();
+  
+      editor.chain().focus().setVideo(videoUri).run();
     }
-  }, [noteState.videos]);
+  }, [noteState.videos]);  
+
+  // useEffect(() => {
+  //   const editor = rteRef.current?.editor;
+  //   if (noteState.videos.length > 0 && editor) {
+  //     const newVideo = noteState.videos[noteState.videos.length - 1];
+  //     const videoIndex = noteState.videos.length;
+  //     const videoLink = `Video ${videoIndex}`;
+  //     const videoUri = newVideo.uri;
+
+  //     editor
+  //       .chain()
+  //       .focus()
+  //       .command(({ tr, dispatch }) => {
+  //         if (dispatch) {
+  //           const endPos = tr.doc.content.size;
+  //           const paragraphNodeForNewLine = editor.schema.node("paragraph");
+  //           const textNode = editor.schema.text(videoLink, [
+  //             editor.schema.marks.link.create({ href: videoUri }),
+  //           ]);
+  //           const paragraphNodeForLink = editor.schema.node("paragraph", null, [
+  //             textNode,
+  //           ]);
+
+  //           const transaction = tr
+  //             .insert(endPos, paragraphNodeForNewLine)
+  //             .insert(endPos + 1, paragraphNodeForLink);
+  //           dispatch(transaction);
+  //         }
+  //         return true;
+  //       })
+  //       .run();
+  //   }
+  // }, [noteState.videos]);
 
   useEffect(() => {
     if (initialNote) {
@@ -123,7 +133,7 @@ export default function NoteEditor({
     }
   }, [initialNote]);
 
-  console.log("initial Note", initialNote);
+
 
   useEffect(() => {
     if (initialNote) {
