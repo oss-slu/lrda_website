@@ -299,6 +299,9 @@ dependencies:
   postcss:
     specifier: ^8.4.31
     version: 8.4.32
+  prosemirror-state:
+    specifier: ^1.4.3
+    version: 1.4.3
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -344,6 +347,9 @@ dependencies:
   tailwindcss-animate:
     specifier: ^1.0.7
     version: 1.0.7(tailwindcss@3.3.3)
+  tiptap-extension-video:
+    specifier: ^1.0.1
+    version: 1.0.1(@tiptap/pm@2.1.13)
   tooltip:
     specifier: link:@/components/ui/tooltip
     version: link:@/components/ui/tooltip
@@ -3629,6 +3635,14 @@ packages:
 
   /@tiptap/core@2.1.13(@tiptap/pm@2.1.13):
     resolution: {integrity: sha512-cMC8bgTN63dj1Mv82iDeeLl6sa9kY0Pug8LSalxVEptRmyFVsVxGgu2/6Y3T+9aCYScxfS06EkA8SdzFMAwYTQ==}
+    peerDependencies:
+      '@tiptap/pm': ^2.0.0
+    dependencies:
+      '@tiptap/pm': 2.1.13
+    dev: false
+
+  /@tiptap/core@2.2.4(@tiptap/pm@2.1.13):
+    resolution: {integrity: sha512-cRrI8IlLIhCE1hacBQzXIC8dsRvGq6a4lYWQK/BaHuZg21CG7szp3Vd8Ix+ra1f5v0xPOT+Hy+QFNQooRMKMCw==}
     peerDependencies:
       '@tiptap/pm': ^2.0.0
     dependencies:
@@ -9145,6 +9159,14 @@ packages:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
     dependencies:
       '@popperjs/core': 2.11.8
+    dev: false
+
+  /tiptap-extension-video@1.0.1(@tiptap/pm@2.1.13):
+    resolution: {integrity: sha512-6u2cKjYxEP1L1G5swVjLb5mkBDODz/Pir+xZtcMXmDNu7gSDVlMWM0ik/+JtiG4EUzxnxFFVDLCqpJG8JSEuiw==}
+    dependencies:
+      '@tiptap/core': 2.2.4(@tiptap/pm@2.1.13)
+    transitivePeerDependencies:
+      - '@tiptap/pm'
     dev: false
 
   /tmpl@1.0.5:

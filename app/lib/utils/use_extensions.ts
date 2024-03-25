@@ -32,6 +32,7 @@ import { Text } from "@tiptap/extension-text";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
+import { Video } from "../components/noteElements/video";
 import { useMemo } from "react";
 import {
   FontSize,
@@ -120,6 +121,7 @@ export default function useExtensions({
       Paragraph,
       CustomSubscript,
       CustomSuperscript,
+      Video,
       Text,
 
       // Blockquote must come after Bold, since we want the "Cmd+B" shortcut to
