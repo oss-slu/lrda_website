@@ -71,10 +71,10 @@ export default function NoteEditor({
       const newVideo = noteState.videos[noteState.videos.length - 1];
       const videoUri = newVideo.uri;
   
-      editor.chain().focus().setVideo(videoUri).run();
+      editor.chain().focus().setTextSelection(1).setVideo(videoUri).run();
     }
-  }, [noteState.videos]);  
-
+  }, [noteState.videos]);
+  
   // useEffect(() => {
   //   const editor = rteRef.current?.editor;
   //   if (noteState.videos.length > 0 && editor) {
