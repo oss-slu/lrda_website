@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/resizable";
 
 export default function Home() {
-  const [isClient, setIsClient] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
 
@@ -18,10 +17,6 @@ export default function Home() {
     setSelectedNote(note);
     setIsNewNote(isNew);
   };
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const isNote = (note: Note | newNote): note is Note => {
     return (note as Note).id !== undefined;
@@ -39,9 +34,20 @@ export default function Home() {
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel>
-        {isClient && selectedNote && (
+      <ResizablePanel defaultSize={80}>
+        {selectedNote ? (
           <NoteEditor note={selectedNote} isNewNote={isNewNote} />
+        ) : (
+          <div className="w-full h-full flex flex-col justify-center items-center text-3xl font-bold">
+            <div className="mb-10">You must be logged in to create notes!</div>
+
+            <button
+              onClick={() => (window.location.href = "/lib/pages/loginPage")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+            >
+              Login Here
+            </button>
+          </div>
         )}
       </ResizablePanel>
     </ResizablePanelGroup>
