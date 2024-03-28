@@ -190,7 +190,7 @@ export default function NoteEditor({
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
   return (
-    <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center  flex-grow">
+    <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-growa">
       <div
         key={noteState.counter}
         style={{
@@ -198,31 +198,14 @@ export default function NoteEditor({
           height: "full",
         }}
       >
-        <div aria-label="Top Bar" className="w-full flex flex-row items-center">
-        <div
-              className="bg-white p-4 rounded m-4 flex-grow"
-              style={{ maxWidth: "330px" }}
-            >
-              <Input
-                value={noteState.title}
-                onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-                placeholder="Title"
-                style={{
-                  all: "unset",
-                  fontSize: "1.5em",
-                  fontWeight: "bold",
-                  outline: "none",
-                  width: "100%",
-                  minWidth: "150px",
-                }}
-              />
-            </div>
-          <div
-            className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
-          >
-           
-            <div className="w-2 h-9 bg-border" />
-
+        <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
+          <Input
+            value={noteState.title}
+            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+            placeholder="Title"
+            className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
+          />
+          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
             <PublishToggle
               isPublished={noteState.isPublished}
               onPublishChange={(bool) =>
@@ -309,8 +292,6 @@ export default function NoteEditor({
               <div className="ml-2">Audio</div>
             </button>
           </div>
-        </div>
-        <div className="p-2 rounded mx-4 flex items-center overflow-auto">
           <TagManager
             inputTags={noteState.tags}
             onTagsChange={(newTags) =>
@@ -341,12 +322,11 @@ export default function NoteEditor({
             </div>
           </div>
         )}
-        <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat">
-          <main className="flex-grow w-full p-6 flex flex-col">
-            <div className="overflow-auto bg-white w-full">
+          <div className="flex-grow w-full p-4 flex flex-col">
+            <div className=" flex-grow flex flex-col bg-white w-full rounded">
               <RichTextEditor
                 ref={rteRef}
-                className="min-h-[875px]"
+                className="min-h-[712px]"
                 extensions={extensions}
                 content={noteState.editorContent}
                 onUpdate={({ editor }) =>
@@ -364,9 +344,8 @@ export default function NoteEditor({
                 }}
               />
             </div>
-          </main>
+          </div>
         </div>
-      </div>
     </ScrollArea>
   );
 }

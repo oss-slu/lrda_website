@@ -14,11 +14,10 @@ import {
   TooltipTrigger,
 } from "@/components/tooltip";
 
-// Including onLocationChange in the props interface
 interface LocationPickerProps {
   long?: string;
   lat?: string;
-  onLocationChange: (newLongitude: number, newLatitude: number) => void; // This is the callback function
+  onLocationChange: (newLongitude: number, newLatitude: number) => void;
 }
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
