@@ -28,17 +28,21 @@ export default function Home() {
   };
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-    >
-      <ResizablePanel minSize={15} maxSize={30} defaultSize={20}>
+    <ResizablePanelGroup direction="horizontal">
+      <ResizablePanel
+        minSize={15}
+        maxSize={30}
+        defaultSize={20}
+        collapsible={true}
+        collapsedSize={1}
+      >
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel>
-          {isClient && selectedNote && (
-            <NoteEditor note={selectedNote} isNewNote={isNewNote} />
-          )}
+        {isClient && selectedNote && (
+          <NoteEditor note={selectedNote} isNewNote={isNewNote} />
+        )}
       </ResizablePanel>
     </ResizablePanelGroup>
   );
