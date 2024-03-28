@@ -58,7 +58,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
             className={`h-16 p-2 m-1 z-10 rounded truncate ${
               note.id === selectedNoteId
                 ? "bg-primary/80 text-popover"
-                : "bg-popover text-primary"
+                : "bg-popover text-primary hover:bg-primary/80"
             }`}
             onClick={() => handleLoadText(note)}
           >
