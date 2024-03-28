@@ -53,9 +53,10 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
         const noteTextContent = extractTextFromHtml(note.text);
 
         return (
+          /*This is the button to click a note*/
           <div
             key={note.id}
-            className={`h-16 p-2 m-1 z-10 rounded truncate ${
+            className={`h-16 p-2 m-1 z-10 rounded truncate cursor-pointer ${
               note.id === selectedNoteId
                 ? "bg-primary/80 text-popover"
                 : "bg-popover text-primary hover:bg-primary/80"
