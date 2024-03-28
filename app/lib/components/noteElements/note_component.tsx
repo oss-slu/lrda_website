@@ -154,13 +154,14 @@ export default function NoteEditor({
           description: "Your new note has been successfully created.",
           duration: 2000,
         });
+        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       } else {
         await ApiService.overwriteNote(updatedNote);
         toast("Note Saved", {
           description: "Your note has been successfully saved.",
           duration: 2000,
         });
-        console.log("SAVED NOTE HERE: ", updatedNote);
+        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -197,11 +198,8 @@ export default function NoteEditor({
           height: "full",
         }}
       >
-        <div className="w-full flex flex-row items-center">
-          <div
-            className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
-          >
-            <div
+        <div aria-label="Top Bar" className="w-full flex flex-row items-center">
+        <div
               className="bg-white p-4 rounded m-4 flex-grow"
               style={{ maxWidth: "330px" }}
             >
@@ -219,6 +217,10 @@ export default function NoteEditor({
                 }}
               />
             </div>
+          <div
+            className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
+          >
+           
             <div className="w-2 h-9 bg-border" />
 
             <PublishToggle
