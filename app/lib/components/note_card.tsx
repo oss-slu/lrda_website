@@ -2,21 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Note } from '@/app/types';
 import ApiService from '../utils/api_service';
 import placeholderImage from 'public/no-photo-placeholder.jpeg';
+import { formatDateTime } from '../utils/data_conversion';
 
 interface NoteCardProps {
   note: Note;
-}
-
-function formatDateTime(date: Date) {
-  if (!date) return 'Pick a date';
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
-
-  return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
 const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
