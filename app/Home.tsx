@@ -24,7 +24,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative flex h-[90vh] flex-row p-4">
+    <main className="relative flex h-[90vh] flex-row">
       <Sidebar onNoteSelect={handleNoteSelect} />
       <ScrollArea>
         <div className="flex-1 ml-64">

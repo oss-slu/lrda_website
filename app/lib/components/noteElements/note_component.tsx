@@ -193,7 +193,7 @@ export default function NoteEditor({
       key={noteState.counter}
       style={{
         backgroundImage: `url('/note_background.jpg')`,
-        width: "calc(100vw - 285px)",
+        width: "calc(100vw - 256px)",
       }}
     >
       <div className="w-full flex flex-row items-center">
