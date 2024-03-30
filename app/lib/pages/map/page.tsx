@@ -360,6 +360,7 @@ const Page = () => {
             center={mapCenter}
             zoom={mapZoom}
             onLoad={onMapLoad}
+            // onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
             onClick={handleMapClick}
             options={{
               streetViewControl: false,
