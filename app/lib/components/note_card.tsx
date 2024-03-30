@@ -6,19 +6,20 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PersonIcon } from "@radix-ui/react-icons";
 import { Calendar, TagIcon, TagsIcon, User2Icon } from "lucide-react";
 import CompactCarousel from "./compact_carousel";
+import { formatDateTime } from '../utils/data_conversion';
 
 interface NoteCardProps {
   note: Note;
 }
 
 function formatDateTime(date: Date) {
-  if (!date) return "Pick a date";
+  if (!date) return 'Pick a date';
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? "AM" : "PM";
+  const ampm = hours < 12 ? 'AM' : 'PM';
 
   return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }

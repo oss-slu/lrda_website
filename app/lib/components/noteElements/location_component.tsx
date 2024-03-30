@@ -101,7 +101,7 @@ export default function LocationPicker({
             {/* <div>
               {longitude.toPrecision(8)}
               {"_"}
-            </div>
+            </div>x
             <div>{latitude.toPrecision(8)}</div> */}
           </button>
         </PopoverTrigger>
@@ -132,9 +132,10 @@ export default function LocationPicker({
           </div>
         </PopoverContent>
       </Popover>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={100}>
         <Tooltip>
           <TooltipTrigger asChild>
+            
             <button
               onClick={handleGetCurrentLocation}
               aria-label="compass"
