@@ -461,3 +461,15 @@ body {
   position: absolute;
   width: auto;
 }
+
+/* Add this to your global stylesheet */
+.scroll-shadow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px; /* Adjust width as needed */
+  background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 100%);
+  pointer-events: none; /* This ensures the shadow doesn't interfere with clicking or scrolling */
+}
