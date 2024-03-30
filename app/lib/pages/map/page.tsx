@@ -15,6 +15,7 @@ import ClickableNote from "../../components/click_note_card";
 import mapPin from "public/3d-map-pin.jpeg";
 import { Switch } from "@/components/ui/switch";
 import { GlobeIcon, UserIcon } from "lucide-react";
+import { log } from "console";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
@@ -44,12 +45,16 @@ const Page = () => {
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
     null
   );
+  const mapRef = useRef<google.maps.Map>();
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [notePixelPosition, setNotePixelPosition] = useState({ x: 0, y: 0 });
   const noteRefs = useRef<Refs>({});
 
   const user = User.getInstance();
 
   const onMapLoad = (map: any) => {
+    mapRef.current = map;
     const updateBounds = () => {
       const newCenter: Location = {
         lat: map.getCenter().lat(),
@@ -88,6 +93,9 @@ const Page = () => {
       );
     });
   };
+
+
+
 
   const updateFilteredNotes = async (
     center: Location,
@@ -133,6 +141,50 @@ const Page = () => {
     });
   }, [global]);
 
+  const handleMarkerClick = (note: Note) => {
+    setActiveNote(note);
+    scrollToNoteTile(note.id);
+  
+    const map = mapRef.current;
+  
+    if (map && mapContainerRef.current) {
+      const overlay = new google.maps.OverlayView();
+      overlay.draw = function() {}; // Empty function to satisfy the API
+      overlay.setMap(map);
+  
+      // Wait for the overlay to be added to the map
+      setTimeout(() => {
+        const projection = overlay.getProjection();
+  
+        if (projection) {
+          const latLng = new google.maps.LatLng(
+            parseFloat(note.latitude),
+            parseFloat(note.longitude)
+          );
+          const pixelPosition = projection.fromLatLngToDivPixel(latLng);
+  
+          if (pixelPosition) {
+            const mapContainerRect = mapContainerRef.current.getBoundingClientRect();
+            const xLength = mapContainerRect.right - mapContainerRect.left;
+            const yLength = mapContainerRect.bottom - mapContainerRect.top;
+  
+            // Adding mapContainerRect.left to adjust 'left' position
+            const left = pixelPosition.x ;
+            const top = pixelPosition.y;
+            console.log('xLength: ', xLength);
+            console.log('yLength: ', yLength);
+            setNotePixelPosition({ x: left + 290, y: top });
+          }
+        }
+      }, 0);
+    }
+  };
+  
+  
+  
+  
+  
+
   // New useEffect hook for map bounds changes
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
@@ -174,10 +226,6 @@ const Page = () => {
     }
   }
 
-  const getMarkerLabel = (note: Note) => {
-    const label = note.tags?.[0] ?? note.title.split(" ")[0];
-    return label.length > 10 ? `${label.substring(0, 10)}...` : label;
-  };
 
   const toggleFilter = () => {
     setGlobal(!global);
@@ -215,7 +263,7 @@ const Page = () => {
           </div>
         ) : null}
       </div>
-      <div className="flex-grow">
+      <div ref={mapContainerRef} className="flex-grow">
         {isLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -237,10 +285,7 @@ const Page = () => {
                     lat: parseFloat(note.latitude),
                     lng: parseFloat(note.longitude),
                   }}
-                  onClick={() => {
-                    setActiveNote(note);
-                    scrollToNoteTile(note.id);
-                  }}
+                  onClick={() => handleMarkerClick(note)}
                   icon={createMarkerIcon(isNoteHovered)}
                   zIndex={isNoteHovered ? 1 : 0}
                   onLoad={(marker) => {
@@ -250,22 +295,21 @@ const Page = () => {
               );
             })}
 
-            {activeNote && (
-              <InfoWindow
-                key={new Date().getMilliseconds() + new Date().getTime()}
-                position={{
-                  lat: parseFloat(activeNote.latitude),
-                  lng: parseFloat(activeNote.longitude),
-                }}
-                onCloseClick={() => {
-                  setActiveNote(null);
-                }}
-              >
-                <div className="transition-transform duration-300 ease-in-out">
-                  <ClickableNote note={activeNote} />
-                </div>
-              </InfoWindow>
-            )}
+
+{activeNote && (
+  <div
+    className="absolute"
+    style={{
+      left: `${notePixelPosition.x}px`,
+      top: `${notePixelPosition.y}px`,
+      pointerEvents: 'auto', 
+    }}
+  >
+    <ClickableNote note={activeNote} onClose={() => setActiveNote(null)} />
+  </div>
+)}
+
+
           </GoogleMap>
         )}
       </div>
