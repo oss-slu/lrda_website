@@ -28,7 +28,6 @@ interface Refs {
   [key: string]: HTMLElement | undefined;
 }
 
-
 const Page = () => {
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
@@ -73,29 +72,37 @@ const Page = () => {
       setActiveNote(null); // This will hide the ClickableNote
     });
 
+    const mapDragListener = map.addListener("dragstart", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
+
     setTimeout(() => {
       updateBounds();
     }, 100);
     return () => {
       google.maps.event.removeListener(mapClickListener);
+      google.maps.event.removeListener(mapDragListener);
     };
   };
 
   useEffect(() => {
     const map = mapRef.current;
-  
+
     if (map) {
       const mapClickListener = map.addListener("click", () => {
-        setActiveNote(null); // This will hide the ClickableNote
+        setActiveNote(null);
       });
-  
-      // Clean up the listener when the component unmounts
+
+      const mapDragListener = map.addListener("dragstart", () => {
+        setActiveNote(null);
+      });
+
       return () => {
         google.maps.event.removeListener(mapClickListener);
+        google.maps.event.removeListener(mapDragListener);
       };
     }
   }, []);
-  
 
   // Filter function
   const filterNotesByMapBounds = (
@@ -115,9 +122,6 @@ const Page = () => {
       );
     });
   };
-
-
-
 
   const updateFilteredNotes = async (
     center: Location,
@@ -166,46 +170,42 @@ const Page = () => {
   const handleMarkerClick = (note: Note) => {
     setActiveNote(note);
     scrollToNoteTile(note.id);
-  
+
     const map = mapRef.current;
-  
+
     if (map && mapContainerRef.current) {
       const overlay = new google.maps.OverlayView();
-      overlay.draw = function() {}; // Empty function to satisfy the API
+      overlay.draw = function () {}; // Empty function to satisfy the API
       overlay.setMap(map);
-  
+
       // Wait for the overlay to be added to the map
       setTimeout(() => {
         const projection = overlay.getProjection();
-  
+
         if (projection) {
           const latLng = new google.maps.LatLng(
             parseFloat(note.latitude),
             parseFloat(note.longitude)
           );
           const pixelPosition = projection.fromLatLngToDivPixel(latLng);
-  
+
           if (pixelPosition) {
-            const mapContainerRect = mapContainerRef.current.getBoundingClientRect();
+            const mapContainerRect =
+              mapContainerRef.current.getBoundingClientRect();
             const xLength = mapContainerRect.right - mapContainerRect.left;
             const yLength = mapContainerRect.bottom - mapContainerRect.top;
-  
+
             // Adding mapContainerRect.left to adjust 'left' position
-            const left = pixelPosition.x ;
+            const left = pixelPosition.x;
             const top = pixelPosition.y;
-            console.log('xLength: ', xLength);
-            console.log('yLength: ', yLength);
+            console.log("xLength: ", xLength);
+            console.log("yLength: ", yLength);
             setNotePixelPosition({ x: left + 290, y: top });
           }
         }
       }, 0);
     }
   };
-  
-  
-  
-  
-  
 
   // New useEffect hook for map bounds changes
   useEffect(() => {
@@ -240,13 +240,11 @@ const Page = () => {
       };
     } else {
       return {
-        url: "/markerR.png", 
+        url: "/markerR.png",
         scaledSize: new window.google.maps.Size(40, 40),
       };
     }
   }
-  
-
 
   const toggleFilter = () => {
     setGlobal(!global);
@@ -258,7 +256,7 @@ const Page = () => {
   const scrollToNoteTile = (noteId: string) => {
     const noteTile = noteRefs.current[noteId];
     if (noteTile) {
-      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
 
@@ -316,21 +314,21 @@ const Page = () => {
               );
             })}
 
-
-{activeNote && (
-  <div
-    className="absolute"
-    style={{
-      left: `${notePixelPosition.x}px`,
-      top: `${notePixelPosition.y}px`,
-      pointerEvents: 'auto', 
-    }}
-  >
-    <ClickableNote note={activeNote} onClose={() => setActiveNote(null)} />
-  </div>
-)}
-
-
+            {activeNote && (
+              <div
+                className="absolute"
+                style={{
+                  left: `${notePixelPosition.x}px`,
+                  top: `${notePixelPosition.y}px`,
+                  pointerEvents: "auto",
+                }}
+              >
+                <ClickableNote
+                  note={activeNote}
+                  onClose={() => setActiveNote(null)}
+                />
+              </div>
+            )}
           </GoogleMap>
         )}
       </div>
@@ -339,11 +337,12 @@ const Page = () => {
           <div>Loading...</div>
         ) : (
           filteredNotes.map((note) => (
-            <div ref={(el: HTMLElement | null) => {
-              if (el) {
-                noteRefs.current[note.id] = el;
-              }
-            }}
+            <div
+              ref={(el: HTMLElement | null) => {
+                if (el) {
+                  noteRefs.current[note.id] = el;
+                }
+              }}
               // within here I need to change the hover;scale-105 to a different class
               className={`transition-transform duration-300 ease-in-out cursor-pointer ${
                 note.id === activeNote?.id
