@@ -149,8 +149,8 @@ const Page = () => {
   ): Note[] => {
     if (!bounds) return notes;
 
-    const ne = bounds.getNorthEast(); // North East corner
-    const sw = bounds.getSouthWest(); // South West corner
+    const ne = bounds.getNorthEast(); 
+    const sw = bounds.getSouthWest(); 
 
     return notes.filter((note) => {
       const lat = parseFloat(note.latitude);

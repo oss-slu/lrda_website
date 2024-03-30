@@ -23,6 +23,9 @@ dependencies:
   '@emotion/styled':
     specifier: ^11.11.0
     version: 11.11.0(@emotion/react@11.11.3)(@types/react@18.2.22)(react@18.2.0)
+  '@googlemaps/js-api-loader':
+    specifier: ^1.16.6
+    version: 1.16.6
   '@mui/icons-material':
     specifier: ^5.15.1
     version: 5.15.2(@mui/material@5.15.2)(@types/react@18.2.22)(react@18.2.0)
@@ -1855,6 +1858,12 @@ packages:
 
   /@googlemaps/js-api-loader@1.16.2:
     resolution: {integrity: sha512-psGw5u0QM6humao48Hn4lrChOM2/rA43ZCm3tKK9qQsEj1/VzqkCqnvGfEOshDbBQflydfaRovbKwZMF4AyqbA==}
+    dependencies:
+      fast-deep-equal: 3.1.3
+    dev: false
+
+  /@googlemaps/js-api-loader@1.16.6:
+    resolution: {integrity: sha512-V8p5W9DbPQx74jWUmyYJOerhiB4C+MHekaO0ZRmc6lrOYrvY7+syLhzOWpp55kqSPeNb+qbC2h8i69aLIX6krQ==}
     dependencies:
       fast-deep-equal: 3.1.3
     dev: false
