@@ -35,8 +35,6 @@ export default function LocationPicker({
     googleMapsApiKey: mapAPIKey,
   });
 
-<<<<<<< Updated upstream:app/lib/components/noteElements/location_component.tsx
-=======
   const updateLongitude = (newLongitude: number) => {
     setLongitude(prevLongitude => {
       const updatedLongitude = newLongitude;
@@ -54,7 +52,6 @@ export default function LocationPicker({
   };
   
 
->>>>>>> Stashed changes:app/lib/components/location_component.tsx
   const handleGetCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
