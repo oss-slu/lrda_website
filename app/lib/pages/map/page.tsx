@@ -69,11 +69,33 @@ const Page = () => {
 
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", updateBounds);
+    const mapClickListener = map.addListener("click", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
 
     setTimeout(() => {
       updateBounds();
     }, 100);
+    return () => {
+      google.maps.event.removeListener(mapClickListener);
+    };
   };
+
+  useEffect(() => {
+    const map = mapRef.current;
+  
+    if (map) {
+      const mapClickListener = map.addListener("click", () => {
+        setActiveNote(null); // This will hide the ClickableNote
+      });
+  
+      // Clean up the listener when the component unmounts
+      return () => {
+        google.maps.event.removeListener(mapClickListener);
+      };
+    }
+  }, []);
+  
 
   // Filter function
   const filterNotesByMapBounds = (
@@ -217,7 +239,6 @@ const Page = () => {
         scaledSize: new window.google.maps.Size(48, 48), // 20% larger than the default size (40, 40)
       };
     } else {
-
       return {
         url: "/markerR.png", 
         scaledSize: new window.google.maps.Size(40, 40),
