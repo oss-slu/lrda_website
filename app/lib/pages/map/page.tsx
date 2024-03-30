@@ -292,23 +292,51 @@ const Page = () => {
     }
   };
 
-  const handleSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+  // Old handle search that filters the locations by string
+  // const handleSearch = (searchQuery: string) => {
+  //   if (!searchQuery.trim()) {
+  //     setFilteredNotes(notes);
+  //     return;
+  //   }
+  //   const query = searchQuery.toLowerCase();
+  //   const filtered = notes.filter(
+  //     (note) =>
+  //       note.title.toLowerCase().includes(query) ||
+  //       note.tags.some((tag) => tag.toLowerCase().includes(query))
+  //   );
+  //   setFilteredNotes(filtered);
+  // };
+
+  // New handleSearch for location based searching
+  const handleSearch = (address: string, lat?: number, lng?: number) => {
+    if (!address.trim()) {
       setFilteredNotes(notes);
       return;
     }
-    const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.toLowerCase().includes(query))
-    );
-    setFilteredNotes(filtered);
+  
+    // Check if latitude and longitude are provided
+    if (lat != null && lng != null) {
+      // If so, move the map to the new location
+      const newCenter = { lat, lng };
+      mapRef.current?.panTo(newCenter);
+      mapRef.current?.setZoom(10); 
+    } else {
+      // Otherwise, filter the notes based on the search query
+      const query = address.toLowerCase();
+      const filtered = notes.filter(
+        (note) =>
+          note.title.toLowerCase().includes(query) ||
+          note.tags.some((tag) => tag.toLowerCase().includes(query))
+      );
+      setFilteredNotes(filtered);
+    }
   };
+  
 
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: mapAPIKey,
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: mapAPIKey, 
+    libraries: ["places", "maps"],
+    id: "google-map-script"
   });
 
   function createMarkerIcon(isHighlighted: boolean) {
@@ -343,7 +371,7 @@ const Page = () => {
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
         <div className="min-w-[80px] mr-3">
-          <SearchBar onSearch={handleSearch} />
+        <SearchBar onSearch={handleSearch} isLoaded={isLoaded} />
         </div>
         {isLoggedIn ? (
           <div className="flex flex-row justify-evenly items-center">
