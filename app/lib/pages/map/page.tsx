@@ -212,19 +212,19 @@ const Page = () => {
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
-      // Change the color to a highlighted color and increase the scale by 20%
       return {
-        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png", // A green icon URL
+        url: "/markerG.png",
         scaledSize: new window.google.maps.Size(48, 48), // 20% larger than the default size (40, 40)
       };
     } else {
-      // Return the default red marker icon
+
       return {
-        url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // Default red icon URL
-        scaledSize: new window.google.maps.Size(40, 40), // Default icon size
+        url: "/markerR.png", 
+        scaledSize: new window.google.maps.Size(40, 40),
       };
     }
   }
+  
 
 
   const toggleFilter = () => {
