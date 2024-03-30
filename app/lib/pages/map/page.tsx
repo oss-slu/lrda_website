@@ -109,40 +109,75 @@ const Page = () => {
   const onMapLoad = React.useCallback((map: any) => {
     console.log("Map loaded:", map);
     mapRef.current = map;
+
+    const updateBounds = () => {
+      const newCenter: Location = {
+        lat: map.getCenter().lat(),
+        lng: map.getCenter().lng(),
+      };
+      const newBounds = map.getBounds();
+
+      setMapCenter(newCenter);
+      setMapBounds(newBounds);
+      updateFilteredNotes(newCenter, newBounds, notes);
+    };
+
+    map.addListener("dragend", updateBounds);
+    map.addListener("zoom_changed", updateBounds);
+    const mapClickListener = map.addListener("click", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
+
+    const mapDragListener = map.addListener("dragstart", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
+    updateBounds();
+
+    setTimeout(() => {
+      updateBounds();
+    }, 100);
+    // return () => {
+    //   google.maps.event.clearListeners(map, 'dragend');
+    //   google.maps.event.clearListeners(map, 'zoom_changed');
+    // };
+
   }, []);
+/*
+  const onMapLoad = React.useCallback((map: any) => {
+    mapRef.current = map;
+    const updateBounds = () => {
+      const newCenter: Location = {
+        lat: map.getCenter().lat(),
+        lng: map.getCenter().lng(),
+      };
+      const newBounds = map.getBounds();
 
-  // const onMapLoad = React.useCallback((map: any) => {
-  //   mapRef.current = map;
-  //   const updateBounds = () => {
-  //     const newCenter: Location = {
-  //       lat: map.getCenter().lat(),
-  //       lng: map.getCenter().lng(),
-  //     };
-  //     const newBounds = map.getBounds();
+      setMapCenter(newCenter);
+      setMapBounds(newBounds);
+      updateFilteredNotes(newCenter, newBounds, notes);
+    };
 
-  //     setMapCenter(newCenter);
-  //     setMapBounds(newBounds);
-  //     updateFilteredNotes(newCenter, newBounds, notes);
-  //   };
+    map.addListener("dragend", updateBounds);
+    map.addListener("zoom_changed", updateBounds);
+    const mapClickListener = map.addListener("click", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
 
-  //   map.addListener("dragend", updateBounds);
-  //   map.addListener("zoom_changed", updateBounds);
-  //   const mapClickListener = map.addListener("click", () => {
-  //     setActiveNote(null); // This will hide the ClickableNote
-  //   });
+    const mapDragListener = map.addListener("dragstart", () => {
+      setActiveNote(null); // This will hide the ClickableNote
+    });
+    updateBounds();
 
-  //   const mapDragListener = map.addListener("dragstart", () => {
-  //     setActiveNote(null); // This will hide the ClickableNote
-  //   });
 
-  //   setTimeout(() => {
-  //     updateBounds();
-  //   }, 100);
-  //   return () => {
-  //     google.maps.event.removeListener(mapClickListener);
-  //     google.maps.event.removeListener(mapDragListener);
-  //   };
-  // }, []);
+    setTimeout(() => {
+      updateBounds();
+    }, 100);
+    return () => {
+      google.maps.event.clearListeners(map, 'dragend');
+      google.maps.event.clearListeners(map, 'zoom_changed');
+    };
+  }, []);
+  */
 
   // Filter function
   const filterNotesByMapBounds = (
