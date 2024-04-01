@@ -87,6 +87,10 @@ const Page = () => {
           setLocationFound(true);
         }
       } catch (error) {
+        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+        setMapCenter(defaultLocation as Location);
+        setMapZoom(10);
+        setLocationFound(true);
         console.error("Failed to fetch the last location", error);
       }
     };
@@ -105,6 +109,10 @@ const Page = () => {
         }
         await setItem("LastLocation", JSON.stringify(currentLocation));
       } catch (error) {
+        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+        setMapCenter(defaultLocation as Location);
+        setMapZoom(10);
+        setLocationFound(true);
         console.log("Using last known location due to error:", error);
       }
     };
