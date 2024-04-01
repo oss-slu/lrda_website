@@ -65,7 +65,7 @@ const Page = () => {
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
-  const markers = new Map();
+  const [markers, setMarkers] = useState(new Map());
 
   const user = User.getInstance();
 
@@ -170,42 +170,57 @@ const Page = () => {
     }
   }, [locationFound, global]);
 
+  // useEffect that creates and updates Markers and MarkerClusters
   useEffect(() => {
     if (isLoaded && mapRef.current && filteredNotes.length > 0) {
-      // Define the function within useEffect to use the most up-to-date handleMarkerClick from the component scope.
+      const tempMarkers = new Map();
+  
       const attachMarkerEvents = (marker: google.maps.Marker, note: Note) => {
         google.maps.event.clearListeners(marker, 'click');
+        google.maps.event.clearListeners(marker, 'mouseover');
+        google.maps.event.clearListeners(marker, 'mouseout');
+  
         marker.addListener('click', () => handleMarkerClick(note));
+  
+        marker.addListener('mouseover', () => {
+          setHoveredNoteId(note.id);
+          scrollToNoteTile(note.id);
+          setActiveNote(note);
+          marker.setIcon(createMarkerIcon(true));
+        });
+  
+        marker.addListener('mouseout', () => {
+          setHoveredNoteId(null);
+          setActiveNote(null);
+          marker.setIcon(createMarkerIcon(false));
+        });
       };
   
-      // Create markers and attach click events
-      const newMarkers: google.maps.Marker[] = filteredNotes.map((note) => {
+      filteredNotes.forEach((note) => {
         const marker = new google.maps.Marker({
           position: new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
           icon: createMarkerIcon(false),
         });
   
-        // Attach the click event to each marker
         attachMarkerEvents(marker, note);
-        return marker;
+        tempMarkers.set(note.id, marker);
       });
   
-      // Initialize or update MarkerClusterer
+      setMarkers(tempMarkers);
+  
       if (markerClustererRef.current) {
         markerClustererRef.current.clearMarkers();
       }
   
-      markerClustererRef.current = new MarkerClusterer({ markers: newMarkers, map: mapRef.current });
+      markerClustererRef.current = new MarkerClusterer({ markers: Array.from(tempMarkers.values()), map: mapRef.current });
   
       return () => {
-        // Cleanup: remove all markers when the component unmounts or dependencies change
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
         }
       };
     }
   }, [isLoaded, filteredNotes, mapRef.current]);
-  
   
   const handleMapClick = () => {
     if (currentPopup) {
@@ -587,7 +602,7 @@ const Page = () => {
                       noteRefs.current[note.id] = el;
                     }
                   }}
-                  className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+                  className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
                     note.id === activeNote?.id
                       ? "active-note"
                       : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
