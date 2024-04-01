@@ -21,7 +21,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
@@ -41,7 +41,10 @@ const Page = () => {
   const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
   const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
-  const [mapCenter, setMapCenter] = useState<Location>({ lat: 38.005984, lng: -24.334449 });
+  const [mapCenter, setMapCenter] = useState<Location>({
+    lat: 38.005984,
+    lng: -24.334449,
+  });
   const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
@@ -64,10 +67,10 @@ const Page = () => {
       try {
         const defaultLocation = await getLocation();
         setMapCenter(defaultLocation as Location);
-        setMapZoom(10)
+        setMapZoom(10);
         setLocationFound(true);
       } catch (error) {
-        console.error('Failed to fetch the location', error);
+        console.error("Failed to fetch the location", error);
       }
     };
 
@@ -119,14 +122,13 @@ const Page = () => {
       fetchNotes().then(({ personalNotes, globalNotes }) => {
         setPersonalNotes(personalNotes);
         setGlobalNotes(globalNotes);
-  
+
         const initialNotes = global ? globalNotes : personalNotes;
         setNotes(initialNotes);
         setFilteredNotes(initialNotes);
       });
     }
   }, [locationFound, global]);
-  
 
   const handleMapClick = () => {
     if (currentPopup) {
@@ -396,6 +398,10 @@ const Page = () => {
     }
   };
   function getLocation() {
+    toast("Fetching Location", {
+      description: "Getting your location. This can take a second.",
+      duration: 2000,
+    });
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -412,7 +418,7 @@ const Page = () => {
       );
     });
   }
-  
+
   async function handleSetLocation() {
     try {
       const newCenter = await getLocation();
@@ -423,7 +429,6 @@ const Page = () => {
       console.error("Failed to set location", error);
     }
   }
-  
 
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
@@ -515,7 +520,6 @@ const Page = () => {
                       noteRefs.current[note.id] = el;
                     }
                   }}
-                  // within here I need to change the hover;scale-105 to a different class
                   className={`transition-transform duration-300 ease-in-out cursor-pointer ${
                     note.id === activeNote?.id
                       ? "active-note"
@@ -528,6 +532,10 @@ const Page = () => {
                   <ClickableNote note={note} />
                 </div>
               ))}
+            </div>
+          ) : !locationFound ? (
+            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+              <span className="self-center">Fetching Location...</span>
             </div>
           ) : (
             <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
