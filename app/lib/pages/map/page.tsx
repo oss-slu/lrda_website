@@ -57,7 +57,6 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
-  const [markers, setMarkers] = useState(new Map());
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
     null
   );
@@ -66,6 +65,7 @@ const Page = () => {
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
+  const markers = new Map();
 
   const user = User.getInstance();
 
@@ -134,6 +134,12 @@ const Page = () => {
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
     updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+    const timer = setTimeout(() => {
+      if(filteredNotes.length < 1){
+        setEmptyRegion(true);
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   useEffect(() => {
@@ -160,7 +166,6 @@ const Page = () => {
 
         const initialNotes = global ? globalNotes : personalNotes;
         setNotes(initialNotes);
-        setFilteredNotes(initialNotes);
       });
     }
   }, [locationFound, global]);
@@ -229,7 +234,6 @@ const Page = () => {
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
       updateBounds();
-      // Add a slight delay before repainting to ensure map has finished zooming
     });
     const mapClickListener = map.addListener("click", () => {
       setActiveNote(null); // This will hide the ClickableNote
@@ -266,12 +270,6 @@ const Page = () => {
         lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
       );
     });
-    console.log("Filtering Notes...");
-    setEmptyRegion(false);
-    if (returnVal.length < 1) {
-      console.log("The Region is empty");
-      setEmptyRegion(true);
-    }
     return returnVal;
   };
 
