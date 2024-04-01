@@ -64,9 +64,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoaded }) => {
       placesService.getDetails({ placeId }, (result, status) => {
         console.log('getDetails status:', status); // Log the status of the details fetch
         console.log('Place details:', result); // Log the details of the place
-        if (status === google.maps.places.PlacesServiceStatus.OK && result) {
-          const lat = result.geometry?.location.lat();
-          const lng = result.geometry?.location.lng();
+        if (status === google.maps.places.PlacesServiceStatus.OK && result && result.geometry && result.geometry.location) {
+          const lat = result.geometry.location.lat();
+          const lng = result.geometry.location.lng();
           onSearch(result.formatted_address || '', lat, lng);
           setSearchText(result.formatted_address || '');
           setSuggestions([]);
@@ -74,6 +74,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoaded }) => {
       });
     }
   }, [onSearch, isLoaded]);
+  
 
   return (
     <div className="flex flex-col w-full relative">

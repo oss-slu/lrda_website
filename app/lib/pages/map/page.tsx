@@ -332,13 +332,11 @@ const Page = () => {
   
         /** Called when the popup is added to the map. */
         onAdd() {
-          console.log(this, " BEING ADDED");
           this.getPanes()!.floatPane.appendChild(this.containerDiv);
         }
   
         /** Called when the popup is removed from the map. */
         onRemove() {
-          console.log(this, " BEING Removed");
           if (this.containerDiv.parentElement) {
             this.containerDiv.parentElement.removeChild(this.containerDiv);
           }
@@ -346,7 +344,6 @@ const Page = () => {
   
         /** Called each frame when the popup needs to draw itself. */
         draw() {
-          console.log(this, " BEING drawed");
           const divPosition = this.getProjection().fromLatLngToDivPixel(
             this.position
           )!;
