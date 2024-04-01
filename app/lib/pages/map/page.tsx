@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/resizable";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { getItem, setItem } from "../../utils/async_storage";
 
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
@@ -52,8 +53,7 @@ const Page = () => {
   const [mapCenter, setMapCenter] = useState<Location>({
     lat: 38.005984,
     lng: -24.334449,
-  });
-  const [mapZoom, setMapZoom] = useState(2);
+  });  const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
@@ -76,22 +76,40 @@ const Page = () => {
   });
 
   useEffect(() => {
-    const fetchLocation = async () => {
+    // Immediately try to fetch the last known location from storage
+    const fetchLastLocation = async () => {
       try {
-        const defaultLocation = await getLocation();
-        setMapCenter(defaultLocation as Location);
-        setMapZoom(10);
-        setLocationFound(true);
+        const lastLocationString = await getItem("LastLocation");
+        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
+        if (lastLocation) {
+          setMapCenter(lastLocation);
+          setMapZoom(10);
+          setLocationFound(true);
+        }
       } catch (error) {
-        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-        setMapCenter(defaultLocation as Location);
-        setMapZoom(10);
-        setLocationFound(true);
-        console.log("Failed to fetch the location", error);
+        console.error("Failed to fetch the last location", error);
       }
     };
-
-    fetchLocation();
+  
+    fetchLastLocation();
+  }, []);
+  
+  useEffect(() => {
+    // After setting the initial location, attempt to get the current location
+    const fetchCurrentLocationAndUpdate = async () => {
+      try {
+        const currentLocation = await getLocation() as Location;
+        if(!locationFound){
+          setMapCenter(currentLocation);
+          setMapZoom(10);
+        }
+        await setItem("LastLocation", JSON.stringify(currentLocation));
+      } catch (error) {
+        console.log("Using last known location due to error:", error);
+      }
+    };
+  
+    fetchCurrentLocationAndUpdate();
   }, []);
 
   useEffect(() => {
