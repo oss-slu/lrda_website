@@ -8,7 +8,13 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
-import { GlobeIcon, UserIcon } from "lucide-react";
+import {
+  CompassIcon,
+  GlobeIcon,
+  LocateIcon,
+  Navigation,
+  UserIcon,
+} from "lucide-react";
 import { createRoot } from "react-dom/client";
 import {
   ResizableHandle,
@@ -29,16 +35,16 @@ interface Refs {
 }
 
 const Page = () => {
-  const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
   const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
-  const [mapCenter, setMapCenter] = useState(defaultLocation);
-  const [mapZoom, setMapZoom] = useState(10);
+  const [mapCenter, setMapCenter] = useState<Location>({ lat: 38.005984, lng: -24.334449 });
+  const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
@@ -49,8 +55,24 @@ const Page = () => {
   const [notePixelPosition, setNotePixelPosition] = useState({ x: 0, y: 0 });
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
+  const [widthOfLeft, setWidthOfLeft] = useState();
 
   const user = User.getInstance();
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const defaultLocation = await getLocation();
+        setMapCenter(defaultLocation as Location);
+        setMapZoom(10)
+        setLocationFound(true);
+      } catch (error) {
+        console.error('Failed to fetch the location', error);
+      }
+    };
+
+    fetchLocation();
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -93,15 +115,18 @@ const Page = () => {
   }, [hoveredNoteId, markers]);
 
   useEffect(() => {
-    fetchNotes().then(({ personalNotes, globalNotes }) => {
-      setPersonalNotes(personalNotes);
-      setGlobalNotes(globalNotes);
-
-      const initialNotes = global ? globalNotes : personalNotes;
-      setNotes(initialNotes);
-      setFilteredNotes(initialNotes);
-    });
-  }, [global]);
+    if (locationFound) {
+      fetchNotes().then(({ personalNotes, globalNotes }) => {
+        setPersonalNotes(personalNotes);
+        setGlobalNotes(globalNotes);
+  
+        const initialNotes = global ? globalNotes : personalNotes;
+        setNotes(initialNotes);
+        setFilteredNotes(initialNotes);
+      });
+    }
+  }, [locationFound, global]);
+  
 
   const handleMapClick = () => {
     if (currentPopup) {
@@ -370,6 +395,35 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
+  function getLocation() {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newCenter = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          resolve(newCenter);
+        },
+        (error) => {
+          console.error("Error fetching location", error);
+          reject(error);
+        }
+      );
+    });
+  }
+  
+  async function handleSetLocation() {
+    try {
+      const newCenter = await getLocation();
+      setMapCenter(newCenter as Location);
+      mapRef.current?.panTo(newCenter as Location);
+      mapRef.current?.setZoom(13);
+    } catch (error) {
+      console.error("Failed to set location", error);
+    }
+  }
+  
 
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
@@ -378,20 +432,8 @@ const Page = () => {
           defaultSize={65}
           maxSize={82}
           minSize={29}
-          className="flex-grow"
+          className="flex-grow min-w-[320px]"
         >
-          <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
-            <div className="min-w-[80px] mr-3">
-              <SearchBar onSearch={handleSearch} isLoaded={isLoaded} />
-            </div>
-            {isLoggedIn ? (
-              <div className="flex flex-row justify-evenly items-center">
-                <GlobeIcon className="text-primary" />
-                <Switch onClick={toggleFilter} />
-                <UserIcon className="text-primary" />
-              </div>
-            ) : null}
-          </div>
           {isLoaded && (
             <GoogleMap
               mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -406,6 +448,26 @@ const Page = () => {
                 fullscreenControl: false,
               }}
             >
+              <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
+                <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+                  <div className="min-w-[80px] mr-3">
+                    <SearchBar onSearch={handleSearch} isLoaded={isLoaded} />
+                  </div>
+                  {isLoggedIn ? (
+                    <div className="flex flex-row justify-evenly items-center">
+                      <GlobeIcon className="text-primary" />
+                      <Switch onClick={toggleFilter} />
+                      <UserIcon className="text-primary" />
+                    </div>
+                  ) : null}
+                </div>
+                <div
+                  className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
+                  onClick={handleSetLocation}
+                >
+                  <Navigation size={20} />
+                </div>
+              </div>
               {filteredNotes.map((note, index) => {
                 const isNoteHovered = hoveredNoteId === note.id;
                 return (
@@ -428,43 +490,50 @@ const Page = () => {
           )}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={35} maxSize={71} minSize={18} className="min-w-[270px]">
-          <div>
-            {isLoading ? (
-              <div>Loading...</div>
-            ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '0.5rem',
-                padding: '0.5rem',
-                overflowY: 'auto',
-                height: '90vh',
-                justifyContent: 'center'
-              }}>
-                {filteredNotes.map((note) => (
-                  <div
-                    ref={(el: HTMLElement | null) => {
-                      if (el) {
-                        noteRefs.current[note.id] = el;
-                      }
-                    }}
-                    // within here I need to change the hover;scale-105 to a different class
-                    className={`transition-transform duration-300 ease-in-out cursor-pointer ${
-                      note.id === activeNote?.id
-                        ? "active-note"
-                        : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-                    }`}
-                    onMouseEnter={() => setHoveredNoteId(note.id)}
-                    onMouseLeave={() => setHoveredNoteId(null)}
-                    key={note.id}
-                  >
-                    <ClickableNote note={note} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <ResizablePanel
+          defaultSize={35}
+          maxSize={71}
+          minSize={18}
+          className="min-w-[270px]"
+        >
+          {filteredNotes.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: "0.5rem",
+                padding: "0.5rem",
+                overflowY: "auto",
+                height: "90vh",
+                justifyContent: "center",
+              }}
+            >
+              {filteredNotes.map((note) => (
+                <div
+                  ref={(el: HTMLElement | null) => {
+                    if (el) {
+                      noteRefs.current[note.id] = el;
+                    }
+                  }}
+                  // within here I need to change the hover;scale-105 to a different class
+                  className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+                    note.id === activeNote?.id
+                      ? "active-note"
+                      : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                  }`}
+                  onMouseEnter={() => setHoveredNoteId(note.id)}
+                  onMouseLeave={() => setHoveredNoteId(null)}
+                  key={note.id}
+                >
+                  <ClickableNote note={note} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+              <span className="self-center">Loading...</span>
+            </div>
+          )}
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
