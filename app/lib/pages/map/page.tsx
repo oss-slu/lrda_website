@@ -1,6 +1,11 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { GoogleMap, useJsApiLoader, Marker, Libraries } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  Libraries,
+} from "@react-google-maps/api";
 import SearchBar from "../../components/search_bar";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
@@ -22,9 +27,11 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { toast } from "sonner";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
-const libraries: Libraries = ["places", "maps"];
+const libraries: Libraries = ["places"];
 
 interface Location {
   lat: number;
@@ -55,11 +62,18 @@ const Page = () => {
     null
   );
   const mapRef = useRef<google.maps.Map>();
+  const markerClustererRef = useRef<MarkerClusterer>();
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
 
   const user = User.getInstance();
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: mapAPIKey,
+    libraries,
+    id: "google-map-script",
+  });
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -133,11 +147,48 @@ const Page = () => {
     }
   }, [locationFound, global]);
 
+  useEffect(() => {
+    if (isLoaded && mapRef.current && filteredNotes.length > 0) {
+      // Define the function within useEffect to use the most up-to-date handleMarkerClick from the component scope.
+      const attachMarkerEvents = (marker: google.maps.Marker, note: Note) => {
+        google.maps.event.clearListeners(marker, 'click');
+        marker.addListener('click', () => handleMarkerClick(note));
+      };
+  
+      // Create markers and attach click events
+      const newMarkers: google.maps.Marker[] = filteredNotes.map((note) => {
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+          icon: createMarkerIcon(false),
+        });
+  
+        // Attach the click event to each marker
+        attachMarkerEvents(marker, note);
+        return marker;
+      });
+  
+      // Initialize or update MarkerClusterer
+      if (markerClustererRef.current) {
+        markerClustererRef.current.clearMarkers();
+      }
+  
+      markerClustererRef.current = new MarkerClusterer({ markers: newMarkers, map: mapRef.current });
+  
+      return () => {
+        // Cleanup: remove all markers when the component unmounts or dependencies change
+        if (markerClustererRef.current) {
+          markerClustererRef.current.clearMarkers();
+        }
+      };
+    }
+  }, [isLoaded, filteredNotes, mapRef.current]);
+  
+  
   const handleMapClick = () => {
     if (currentPopup) {
       currentPopup.setMap(null);
-      setCurrentPopup(null);
     }
+    setCurrentPopup(null);
     setActiveNote(null);
   };
 
@@ -158,7 +209,10 @@ const Page = () => {
     };
 
     map.addListener("dragend", updateBounds);
-    map.addListener("zoom_changed", updateBounds);
+    map.addListener("zoom_changed", () => {
+      updateBounds();
+      // Add a slight delay before repainting to ensure map has finished zooming
+    });
     const mapClickListener = map.addListener("click", () => {
       setActiveNote(null); // This will hide the ClickableNote
     });
@@ -194,10 +248,10 @@ const Page = () => {
         lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
       );
     });
-    console.log("Filtering Notes...")
+    console.log("Filtering Notes...");
     setEmptyRegion(false);
     if (returnVal.length < 1) {
-      console.log("The Region is empty")
+      console.log("The Region is empty");
       setEmptyRegion(true);
     }
     return returnVal;
@@ -235,84 +289,84 @@ const Page = () => {
   };
 
   const handleMarkerClick = (note: Note) => {
-    handleMapClick();
-    setActiveNote(note);
-    scrollToNoteTile(note.id);
-
-    const map = mapRef.current;
-
-    class Popup extends google.maps.OverlayView {
-      position: google.maps.LatLng;
-      containerDiv: HTMLDivElement;
-
-      constructor(position: google.maps.LatLng, content: HTMLElement) {
-        super();
-        this.position = position;
-
-        content.classList.add("popup-bubble");
-
-        // This zero-height div is positioned at the bottom of the bubble.
-        const bubbleAnchor = document.createElement("div");
-
-        bubbleAnchor.classList.add("popup-bubble-anchor");
-        bubbleAnchor.appendChild(content);
-
-        // This zero-height div is positioned at the bottom of the tip.
-        this.containerDiv = document.createElement("div");
-        this.containerDiv.classList.add("popup-container");
-        this.containerDiv.appendChild(bubbleAnchor);
-
-        // Optionally stop clicks, etc., from bubbling up to the map.
-        Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-      }
-
-      /** Called when the popup is added to the map. */
-      onAdd() {
-        console.log(this, " BEING ADDED");
-        this.getPanes()!.floatPane.appendChild(this.containerDiv);
-      }
-
-      /** Called when the popup is removed from the map. */
-      onRemove() {
-        console.log(this, " BEING Removed");
-        if (this.containerDiv.parentElement) {
-          this.containerDiv.parentElement.removeChild(this.containerDiv);
-        }
-      }
-
-      /** Called each frame when the popup needs to draw itself. */
-      draw() {
-        console.log(this, " BEING drawed");
-        const divPosition = this.getProjection().fromLatLngToDivPixel(
-          this.position
-        )!;
-
-        // Hide the popup when it is far out of view.
-        const display =
-          Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
-            ? "block"
-            : "none";
-
-        if (display === "block") {
-          this.containerDiv.style.left = divPosition.x + "px";
-          this.containerDiv.style.top = divPosition.y + "px";
-        }
-
-        if (this.containerDiv.style.display !== display) {
-          this.containerDiv.style.display = display;
-        }
-      }
+    // Close the currently active popup if it exists
+    if (currentPopup) {
+      currentPopup.setMap(null); // Close the currently open popup
+      setCurrentPopup(null); // Set the currentPopup to null immediately after closing
     }
-
+  
+    setActiveNote(note); // Set the new active note
+    scrollToNoteTile(note.id); // Scroll to the note tile if needed
+  
+    const map = mapRef.current;
+  
     if (map) {
-      console.log("BURUV");
-
       const popupContent = document.createElement("div");
-      // Use createRoot to render the component into popupContent
-      const root = createRoot(popupContent); // Create a root.
-      root.render(<ClickableNote note={note} />); // Use the root to render.
-
-      console.log("popupContent", popupContent);
+      const root = createRoot(popupContent);
+      root.render(<ClickableNote note={note} />);
+  
+      class Popup extends google.maps.OverlayView {
+        position: google.maps.LatLng;
+        containerDiv: HTMLDivElement;
+  
+        constructor(position: google.maps.LatLng, content: HTMLElement) {
+          super();
+          this.position = position;
+  
+          content.classList.add("popup-bubble");
+  
+          // This zero-height div is positioned at the bottom of the bubble.
+          const bubbleAnchor = document.createElement("div");
+  
+          bubbleAnchor.classList.add("popup-bubble-anchor");
+          bubbleAnchor.appendChild(content);
+  
+          // This zero-height div is positioned at the bottom of the tip.
+          this.containerDiv = document.createElement("div");
+          this.containerDiv.classList.add("popup-container");
+          this.containerDiv.appendChild(bubbleAnchor);
+  
+          // Optionally stop clicks, etc., from bubbling up to the map.
+          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
+        }
+  
+        /** Called when the popup is added to the map. */
+        onAdd() {
+          console.log(this, " BEING ADDED");
+          this.getPanes()!.floatPane.appendChild(this.containerDiv);
+        }
+  
+        /** Called when the popup is removed from the map. */
+        onRemove() {
+          console.log(this, " BEING Removed");
+          if (this.containerDiv.parentElement) {
+            this.containerDiv.parentElement.removeChild(this.containerDiv);
+          }
+        }
+  
+        /** Called each frame when the popup needs to draw itself. */
+        draw() {
+          console.log(this, " BEING drawed");
+          const divPosition = this.getProjection().fromLatLngToDivPixel(
+            this.position
+          )!;
+  
+          // Hide the popup when it is far out of view.
+          const display =
+            Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
+              ? "block"
+              : "none";
+  
+          if (display === "block") {
+            this.containerDiv.style.left = divPosition.x + "px";
+            this.containerDiv.style.top = divPosition.y + "px";
+          }
+  
+          if (this.containerDiv.style.display !== display) {
+            this.containerDiv.style.display = display;
+          }
+        }
+      }
 
       let popup = new Popup(
         new google.maps.LatLng(
@@ -321,11 +375,11 @@ const Page = () => {
         ),
         popupContent
       );
-      if (currentPopup) {
-        currentPopup.setMap(null);
-        setCurrentPopup(null);
-      }
+  
+      // Set the new popup as the currentPopup before opening it
       setCurrentPopup(popup);
+  
+      // Open the popup
       popup.setMap(map);
     }
   };
@@ -369,12 +423,6 @@ const Page = () => {
       setFilteredNotes(filtered);
     }
   };
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: mapAPIKey,
-    libraries,
-    id: "google-map-script",
-  });
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
@@ -451,7 +499,7 @@ const Page = () => {
               center={mapCenter}
               zoom={mapZoom}
               onLoad={onMapLoad}
-              // onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
+              onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
               onClick={handleMapClick}
               options={{
                 streetViewControl: false,
@@ -479,7 +527,7 @@ const Page = () => {
                   <Navigation size={20} />
                 </div>
               </div>
-              {filteredNotes.map((note, index) => {
+              {/* {filteredNotes.map((note, index) => {
                 const isNoteHovered = hoveredNoteId === note.id;
                 return (
                   <Marker
@@ -496,7 +544,7 @@ const Page = () => {
                     }}
                   />
                 );
-              })}
+              })} */}
             </GoogleMap>
           )}
         </ResizablePanel>
