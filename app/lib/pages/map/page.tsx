@@ -10,6 +10,12 @@ import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { GlobeIcon, UserIcon } from "lucide-react";
 import { createRoot } from "react-dom/client";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
@@ -39,7 +45,6 @@ const Page = () => {
     null
   );
   const mapRef = useRef<google.maps.Map>();
-  const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notePixelPosition, setNotePixelPosition] = useState({ x: 0, y: 0 });
   const noteRefs = useRef<Refs>({});
@@ -149,8 +154,8 @@ const Page = () => {
   ): Note[] => {
     if (!bounds) return notes;
 
-    const ne = bounds.getNorthEast(); 
-    const sw = bounds.getSouthWest(); 
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
 
     return notes.filter((note) => {
       const lat = parseFloat(note.latitude);
@@ -313,13 +318,13 @@ const Page = () => {
       setFilteredNotes(notes);
       return;
     }
-  
+
     // Check if latitude and longitude are provided
     if (lat != null && lng != null) {
       // If so, move the map to the new location
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
-      mapRef.current?.setZoom(10); 
+      mapRef.current?.setZoom(10);
     } else {
       // Otherwise, filter the notes based on the search query
       const query = address.toLowerCase();
@@ -331,12 +336,11 @@ const Page = () => {
       setFilteredNotes(filtered);
     }
   };
-  
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: mapAPIKey, 
+    googleMapsApiKey: mapAPIKey,
     libraries: ["places", "maps"],
-    id: "google-map-script"
+    id: "google-map-script",
   });
 
   function createMarkerIcon(isHighlighted: boolean) {
@@ -369,80 +373,100 @@ const Page = () => {
 
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-      <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
-        <div className="min-w-[80px] mr-3">
-        <SearchBar onSearch={handleSearch} isLoaded={isLoaded} />
-        </div>
-        {isLoggedIn ? (
-          <div className="flex flex-row justify-evenly items-center">
-            <GlobeIcon className="text-primary" />
-            <Switch onClick={toggleFilter} />
-            <UserIcon className="text-primary" />
-          </div>
-        ) : null}
-      </div>
-      <div ref={mapContainerRef} className="flex-grow">
-        {isLoaded && (
-          <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={mapCenter}
-            zoom={mapZoom}
-            onLoad={onMapLoad}
-            // onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
-            onClick={handleMapClick}
-            options={{
-              streetViewControl: false,
-              mapTypeControl: false,
-              fullscreenControl: false,
-            }}
-          >
-            {filteredNotes.map((note, index) => {
-              const isNoteHovered = hoveredNoteId === note.id;
-              return (
-                <MarkerF
-                  key={note.id}
-                  position={{
-                    lat: parseFloat(note.latitude),
-                    lng: parseFloat(note.longitude),
-                  }}
-                  onClick={() => handleMarkerClick(note)}
-                  icon={createMarkerIcon(isNoteHovered)}
-                  zIndex={isNoteHovered ? 1 : 0}
-                  onLoad={(marker) => {
-                    setMarkers((prev) => new Map(prev).set(note.id, marker));
-                  }}
-                />
-              );
-            })}
-          </GoogleMap>
-        )}
-      </div>
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : (
-          filteredNotes.map((note) => (
-            <div
-              ref={(el: HTMLElement | null) => {
-                if (el) {
-                  noteRefs.current[note.id] = el;
-                }
-              }}
-              // within here I need to change the hover;scale-105 to a different class
-              className={`transition-transform duration-300 ease-in-out cursor-pointer ${
-                note.id === activeNote?.id
-                  ? "active-note"
-                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-              }`}
-              onMouseEnter={() => setHoveredNoteId(note.id)}
-              onMouseLeave={() => setHoveredNoteId(null)}
-              key={note.id}
-            >
-              <ClickableNote note={note} />
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel
+          defaultSize={65}
+          maxSize={82}
+          minSize={29}
+          className="flex-grow"
+        >
+          <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
+            <div className="min-w-[80px] mr-3">
+              <SearchBar onSearch={handleSearch} isLoaded={isLoaded} />
             </div>
-          ))
-        )}
-      </div>
+            {isLoggedIn ? (
+              <div className="flex flex-row justify-evenly items-center">
+                <GlobeIcon className="text-primary" />
+                <Switch onClick={toggleFilter} />
+                <UserIcon className="text-primary" />
+              </div>
+            ) : null}
+          </div>
+          {isLoaded && (
+            <GoogleMap
+              mapContainerStyle={{ width: "100%", height: "100%" }}
+              center={mapCenter}
+              zoom={mapZoom}
+              onLoad={onMapLoad}
+              // onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
+              onClick={handleMapClick}
+              options={{
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+              }}
+            >
+              {filteredNotes.map((note, index) => {
+                const isNoteHovered = hoveredNoteId === note.id;
+                return (
+                  <MarkerF
+                    key={note.id}
+                    position={{
+                      lat: parseFloat(note.latitude),
+                      lng: parseFloat(note.longitude),
+                    }}
+                    onClick={() => handleMarkerClick(note)}
+                    icon={createMarkerIcon(isNoteHovered)}
+                    zIndex={isNoteHovered ? 1 : 0}
+                    onLoad={(marker) => {
+                      setMarkers((prev) => new Map(prev).set(note.id, marker));
+                    }}
+                  />
+                );
+              })}
+            </GoogleMap>
+          )}
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={35} maxSize={71} minSize={18} className="min-w-[270px]">
+          <div>
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '0.5rem',
+                padding: '0.5rem',
+                overflowY: 'auto',
+                height: '90vh',
+                justifyContent: 'center'
+              }}>
+                {filteredNotes.map((note) => (
+                  <div
+                    ref={(el: HTMLElement | null) => {
+                      if (el) {
+                        noteRefs.current[note.id] = el;
+                      }
+                    }}
+                    // within here I need to change the hover;scale-105 to a different class
+                    className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+                      note.id === activeNote?.id
+                        ? "active-note"
+                        : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                    }`}
+                    onMouseEnter={() => setHoveredNoteId(note.id)}
+                    onMouseLeave={() => setHoveredNoteId(null)}
+                    key={note.id}
+                  >
+                    <ClickableNote note={note} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
