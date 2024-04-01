@@ -70,7 +70,11 @@ const Page = () => {
         setMapZoom(10);
         setLocationFound(true);
       } catch (error) {
-        console.error("Failed to fetch the location", error);
+        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+        setMapCenter(defaultLocation as Location);
+        setMapZoom(10);
+        setLocationFound(true);
+        console.log("Failed to fetch the location", error);
       }
     };
 
