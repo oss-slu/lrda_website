@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker, Libraries } from "@react-google-maps/api";
 import SearchBar from "../../components/search_bar";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
+const libraries: Libraries = ["places", "maps"];
 
 interface Location {
   lat: number;
@@ -54,11 +55,9 @@ const Page = () => {
     null
   );
   const mapRef = useRef<google.maps.Map>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [notePixelPosition, setNotePixelPosition] = useState({ x: 0, y: 0 });
+  const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
-  const [widthOfLeft, setWidthOfLeft] = useState();
 
   const user = User.getInstance();
 
@@ -155,7 +154,7 @@ const Page = () => {
 
       setMapCenter(newCenter);
       setMapBounds(newBounds);
-      updateFilteredNotes(newCenter, newBounds, notes);
+      // updateFilteredNotes(newCenter, newBounds, notes); // this line was causing over rendering.
     };
 
     map.addListener("dragend", updateBounds);
@@ -188,13 +187,20 @@ const Page = () => {
     const ne = bounds.getNorthEast();
     const sw = bounds.getSouthWest();
 
-    return notes.filter((note) => {
+    const returnVal = notes.filter((note) => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
       return (
         lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
       );
     });
+    console.log("Filtering Notes...")
+    setEmptyRegion(false);
+    if (returnVal.length < 1) {
+      console.log("The Region is empty")
+      setEmptyRegion(true);
+    }
+    return returnVal;
   };
 
   const updateFilteredNotes = async (
@@ -202,10 +208,8 @@ const Page = () => {
     bounds: google.maps.LatLngBounds | null,
     allNotes: Note[]
   ) => {
-    setIsLoading(true);
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
-    setIsLoading(false);
   };
 
   const fetchNotes = async () => {
@@ -236,8 +240,6 @@ const Page = () => {
     scrollToNoteTile(note.id);
 
     const map = mapRef.current;
-
-    console.log("inside handleMarkerClick funciton", map);
 
     class Popup extends google.maps.OverlayView {
       position: google.maps.LatLng;
@@ -370,7 +372,7 @@ const Page = () => {
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: mapAPIKey,
-    libraries: ["places", "maps"],
+    libraries,
     id: "google-map-script",
   });
 
@@ -404,7 +406,7 @@ const Page = () => {
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
-      duration: 2000,
+      duration: 3000,
     });
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
@@ -480,7 +482,7 @@ const Page = () => {
               {filteredNotes.map((note, index) => {
                 const isNoteHovered = hoveredNoteId === note.id;
                 return (
-                  <MarkerF
+                  <Marker
                     key={note.id}
                     position={{
                       lat: parseFloat(note.latitude),
@@ -540,6 +542,12 @@ const Page = () => {
           ) : !locationFound ? (
             <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
               <span className="self-center">Fetching Location...</span>
+            </div>
+          ) : emptyRegion ? (
+            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+              <span className="self-center">
+                There are no entries in this region.
+              </span>
             </div>
           ) : (
             <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
