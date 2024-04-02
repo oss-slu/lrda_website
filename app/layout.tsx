@@ -18,7 +18,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en">
       <head />
       <body>
-        <Navbar />
+        <Navbar /> 
         <NextAppDirEmotionCacheProvider options={{ key: "css" }}>
           {children}
         </NextAppDirEmotionCacheProvider>
