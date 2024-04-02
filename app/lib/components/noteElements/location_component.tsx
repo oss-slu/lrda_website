@@ -144,3 +144,5 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
     </div>
   );
 }
+
+export default LocationPicker;
