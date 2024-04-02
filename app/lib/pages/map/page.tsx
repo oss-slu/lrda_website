@@ -32,7 +32,7 @@ import { getItem, setItem } from "../../utils/async_storage";
 
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
-const libraries: Libraries = ["places"];
+const libraries: Libraries = ["places", "maps"];
 
 interface Location {
   lat: number;
@@ -69,9 +69,9 @@ const Page = () => {
 
   const user = User.getInstance();
 
-  const { isLoaded, loadError } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: mapAPIKey,
-    libraries,
+    libraries: ["places", "maps"],
     id: "google-map-script",
   });
 
@@ -535,7 +535,7 @@ const Page = () => {
               center={mapCenter}
               zoom={mapZoom}
               onLoad={onMapLoad}
-              onDragStart={handleMapClick} // Add this line if we want to get rid of the Popup as soon as they drag
+              onDragStart={handleMapClick}
               onClick={handleMapClick}
               options={{
                 streetViewControl: false,
