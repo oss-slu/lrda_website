@@ -255,8 +255,8 @@ const Page = () => {
 
     const updateBounds = () => {
       const newCenter: Location = {
-        lat: map.getCenter().lat(),
-        lng: map.getCenter().lng(),
+        lat: map.getCenter()?.lat() || "",
+        lng: map.getCenter()?.lng() || "",
       };
       const newBounds = map.getBounds();
 
