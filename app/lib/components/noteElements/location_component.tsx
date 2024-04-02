@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useEffect, useState, useCallback } from "react";
 import { Compass, MapPin } from "lucide-react";
 import {
@@ -6,13 +6,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@radix-ui/react-popover";
-import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
+import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/tooltip";
+import { useGoogleMaps } from '../../utils/GoogleMapsContext';
 
 interface LocationPickerProps {
   long?: string;
@@ -20,19 +21,10 @@ interface LocationPickerProps {
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
 }
 
-const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
-
-export default function LocationPicker({
-  long,
-  lat,
-  onLocationChange,
-}: LocationPickerProps) {
+const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationChange }) => {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: mapAPIKey,
-  });
+  const isLoaded = useGoogleMaps(); 
 
   const updateLongitude = (newLongitude: number) => {
     setLongitude(prevLongitude => {

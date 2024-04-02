@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import Navbar from "./lib/components/navbar";
 import { NextAppDirEmotionCacheProvider } from "tss-react/next/appDir";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleMapsProvider } from "./lib/utils/GoogleMapsContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,17 +14,22 @@ type RootLayoutProps = {
   children: ReactNode;
 };
 
-export default function RootLayout({ children }: RootLayoutProps) {
+const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
     <html lang="en">
       <head />
       <body>
+      <GoogleMapsProvider>
         <Navbar /> 
         <NextAppDirEmotionCacheProvider options={{ key: "css" }}>
           {children}
         </NextAppDirEmotionCacheProvider>
         <Toaster />
+        </GoogleMapsProvider>
       </body>
     </html>
   );
 }
+
+
+export default RootLayout;
