@@ -2,9 +2,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
-  useJsApiLoader,
-  Marker,
-  Libraries,
 } from "@react-google-maps/api";
 import SearchBar from "../../components/search_bar";
 import { Note } from "@/app/types";
@@ -29,9 +26,8 @@ import {
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
+import { useGoogleMaps } from '../../utils/GoogleMapsContext';
 
-const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
-const libraries: Libraries = ["places", "maps"];
 
 interface Location {
   lat: number;
@@ -69,11 +65,7 @@ const Page = () => {
 
   const user = User.getInstance();
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: mapAPIKey,
-    libraries: ["places", "maps"],
-    id: "google-map-script",
-  });
+  const isLoaded = useGoogleMaps();
 
   useEffect(() => {
     let isSubscribed = true;
