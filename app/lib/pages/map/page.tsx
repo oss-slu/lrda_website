@@ -76,12 +76,13 @@ const Page = () => {
   });
 
   useEffect(() => {
+    let isSubscribed = true;
     // Immediately try to fetch the last known location from storage
     const fetchLastLocation = async () => {
       try {
         const lastLocationString = await getItem("LastLocation");
         const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
-        if (lastLocation) {
+        if (isSubscribed) {
           setMapCenter(lastLocation);
           setMapZoom(10);
           setLocationFound(true);
@@ -94,31 +95,42 @@ const Page = () => {
         console.error("Failed to fetch the last location", error);
       }
     };
-  
     fetchLastLocation();
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
   
   useEffect(() => {
-    // After setting the initial location, attempt to get the current location
+    let isComponentMounted = true;
+  
     const fetchCurrentLocationAndUpdate = async () => {
       try {
         const currentLocation = await getLocation() as Location;
-        if(!locationFound){
+        if (!locationFound && isComponentMounted) {
           setMapCenter(currentLocation);
           setMapZoom(10);
         }
         await setItem("LastLocation", JSON.stringify(currentLocation));
       } catch (error) {
-        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-        setMapCenter(defaultLocation as Location);
-        setMapZoom(10);
-        setLocationFound(true);
-        console.log("Using last known location due to error:", error);
+        if (isComponentMounted) {
+          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+          setMapCenter(defaultLocation);
+          setMapZoom(10);
+          setLocationFound(true);
+          console.log("Using last known location due to error:", error);
+        }
       }
     };
   
     fetchCurrentLocationAndUpdate();
-  }, []);
+  
+    // The cleanup function to run when the component unmounts
+    return () => {
+      isComponentMounted = false;
+    };
+  }, [locationFound]); 
+  
 
   useEffect(() => {
     const map = mapRef.current;
