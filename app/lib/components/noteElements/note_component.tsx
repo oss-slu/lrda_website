@@ -190,7 +190,7 @@ export default function NoteEditor({
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
   return (
-    <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-growa">
+    <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
       <div
         key={noteState.counter}
         style={{

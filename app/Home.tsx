@@ -18,9 +18,6 @@ export default function Home() {
     setIsNewNote(isNew);
   };
 
-  const isNote = (note: Note | newNote): note is Note => {
-    return (note as Note).id !== undefined;
-  };
 
   return (
     <ResizablePanelGroup direction="horizontal">
