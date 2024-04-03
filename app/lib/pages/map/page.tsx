@@ -531,128 +531,93 @@ const Page = () => {
     }
   }
 
-  return (
-    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel
-          defaultSize={65}
-          maxSize={82}
-          minSize={29}
-          className="flex-grow min-w-[320px]"
-        >
-          {isMapsApiLoaded && (
-            <GoogleMap
-              mapContainerStyle={{ width: "100%", height: "100%" }}
-              center={mapCenter}
-              zoom={mapZoom}
-              onLoad={onMapLoad}
-              onDragStart={handleMapClick}
-              onClick={handleMapClick}
-              options={{
-                streetViewControl: false,
-                mapTypeControl: false,
-                fullscreenControl: false,
-              }}
-            >
-              <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-                <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                  <div className="min-w-[80px] mr-3">
-                    <SearchBar onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
-                  </div>
-                  {isLoggedIn ? (
-                    <div className="flex flex-row justify-evenly items-center">
-                      <GlobeIcon className="text-primary" />
-                      <Switch onClick={toggleFilter} />
-                      <UserIcon className="text-primary" />
-                    </div>
-                  ) : null}
-                </div>
-                <div
-                  className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
-                  onClick={handleSetLocation}
-                >
-                  <Navigation size={20} />
-                </div>
+return (
+  <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+    <div className="flex-grow">
+      {isMapsApiLoaded && (
+        <GoogleMap
+        mapContainerStyle={{ width: "100%", height: "100%" }}
+        center={mapCenter}
+        zoom={mapZoom}
+        onLoad={onMapLoad}
+        onDragStart={handleMapClick}
+        onClick={handleMapClick}
+        options={{
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+        }}
+      >
+        <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
+          <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+            <div className="min-w-[80px] mr-3">
+              <SearchBar onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
+            </div>
+            {isLoggedIn ? (
+              <div className="flex flex-row justify-evenly items-center">
+                <GlobeIcon className="text-primary" />
+                <Switch onClick={toggleFilter} />
+                <UserIcon className="text-primary" />
               </div>
-              {/* {filteredNotes.map((note, index) => {
-                const isNoteHovered = hoveredNoteId === note.id;
-                return (
-                  <Marker
-                    key={note.id}
-                    position={{
-                      lat: parseFloat(note.latitude),
-                      lng: parseFloat(note.longitude),
-                    }}
-                    onClick={() => handleMarkerClick(note)}
-                    icon={createMarkerIcon(isNoteHovered)}
-                    zIndex={isNoteHovered ? 1 : 0}
-                    onLoad={(marker) => {
-                      setMarkers((prev) => new Map(prev).set(note.id, marker));
-                    }}
-                  />
-                );
-              })} */}
-            </GoogleMap>
-          )}
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel
-          defaultSize={35}
-          maxSize={71}
-          minSize={18}
-          className="min-w-[270px]"
-        >
-          {filteredNotes.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "0.5rem",
-                padding: "0.5rem",
-                overflowY: "auto",
-                height: "90vh",
-                justifyContent: "center",
+            ) : null}
+          </div>
+          <div
+            className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
+            onClick={handleSetLocation}
+          >
+            <Navigation size={20} />
+          </div>
+        </div>
+        {/* {filteredNotes.map((note, index) => {
+          const isNoteHovered = hoveredNoteId === note.id;
+          return (
+            <Marker
+              key={note.id}
+              position={{
+                lat: parseFloat(note.latitude),
+                lng: parseFloat(note.longitude),
               }}
-            >
-              {filteredNotes.map((note) => (
-                <div
-                  ref={(el: HTMLElement | null) => {
-                    if (el) {
-                      noteRefs.current[note.id] = el;
-                    }
-                  }}
-                  className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                    note.id === activeNote?.id
-                      ? "active-note"
-                      : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-                  }`}
-                  onMouseEnter={() => setHoveredNoteId(note.id)}
-                  onMouseLeave={() => setHoveredNoteId(null)}
-                  key={note.id}
-                >
-                  <ClickableNote note={note} />
-                </div>
-              ))}
-            </div>
-          ) : !locationFound ? (
-            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-              <span className="self-center">Fetching Location...</span>
-            </div>
-          ) : emptyRegion ? (
-            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-              <span className="self-center">
-                There are no entries in this region.
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-              <span className="self-center">Loading...</span>
-            </div>
-          )}
-        </ResizablePanel>
-      </ResizablePanelGroup>
+              onClick={() => handleMarkerClick(note)}
+              icon={createMarkerIcon(isNoteHovered)}
+              zIndex={isNoteHovered ? 1 : 0}
+              onLoad={(marker) => {
+                setMarkers((prev) => new Map(prev).set(note.id, marker));
+              }}
+            />
+          );
+        })} */}
+      </GoogleMap>
+      )}
     </div>
-  );
-};
+    <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+      {filteredNotes.length > 0 ? (
+        filteredNotes.map((note) => (
+          <div
+            ref={(el) => {
+              if (el) noteRefs.current[note.id] = el;
+            }}
+            className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+              note.id === activeNote?.id
+                ? "active-note"
+                : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+            }`}
+            onMouseEnter={() => setHoveredNoteId(note.id)}
+            onMouseLeave={() => setHoveredNoteId(null)}
+            key={note.id}
+          >
+            <ClickableNote note={note} />
+          </div>
+        ))
+      ) : (
+        <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+          {/* Conditional rendering for various states */}
+          <span className="self-center">{!isMapsApiLoaded ? "Loading..." : "No entries found"}</span>
+        </div>
+      )}
+    </div>
+  </div>
+);
+      };
+
 
 export default Page;
