@@ -105,6 +105,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     if (lat != null && lng != null) {
       setLatitude(lat);
       setLongitude(lng);
+      onLocationChange(lng, lat);
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
