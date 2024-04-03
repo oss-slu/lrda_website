@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
 } from "@react-google-maps/api";
-import SearchBar from "../../components/search_bar_map";
+import SearchBarMap from "../../components/search_bar_map";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
@@ -551,7 +551,7 @@ return (
         <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
           <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
             <div className="min-w-[80px] mr-3">
-              <SearchBar onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
+              <SearchBarMap onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
             </div>
             {isLoggedIn ? (
               <div className="flex flex-row justify-evenly items-center">

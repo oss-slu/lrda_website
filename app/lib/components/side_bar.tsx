@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
-import SearchBar from "./search_bar_createANote";
+import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   return (
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
       <div className="w-full mb-4">
-        <SearchBar onSearch={handleSearch}/>
+        <SearchBarNote onSearch={handleSearch}/>
       </div>
       <Button data-testid="add-note-button" onClick={handleAddNote}>
         Add Note
