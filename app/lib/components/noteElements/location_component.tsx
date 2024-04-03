@@ -17,7 +17,7 @@ import {
   useGoogleMaps,
   GoogleMapsProvider,
 } from "../../utils/GoogleMapsContext";
-import SearchBar from "../search_bar";
+import SearchBarMap from "../search_bar_map";
 
 interface LocationPickerProps {
   long?: string;
@@ -130,7 +130,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         <PopoverContent className="z-30">
           <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
             <div className="absolute top-2 left-2 z-50">
-              <SearchBar onSearch={handleSearch} isLoaded={isLoaded !== null} />
+              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} />
             </div>
             {isLoaded && (
               <GoogleMap
