@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
 } from "@react-google-maps/api";
-import SearchBar from "../../components/search_bar";
+import SearchBar from "../../components/search_bar_map";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
