@@ -1,6 +1,6 @@
-"use client"
-import React, { useEffect, useState, useCallback } from "react";
-import { Compass, MapPin } from "lucide-react";
+"use client";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Compass, MapPin, SearchCheck } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -13,7 +13,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/tooltip";
-import { useGoogleMaps, GoogleMapsProvider} from '../../utils/GoogleMapsContext';
+import {
+  useGoogleMaps,
+  GoogleMapsProvider,
+} from "../../utils/GoogleMapsContext";
+import SearchBar from "../search_bar";
 
 interface LocationPickerProps {
   long?: string;
@@ -21,27 +25,40 @@ interface LocationPickerProps {
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
 }
 
-const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationChange }) => {
+const LocationPicker: React.FC<LocationPickerProps> = ({
+  long,
+  lat,
+  onLocationChange,
+}) => {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
-  const isLoaded = useGoogleMaps(); 
+  const mapRef = useRef<google.maps.Map>();
+  const isLoaded = useGoogleMaps();
+
+  useEffect(() => {
+    if (mapRef.current && latitude && longitude) {
+      const newCenter = new google.maps.LatLng(latitude, longitude);
+      mapRef.current.panTo(newCenter);
+      mapRef.current.setZoom(10); // Adjust zoom level as needed
+    }
+  }, [latitude, longitude]);
+  
 
   const updateLongitude = (newLongitude: number) => {
-    setLongitude(prevLongitude => {
+    setLongitude((prevLongitude) => {
       const updatedLongitude = newLongitude;
-      onLocationChange && onLocationChange(updatedLongitude, latitude); 
+      onLocationChange && onLocationChange(updatedLongitude, latitude);
       return updatedLongitude;
     });
   };
-  
+
   const updateLatitude = (newLatitude: number) => {
-    setLatitude(prevLatitude => {
+    setLatitude((prevLatitude) => {
       const updatedLatitude = newLatitude;
-      onLocationChange && onLocationChange(longitude, updatedLatitude); 
+      onLocationChange && onLocationChange(longitude, updatedLatitude);
       return updatedLatitude;
     });
   };
-  
 
   const handleGetCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
@@ -71,7 +88,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
   };
 
   useEffect(() => {
-    const validLong = long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
+    const validLong =
+      long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
     const validLat = lat && !isNaN(parseFloat(lat)) && parseFloat(lat) !== 0;
 
     if (validLong && validLat) {
@@ -81,8 +99,20 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
     if (lat == "0" || long == "0" || long == "" || lat == "") {
       handleGetCurrentLocation();
     }
-  }, [long, lat, handleGetCurrentLocation]); 
-  
+  }, [long, lat, handleGetCurrentLocation]);
+
+  const handleSearch = (address: string, lat?: number, lng?: number) => {
+    if (lat != null && lng != null) {
+      setLatitude(lat);
+      setLongitude(lng);
+      onLocationChange(lng, lat);
+      const newCenter = { lat, lng };
+      mapRef.current?.panTo(newCenter);
+      mapRef.current?.setZoom(10);
+      console.log("lat: ",lat," lng: ",lng);
+    }
+  };
+
   return (
     <div className="flex flex-row items-center p-2 h-9">
       <Popover>
@@ -99,8 +129,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
         </PopoverTrigger>
         <PopoverContent className="z-30">
           <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
+            <div className="absolute top-2 left-2 z-50">
+              <SearchBar onSearch={handleSearch} isLoaded={isLoaded !== null} />
+            </div>
             {isLoaded && (
-              <GoogleMapsProvider>
               <GoogleMap
                 mapContainerStyle={{
                   width: "100%",
@@ -121,7 +153,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
                   onDragEnd={onMarkerDragEnd}
                 />
               </GoogleMap>
-              </GoogleMapsProvider>
             )}
           </div>
         </PopoverContent>
@@ -129,7 +160,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
       <TooltipProvider delayDuration={100}>
         <Tooltip>
           <TooltipTrigger asChild>
-            
             <button
               onClick={handleGetCurrentLocation}
               aria-label="compass"
@@ -145,6 +175,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
       </TooltipProvider>
     </div>
   );
-}
+};
 
 export default LocationPicker;
