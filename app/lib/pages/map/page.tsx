@@ -267,37 +267,46 @@ const Page = () => {
         let currentlyHighlightedNoteId: null = null; // To keep track of the currently animated marker
   
         tour.onbeforechange(function(this: any) {
-          // This checks if the current step is the one intended to focus on the map marker.
-          if (this._currentStep === 1) { // Adjust the step index as needed
+          // Separate logic for highlighting the search bar and focusing on the map pin
+          const stepIndex = this._currentStep;
+
+          // Logic for the step that focuses on the search bar
+          if (stepIndex === 1) {
+            // The highlighting is managed by IntroJs through the 'element' property
+            // Add any specific logic here if needed for the search bar
+          }
+
+          // Logic for the step that focuses on the map pin
+          else if (stepIndex === 2) { // Adjust based on your actual setup
             if (mapBounds) {
-              // Retrieve a random note within the current map bounds
               const randomNote = getRandomNoteInBounds(notes, mapBounds);
-              
+
               if (randomNote && markers.has(randomNote.id)) {
                 const marker = markers.get(randomNote.id);
-        
-                // Start the bounce animation for the marker associated with the random note
+
+                // Start the bounce animation for the marker
                 marker.setAnimation(google.maps.Animation.BOUNCE);
-        
-                // Adjust the map center and possibly zoom level to ensure the marker is in view
-                // Comment out or adjust the zoom functionality as per your requirements
+
+                // Adjust map center and zoom to ensure the marker is visible
                 setMapCenter({ lat: parseFloat(randomNote.latitude), lng: parseFloat(randomNote.longitude) });
-                setMapZoom(12); 
-        
-                // Dynamically update the tour text to guide users' attention to the bouncing marker
-                this._introItems[this._currentStep].intro = `Notice the bouncing pin on the map. This represents the note titled "${randomNote.title}".`;
-        
+                setMapZoom(12); // Adjust zoom level as needed
+
+                // Update the tour text for this step
+                this._introItems[stepIndex].intro = `Notice the bouncing pin on the map. This represents the note titled "${randomNote.title}".`;
+
                 // Track the ID of the currently highlighted note to manage the animation
                 currentlyHighlightedNoteId = randomNote.id;
               }
             }
-          } else if (currentlyHighlightedNoteId) {
-            // This branch ensures the marker stops bouncing when the user moves to the next step
-            const marker = markers.get(currentlyHighlightedNoteId);
-            if (marker) {
-              marker.setAnimation(null); // Stop the bounce animation
+          } else {
+            // Ensure the marker stops bouncing when moving away from the map pin step
+            if (currentlyHighlightedNoteId) {
+              const marker = markers.get(currentlyHighlightedNoteId);
+              if (marker) {
+                marker.setAnimation(null); // Stop the bounce animation
+              }
+              currentlyHighlightedNoteId = null; // Reset the tracker
             }
-            currentlyHighlightedNoteId = null; // Reset the tracker
           }
         });
   
@@ -308,11 +317,16 @@ const Page = () => {
             if (marker) {
               marker.setAnimation(null);
             }
+            currentlyHighlightedNoteId = null;
           }
         });
   
         tour.setOptions({
           steps: [
+            {
+              // This is your welcome step
+              intro: "Welcome to Where's Religion Desktop! Let's take a tour.",
+            },
             {
               element: '#noteSearchInput',
               intro: 'Use this search bar to quickly find notes by keywords.'
@@ -346,6 +360,10 @@ const Page = () => {
               intro: 'Click here to create a new note. It’s a quick way to start jotting down your thoughts or ideas.',
               position: 'bottom', // Adjust the position based on your layout
             },
+            {
+              // Since this is a floating message, no element is targeted.
+              intro: 'You have completed the tour! Feel free to explore on your own. If you need to revisit the tour, you can start it again anytime.',
+            }
             // Add more steps as needed
           ]
         });
