@@ -15,6 +15,7 @@ import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { GlobeIcon, UserIcon } from "lucide-react";
 
+
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
 
 interface Location {
@@ -256,6 +257,8 @@ const Page = () => {
     setMapZoom(10); // Adjust zoom level as needed
   };
 
+  
+
   const startTour = () => {
     setTimeout(() => {
       if (window.introJs) {
@@ -334,10 +337,10 @@ const Page = () => {
               position: 'right'
             },
             {
-              element: '#notes-list',
-              intro: 'Here are your notes. Click on one to see more details or to edit.',
-              position: 'left'
-            }
+              element: '#highlightedNote', // This targets the first note in your list
+              intro: 'Here is a clickable note. You can interact with it to see more details.',
+              position: 'right'
+            },
             // Add more steps as needed
           ]
         });
@@ -425,25 +428,22 @@ const Page = () => {
         {isLoading ? (
           <div>Loading...</div>
         ) : (
-          filteredNotes.map((note) => (
-            <div ref={(el: HTMLElement | null) => {
-              if (el) {
-                noteRefs.current[note.id] = el;
-              }
-            }}
-              // within here I need to change the hover;scale-105 to a different class
-              className={`transition-transform duration-300 ease-in-out cursor-pointer ${
-                note.id === activeNote?.id
-                  ? "active-note"
-                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-              }`}
-              onMouseEnter={() => setHoveredNoteId(note.id)}
-              onMouseLeave={() => setHoveredNoteId(null)}
-              key={note.id}
-            >
-              <ClickableNote note={note} />
-            </div>
-          ))
+        filteredNotes.map((note, index) => (
+  <div 
+    ref={(el: HTMLElement | null) => {
+      if (el) noteRefs.current[note.id] = el;
+    }}
+    className={`transition-transform duration-300 ease-in-out cursor-pointer ${
+      note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+    }`}
+    onMouseEnter={() => setHoveredNoteId(note.id)}
+    onMouseLeave={() => setHoveredNoteId(null)}
+    key={note.id}
+    id={index === 0 ? "highlightedNote" : undefined} // Assign an id to the first note
+  >
+    <ClickableNote note={note} />
+  </div>
+))
         )}
       </div>
     </div>
