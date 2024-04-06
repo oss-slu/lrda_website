@@ -233,34 +233,118 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
+  const getRandomNoteInBounds = (notes: any[], mapBounds: { contains: (arg0: google.maps.LatLng) => any; }) => {
+    // Assuming mapBounds is a google.maps.LatLngBounds object
+    if (!mapBounds) return null;
+  
+    const notesInBounds = notes.filter((note: { latitude: string; longitude: string; }) => {
+      const lat = parseFloat(note.latitude);
+      const lng = parseFloat(note.longitude);
+      return mapBounds.contains(new google.maps.LatLng(lat, lng));
+    });
+  
+    if (notesInBounds.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * notesInBounds.length);
+    return notesInBounds[randomIndex];
+  };
+  
+  const focusOnNote = (note: { latitude: string; longitude: string; }, setMapCenter: (arg0: { lat: number; lng: number; }) => void, setMapZoom: (arg0: number) => void) => {
+    if (!note) return;
+  
+    const newCenter = { lat: parseFloat(note.latitude), lng: parseFloat(note.longitude) };
+    setMapCenter(newCenter);
+    setMapZoom(10); // Adjust zoom level as needed
+  };
+
   const startTour = () => {
-    if (window.introJs) {
-      window.introJs().setOptions({
-        steps: [
-          {
-            element: '#noteSearchInput',
-            intro: 'Use this search bar to quickly find notes by keywords.',
-            
-          },
-          {
-            element: '#map',
-            intro: 'This is the map where your notes are displayed. You can drag and zoom to explore.',
-            position: 'left',
-          },
-          {
-            element: '#note-switch',
-            intro: 'Toggle between viewing personal and global notes here.',
-            position: 'right',
-          },
-          {
-            element: '#notes-list',
-            intro: 'Here are your notes. Click on one to see more details or to edit.',
-            position: 'left',
-          },
-          // Add more steps as needed
-        ]
-      }).start();
-    }
+    setTimeout(() => {
+      if (window.introJs) {
+        const tour = window.introJs();
+        
+        let currentlyHighlightedNoteId: null = null; // To keep track of the currently animated marker
+  
+        tour.onbeforechange(function(this: any) {
+          // This checks if the current step is the one intended to focus on the map marker.
+          if (this._currentStep === 1) { // Adjust the step index as needed
+            if (mapBounds) {
+              // Retrieve a random note within the current map bounds
+              const randomNote = getRandomNoteInBounds(notes, mapBounds);
+              
+              if (randomNote && markers.has(randomNote.id)) {
+                const marker = markers.get(randomNote.id);
+        
+                // Start the bounce animation for the marker associated with the random note
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+        
+                // Adjust the map center and possibly zoom level to ensure the marker is in view
+                // Comment out or adjust the zoom functionality as per your requirements
+                setMapCenter({ lat: parseFloat(randomNote.latitude), lng: parseFloat(randomNote.longitude) });
+                // setMapZoom(15); // Optional: Adjust or remove depending on whether zooming is desired
+        
+                // Dynamically update the tour text to guide users' attention to the bouncing marker
+                this._introItems[this._currentStep].intro = `Notice the bouncing pin on the map. This represents the note titled "${randomNote.title}".`;
+        
+                // Track the ID of the currently highlighted note to manage the animation
+                currentlyHighlightedNoteId = randomNote.id;
+              }
+            }
+          } else if (currentlyHighlightedNoteId) {
+            // This branch ensures the marker stops bouncing when the user moves to the next step
+            const marker = markers.get(currentlyHighlightedNoteId);
+            if (marker) {
+              marker.setAnimation(null); // Stop the bounce animation
+            }
+            currentlyHighlightedNoteId = null; // Reset the tracker
+          }
+        });
+  
+        tour.onexit(() => {
+          // Ensure animation is stopped if the tour is exited prematurely
+          if (currentlyHighlightedNoteId) {
+            const marker = markers.get(currentlyHighlightedNoteId);
+            if (marker) {
+              marker.setAnimation(null);
+            }
+          }
+        });
+  
+        tour.setOptions({
+          steps: [
+            {
+              element: '#noteSearchInput',
+              intro: 'Use this search bar to quickly find notes by keywords.'
+            },
+            {
+              // This step will be dynamically focused on a random note
+              intro: "We'll now focus on a random note on the map.",
+            },
+            {
+              element: '#noteVisibilityToggle',
+              intro: 'Here you can switch between viewing all notes and your personal notes.',
+              position: 'right'
+            },
+            {
+              element: '#globeIcon',
+              intro: 'Switching to this will render all user notes in the vicinity.',
+              position: 'right'
+            },
+            {
+              element: '#userIcon',
+              intro: 'Switching to this will display only your personal notes.',
+              position: 'right'
+            },
+            {
+              element: '#notes-list',
+              intro: 'Here are your notes. Click on one to see more details or to edit.',
+              position: 'left'
+            }
+            // Add more steps as needed
+          ]
+        });
+  
+        tour.start();
+      }
+    }, 2000); // Delay of 2000 milliseconds (2 seconds)
   };
 
   return (
@@ -273,11 +357,11 @@ const Page = () => {
         Start Tour
         </button>
         {isLoggedIn ? (
-          <div className="flex flex-row justify-evenly items-center">
-            <GlobeIcon className="text-primary" />
-            <Switch onClick={toggleFilter} />
-            <UserIcon className="text-primary" />
-          </div>
+        <div id="noteVisibilityToggle" className="flex flex-row justify-evenly items-center">
+        <GlobeIcon id="globeIcon" className="text-primary" />
+        <Switch onClick={toggleFilter} />
+        <UserIcon id="userIcon" className="text-primary" />
+      </div>
         ) : null}
       </div>
       <div className="flex-grow">
