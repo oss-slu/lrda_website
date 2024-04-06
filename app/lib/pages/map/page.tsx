@@ -254,7 +254,7 @@ const Page = () => {
   
     const newCenter = { lat: parseFloat(note.latitude), lng: parseFloat(note.longitude) };
     setMapCenter(newCenter);
-    setMapZoom(10); // Adjust zoom level as needed
+    setMapZoom(6); // Adjust zoom level as needed
   };
 
   
@@ -282,7 +282,7 @@ const Page = () => {
                 // Adjust the map center and possibly zoom level to ensure the marker is in view
                 // Comment out or adjust the zoom functionality as per your requirements
                 setMapCenter({ lat: parseFloat(randomNote.latitude), lng: parseFloat(randomNote.longitude) });
-                // setMapZoom(15); // Optional: Adjust or remove depending on whether zooming is desired
+                setMapZoom(12); 
         
                 // Dynamically update the tour text to guide users' attention to the bouncing marker
                 this._introItems[this._currentStep].intro = `Notice the bouncing pin on the map. This represents the note titled "${randomNote.title}".`;
@@ -340,6 +340,11 @@ const Page = () => {
               element: '#highlightedNote', // This targets the first note in your list
               intro: 'Here is a clickable note. You can interact with it to see more details.',
               position: 'right'
+            },
+            {
+              element: '#createNoteButton',
+              intro: 'Click here to create a new note. It’s a quick way to start jotting down your thoughts or ideas.',
+              position: 'bottom', // Adjust the position based on your layout
             },
             // Add more steps as needed
           ]
