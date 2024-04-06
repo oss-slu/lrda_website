@@ -12,7 +12,6 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
-import mapPin from "public/3d-map-pin.jpeg";
 import { Switch } from "@/components/ui/switch";
 import { GlobeIcon, UserIcon } from "lucide-react";
 
@@ -27,8 +26,41 @@ interface Refs {
   [key: string]: HTMLElement | undefined;
 }
 
+const useExternalScript = (scriptUrl:string) => {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [scriptUrl]);
+};
+
+const useExternalCSS = (cssUrl:string) => {
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = cssUrl;
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [cssUrl]);
+};
+
 
 const Page = () => {
+  // Load the Intro.js script
+  useExternalScript('https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js');
+
+  // Load the Intro.js CSS
+  useExternalCSS('https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css');
+  
   const defaultLocation = { lat: 38.637334, lng: -90.286021 };
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
@@ -201,12 +233,45 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
+  const startTour = () => {
+    if (window.introJs) {
+      window.introJs().setOptions({
+        steps: [
+          {
+            element: '#noteSearchInput',
+            intro: 'Use this search bar to quickly find notes by keywords.',
+            
+          },
+          {
+            element: '#map',
+            intro: 'This is the map where your notes are displayed. You can drag and zoom to explore.',
+            position: 'left',
+          },
+          {
+            element: '#note-switch',
+            intro: 'Toggle between viewing personal and global notes here.',
+            position: 'right',
+          },
+          {
+            element: '#notes-list',
+            intro: 'Here are your notes. Click on one to see more details or to edit.',
+            position: 'left',
+          },
+          // Add more steps as needed
+        ]
+      }).start();
+    }
+  };
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex flex-row absolute top-30 w-[30vw] left-0 z-10 m-5 align-center items-center">
         <div className="min-w-[80px] mr-3">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar id="noteSearchInput" onSearch={handleSearch} />
         </div>
+        <button onClick={startTour} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Start Tour
+        </button>
         {isLoggedIn ? (
           <div className="flex flex-row justify-evenly items-center">
             <GlobeIcon className="text-primary" />

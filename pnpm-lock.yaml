@@ -364,6 +364,9 @@ devDependencies:
   '@types/draft-js':
     specifier: ^0.11.13
     version: 0.11.16
+  '@types/intro.js':
+    specifier: ^5.1.5
+    version: 5.1.5
   '@types/react-slick':
     specifier: ^0.23.13
     version: 0.23.13
@@ -4146,6 +4149,10 @@ packages:
     dependencies:
       '@types/node': 20.6.2
     dev: false
+
+  /@types/intro.js@5.1.5:
+    resolution: {integrity: sha512-TT1d8ayz07svlBcoqh26sNpQaU6bBpdFcCC+IMZHp46NNX2mYAHAVefM3wCmQSd4UWhhObeMjFByw2IaPKOXlw==}
+    dev: true
 
   /@types/istanbul-lib-coverage@2.0.6:
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
