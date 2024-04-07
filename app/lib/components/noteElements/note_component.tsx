@@ -240,7 +240,15 @@ export default function NoteEditor({
           element: '#audioButton',
           intro: "Use this button to add audio recordings to your note. It's great for voice memos, music, or any audio notes.",
         },
-        // Add more steps as needed
+        {
+          element: '#tagManager',
+          intro: "Here you can add or remove tags from your note. Tags help organize and categorize your notes for easier retrieval.",
+        },
+        {
+          element: '#richTextEditor',
+          intro: "This is where you'll spend most of your time. You can write, format, and edit the content of your note here, including adding images, links, and other multimedia.",
+        },
+        // Conclusion or further instructions...
       ],
     });
   
@@ -371,7 +379,7 @@ export default function NoteEditor({
           </button>
         </div>
       </div>
-      <div className="p-2 rounded mx-4 flex items-center overflow-auto">
+      <div className="p-2 rounded mx-4 flex items-center overflow-auto" id="tagManager">
         <TagManager
           inputTags={noteState.tags}
           onTagsChange={(newTags) =>
@@ -410,7 +418,7 @@ export default function NoteEditor({
           </div>
         </div>
       )}
-      <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat">
+      <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat" id="richTextEditor">
         <main className="flex-grow w-full p-6 flex flex-col">
           <div className="overflow-auto bg-white w-full -ml-2">
             <RichTextEditor
