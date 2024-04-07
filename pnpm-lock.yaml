@@ -263,6 +263,9 @@ dependencies:
   identity-obj-proxy:
     specifier: ^3.0.0
     version: 3.0.0
+  intro.js:
+    specifier: ^7.2.0
+    version: 7.2.0
   jest:
     specifier: ^29.7.0
     version: 29.7.0(@types/node@20.6.2)
@@ -6246,6 +6249,10 @@ packages:
       get-intrinsic: 1.2.2
       hasown: 2.0.0
       side-channel: 1.0.4
+
+  /intro.js@7.2.0:
+    resolution: {integrity: sha512-qbMfaB70rOXVBceIWNYnYTpVTiZsvQh/MIkfdQbpA9di9VBfj1GigUPfcCv3aOfsbrtPcri8vTLTA4FcEDcHSQ==}
+    dev: false
 
   /invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}

@@ -46,6 +46,8 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { init } from "next/dist/compiled/webpack/webpack";
+import introJs from 'intro.js'
+import 'intro.js/introjs.css';
 
 const user = User.getInstance();
 
@@ -187,6 +189,66 @@ export default function NoteEditor({
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
+  const startTour = () => {
+    const tour = introJs();
+    tour.setOptions({
+      steps: [
+        {
+          intro: "Welcome to your note editor! Let's take a quick tour.",
+        },
+        {
+          element:'#tourStepSearchBar',
+          intro: "Use this search bar to quickly find your notes.",
+        },
+        {
+          element: '#addNoteButton',
+          intro: "This is the add note button. Press this button when you wish to start creating a new note or to refresh the note editor.",
+        },
+        {
+          element: '#noteToolbar',
+          intro: "This is the toolbar for your note component. Let's walk through each part:",
+        },
+        {
+          element: '#noteTitleInput',
+          intro: "Here is where you will enter the title for your note.",
+        },
+        {
+          element: '#publishToggle',
+          intro: "This toggle controls whether your note is public or private. Switch it to publish your note or keep it private.",
+        },
+        {
+          element: '#saveButton',
+          intro: "Click here to save your note. Make sure to save your progress as you work.",
+        },
+        {
+          element: '#deleteButton',
+          intro: "This button deletes your current note. Be careful, as this action cannot be undone.",
+        },
+        {
+          element: '#timePicker',
+          intro: "Here's where you set the time for your note. You can use this to remember or organize your notes based on when they were or will be relevant.",
+        },
+        {
+          element: '#locationPicker',
+          intro: "Use the Location Picker to add or edit the geographical location for your note. This can help you remember where your notes were taken or are relevant to.",
+        },
+        {
+          element: '#videoComponent',
+          intro: "Add videos to your note here. This can enhance your notes with visual aids or important video references.",
+        },
+        {
+          element: '#audioButton',
+          intro: "Use this button to add audio recordings to your note. It's great for voice memos, music, or any audio notes.",
+        },
+        // Add more steps as needed
+      ],
+    });
+  
+    tour.start();
+  };
+
+  
+
   return (
     <div
       className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat flex-grow"
@@ -198,6 +260,7 @@ export default function NoteEditor({
     >
       <div className="w-full flex flex-row items-center">
         <div
+        id="noteToolbar"
           className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
           style={{ maxWidth: "1700px" }}
         >
@@ -206,6 +269,7 @@ export default function NoteEditor({
             style={{ maxWidth: "330px" }}
           >
             <Input
+            id="noteTitleInput" // Unique identifier for the input
               value={noteState.title}
               onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
               placeholder="Title"
@@ -220,15 +284,17 @@ export default function NoteEditor({
             />
           </div>
           <div className="w-2 h-9 bg-border" />
-
+          <div id="publishToggle">    
           <PublishToggle
             isPublished={noteState.isPublished}
             onPublishChange={(bool) =>
               handlePublishChange(noteHandlers.setIsPublished, bool)
             }
           />
+          </div>
           <div className="w-2 h-9 bg-border" />
           <button
+          id="saveButton" // Unique identifier
             className="hover:text-green-500 flex justify-center items-center w-full"
             onClick={onSave}
           >
@@ -238,7 +304,7 @@ export default function NoteEditor({
           <div className="w-2 h-9 bg-border" />
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="hover:text-red-500 flex justify-center items-center w-full">
+              <button className="hover:text-red-500 flex justify-center items-center w-full" id="deleteButton">
                 <FileX2 className="text-current" />
                 <div className="ml-2">Delete</div>
               </button>
@@ -264,7 +330,7 @@ export default function NoteEditor({
             </AlertDialogContent>
           </AlertDialog>
           <div className="w-2 h-9 bg-border" />
-          <div className="flex-grow">
+          <div className="flex-grow" id="timePicker">
             <TimePicker
               initialDate={noteState.time || new Date()}
               onTimeChange={(newDate) =>
@@ -273,7 +339,7 @@ export default function NoteEditor({
             />
           </div>
           <div className="w-2 h-9 bg-border" />
-          <div className="bg-white p-2 rounded">
+          <div className= "bg-white p-2 rounded" id="locationPicker">
             <LocationPicker
               long={noteState.longitude}
               lat={noteState.latitude}
@@ -288,7 +354,7 @@ export default function NoteEditor({
             />
           </div>
           <div className="w-2 h-9 bg-border" />
-          <div className="bg-white p-2 rounded">
+          <div className="bg-white p-2 rounded" id="videoComponent">
             <VideoComponent
               videoArray={noteState.videos || []}
               setVideo={noteHandlers.setVideos}
@@ -296,6 +362,7 @@ export default function NoteEditor({
           </div>
           <div className="w-2 h-9 bg-border" />
           <button
+          id="audioButton"
             className="hover:text-orange-500 flex justify-center items-center w-full"
             onClick={() => setIsAudioModalOpen(true)}
           >
@@ -311,6 +378,14 @@ export default function NoteEditor({
             handleTagsChange(noteHandlers.setTags, newTags)
           }
         />
+
+         {/* Start Tour Button */}
+  <button
+    className="hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center ml-4"
+    onClick={startTour}
+  >
+    <span>Start Tour</span>
+  </button>
       </div>
 
       {isAudioModalOpen && (
