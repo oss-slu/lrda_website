@@ -259,6 +259,17 @@ const Page = () => {
     setMapZoom(6); // Adjust zoom level as needed
   };
 
+  useEffect(() => {
+    const checkAndStartTour = async () => {
+      const hasCompletedTour = await user.hasCompletedTour();
+      if (!hasCompletedTour) {
+        startTour();
+      }
+    };
+  
+    checkAndStartTour();
+  }, []); // Empty dependency array ensures this runs once on component mount
+
   
 
   const startTour = () => {
@@ -368,6 +379,17 @@ const Page = () => {
             }
             // Add more steps as needed
           ]
+        });
+
+        tour.oncomplete(() => {
+          user.setTourCompleted(); // Mark the tour as completed
+          console.log("Tour completed successfully");
+        });
+      
+        tour.onexit(() => {
+          // Existing code to handle exit logic
+          user.setTourCompleted(); // Also mark the tour as completed when exited early
+          console.log("Tour exited before completion");
         });
   
         tour.start();
