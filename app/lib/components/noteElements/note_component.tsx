@@ -265,7 +265,7 @@ export default function NoteEditor({
           intro: "This is your main writing and editing area. Style your text, add images, and more.",
         },
         {
-          element: '#startTourButton',
+          
           intro: "Tour complete. Restart any time by clicking 'Start Tour'.",
         }
         // Conclusion or further instructions...

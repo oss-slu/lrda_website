@@ -14,6 +14,8 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { GlobeIcon, UserIcon } from "lucide-react";
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 
 
 const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
@@ -324,6 +326,7 @@ const Page = () => {
         tour.setOptions({
           steps: [
             {
+              // This is your welcome step
               intro: "Welcome to Where's Religion Desktop! Ready for a quick tour?",
             },
             {
@@ -331,7 +334,8 @@ const Page = () => {
               intro: 'Quickly find notes using keywords here.',
             },
             {
-              intro: "Next, let's highlight a random note on the map.",
+              // This step will be dynamically focused on a random note
+              intro: "We'll now focus on a random note on the map.",
             },
             {
               element: '#noteVisibilityToggle',
@@ -349,17 +353,18 @@ const Page = () => {
               position: 'right'
             },
             {
-              element: '#highlightedNote',
+              element: '#highlightedNote', // This targets the first note in your list
               intro: 'Explore details by clicking on any note.',
               position: 'right'
             },
             {
               element: '#createNoteButton',
               intro: 'Start a new note quickly by clicking here.',
-              position: 'bottom',
+              position: 'bottom', // Adjust the position based on your layout
             },
             {
-              intro: 'Tour complete! Feel free to explore further or restart the tour anytime.',
+              // Since this is a floating message, no element is targeted.
+              intro: 'Tour complete! Feel free to explore further or restart the tour anytime but clicker the start tour button.',
             }
             // Add more steps as needed
           ]
@@ -367,7 +372,7 @@ const Page = () => {
   
         tour.start();
       }
-    }, 2000); // Delay of 2000 milliseconds (2 seconds)
+    }, 3000); // Delay of 3000 milliseconds (3 seconds)
   };
 
   return (
