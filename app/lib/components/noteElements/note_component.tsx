@@ -67,6 +67,18 @@ export default function NoteEditor({
     placeholder: "Add your own content here...",
   });
 
+  // Add the useEffect hook here to check and start the tour
+  useEffect(() => {
+    const checkAndStartTour = async () => {
+      const userHasCompletedTour = await user.hasCompletedTour();
+      if (!userHasCompletedTour) {
+        startTour();
+      }
+    };
+
+    checkAndStartTour();
+  }, []); // Empty dependency array ensures this runs once on component mount
+
   useEffect(() => {
     const editor = rteRef.current?.editor;
     if (noteState.videos.length > 0 && editor) {
@@ -187,6 +199,10 @@ export default function NoteEditor({
     });
   };
 
+
+
+  
+
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
   const startTour = () => {
@@ -251,6 +267,9 @@ export default function NoteEditor({
         // Conclusion or further instructions...
       ],
     });
+
+      tour.oncomplete(() => user.setTourCompleted());
+      tour.onexit(() => user.setTourCompleted());
   
     tour.start();
   };
