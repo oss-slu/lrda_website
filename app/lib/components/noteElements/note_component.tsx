@@ -210,60 +210,64 @@ export default function NoteEditor({
     tour.setOptions({
       steps: [
         {
-          intro: "Welcome to your note editor! Let's take a quick tour.",
+          intro: "Welcome! Let's quickly explore the note editor.",
         },
         {
-          element:'#tourStepSearchBar',
-          intro: "Use this search bar to quickly find your notes.",
+          element: '#tourStepSearchBar',
+          intro: "Find notes fast using this search bar.",
         },
         {
           element: '#addNoteButton',
-          intro: "This is the add note button. Press this button when you wish to start creating a new note or to refresh the note editor.",
+          intro: "Click here to add a new note or refresh the editor.",
         },
         {
           element: '#noteToolbar',
-          intro: "This is the toolbar for your note component. Let's walk through each part:",
+          intro: "This toolbar has all your note tools. Let's check them out.",
         },
         {
           element: '#noteTitleInput',
-          intro: "Here is where you will enter the title for your note.",
+          intro: "Enter your note's title here.",
         },
         {
           element: '#publishToggle',
-          intro: "This toggle controls whether your note is public or private. Switch it to publish your note or keep it private.",
+          intro: "Switch this to make your note public or keep it private.",
         },
         {
           element: '#saveButton',
-          intro: "Click here to save your note. Make sure to save your progress as you work.",
+          intro: "Save your note regularly here.",
         },
         {
           element: '#deleteButton',
-          intro: "This button deletes your current note. Be careful, as this action cannot be undone.",
+          intro: "Delete your note with caution—there's no undo.",
         },
         {
           element: '#timePicker',
-          intro: "Here's where you set the time for your note. You can use this to remember or organize your notes based on when they were or will be relevant.",
+          intro: "Set your note's time for scheduling or organization.",
         },
         {
           element: '#locationPicker',
-          intro: "Use the Location Picker to add or edit the geographical location for your note. This can help you remember where your notes were taken or are relevant to.",
+          intro: "Pin a location to your note here.",
         },
         {
           element: '#videoComponent',
-          intro: "Add videos to your note here. This can enhance your notes with visual aids or important video references.",
+          intro: "Enhance notes with videos here.",
         },
         {
           element: '#audioButton',
-          intro: "Use this button to add audio recordings to your note. It's great for voice memos, music, or any audio notes.",
+          intro: "Add audio recordings to your note here.",
         },
         {
           element: '#tagManager',
-          intro: "Here you can add or remove tags from your note. Tags help organize and categorize your notes for easier retrieval.",
+          intro: "Organize your notes using tags here.",
         },
         {
           element: '#richTextEditor',
-          intro: "This is where you'll spend most of your time. You can write, format, and edit the content of your note here, including adding images, links, and other multimedia.",
+          intro: "This is your main writing and editing area. Style your text, add images, and more.",
         },
+        {
+          element: '#startTourButton',
+          intro: "Tour complete. Restart any time by clicking 'Start Tour'.",
+        }
         // Conclusion or further instructions...
       ],
     });
@@ -408,6 +412,7 @@ export default function NoteEditor({
 
          {/* Start Tour Button */}
   <button
+  id = "startTourButton"
     className="hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center ml-4"
     onClick={startTour}
   >

@@ -324,45 +324,42 @@ const Page = () => {
         tour.setOptions({
           steps: [
             {
-              // This is your welcome step
-              intro: "Welcome to Where's Religion Desktop! Let's take a tour.",
+              intro: "Welcome to Where's Religion Desktop! Ready for a quick tour?",
             },
             {
               element: '#noteSearchInput',
-              intro: 'Use this search bar to quickly find notes by keywords.'
+              intro: 'Quickly find notes using keywords here.',
             },
             {
-              // This step will be dynamically focused on a random note
-              intro: "We'll now focus on a random note on the map.",
+              intro: "Next, let's highlight a random note on the map.",
             },
             {
               element: '#noteVisibilityToggle',
-              intro: 'Here you can switch between viewing all notes and your personal notes.',
+              intro: 'Toggle to view all notes or just yours.',
               position: 'right'
             },
             {
               element: '#globeIcon',
-              intro: 'Switching to this will render all user notes in the vicinity.',
+              intro: 'View notes nearby by clicking this.',
               position: 'right'
             },
             {
               element: '#userIcon',
-              intro: 'Switching to this will display only your personal notes.',
+              intro: 'Click here to see only your notes.',
               position: 'right'
             },
             {
-              element: '#highlightedNote', // This targets the first note in your list
-              intro: 'Here is a clickable note. You can interact with it to see more details.',
+              element: '#highlightedNote',
+              intro: 'Explore details by clicking on any note.',
               position: 'right'
             },
             {
               element: '#createNoteButton',
-              intro: 'Click here to create a new note. It’s a quick way to start jotting down your thoughts or ideas.',
-              position: 'bottom', // Adjust the position based on your layout
+              intro: 'Start a new note quickly by clicking here.',
+              position: 'bottom',
             },
             {
-              // Since this is a floating message, no element is targeted.
-              intro: 'You have completed the tour! Feel free to explore on your own. If you need to revisit the tour, you can start it again anytime.',
+              intro: 'Tour complete! Feel free to explore further or restart the tour anytime.',
             }
             // Add more steps as needed
           ]
