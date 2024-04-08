@@ -404,3 +404,72 @@
   background-color: #e2e2e2; 
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
+/*Always set the map height explicitly to define the size of the div element that contains the map.  */
+
+#map {
+  height: 100%;
+}
+
+
+/* Optional: Makes the sample page fill the window.  */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* The popup bubble styling. */
+.popup-bubble {
+  /* Position the bubble centered above its parent. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -102%);
+  background-color: none;
+  padding: 0;
+  border-radius: 5px;
+  font-family: sans-serif;
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+/* The parent of the bubble. A zero-height div at the top of the tip. */
+.popup-bubble-anchor {
+  /* Position the div a fixed distance above the tip. */
+  position: absolute;
+  width: 100%;
+  bottom: 8px;
+  left: 0;
+}
+
+.popup-bubble-anchor::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  transform: translate(-50%, 0);
+  width: 0;
+  height: 0;
+}
+
+.popup-container {
+  cursor: auto;
+  height: 0;
+  position: absolute;
+  width: auto;
+}
+
+/* Add this to your global stylesheet */
+.scroll-shadow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px; /* Adjust width as needed */
+  background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 100%);
+  pointer-events: none; /* This ensures the shadow doesn't interfere with clicking or scrolling */
+}

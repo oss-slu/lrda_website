@@ -23,7 +23,7 @@ const WelcomePage: React.FC = () => {
   // the px-3 in the h1 is what makes it 3D
   return (
     <div
-      className="flex flex-col justify-center items-center h-screen bg-black overflow-visible"
+      className="flex flex-col justify-center items-center h-[90vh] bg-black overflow-visible"
       onMouseMove={handleMouseMove}
       style={{ cursor: "url(/pin.png), auto" }}
     >

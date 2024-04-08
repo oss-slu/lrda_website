@@ -46,8 +46,12 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { init } from "next/dist/compiled/webpack/webpack";
+<<<<<<< HEAD
 import introJs from 'intro.js'
 import 'intro.js/introjs.css';
+=======
+import { ScrollArea } from "@/components/ui/scroll-area";
+>>>>>>> 8fa926c1625bd322f6984bdb24258cd7b808087b
 
 const user = User.getInstance();
 
@@ -167,13 +171,14 @@ export default function NoteEditor({
           description: "Your new note has been successfully created.",
           duration: 2000,
         });
+        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       } else {
         await ApiService.overwriteNote(updatedNote);
         toast("Note Saved", {
           description: "Your note has been successfully saved.",
           duration: 2000,
         });
-        console.log("SAVED NOTE HERE: ", updatedNote);
+        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -281,6 +286,7 @@ export default function NoteEditor({
   
 
   return (
+<<<<<<< HEAD
     <div
       className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat flex-grow"
       key={noteState.counter}
@@ -312,8 +318,111 @@ export default function NoteEditor({
                 width: "100%",
                 minWidth: "150px",
               }}
+=======
+    <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
+      <div
+        key={noteState.counter}
+        style={{
+          backgroundImage: `url('/note_background.jpg')`,
+          height: "full",
+        }}
+      >
+        <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
+          <Input
+            value={noteState.title}
+            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+            placeholder="Title"
+            className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
+          />
+          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+            <PublishToggle
+              isPublished={noteState.isPublished}
+              onPublishChange={(bool) =>
+                handlePublishChange(noteHandlers.setIsPublished, bool)
+              }
+>>>>>>> 8fa926c1625bd322f6984bdb24258cd7b808087b
             />
+            <div className="w-2 h-9 bg-border" />
+            <button
+              className="hover:text-green-500 flex justify-center items-center w-full"
+              onClick={onSave}
+            >
+              <SaveIcon className="text-current" />
+              <div className="ml-2">Save</div>
+            </button>
+            <div className="w-2 h-9 bg-border" />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="hover:text-red-500 flex justify-center items-center w-full">
+                  <FileX2 className="text-current" />
+                  <div className="ml-2">Delete</div>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    this note.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      handleDeleteNote(
+                        noteState.note,
+                        user,
+                        noteHandlers.setNote
+                      )
+                    }
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <div className="w-2 h-9 bg-border" />
+            <div className="flex-grow">
+              <TimePicker
+                initialDate={noteState.time || new Date()}
+                onTimeChange={(newDate) =>
+                  handleTimeChange(noteHandlers.setTime, newDate)
+                }
+              />
+            </div>
+            <div className="w-2 h-9 bg-border" />
+            <div className="bg-white p-2 rounded">
+              <LocationPicker
+                long={noteState.longitude}
+                lat={noteState.latitude}
+                onLocationChange={(newLong, newLat) =>
+                  handleLocationChange(
+                    noteHandlers.setLongitude,
+                    noteHandlers.setLatitude,
+                    newLong,
+                    newLat
+                  )
+                }
+              />
+            </div>
+            <div className="w-2 h-9 bg-border" />
+            <div className="bg-white p-2 rounded">
+              <VideoComponent
+                videoArray={noteState.videos || []}
+                setVideo={noteHandlers.setVideos}
+              />
+            </div>
+            <div className="w-2 h-9 bg-border" />
+            <button
+              className="hover:text-orange-500 flex justify-center items-center w-full"
+              onClick={() => setIsAudioModalOpen(true)}
+            >
+              <Music className="text-current" />
+              <div className="ml-2">Audio</div>
+            </button>
           </div>
+<<<<<<< HEAD
           <div className="w-2 h-9 bg-border" />
           <div id="publishToggle">    
           <PublishToggle
@@ -419,28 +528,63 @@ export default function NoteEditor({
     <span>Start Tour</span>
   </button>
       </div>
+=======
+          <TagManager
+            inputTags={noteState.tags}
+            onTagsChange={(newTags) =>
+              handleTagsChange(noteHandlers.setTags, newTags)
+            }
+          />
+        </div>
+>>>>>>> 8fa926c1625bd322f6984bdb24258cd7b808087b
 
-      {isAudioModalOpen && (
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-            <h2 className="text-lg font-semibold mb-2 text-center">
-              Select Audio
-            </h2>
-            <div className="flex flex-col justify-between h-auto">
-              <AudioPicker
-                audioArray={noteState.audio || []}
-                setAudio={noteHandlers.setAudio}
-                editable={true}
+        {isAudioModalOpen && (
+          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+              <h2 className="text-lg font-semibold mb-2 text-center">
+                Select Audio
+              </h2>
+              <div className="flex flex-col justify-between h-auto">
+                <AudioPicker
+                  audioArray={noteState.audio || []}
+                  setAudio={noteHandlers.setAudio}
+                  editable={true}
+                />
+                <button
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
+                  onClick={() => setIsAudioModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+          <div className="flex-grow w-full p-4 flex flex-col">
+            <div className=" flex-grow flex flex-col bg-white w-full rounded">
+              <RichTextEditor
+                ref={rteRef}
+                className="min-h-[712px]"
+                extensions={extensions}
+                content={noteState.editorContent}
+                onUpdate={({ editor }) =>
+                  handleEditorChange(
+                    noteHandlers.setEditorContent,
+                    editor.getHTML()
+                  )
+                }
+                renderControls={() => (
+                  <EditorMenuControls onImageUpload={addImageToNote} />
+                )}
+                children={(editor) => {
+                  if (!editor) return null;
+                  return <LinkBubbleMenu />;
+                }}
               />
-              <button
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-                onClick={() => setIsAudioModalOpen(false)}
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
+<<<<<<< HEAD
       )}
       <div className="flex flex-col w-full h-screen bg-cover bg-center bg-no-repeat" id="richTextEditor">
         <main className="flex-grow w-full p-6 flex flex-col">
@@ -468,5 +612,8 @@ export default function NoteEditor({
         </main>
       </div>
     </div>
+=======
+    </ScrollArea>
+>>>>>>> 8fa926c1625bd322f6984bdb24258cd7b808087b
   );
 }
