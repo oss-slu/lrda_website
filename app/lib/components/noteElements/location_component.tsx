@@ -1,39 +1,64 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
-import { Compass, MapPin } from "lucide-react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Compass, MapPin, SearchCheck } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@radix-ui/react-popover";
-import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
+import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/tooltip";
+import {
+  useGoogleMaps,
+  GoogleMapsProvider,
+} from "../../utils/GoogleMapsContext";
+import SearchBarMap from "../search_bar_map";
 
-// Including onLocationChange in the props interface
 interface LocationPickerProps {
   long?: string;
   lat?: string;
-  onLocationChange: (newLongitude: number, newLatitude: number) => void; // This is the callback function
+  onLocationChange: (newLongitude: number, newLatitude: number) => void;
 }
 
-const mapAPIKey = process.env.NEXT_PUBLIC_MAP_KEY || "";
-
-export default function LocationPicker({
+const LocationPicker: React.FC<LocationPickerProps> = ({
   long,
   lat,
-  onLocationChange, // Destructuring the onLocationChange from props
-}: LocationPickerProps) {
+  onLocationChange,
+}) => {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: mapAPIKey,
-  });
+  const mapRef = useRef<google.maps.Map>();
+  const isLoaded = useGoogleMaps();
+
+  useEffect(() => {
+    if (mapRef.current && latitude && longitude) {
+      const newCenter = new google.maps.LatLng(latitude, longitude);
+      mapRef.current.panTo(newCenter);
+      mapRef.current.setZoom(10); // Adjust zoom level as needed
+    }
+  }, [latitude, longitude]);
+  
+
+  const updateLongitude = (newLongitude: number) => {
+    setLongitude((prevLongitude) => {
+      const updatedLongitude = newLongitude;
+      onLocationChange && onLocationChange(updatedLongitude, latitude);
+      return updatedLongitude;
+    });
+  };
+
+  const updateLatitude = (newLatitude: number) => {
+    setLatitude((prevLatitude) => {
+      const updatedLatitude = newLatitude;
+      onLocationChange && onLocationChange(longitude, updatedLatitude);
+      return updatedLatitude;
+    });
+  };
 
   const handleGetCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
@@ -63,7 +88,8 @@ export default function LocationPicker({
   };
 
   useEffect(() => {
-    const validLong = long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
+    const validLong =
+      long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
     const validLat = lat && !isNaN(parseFloat(lat)) && parseFloat(lat) !== 0;
 
     if (validLong && validLat) {
@@ -73,8 +99,20 @@ export default function LocationPicker({
     if (lat == "0" || long == "0" || long == "" || lat == "") {
       handleGetCurrentLocation();
     }
-  }, [long, lat, handleGetCurrentLocation]); 
-  
+  }, [long, lat, handleGetCurrentLocation]);
+
+  const handleSearch = (address: string, lat?: number, lng?: number) => {
+    if (lat != null && lng != null) {
+      setLatitude(lat);
+      setLongitude(lng);
+      onLocationChange(lng, lat);
+      const newCenter = { lat, lng };
+      mapRef.current?.panTo(newCenter);
+      mapRef.current?.setZoom(10);
+      console.log("lat: ",lat," lng: ",lng);
+    }
+  };
+
   return (
     <div className="flex flex-row items-center p-2 h-9">
       <Popover>
@@ -85,12 +123,15 @@ export default function LocationPicker({
             {/* <div>
               {longitude.toPrecision(8)}
               {"_"}
-            </div>
+            </div>x
             <div>{latitude.toPrecision(8)}</div> */}
           </button>
         </PopoverTrigger>
         <PopoverContent className="z-30">
           <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
+            <div className="absolute top-2 left-2 z-50">
+              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} />
+            </div>
             {isLoaded && (
               <GoogleMap
                 mapContainerStyle={{
@@ -116,7 +157,7 @@ export default function LocationPicker({
           </div>
         </PopoverContent>
       </Popover>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={100}>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -134,4 +175,6 @@ export default function LocationPicker({
       </TooltipProvider>
     </div>
   );
-}
+};
+
+export default LocationPicker;

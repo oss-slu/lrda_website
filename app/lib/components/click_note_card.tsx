@@ -80,7 +80,7 @@ const ClickableNote: React.FC<{
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="z-50">
+        <div className="z-40">
           <NoteCard note={note} />
         </div>
       </DialogTrigger>
@@ -163,7 +163,9 @@ const ClickableNote: React.FC<{
                   </div>
                 </PopoverTrigger>
                 <PopoverContent className="bg-white overflow-auto rounded-lg shadow-lg w-[450px] max-w-full px-16 align-middle justify-center items-center">
-                  <PopoverClose className="absolute right-4"><X/></PopoverClose>
+                  <PopoverClose className="absolute right-4">
+                    <X />
+                  </PopoverClose>
                   <MediaViewer mediaArray={note.media} />
                 </PopoverContent>
               </Popover>

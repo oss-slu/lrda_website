@@ -47,16 +47,24 @@ export default function Navbar() {
       <div className="flex w-full justify-start">
       <Link legacyBehavior href="/" passHref>
         <a id="createNoteButton" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-        Create a Note
+        Where's Religion
         </a>
       </Link>
+
+        {name ? (
+          <Link legacyBehavior href="/lib/pages/notes" passHref>
+            <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+              Create a Note
+            </a>
+          </Link>
+        ) : null}
 
         {/* <Link legacyBehavior href="/lib/pages/aboutPage" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
             About
           </a>
         </Link> */}
-        
+
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
             Explore
@@ -67,7 +75,12 @@ export default function Navbar() {
       <div className="">
         {name ? (
           <div className="flex items-center gap-6 w-full">
-            <span className="text-lg font-semibold min-w-max truncate max-w-[150px] hover:underline cursor-pointer" title={name}>Hi, {name}!</span>
+            <span
+              className="text-lg font-semibold min-w-max truncate max-w-[150px] hover:underline cursor-pointer"
+              title={name}
+            >
+              Hi, {name}!
+            </span>
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
               onClick={handleLogout}

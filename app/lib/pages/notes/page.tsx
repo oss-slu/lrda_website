@@ -1,9 +1,10 @@
 "use client";
+import Home from "@/app/Home";
 import React, { useState, useEffect } from "react";
-import WelcomePage from "./WelcomePage";
+
 
 const IndexPage: React.FC = () => {
-  return <WelcomePage />;
+  return <Home/>;
 };
 
 export default IndexPage;
