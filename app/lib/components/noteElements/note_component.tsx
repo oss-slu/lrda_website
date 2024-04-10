@@ -392,134 +392,7 @@ export default function NoteEditor({
             }
           />
         </div>
-    <div
-      className="flex flex-col w-full min-h-screen bg-cover bg-center bg-no-repeat flex-grow"
-      key={noteState.counter}
-      style={{
-        backgroundImage: `url('/note_background.jpg')`,
-        width: "calc(100vw - 285px)",
-      }}
-    >
-      <div className="w-full flex flex-row items-center">
-        <div
-        id="noteToolbar"
-          className="flex bg-popup shadow-sm rounded-md border border-border bg-white justify-around items-center m-4 w-full"
-          style={{ maxWidth: "1700px" }}
-        >
-          <div
-            className="bg-white p-4 rounded m-4 flex-grow"
-            style={{ maxWidth: "330px" }}
-          >
-            <Input
-            id="noteTitleInput" // Unique identifier for the input
-              value={noteState.title}
-              onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-              placeholder="Title"
-              style={{
-                all: "unset",
-                fontSize: "1.5em",
-                fontWeight: "bold",
-                outline: "none",
-                width: "100%",
-                minWidth: "150px",
-              }}
-            />
-          </div>
-          <div className="w-2 h-9 bg-border" />
-          <div id="publishToggle">    
-          <PublishToggle
-            isPublished={noteState.isPublished}
-            onPublishChange={(bool) =>
-              handlePublishChange(noteHandlers.setIsPublished, bool)
-            }
-          />
-          </div>
-          <div className="w-2 h-9 bg-border" />
-          <button
-          id="saveButton" // Unique identifier
-            className="hover:text-green-500 flex justify-center items-center w-full"
-            onClick={onSave}
-          >
-            <SaveIcon className="text-current" />
-            <div className="ml-2">Save</div>
-          </button>
-          <div className="w-2 h-9 bg-border" />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="hover:text-red-500 flex justify-center items-center w-full" id="deleteButton">
-                <FileX2 className="text-current" />
-                <div className="ml-2">Delete</div>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  this note.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() =>
-                    handleDeleteNote(noteState.note, user, noteHandlers.setNote)
-                  }
-                >
-                  Continue
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <div className="w-2 h-9 bg-border" />
-          <div className="flex-grow" id="timePicker">
-            <TimePicker
-              initialDate={noteState.time || new Date()}
-              onTimeChange={(newDate) =>
-                handleTimeChange(noteHandlers.setTime, newDate)
-              }
-            />
-          </div>
-          <div className="w-2 h-9 bg-border" />
-          <div className= "bg-white p-2 rounded" id="locationPicker">
-            <LocationPicker
-              long={noteState.longitude}
-              lat={noteState.latitude}
-              onLocationChange={(newLong, newLat) =>
-                handleLocationChange(
-                  noteHandlers.setLongitude,
-                  noteHandlers.setLatitude,
-                  newLong,
-                  newLat
-                )
-              }
-            />
-          </div>
-          <div className="w-2 h-9 bg-border" />
-          <div className="bg-white p-2 rounded" id="videoComponent">
-            <VideoComponent
-              videoArray={noteState.videos || []}
-              setVideo={noteHandlers.setVideos}
-            />
-          </div>
-          <div className="w-2 h-9 bg-border" />
-          <button
-          id="audioButton"
-            className="hover:text-orange-500 flex justify-center items-center w-full"
-            onClick={() => setIsAudioModalOpen(true)}
-          >
-            <Music className="text-current" />
-            <div className="ml-2">Audio</div>
-          </button>
-        </div>
-      </div>
-      <div className="p-2 rounded mx-4 flex items-center overflow-auto" id="tagManager">
-        <TagManager
-          inputTags={noteState.tags}
-          onTagsChange={(newTags) =>
-            handleTagsChange(noteHandlers.setTags, newTags)
-          }
-        />
+    
 
          {/* Start Tour Button */}
   <button
@@ -576,7 +449,6 @@ export default function NoteEditor({
               />
             </div>
           </div>
-        </div>
     </ScrollArea>
   );
 }
