@@ -66,12 +66,19 @@ export default function Navbar() {
         </Link> }
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
-          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
+          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
             Explore
           </a>
         </Link>
-      </div>
+    
 
+        <Button
+        className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4"
+      >
+        Tour
+      </Button>
+        </div>
+      
       <div className="">
         {name ? (
           <div className="flex items-center gap-6 w-full">
