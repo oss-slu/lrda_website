@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 
 const user = User.getInstance();
 
@@ -42,6 +44,11 @@ export default function Navbar() {
     fetchName();
   }, []);
 
+   // Function to start the Intro.js tour
+   const startTour = () => {
+    introJs().start();
+  };
+
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
       <div className="flex w-full justify-start">
@@ -66,11 +73,12 @@ export default function Navbar() {
         </Link> }
 
         <Button
-        style={{ marginTop: '-2px' }}
-        className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
-      >
-        Tour
-      </Button>
+          onClick={startTour}
+          style={{ marginTop: '-2px' }}
+          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out"
+        >
+          Tour
+        </Button>
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
