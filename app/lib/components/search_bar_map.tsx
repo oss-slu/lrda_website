@@ -43,13 +43,29 @@ class SearchBarMap extends React.Component<SearchBarMapProps, SearchBarMapState>
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     this.setState({ searchText: query });
-    
+  
     if (query.length > 2 && this.autocompleteService) {
       this.autocompleteService.getPlacePredictions({ input: query }, this.handlePredictions);
     } else {
       this.setState({ suggestions: [] });
+      if (query.length === 0 && this.state.searchText.length > 0) {
+        // Only reset search if transitioning from non-empty to empty
+        this.props.onSearch(''); // Call the search handler with empty string or reset value
+      }
     }
+  
+    // Keydown event listener for Enter key
+    e.target.onkeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();  // Prevent default form submission behavior
+        if (this.state.searchText.trim().length > 0) {
+          this.props.onSearch(this.state.searchText);  // Trigger search when Enter is pressed
+        }
+      }
+    };
   };
+  
+  
 
   handlePredictions = (
     predictions: google.maps.places.AutocompletePrediction[] | null,

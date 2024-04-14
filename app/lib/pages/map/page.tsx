@@ -430,6 +430,7 @@ const Page = () => {
       popup.setMap(map);
     }
   };
+  
 
   // Old handle search that filters the locations by string
   // const handleSearch = (searchQuery: string) => {
