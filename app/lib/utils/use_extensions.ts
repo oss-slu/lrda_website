@@ -41,6 +41,51 @@ import {
   TableImproved,
 } from "mui-tiptap";
 
+import { Node } from '@tiptap/core'
+
+const LazyImage = Node.create({
+  name: 'image',
+
+  addAttributes() {
+    return {
+      src: {},
+      alt: {
+        default: null,
+      },
+      title: {
+        default: null,
+      },
+      loading: {
+        default: 'lazy',
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'img[src][loading="lazy"]',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['img', HTMLAttributes];
+  },
+
+  addCommands() {
+    return {
+      setImage: options => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    };
+  },
+});
+
+
 export type UseExtensionsOptions = {
   /** Placeholder hint to show in the text input area before a user types a message. */
   placeholder?: string;
@@ -129,7 +174,7 @@ export default function useExtensions({
       // https://github.com/ueberdosis/tiptap/issues/4006)
       Bold,
       Blockquote,
-
+      LazyImage,
       Code,
       Italic,
       Underline,
