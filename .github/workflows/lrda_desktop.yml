@@ -26,6 +26,6 @@ jobs:
       - name: Install pnpm
         run: npm i -g pnpm
       - name: Install dependencies
-        run: pnpm install # Replace 'npm install' with 'pnpm install'
+        run: yarn install # Replace 'npm install' with 'pnpm install'
       - name: Run tests
-        run: pnpm test # or 'npm test' if you're using npm
+        run: yarn test # or 'npm test' if you're using npm
