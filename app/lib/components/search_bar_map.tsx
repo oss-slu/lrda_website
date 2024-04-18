@@ -1,6 +1,6 @@
 import React from "react";
-import SearchBarUI from "./search_bar_ui"; 
-import {Note} from '../../types';
+import SearchBarUI from "./search_bar_ui";
+import { Note, CombinedResult } from "../../types";
 
 declare global {
   interface Window {
@@ -10,11 +10,10 @@ declare global {
 
 type SearchBarMapProps = {
   onSearch: (address: string, lat?: number, lng?: number) => void;
-  onNotesSearch: (searchText: string) => void; 
+  onNotesSearch: (searchText: string) => void;
   isLoaded: boolean;
-  filteredNotes: Note[]; 
+  filteredNotes: Note[];
 };
-
 
 type SearchBarMapState = {
   searchText: string;
@@ -57,15 +56,18 @@ class SearchBarMap extends React.Component<
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     this.setState({ searchText: query });
-  
+
     if (query.length > 2 && this.autocompleteService) {
-      this.autocompleteService.getPlacePredictions({ input: query }, this.handlePredictions);
+      this.autocompleteService.getPlacePredictions(
+        { input: query },
+        this.handlePredictions
+      );
       this.props.onNotesSearch(query); // Call the notes search when input changes
     } else {
       this.setState({ suggestions: [] });
       if (query.length === 0 && this.state.searchText.length > 0) {
-        this.props.onSearch(''); // Call the search handler with empty string or reset value
-        this.props.onNotesSearch(''); // Also reset notes search
+        this.props.onSearch(""); // Call the search handler with empty string or reset value
+        this.props.onNotesSearch(""); // Also reset notes search
       }
     }
 
@@ -121,20 +123,19 @@ class SearchBarMap extends React.Component<
   render() {
     const { searchText, suggestions } = this.state;
     const { filteredNotes } = this.props;
-  
-    // Create a combined list of suggestions and notes
-    const combinedResults = [
-      ...suggestions.map(s => ({ ...s, type: 'suggestion' })),
-      ...filteredNotes.map(n => ({ ...n, type: 'note' }))
+
+    const combinedResults: CombinedResult[] = [
+      ...suggestions.map((s) => ({ ...s, type: "suggestion" as const })),
+      ...filteredNotes.map((n) => ({ ...n, type: "note" as const })),
     ];
-  
+
     // Sort the combined list alphabetically
     combinedResults.sort((a, b) => {
-      let textA = a.description || a.title;
-      let textB = b.description || b.title;
+      let textA = "description" in a ? a.description : a.title;
+      let textB = "description" in b ? b.description : b.title;
       return textA.localeCompare(textB);
     });
-  
+
     return (
       <div className="flex flex-col w-full relative">
         <SearchBarUI
@@ -146,35 +147,50 @@ class SearchBarMap extends React.Component<
             id="autocomplete-suggestions"
             className="absolute z-10 w-full mt-1 rounded-md bg-white shadow-lg max-h-60 overflow-auto top-full"
           >
-            {combinedResults.map((result, index) => (
-              <li
-                key={result.place_id || result.id} // Use place_id for suggestions and id for notes
-                className="flex items-center px-4 py-2 hover:bg-blue-100 cursor-pointer transition-colors"
-                onClick={() => {
-                  // Call appropriate handler based on result type
-                  if (result.type === 'suggestion') {
-                    this.handleSelectSuggestion(result.place_id);
-                  } else {
-                    // Handle note selection here if needed
+            {combinedResults.map((result, index) => {
+              const isSuggestion = result.type === "suggestion";
+              const key = isSuggestion ? result.place_id : result.id;
+              const onClickHandler = () => {
+                if (isSuggestion) {
+                  this.handleSelectSuggestion(
+                    (result as google.maps.places.AutocompletePrediction)
+                      .place_id
+                  );
+                } else {
+                  const lat = parseFloat(result.latitude);
+                  const lng = parseFloat(result.longitude);
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    this.props.onSearch(result.title, lat, lng);
                   }
-                }}
-                role="option"
-                aria-selected="false"
-              >
-                <img
-                  src={result.type === 'suggestion' ? "/autocomplete_map_pin.png" : "/autocomplete_search_icon.png"}
-                  alt={result.type === 'suggestion' ? "Map Pin" : "Search Icon"}
-                  className="h-4 w-4 mr-2"
-                />
-                {result.description || result.title}
-              </li>
-            ))}
+                }
+              };
+
+              return (
+                <li
+                  key={key}
+                  className="flex items-center px-4 py-2 hover:bg-blue-100 cursor-pointer transition-colors"
+                  onClick={onClickHandler}
+                  role="option"
+                  aria-selected="false"
+                >
+                  <img
+                    src={
+                      isSuggestion
+                        ? "/autocomplete_map_pin.png"
+                        : "/autocomplete_search_icon.png"
+                    }
+                    alt={isSuggestion ? "Map Pin" : "Search Icon"}
+                    className="h-4 w-4 mr-2"
+                  />
+                  {result.description || result.title}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
     );
   }
-  
 }
 
 export default SearchBarMap;

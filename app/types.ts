@@ -35,6 +35,11 @@ import {
     tags: string[];
   };
 
+  export type CombinedResult =
+  | (google.maps.places.AutocompletePrediction & { type: 'suggestion' })
+  | (Note & { type: 'note' });
+
+
   export type newNote = {
     title: string;
     text: string;
