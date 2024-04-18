@@ -16,11 +16,6 @@ import {
   UserIcon,
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -256,32 +251,18 @@ const Page = () => {
         lng: map.getCenter()?.lng() || "",
       };
       const newBounds = map.getBounds();
-
       setMapCenter(newCenter);
       setMapBounds(newBounds);
-      // updateFilteredNotes(newCenter, newBounds, notes); // this line was causing over rendering.
     };
 
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
       updateBounds();
     });
-    const mapClickListener = map.addListener("click", () => {
-      setActiveNote(null); // This will hide the ClickableNote
-    });
-
-    const mapDragListener = map.addListener("dragstart", () => {
-      setActiveNote(null); // This will hide the ClickableNote
-    });
-    updateBounds();
 
     setTimeout(() => {
       updateBounds();
     }, 100);
-    // return () => {
-    //   google.maps.event.clearListeners(map, 'dragend');
-    //   google.maps.event.clearListeners(map, 'zoom_changed');
-    // };
   }, []);
 
   // Filter function
@@ -568,24 +549,6 @@ const Page = () => {
                 <Navigation size={20} />
               </div>
             </div>
-            {/* {filteredNotes.map((note, index) => {
-          const isNoteHovered = hoveredNoteId === note.id;
-          return (
-            <Marker
-              key={note.id}
-              position={{
-                lat: parseFloat(note.latitude),
-                lng: parseFloat(note.longitude),
-              }}
-              onClick={() => handleMarkerClick(note)}
-              icon={createMarkerIcon(isNoteHovered)}
-              zIndex={isNoteHovered ? 1 : 0}
-              onLoad={(marker) => {
-                setMarkers((prev) => new Map(prev).set(note.id, marker));
-              }}
-            />
-          );
-        })} */}
           </GoogleMap>
         )}
       </div>
