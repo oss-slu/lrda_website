@@ -432,9 +432,6 @@ const Page = () => {
     console.log("Notes: ", notes);
     console.log("Filtered Notes: ", filteredNotes);
     if (isNoteClick) {
-      // If it's a click on a note, filter to just that note
-      const clickedNote = notes.find(note => note.title.toLowerCase() === address.toLowerCase());
-      setFilteredNotes(clickedNote ? [clickedNote] : []);
       setIsNoteSelectedFromSearch(true);
     } else {
       // Otherwise, filter based on the search query as user types
@@ -447,7 +444,7 @@ const Page = () => {
               note.text.toLowerCase().includes(query) || 
               note.tags.some((tag) => tag.toLowerCase().includes(query))
           )
-        : [...notes]; // If query is empty, show all notes
+        : [...notes]; 
   
       setFilteredNotes(filtered);
     }
