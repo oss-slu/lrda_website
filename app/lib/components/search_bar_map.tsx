@@ -111,9 +111,8 @@ class SearchBarMap extends React.Component<SearchBarMapProps, SearchBarMapState>
         aria-selected="false"
       >
         <img src="/results_pin.png" alt="Map Pin" className="h-4 w-4 mr-2"/> 
-        <span className="truncate"> 
           {suggestion.description}
-        </span>
+
       </li>
     ))}
   </ul>
