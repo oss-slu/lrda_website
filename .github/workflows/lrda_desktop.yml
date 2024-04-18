@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x] # Adjust according to your project's Node.js version
+        node-version: [18.x] # Adjust according to your project's Node.js version
 
     steps:
       - uses: actions/checkout@v2
@@ -24,8 +24,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install pnpm
-        run: npm i -g pnpm
+        run: npm install -g pnpm
       - name: Install dependencies
-        run: yarn install # Replace 'npm install' with 'pnpm install'
+        run: pnpm install # Replace 'npm install' with 'pnpm install'
       - name: Run tests
-        run: yarn test # or 'npm test' if you're using npm
+        run: pnpm test # or 'npm test' if you're using npm
