@@ -100,21 +100,24 @@ class SearchBarMap extends React.Component<SearchBarMapProps, SearchBarMapState>
     return (
       <div className="flex flex-col w-full relative">
         <SearchBarUI searchText={searchText} onInputChange={this.handleInputChange} />
-        {suggestions.length > 0 && (
-          <ul id="autocomplete-suggestions" className="absolute z-10 w-full mt-1 rounded-md bg-white shadow-lg max-h-60 overflow-auto top-full">
-            {suggestions.map((suggestion) => (
-              <li
-                key={suggestion.place_id}
-                className="px-4 py-2 hover:bg-blue-100 cursor-pointer transition-colors"
-                onClick={() => this.handleSelectSuggestion(suggestion.place_id)}
-                role="option"
-                aria-selected="false"
-              >
-                {suggestion.description}
-              </li>
-            ))}
-          </ul>
-        )}
+        { suggestions.length > 0 && (
+  <ul id="autocomplete-suggestions" className="absolute z-10 w-full mt-1 rounded-md bg-white shadow-lg max-h-60 overflow-auto top-full">
+    {suggestions.map((suggestion) => (
+      <li
+        key={suggestion.place_id}
+        className="flex items-center px-4 py-2 hover:bg-blue-100 cursor-pointer transition-colors"
+        onClick={() => this.handleSelectSuggestion(suggestion.place_id)}
+        role="option"
+        aria-selected="false"
+      >
+        <img src="/results_pin.png" alt="Map Pin" className="h-4 w-4 mr-2"/> 
+        <span className="truncate"> 
+          {suggestion.description}
+        </span>
+      </li>
+    ))}
+  </ul>
+)}
       </div>
     );
   }
