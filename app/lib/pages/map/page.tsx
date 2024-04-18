@@ -429,8 +429,6 @@ const Page = () => {
 
   // New handleSearch for location based searching
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
-    console.log("Notes: ", notes);
-    console.log("Filtered Notes: ", filteredNotes);
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
     } else {
