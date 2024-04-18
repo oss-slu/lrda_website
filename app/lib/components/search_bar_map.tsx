@@ -9,7 +9,12 @@ declare global {
 }
 
 type SearchBarMapProps = {
-  onSearch: (address: string, lat?: number, lng?: number) => void;
+  onSearch: (
+    address: string,
+    lat?: number,
+    lng?: number,
+    isNoteClick?: boolean
+  ) => void;
   onNotesSearch: (searchText: string) => void;
   isLoaded: boolean;
   filteredNotes: Note[];
@@ -139,7 +144,7 @@ class SearchBarMap extends React.Component<
     return (
       <div className="flex flex-col w-full relative">
         <SearchBarUI
-          searchText={searchText}
+          searchText={this.state.searchText}
           onInputChange={this.handleInputChange}
         />
         {combinedResults.length > 0 && suggestions.length > 0 && (
@@ -160,7 +165,26 @@ class SearchBarMap extends React.Component<
                   const lat = parseFloat(result.latitude);
                   const lng = parseFloat(result.longitude);
                   if (!isNaN(lat) && !isNaN(lng)) {
-                    this.props.onSearch(result.title, lat, lng);
+                    // The additional boolean parameter `true` signifies that the click came from a note
+                    this.props.onSearch(result.title, lat, lng, true);
+
+                    // Update searchText to the title of the note
+                    this.setState({
+                      searchText: result.title,
+                      suggestions: [],
+                    });
+                  } else {
+                    this.props.onSearch(
+                      result.title,
+                      undefined,
+                      undefined,
+                      true
+                    );
+
+                    this.setState({
+                      searchText: result.title,
+                      suggestions: [],
+                    });
                   }
                 }
               };

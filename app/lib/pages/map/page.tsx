@@ -35,6 +35,7 @@ const Page = () => {
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
+  const [isNoteSelectedFromSearch, setIsNoteSelectedFromSearch] = useState(false);
   const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>({
@@ -138,7 +139,9 @@ const Page = () => {
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
-    updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+    if (!isNoteSelectedFromSearch){
+      updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+    }
     const timer = setTimeout(() => {
       if (filteredNotes.length < 1) {
         setEmptyRegion(true);
@@ -425,29 +428,39 @@ const Page = () => {
   // };
 
   // New handleSearch for location based searching
-  const handleSearch = (address: string, lat?: number, lng?: number) => {
-    if (!address.trim()) {
-      setFilteredNotes(notes);
-      return;
+  const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
+    console.log("Notes: ", notes);
+    console.log("Filtered Notes: ", filteredNotes);
+    if (isNoteClick) {
+      // If it's a click on a note, filter to just that note
+      const clickedNote = notes.find(note => note.title.toLowerCase() === address.toLowerCase());
+      setFilteredNotes(clickedNote ? [clickedNote] : []);
+      setIsNoteSelectedFromSearch(true);
+    } else {
+      // Otherwise, filter based on the search query as user types
+      setIsNoteSelectedFromSearch(false);
+      const query = address.trim().toLowerCase();
+      const filtered = query
+        ? notes.filter(
+            (note) =>
+              note.title.toLowerCase().includes(query) ||
+              note.text.toLowerCase().includes(query) || 
+              note.tags.some((tag) => tag.toLowerCase().includes(query))
+          )
+        : [...notes]; // If query is empty, show all notes
+  
+      setFilteredNotes(filtered);
     }
-
-    // Check if latitude and longitude are provided
-    if (lat != null && lng != null) {
-      // If so, move the map to the new location
+  
+    // If lat and lng are provided, move the map to that location
+    if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
-    } else {
-      // Otherwise, filter the notes based on the search query
-      const query = address.toLowerCase();
-      const filtered = notes.filter(
-        (note) =>
-          note.title.toLowerCase().includes(query) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
-      setFilteredNotes(filtered);
     }
   };
+  
+  
 
   const handleNotesSearch = (searchText: string) => {
     // Filter notes based on the search query
@@ -458,13 +471,14 @@ const Page = () => {
         note.tags.some((tag) => tag.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
+    console.log("Filtered:", filtered);
   };
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
       return {
         url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48), // 20% larger than the default size (40, 40)
+        scaledSize: new window.google.maps.Size(48, 48), 
       };
     } else {
       return {
@@ -542,9 +556,9 @@ const Page = () => {
                 <div className="min-w-[80px] mr-3">
                   <SearchBarMap
                     onSearch={handleSearch}
-                    onNotesSearch={handleNotesSearch} 
+                    onNotesSearch={handleNotesSearch}
                     isLoaded={isMapsApiLoaded}
-                    filteredNotes={filteredNotes} 
+                    filteredNotes={filteredNotes}
                   />
                 </div>
                 {isLoggedIn ? (
