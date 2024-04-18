@@ -1,8 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import {
-  GoogleMap,
-} from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
@@ -26,8 +24,7 @@ import {
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
-import { useGoogleMaps } from '../../utils/GoogleMapsContext';
-
+import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 
 interface Location {
   lat: number;
@@ -430,7 +427,6 @@ const Page = () => {
       popup.setMap(map);
     }
   };
-  
 
   // Old handle search that filters the locations by string
   // const handleSearch = (searchQuery: string) => {
@@ -532,44 +528,47 @@ const Page = () => {
     }
   }
 
-return (
-  <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-    <div className="flex-grow">
-      {isMapsApiLoaded && (
-        <GoogleMap
-        mapContainerStyle={{ width: "100%", height: "100%" }}
-        center={mapCenter}
-        zoom={mapZoom}
-        onLoad={onMapLoad}
-        onDragStart={handleMapClick}
-        onClick={handleMapClick}
-        options={{
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false,
-        }}
-      >
-        <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-          <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-            <div className="min-w-[80px] mr-3">
-              <SearchBarMap onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
-            </div>
-            {isLoggedIn ? (
-              <div className="flex flex-row justify-evenly items-center">
-                <GlobeIcon className="text-primary" />
-                <Switch onClick={toggleFilter} />
-                <UserIcon className="text-primary" />
-              </div>
-            ) : null}
-          </div>
-          <div
-            className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
-            onClick={handleSetLocation}
+  return (
+    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+      <div className="flex-grow">
+        {isMapsApiLoaded && (
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={mapCenter}
+            zoom={mapZoom}
+            onLoad={onMapLoad}
+            onDragStart={handleMapClick}
+            onClick={handleMapClick}
+            options={{
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false,
+            }}
           >
-            <Navigation size={20} />
-          </div>
-        </div>
-        {/* {filteredNotes.map((note, index) => {
+            <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
+              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+                <div className="min-w-[80px] mr-3">
+                  <SearchBarMap
+                    onSearch={handleSearch}
+                    isLoaded={isMapsApiLoaded}
+                  />
+                </div>
+                {isLoggedIn ? (
+                  <div className="flex flex-row justify-evenly items-center">
+                    <GlobeIcon className="text-primary" />
+                    <Switch onClick={toggleFilter} />
+                    <UserIcon className="text-primary" />
+                  </div>
+                ) : null}
+              </div>
+              <div
+                className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
+                onClick={handleSetLocation}
+              >
+                <Navigation size={20} />
+              </div>
+            </div>
+            {/* {filteredNotes.map((note, index) => {
           const isNoteHovered = hoveredNoteId === note.id;
           return (
             <Marker
@@ -587,38 +586,39 @@ return (
             />
           );
         })} */}
-      </GoogleMap>
-      )}
-    </div>
-    <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-      {filteredNotes.length > 0 ? (
-        filteredNotes.map((note) => (
-          <div
-            ref={(el) => {
-              if (el) noteRefs.current[note.id] = el;
-            }}
-            className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-              note.id === activeNote?.id
-                ? "active-note"
-                : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-            }`}
-            onMouseEnter={() => setHoveredNoteId(note.id)}
-            onMouseLeave={() => setHoveredNoteId(null)}
-            key={note.id}
-          >
-            <ClickableNote note={note} />
+          </GoogleMap>
+        )}
+      </div>
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+        {filteredNotes.length > 0 ? (
+          filteredNotes.map((note) => (
+            <div
+              ref={(el) => {
+                if (el) noteRefs.current[note.id] = el;
+              }}
+              className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                note.id === activeNote?.id
+                  ? "active-note"
+                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+              }`}
+              onMouseEnter={() => setHoveredNoteId(note.id)}
+              onMouseLeave={() => setHoveredNoteId(null)}
+              key={note.id}
+            >
+              <ClickableNote note={note} />
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+            {/* Conditional rendering for various states */}
+            <span className="self-center">
+              {!isMapsApiLoaded ? "Loading..." : "No entries found"}
+            </span>
           </div>
-        ))
-      ) : (
-        <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-          {/* Conditional rendering for various states */}
-          <span className="self-center">{!isMapsApiLoaded ? "Loading..." : "No entries found"}</span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  </div>
-);
-      };
-
+  );
+};
 
 export default Page;
