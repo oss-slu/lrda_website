@@ -449,6 +449,17 @@ const Page = () => {
     }
   };
 
+  const handleNotesSearch = (searchText: string) => {
+    // Filter notes based on the search query
+    const query = searchText.toLowerCase();
+    const filtered = notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(query))
+    );
+    setFilteredNotes(filtered);
+  };
+
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
       return {
@@ -531,7 +542,9 @@ const Page = () => {
                 <div className="min-w-[80px] mr-3">
                   <SearchBarMap
                     onSearch={handleSearch}
+                    onNotesSearch={handleNotesSearch} 
                     isLoaded={isMapsApiLoaded}
+                    filteredNotes={filteredNotes} 
                   />
                 </div>
                 {isLoggedIn ? (
