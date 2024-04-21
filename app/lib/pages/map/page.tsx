@@ -1,8 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import {
-  GoogleMap,
-} from "@react-google-maps/api";
+import {GoogleMap,} from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
@@ -27,8 +25,6 @@ import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from '../../utils/GoogleMapsContext';
-import introJs from 'intro.js'
-import 'intro.js/introjs.css';
 
 
 interface Location {

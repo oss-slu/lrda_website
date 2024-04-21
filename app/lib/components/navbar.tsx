@@ -75,7 +75,7 @@ export default function Navbar() {
         <Button
           onClick={startTour}
           style={{ marginTop: '-2px' }}
-          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out"
+          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
         >
           Tour
         </Button>
