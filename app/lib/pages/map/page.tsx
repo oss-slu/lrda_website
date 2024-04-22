@@ -8,6 +8,8 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import {
   CompassIcon,
   GlobeIcon,
@@ -44,6 +46,7 @@ const Page = () => {
   });
   const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoaded] = useState(true);
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
@@ -147,6 +150,7 @@ const Page = () => {
         setEmptyRegion(true);
       }
     }, 2000);
+    setIsLoaded(false);
     return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
@@ -228,6 +232,8 @@ const Page = () => {
         map: mapRef.current,
       });
 
+      setIsLoaded(false);
+
       return () => {
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
@@ -295,6 +301,7 @@ const Page = () => {
   ) => {
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
+    setIsLoaded(false);
   };
 
   const fetchNotes = async () => {
@@ -488,6 +495,7 @@ const Page = () => {
     const notesToUse = !global ? globalNotes : personalNotes;
     setNotes(notesToUse);
     setFilteredNotes(notesToUse);
+    setIsLoaded(false);
   };
 
   const scrollToNoteTile = (noteId: string) => {
@@ -574,8 +582,16 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
+
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {filteredNotes.length > 0 ? (
+        {isLoading ? (
+          [...Array(6)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+            />
+          ))
+        ) : filteredNotes.length > 0 ? (
           filteredNotes.map((note) => (
             <div
               ref={(el) => {
@@ -594,12 +610,17 @@ const Page = () => {
             </div>
           ))
         ) : (
-          <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-            {/* Conditional rendering for various states */}
-            <span className="self-center">
-              {!isMapsApiLoaded ? "Loading..." : "No entries found"}
-            </span>
-          </div>
+          [...Array(6)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+            />
+          ))
+          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+          //   <span className="self-center">
+          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
+          //   </span>
+          // </div>
         )}
       </div>
     </div>
