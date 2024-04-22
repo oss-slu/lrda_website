@@ -46,7 +46,7 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { init } from "next/dist/compiled/webpack/webpack";
-import introJs from 'intro.js'
+import introJs from 'intro.js';
 import 'intro.js/introjs.css';
 import { ScrollArea } from "@/components/ui/scroll-area";
 

@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 
 interface Location {
   lat: number;
