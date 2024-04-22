@@ -22,16 +22,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const userId = await user.getId();
     if (userId) {
       const newBlankNote: newNote = {
-        title: '',
-        text: '',
+        title: "",
+        text: "",
         time: new Date(),
         media: [],
         audio: [],
-        creator: userId, 
-        latitude: '',
-        longitude: '',
+        creator: userId,
+        latitude: "",
+        longitude: "",
         published: undefined,
-        tags: []
+        tags: [],
       };
       onNoteSelect(newBlankNote, true); // Notify that a new note is being added
     } else {
@@ -45,10 +45,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         const userId = await user.getId();
         if (userId) {
           const userNotes = await ApiService.fetchUserMessages(userId);
-          const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
+          const convertedNotes =
+            DataConversion.convertMediaTypes(userNotes).reverse();
           setNotes(convertedNotes);
           setFilteredNotes(convertedNotes);
-        } else { 
+        } else {
           console.error("User not logged in");
         }
       } catch (error) {
@@ -59,15 +60,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     fetchUserMessages();
   }, []);
 
-  const handleSearch = (searchQuery: string) => { 
+  const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setFilteredNotes(notes);
       return;
     }
     const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(note =>
-      note.title.toLowerCase().includes(query) || 
-      note.tags.some(tag => tag.toLowerCase().includes(query))
+    const filtered = notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(query))
     );
     setFilteredNotes(filtered);
   };
@@ -75,13 +77,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   return (
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
       <div className="w-full mb-4" id="tourStepSearchBar">
-        <SearchBarNote onSearch={handleSearch}/>
+        <SearchBarNote onSearch={handleSearch} />
       </div>
       <Button data-testid="add-note-button" id="addNoteButton" onClick={handleAddNote}>
         Add Note
       </Button>
       <div>
-        <NoteListView notes={filteredNotes} onNoteSelect={(note) => onNoteSelect(note, false)} />
+        <NoteListView
+          notes={filteredNotes}
+          onNoteSelect={(note) => onNoteSelect(note, false)}
+        />
       </div>
     </div>
   );

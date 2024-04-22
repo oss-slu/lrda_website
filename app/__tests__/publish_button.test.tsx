@@ -2,6 +2,21 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import PublishToggle from '../lib/components/noteElements/publish_toggle';
 
+beforeEach(() => {
+  jest.spyOn(console, 'error').mockImplementation((message) => {
+    // Suppress specific React warnings about invalid DOM nesting
+    if (message.includes("validateDOMNesting")) {
+      return;
+    }
+    // For other messages, keep the default behavior
+    console.warn("Console error suppressed in tests but may need attention:", message);
+  });
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 test('PublishToggle reflects initial isPublished state', () => {
   const { getByRole } = render(<PublishToggle isPublished={true} />);
   const switchButton = getByRole('switch'); 

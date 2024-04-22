@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import {GoogleMap,} from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
@@ -8,6 +8,8 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import {
   CompassIcon,
   GlobeIcon,
@@ -16,16 +18,10 @@ import {
   UserIcon,
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
-import { useGoogleMaps } from '../../utils/GoogleMapsContext';
-
+import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 
 interface Location {
   lat: number;
@@ -41,6 +37,7 @@ const Page = () => {
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
+  const [isNoteSelectedFromSearch, setIsNoteSelectedFromSearch] = useState(false);
   const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>({
@@ -49,6 +46,7 @@ const Page = () => {
   });
   const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoaded] = useState(true);
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
@@ -144,12 +142,15 @@ const Page = () => {
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
-    updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+    if (!isNoteSelectedFromSearch){
+      updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+    }
     const timer = setTimeout(() => {
       if (filteredNotes.length < 1) {
         setEmptyRegion(true);
       }
     }, 2000);
+    setIsLoaded(false);
     return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
@@ -231,6 +232,8 @@ const Page = () => {
         map: mapRef.current,
       });
 
+      setIsLoaded(false);
+
       return () => {
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
@@ -257,32 +260,18 @@ const Page = () => {
         lng: map.getCenter()?.lng() || "",
       };
       const newBounds = map.getBounds();
-
       setMapCenter(newCenter);
       setMapBounds(newBounds);
-      // updateFilteredNotes(newCenter, newBounds, notes); // this line was causing over rendering.
     };
 
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
       updateBounds();
     });
-    const mapClickListener = map.addListener("click", () => {
-      setActiveNote(null); // This will hide the ClickableNote
-    });
-
-    const mapDragListener = map.addListener("dragstart", () => {
-      setActiveNote(null); // This will hide the ClickableNote
-    });
-    updateBounds();
 
     setTimeout(() => {
       updateBounds();
     }, 100);
-    // return () => {
-    //   google.maps.event.clearListeners(map, 'dragend');
-    //   google.maps.event.clearListeners(map, 'zoom_changed');
-    // };
   }, []);
 
   // Filter function
@@ -312,6 +301,7 @@ const Page = () => {
   ) => {
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
+    setIsLoaded(false);
   };
 
   const fetchNotes = async () => {
@@ -445,35 +435,52 @@ const Page = () => {
   // };
 
   // New handleSearch for location based searching
-  const handleSearch = (address: string, lat?: number, lng?: number) => {
-    if (!address.trim()) {
-      setFilteredNotes(notes);
-      return;
+  const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
+    if (isNoteClick) {
+      setIsNoteSelectedFromSearch(true);
+    } else {
+      // Otherwise, filter based on the search query as user types
+      setIsNoteSelectedFromSearch(false);
+      const query = address.trim().toLowerCase();
+      const filtered = query
+        ? notes.filter(
+            (note) =>
+              note.title.toLowerCase().includes(query) ||
+              note.text.toLowerCase().includes(query) || 
+              note.tags.some((tag) => tag.toLowerCase().includes(query))
+          )
+        : [...notes]; 
+  
+      setFilteredNotes(filtered);
     }
-
-    // Check if latitude and longitude are provided
-    if (lat != null && lng != null) {
-      // If so, move the map to the new location
+  
+    // If lat and lng are provided, move the map to that location
+    if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
-    } else {
-      // Otherwise, filter the notes based on the search query
-      const query = address.toLowerCase();
-      const filtered = notes.filter(
-        (note) =>
-          note.title.toLowerCase().includes(query) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
-      setFilteredNotes(filtered);
     }
+  };
+  
+  
+
+  const handleNotesSearch = (searchText: string) => {
+    // Filter notes based on the search query
+    const query = searchText.toLowerCase();
+    const filtered = notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(query))
+    );
+    setFilteredNotes(filtered);
+    console.log("Filtered:", filtered);
   };
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
       return {
         url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48), // 20% larger than the default size (40, 40)
+        scaledSize: new window.google.maps.Size(48, 48), 
       };
     } else {
       return {
@@ -488,6 +495,7 @@ const Page = () => {
     const notesToUse = !global ? globalNotes : personalNotes;
     setNotes(notesToUse);
     setFilteredNotes(notesToUse);
+    setIsLoaded(false);
   };
 
   const scrollToNoteTile = (noteId: string) => {
@@ -529,93 +537,94 @@ const Page = () => {
     }
   }
 
-return (
-  <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-    <div className="flex-grow">
-      {isMapsApiLoaded && (
-        <GoogleMap
-        mapContainerStyle={{ width: "100%", height: "100%" }}
-        center={mapCenter}
-        zoom={mapZoom}
-        onLoad={onMapLoad}
-        onDragStart={handleMapClick}
-        onClick={handleMapClick}
-        options={{
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false,
-        }}
-      >
-        <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-          <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-            <div className="min-w-[80px] mr-3">
-              <SearchBarMap onSearch={handleSearch} isLoaded={isMapsApiLoaded} />
-            </div>
-            {isLoggedIn ? (
-              <div className="flex flex-row justify-evenly items-center">
-                <GlobeIcon className="text-primary" />
-                <Switch onClick={toggleFilter} />
-                <UserIcon className="text-primary" />
-              </div>
-            ) : null}
-          </div>
-          <div
-            className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
-            onClick={handleSetLocation}
-          >
-            <Navigation size={20} />
-          </div>
-        </div>
-        {/* {filteredNotes.map((note, index) => {
-          const isNoteHovered = hoveredNoteId === note.id;
-          return (
-            <Marker
-              key={note.id}
-              position={{
-                lat: parseFloat(note.latitude),
-                lng: parseFloat(note.longitude),
-              }}
-              onClick={() => handleMarkerClick(note)}
-              icon={createMarkerIcon(isNoteHovered)}
-              zIndex={isNoteHovered ? 1 : 0}
-              onLoad={(marker) => {
-                setMarkers((prev) => new Map(prev).set(note.id, marker));
-              }}
-            />
-          );
-        })} */}
-      </GoogleMap>
-      )}
-    </div>
-    <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-      {filteredNotes.length > 0 ? (
-        filteredNotes.map((note) => (
-          <div
-            ref={(el) => {
-              if (el) noteRefs.current[note.id] = el;
+  return (
+    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+      <div className="flex-grow">
+        {isMapsApiLoaded && (
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={mapCenter}
+            zoom={mapZoom}
+            onLoad={onMapLoad}
+            onDragStart={handleMapClick}
+            onClick={handleMapClick}
+            options={{
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false,
             }}
-            className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-              note.id === activeNote?.id
-                ? "active-note"
-                : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-            }`}
-            onMouseEnter={() => setHoveredNoteId(note.id)}
-            onMouseLeave={() => setHoveredNoteId(null)}
-            key={note.id}
           >
-            <ClickableNote note={note} />
-          </div>
-        ))
-      ) : (
-        <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-          {/* Conditional rendering for various states */}
-          <span className="self-center">{!isMapsApiLoaded ? "Loading..." : "No entries found"}</span>
-        </div>
-      )}
-    </div>
-  </div>
-);
-      };
+            <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
+              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+                <div className="min-w-[80px] mr-3">
+                  <SearchBarMap
+                    onSearch={handleSearch}
+                    onNotesSearch={handleNotesSearch}
+                    isLoaded={isMapsApiLoaded}
+                    filteredNotes={filteredNotes}
+                  />
+                </div>
+                {isLoggedIn ? (
+                  <div className="flex flex-row justify-evenly items-center">
+                    <GlobeIcon className="text-primary" />
+                    <Switch onClick={toggleFilter} />
+                    <UserIcon className="text-primary" />
+                  </div>
+                ) : null}
+              </div>
+              <div
+                className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
+                onClick={handleSetLocation}
+              >
+                <Navigation size={20} />
+              </div>
+            </div>
+          </GoogleMap>
+        )}
+      </div>
 
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+        {isLoading ? (
+          [...Array(6)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+            />
+          ))
+        ) : filteredNotes.length > 0 ? (
+          filteredNotes.map((note) => (
+            <div
+              ref={(el) => {
+                if (el) noteRefs.current[note.id] = el;
+              }}
+              className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                note.id === activeNote?.id
+                  ? "active-note"
+                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+              }`}
+              onMouseEnter={() => setHoveredNoteId(note.id)}
+              onMouseLeave={() => setHoveredNoteId(null)}
+              key={note.id}
+            >
+              <ClickableNote note={note} />
+            </div>
+          ))
+        ) : (
+          [...Array(6)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+            />
+          ))
+          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+          //   <span className="self-center">
+          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
+          //   </span>
+          // </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default Page;
