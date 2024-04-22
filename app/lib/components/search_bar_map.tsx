@@ -157,11 +157,10 @@ class SearchBarMap extends React.Component<
               const key = isSuggestion ? result.place_id : result.id;
               const onClickHandler = () => {
                 if (isSuggestion) {
-                  this.handleSelectSuggestion(
-                    (result as google.maps.places.AutocompletePrediction)
-                      .place_id
-                  );
+                  // Safe to assert result is AutocompletePrediction because isSuggestion is true
+                  this.handleSelectSuggestion(result.place_id);
                 } else {
+                  // Safe to use Note properties because isSuggestion is false
                   const lat = parseFloat(result.latitude);
                   const lng = parseFloat(result.longitude);
                   if (!isNaN(lat) && !isNaN(lng)) {
@@ -180,7 +179,6 @@ class SearchBarMap extends React.Component<
                       undefined,
                       true
                     );
-
                     this.setState({
                       searchText: result.title,
                       suggestions: [],
@@ -188,6 +186,11 @@ class SearchBarMap extends React.Component<
                   }
                 }
               };
+
+              // Choose the display text based on whether the result is a suggestion or note
+              const displayText = isSuggestion
+                ? result.description
+                : result.title;
 
               return (
                 <li
@@ -206,7 +209,7 @@ class SearchBarMap extends React.Component<
                     alt={isSuggestion ? "Map Pin" : "Search Icon"}
                     className="h-4 w-4 mr-2"
                   />
-                  {result.description || result.title}
+                  {displayText}
                 </li>
               );
             })}
