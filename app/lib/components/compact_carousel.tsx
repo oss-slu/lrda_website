@@ -58,11 +58,15 @@ export default function CompactCarousel({
             className="flex justify-center items-center h-full self-center"
           >
             {media.type === "image" && (
-              <img
-                src={media.uri}
-                className="w-64 h-[180px] object-cover rounded-t-sm"
-                alt="Media content"
-              />
+              <Image
+              src={media.uri}
+              width={256}
+              height={180}
+              objectFit="cover"
+              className="rounded-t-sm h-[180px] w-[256px]"
+              alt="Media content"
+              quality={5}
+            />
             )}
             {media.type === "video" && (
               <ReactPlayer

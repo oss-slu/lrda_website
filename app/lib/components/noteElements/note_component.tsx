@@ -174,18 +174,35 @@ export default function NoteEditor({
 
   const addImageToNote = (imageUrl: string) => {
     console.log("Before updating images", noteState.images);
-    const newImage = new PhotoType({
-      uuid: uuidv4(),
-      uri: imageUrl,
-      type: "image",
-    });
-
+    const newImage = {
+      type: 'image',
+      attrs: {
+        src: imageUrl,
+        alt: 'Image description',
+        loading: 'lazy',
+      },
+    };
+  
+    const editor = rteRef.current?.editor;
+    if (editor) {
+      editor
+        .chain()
+        .focus()
+        .setImage(newImage.attrs)
+        .run();
+    }
+  
     noteHandlers.setImages((prevImages) => {
-      const newImages = [...prevImages, newImage];
+      const newImages = [...prevImages, new PhotoType({
+        uuid: uuidv4(),
+        uri: imageUrl,
+        type: "image",
+      })];
       console.log("After updating images", newImages);
       return newImages;
     });
   };
+  
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
