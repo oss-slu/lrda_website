@@ -509,11 +509,6 @@ body {
   background-color: #005ecb;
 }
 
-.introjs-skipbutton {
-  background-color: #777777;
-  color: #ffffff;
-}
-
 .introjs-donebutton {
   background-color: #28a745;
   color: #ffffff;
@@ -538,3 +533,5 @@ body {
 .introjs-tooltipReferenceLayer {
   border-radius: 8px;
 }
+
+

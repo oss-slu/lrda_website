@@ -111,9 +111,8 @@ export default function Navbar() {
         },
 
         {
-          element: '.popup-bubble', // Class of the popup bubbles for pins
-          intro: 'Hover over a pin to see a preview of the note.',
-          position: 'top',
+          element: '#mapContainer',
+          intro: "This is the map area where you can interact with the map features.",
           tooltipClass: 'customTooltipClass'
         },
         {
@@ -130,13 +129,14 @@ export default function Navbar() {
         // Additional steps can be added here
       ],
       showProgress: true,
-      showBullets: false,
-      exitOnOverlayClick: false,
-      exitOnEsc: true,
-      nextLabel: 'Next >',
-      prevLabel: '< Back',
-      doneLabel: 'Finish',
-      skipLabel: 'Skip'
+    showBullets: false,
+    exitOnOverlayClick: false,
+    exitOnEsc: true,
+    nextLabel: 'Next >',
+    prevLabel: '< Back',
+    doneLabel: 'Finish',
+    skipLabel: '×', 
+    tooltipClass: 'customTooltipClass',
     });
 
     tour.onexit(() => {
@@ -234,6 +234,15 @@ export default function Navbar() {
         }
         // Conclusion or further instructions...
       ],
+      showProgress: true,
+    showBullets: false,
+    exitOnOverlayClick: false,
+    exitOnEsc: true,
+    nextLabel: 'Next >',
+    prevLabel: '< Back',
+    doneLabel: 'Finish',
+    skipLabel: '×', 
+    tooltipClass: 'customTooltipClass',
     });
 
       tour.oncomplete(() => user.setTourCompleted());
@@ -256,7 +265,7 @@ export default function Navbar() {
         {name ? (
           <Link legacyBehavior href="/lib/pages/notes" passHref>
             <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-              Create a Note
+              Create
             </a>
           </Link>
         ) : null}
