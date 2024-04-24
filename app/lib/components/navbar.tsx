@@ -50,6 +50,7 @@ export default function Navbar() {
     fetchName();
   }, []);
 
+  /* Commented out to bypass the tour check
   useEffect(() => {
     user.hasCompletedTour().then((completed) => {
       if (!completed) {
@@ -57,6 +58,7 @@ export default function Navbar() {
       }
     });
   }, []);
+  */
 
 
   const startTour = () => {
