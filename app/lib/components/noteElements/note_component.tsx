@@ -68,18 +68,6 @@ export default function NoteEditor({
     placeholder: "Add your own content here...",
   });
 
-  // Add the useEffect hook here to check and start the tour
-  useEffect(() => {
-    const checkAndStartTour = async () => {
-      const userHasCompletedTour = await user.hasCompletedTour();
-      if (!userHasCompletedTour) {
-        startTour();
-      }
-    };
-
-    checkAndStartTour();
-  }, []); // Empty dependency array ensures this runs once on component mount
-
   useEffect(() => {
     const editor = rteRef.current?.editor;
     if (noteState.videos.length > 0 && editor) {
@@ -216,88 +204,9 @@ export default function NoteEditor({
       return newImages;
     });
   };
-  
 
-
-
-  
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
-
-  const startTour = () => {
-    const tour = introJs();
-    tour.setOptions({
-      steps: [
-        {
-          intro: "Welcome! Let's quickly explore the note editor.",
-        },
-        {
-          element: '#tourStepSearchBar',
-          intro: "Find notes fast using this search bar.",
-        },
-        {
-          element: '#addNoteButton',
-          intro: "Click here to add a new note or refresh the editor.",
-        },
-        {
-          element: '#noteToolbar',
-          intro: "This toolbar has all your note tools. Let's check them out.",
-        },
-        {
-          element: '#noteTitleInput',
-          intro: "Enter your note's title here.",
-        },
-        {
-          element: '#publishToggle',
-          intro: "Switch this to make your note public or keep it private.",
-        },
-        {
-          element: '#saveButton',
-          intro: "Save your note regularly here.",
-        },
-        {
-          element: '#deleteButton',
-          intro: "Delete your note with caution—there's no undo.",
-        },
-        {
-          element: '#timePicker',
-          intro: "Set your note's time for scheduling or organization.",
-        },
-        {
-          element: '#locationPicker',
-          intro: "Pin a location to your note here.",
-        },
-        {
-          element: '#videoComponent',
-          intro: "Enhance notes with videos here.",
-        },
-        {
-          element: '#audioButton',
-          intro: "Add audio recordings to your note here.",
-        },
-        {
-          element: '#tagManager',
-          intro: "Organize your notes using tags here.",
-        },
-        {
-          element: '#richTextEditor',
-          intro: "This is your main writing and editing area. Style your text, add images, and more.",
-        },
-        {
-          
-          intro: "Tour complete. Restart any time by clicking 'Start Tour'.",
-        }
-        // Conclusion or further instructions...
-      ],
-    });
-
-      tour.oncomplete(() => user.setTourCompleted());
-      tour.onexit(() => user.setTourCompleted());
-  
-    tour.start();
-  };
-
-  
 
   return (
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
@@ -415,16 +324,6 @@ export default function NoteEditor({
           />
         </div>
         </div>
-    
-
-         {/* Start Tour Button */}
-  <button
-  id = "startTourButton"
-    className="hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center ml-4"
-    onClick={startTour}
-  >
-    <span>Start Tour</span>
-  </button>
       </div>
 
         {isAudioModalOpen && (

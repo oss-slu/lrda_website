@@ -5,13 +5,15 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import introJs from 'intro.js';
 import 'intro.js/introjs.css';
-import { useRouter } from "next/router";
+
 
 const user = User.getInstance();
 
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
-  const router = useRouter();
+  
+
+ 
 
   const handleLogout = async () => {
     try {
@@ -45,6 +47,22 @@ export default function Navbar() {
 
     fetchName();
   }, []);
+
+  const startTour = () => {
+    // Determine the current page or route
+    const currentPage = window.location.pathname;
+  
+    // Check the current page and start the corresponding tour
+    if (currentPage === "/lib/pages/map") {
+      startMapTour();
+    } else if (currentPage === "/lib/pages/notes" || currentPage === "/lib/pages/aboutPage") {
+      startNoteComponentTour();
+    } else {
+      // Default behavior or error handling if the page doesn't match any tour
+      console.error("No tour available for this page");
+    }
+  };
+
 
   const startMapTour = () => {
     const tour = introJs();
@@ -212,12 +230,12 @@ export default function Navbar() {
         </Link> }
 
         <Button
-          onClick={startMapTour}
-          style={{ marginTop: '-2px' }}
-          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
-        >
-          Tour
-        </Button>
+        onClick={startTour}
+  style={{ marginTop: '-2px' }}
+  className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
+>
+  Tour
+</Button>
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
