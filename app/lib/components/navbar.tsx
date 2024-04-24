@@ -5,11 +5,13 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import introJs from 'intro.js';
 import 'intro.js/introjs.css';
+import { useRouter } from "next/router";
 
 const user = User.getInstance();
 
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
@@ -44,10 +46,147 @@ export default function Navbar() {
     fetchName();
   }, []);
 
-   // Function to start the Intro.js tour
-   const startTour = () => {
-    introJs().start();
+  const startMapTour = () => {
+    const tour = introJs();
+    tour.setOptions({
+      steps: [
+        {
+          intro: "Welcome to Where's Religion Desktop! Lets take a quick tour of the Explore page.",
+        },
+        {
+          element: '#tourStepSearchBar',
+          intro: 'Use this search bar to quickly find notes based on their content or location. You can search for anything from note titles to tags or even note contents.',
+          position: 'bottom'
+        },
+
+        {
+          element: '#userInteractionIcons',
+          intro: 'Here you can toggle between global or personal notes, and manage your user settings. Each icon represents a different function, helping you customize your viewing experience.',
+          position: 'right'
+        },
+
+        {
+          element: '#globeIcon',
+          intro: 'Switching to global will display notes in a 100 miles radius on the right panel. Let\'s try it! Switch between the global and the user icon and notice how the notes displayed on the right side change.',
+          position: 'right',
+          tooltipClass: 'introjs-step-global-switch'  // Custom class for styling if needed
+        },
+        {
+          element: '#userIcon',
+          intro: 'Switching to this icon will only display your notes on the right panel. Make sure to switch back and forth twice.',
+          position: 'right',
+          tooltipClass: 'introjs-step-user-switch'  // Custom class for styling if needed
+        },
+
+        {
+          element: '.gm-bundled-control', // This is a generic class for bundled controls which might include zoom controls
+          intro: 'Use these buttons to zoom in and out on the map.',
+          position: 'right'
+        },
+     
+        {
+          
+          intro: "Tour complete. Restart any time by clicking 'Tour' on the NavBar.",
+        }
+        // Additional steps can be added here
+      ],
+      showProgress: true,
+      showBullets: false,
+      exitOnOverlayClick: false,
+      exitOnEsc: true,
+      nextLabel: 'Next >',
+      prevLabel: '< Back',
+      doneLabel: 'Finish',
+      skipLabel: 'Skip'
+    });
+
+    tour.onexit(() => {
+      console.log("Tour was exited");
+      // Perform any necessary cleanup or state updates here
+    });
+  
+    tour.oncomplete(() => {
+      console.log("Tour completed successfully");
+      // Perform any final actions once the tour is completed
+    });
+  
+    tour.start();
   };
+
+  const startNoteComponentTour = () => {
+    const tour = introJs();
+    tour.setOptions({
+      steps: [
+        {
+          intro: "Welcome! Let's quickly explore the note editor.",
+        },
+        {
+          element: '#tourStepSearchBar',
+          intro: "Find notes fast using this search bar.",
+        },
+        {
+          element: '#addNoteButton',
+          intro: "Click here to add a new note or refresh the editor.",
+        },
+        {
+          element: '#noteToolbar',
+          intro: "This toolbar has all your note tools. Let's check them out.",
+        },
+        {
+          element: '#noteTitleInput',
+          intro: "Enter your note's title here.",
+        },
+        {
+          element: '#publishToggle',
+          intro: "Switch this to make your note public or keep it private.",
+        },
+        {
+          element: '#saveButton',
+          intro: "Save your note regularly here.",
+        },
+        {
+          element: '#deleteButton',
+          intro: "Delete your note with caution—there's no undo.",
+        },
+        {
+          element: '#timePicker',
+          intro: "Set your note's time for scheduling or organization.",
+        },
+        {
+          element: '#locationPicker',
+          intro: "Pin a location to your note here.",
+        },
+        {
+          element: '#videoComponent',
+          intro: "Enhance notes with videos here.",
+        },
+        {
+          element: '#audioButton',
+          intro: "Add audio recordings to your note here.",
+        },
+        {
+          element: '#tagManager',
+          intro: "Organize your notes using tags here.",
+        },
+        {
+          element: '#richTextEditor',
+          intro: "This is your main writing and editing area. Style your text, add images, and more.",
+        },
+        {
+          
+          intro: "Tour complete. Restart any time by clicking 'Start Tour'.",
+        }
+        // Conclusion or further instructions...
+      ],
+    });
+
+      tour.oncomplete(() => user.setTourCompleted());
+      tour.onexit(() => user.setTourCompleted());
+  
+    tour.start();
+  };
+
+  
 
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
@@ -73,7 +212,7 @@ export default function Navbar() {
         </Link> }
 
         <Button
-          onClick={startTour}
+          onClick={startMapTour}
           style={{ marginTop: '-2px' }}
           className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
         >

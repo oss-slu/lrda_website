@@ -215,10 +215,13 @@ const Page = () => {
           position: new google.maps.LatLng(
             parseFloat(note.latitude),
             parseFloat(note.longitude)
+            
           ),
           icon: createMarkerIcon(false),
+          map: mapRef.current,
+          label: { text: note.id, color: "transparent" },
         });
-
+          
         attachMarkerEvents(marker, note);
         tempMarkers.set(note.id, marker);
       });
@@ -558,7 +561,7 @@ const Page = () => {
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                <div className="min-w-[80px] mr-3">
+                <div className="min-w-[80px] mr-3" id="tourStepSearchBar" >
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}
@@ -567,10 +570,10 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <div className="flex flex-row justify-evenly items-center">
-                    <GlobeIcon className="text-primary" />
+                  <div className="flex flex-row justify-evenly items-center" id="userInteractionIcons">
+                    <GlobeIcon className="text-primary" id="globeIcon" />
                     <Switch onClick={toggleFilter} />
-                    <UserIcon className="text-primary" />
+                    <UserIcon className="text-primary" id="userIcon" />
                   </div>
                 ) : null}
               </div>
