@@ -208,6 +208,7 @@ const Page = () => {
           setActiveNote(null);
           marker.setIcon(createMarkerIcon(false));
         });
+
       };
 
       filteredNotes.forEach((note) => {
@@ -220,7 +221,10 @@ const Page = () => {
           icon: createMarkerIcon(false),
           map: mapRef.current,
           label: { text: note.id, color: "transparent" },
-        });
+          
+        }); 
+        
+  
           
         attachMarkerEvents(marker, note);
         tempMarkers.set(note.id, marker);
@@ -542,6 +546,7 @@ const Page = () => {
     }
   }
 
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex-grow">
@@ -588,7 +593,7 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" id="notesSection">
         {isLoading ? (
           [...Array(6)].map((_, index) => (
             <Skeleton

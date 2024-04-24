@@ -7,14 +7,13 @@ import introJs from 'intro.js';
 import 'intro.js/introjs.css';
 
 
+
 const user = User.getInstance();
 
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
   
-
- 
-
+  
   const handleLogout = async () => {
     try {
       await user.logout();
@@ -47,6 +46,15 @@ export default function Navbar() {
 
     fetchName();
   }, []);
+
+  useEffect(() => {
+    user.hasCompletedTour().then((completed) => {
+      if (!completed) {
+        startTour(); // Start the tour if it hasn't been completed
+      }
+    });
+  }, []);
+
 
   const startTour = () => {
     // Determine the current page or route
@@ -96,10 +104,16 @@ export default function Navbar() {
           tooltipClass: 'introjs-step-user-switch'  // Custom class for styling if needed
         },
 
+
+
         {
           element: '.gm-bundled-control', // This is a generic class for bundled controls which might include zoom controls
           intro: 'Use these buttons to zoom in and out on the map.',
           position: 'right'
+        },
+        {
+          element: '#notesSection',
+          intro: 'Your created notes or other uses notes will be displayed here based on your selection.',
         },
      
         {
@@ -125,6 +139,7 @@ export default function Navbar() {
   
     tour.oncomplete(() => {
       console.log("Tour completed successfully");
+      user.setTourCompleted(); // Mark the tour as completed
       // Perform any final actions once the tour is completed
     });
   
@@ -146,13 +161,14 @@ export default function Navbar() {
           element: '#addNoteButton',
           intro: "Click here to add a new note or refresh the editor.",
         },
-        {
-          element: '#noteToolbar',
-          intro: "This toolbar has all your note tools. Let's check them out.",
-        },
+
         {
           element: '#noteTitleInput',
           intro: "Enter your note's title here.",
+        },
+        {
+          element: '#noteToolbar',
+          intro: "This toolbar has all your note tools. Let's check them out.",
         },
         {
           element: '#publishToggle',
@@ -231,11 +247,11 @@ export default function Navbar() {
 
         <Button
         onClick={startTour}
-  style={{ marginTop: '-2px' }}
-  className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
->
-  Tour
-</Button>
+         style={{ marginTop: '-2px' }}
+        className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-2"
+        >
+        Tour
+        </Button>
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
