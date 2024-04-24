@@ -5,6 +5,9 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import introJs from 'intro.js';
 import 'intro.js/introjs.css';
+import '../../globals.css';
+
+
 
 
 
@@ -78,17 +81,20 @@ export default function Navbar() {
       steps: [
         {
           intro: "Welcome to Where's Religion Desktop! Lets take a quick tour of the Explore page.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#tourStepSearchBar',
           intro: 'Use this search bar to quickly find notes based on their content or location. You can search for anything from note titles to tags or even note contents.',
-          position: 'bottom'
+          position: 'bottom',
+          tooltipClass: 'customTooltipClass'
         },
 
         {
           element: '#userInteractionIcons',
           intro: 'Here you can toggle between global or personal notes, and manage your user settings. Each icon represents a different function, helping you customize your viewing experience.',
-          position: 'right'
+          position: 'right',
+          tooltipClass: 'customTooltipClass'
         },
 
         {
@@ -104,21 +110,22 @@ export default function Navbar() {
           tooltipClass: 'introjs-step-user-switch'  // Custom class for styling if needed
         },
 
-
-
         {
-          element: '.gm-bundled-control', // This is a generic class for bundled controls which might include zoom controls
-          intro: 'Use these buttons to zoom in and out on the map.',
-          position: 'right'
+          element: '.popup-bubble', // Class of the popup bubbles for pins
+          intro: 'Hover over a pin to see a preview of the note.',
+          position: 'top',
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#notesSection',
           intro: 'Your created notes or other uses notes will be displayed here based on your selection.',
+          tooltipClass: 'customTooltipClass'
         },
      
         {
           
           intro: "Tour complete. Restart any time by clicking 'Tour' on the NavBar.",
+          tooltipClass: 'customTooltipClass'
         }
         // Additional steps can be added here
       ],
@@ -152,63 +159,78 @@ export default function Navbar() {
       steps: [
         {
           intro: "Welcome! Let's quickly explore the note editor.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#tourStepSearchBar',
           intro: "Find notes fast using this search bar.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#addNoteButton',
           intro: "Click here to add a new note or refresh the editor.",
+          tooltipClass: 'customTooltipClass'
         },
 
         {
           element: '#noteTitleInput',
           intro: "Enter your note's title here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#noteToolbar',
           intro: "This toolbar has all your note tools. Let's check them out.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#publishToggle',
           intro: "Switch this to make your note public or keep it private.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#saveButton',
           intro: "Save your note regularly here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#deleteButton',
           intro: "Delete your note with caution—there's no undo.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#timePicker',
           intro: "Set your note's time for scheduling or organization.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#locationPicker',
           intro: "Pin a location to your note here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#videoComponent',
           intro: "Enhance notes with videos here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#audioButton',
           intro: "Add audio recordings to your note here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#tagManager',
           intro: "Organize your notes using tags here.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           element: '#richTextEditor',
           intro: "This is your main writing and editing area. Style your text, add images, and more.",
+          tooltipClass: 'customTooltipClass'
         },
         {
           
           intro: "Tour complete. Restart any time by clicking 'Start Tour'.",
+          tooltipClass: 'customTooltipClass'
         }
         // Conclusion or further instructions...
       ],
