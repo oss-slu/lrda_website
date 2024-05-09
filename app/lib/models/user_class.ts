@@ -142,4 +142,25 @@ export class User {
     }
     return this.userData?.roles ?? null;
   }
+
+// Set tour completed flag
+public async setTourCompleted(): Promise<void> {
+  try {
+    await setItem('tourCompleted', '1');
+  } catch (error) {
+    console.error("Error setting tour completed flag:", error);
+  }
+}
+
+// Check if the tour has been completed
+public async hasCompletedTour(): Promise<boolean> {
+  try {
+    const completed = await getItem('tourCompleted');
+    return completed === '1';
+  } catch (error) {
+    console.error("Error checking tour completed flag:", error);
+    return false;
+  }
+}
+
 }
