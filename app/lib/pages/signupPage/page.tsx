@@ -1,3 +1,4 @@
+// pages/signup.js
 'use client'
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -6,6 +7,8 @@ import { toast } from 'sonner';
 import { auth } from '../../config'; 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { validateEmail, validatePassword } from '../../utils/validation';
+import { User } from '../../models/user_class';
+import ApiService from '../../utils/api_service';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -23,7 +26,25 @@ const SignupPage = () => {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, username, password);
+      const user = userCredential.user;
+
+      // Create user data in the API
+      const userData = {
+        "@id": user.uid,
+        name: user.displayName || "",
+        roles: {
+          administrator: false,
+          contributor: true,
+        },
+      };
+      await ApiService.createUserData(userData);
+
       toast.success("Signup successful!");
+
+      // Set the user as logged in
+      const userInstance = User.getInstance();
+      userInstance.login(username, password);
+
       // Optionally, redirect the user or perform other actions
     } catch (error) {
       toast.error(`Signup failed: ${error}`);

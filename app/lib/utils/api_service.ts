@@ -1,4 +1,5 @@
 import { Note } from "@/app/types";
+import { UserData } from "../../types";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
@@ -48,6 +49,61 @@ export default class ApiService {
       throw error;
     }
   }
+
+  /**
+   * Fetches user data from the API based on UID.
+   * @param {string} uid - The UID of the user.
+   * @returns {Promise<UserData | null>} The user data.
+   */
+  static async fetchUserData(uid: string): Promise<UserData | null> {
+    try {
+      const url = RERUM_PREFIX + "query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const body = {
+        type: "user",
+        creator: uid,
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      return data.length ? data[0] : null;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Creates user data in the API.
+   * @param {UserData} userData - The user data to be created.
+   * @returns {Promise<Response>} The response from the API.
+   */
+  static async createUserData(userData: UserData) {
+    try {
+      const response = await fetch(RERUM_PREFIX + "create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "user",
+          ...userData,
+        }),
+      });
+      return response;
+    } catch (error) {
+      console.error("Error creating user data:", error);
+      throw error;
+    }
+  }
+
 
   /**
    * Deletes a note from the API.
