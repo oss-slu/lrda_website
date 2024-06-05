@@ -5,6 +5,7 @@ import RegisterButton from '../../components/register_button';
 import { toast } from 'sonner';
 import { auth } from '../../config'; 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { validateEmail, validatePassword } from '../../utils/validation';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -12,6 +13,9 @@ const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSignup = async () => {
+    if (!validateEmail(username)) return;
+    if (!validatePassword(password)) return;
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
