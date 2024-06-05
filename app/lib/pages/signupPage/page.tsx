@@ -1,15 +1,30 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import RegisterButton from '../../components/register_button';
 import { toast } from 'sonner';
+import { auth } from '../../config'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
-const SignupPage: React.FC = () => {
+const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Add your Firebase sign-up logic here
+  const handleSignup = async () => {
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, username, password);
+      toast.success("Signup successful!");
+      // Optionally, redirect the user or perform other actions
+    } catch (error) {
+      toast.error(`Signup failed: ${error}`);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD]">
@@ -54,7 +69,9 @@ const SignupPage: React.FC = () => {
             />
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center">
-            <RegisterButton />
+            <button onClick={handleSignup} className="w-full bg-blue-500 text-white p-3 rounded-lg">
+              Sign Up
+            </button>
           </div>
         </div>
       </div>
