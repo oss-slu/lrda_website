@@ -11,12 +11,15 @@ import { User } from '../../models/user_class';
 import ApiService from '../../utils/api_service';
 
 const SignupPage = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [institution, setInstitution] = useState('');
 
   const handleSignup = async () => {
-    if (!validateEmail(username)) return;
+    if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
 
     if (password !== confirmPassword) {
@@ -25,13 +28,13 @@ const SignupPage = () => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, username, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Create user data in the API
       const userData = {
         "@id": user.uid,
-        name: user.displayName || "",
+        name: `${firstName} ${lastName}`,
         roles: {
           administrator: false,
           contributor: true,
@@ -43,7 +46,7 @@ const SignupPage = () => {
 
       // Set the user as logged in
       const userInstance = User.getInstance();
-      userInstance.login(username, password);
+      userInstance.login(email, password);
 
       // Optionally, redirect the user or perform other actions
     } catch (error) {
@@ -69,16 +72,34 @@ const SignupPage = () => {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Username..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
           <div className="mb-4">
             <input
               type="password"
-              placeholder="Password..."
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
@@ -87,7 +108,7 @@ const SignupPage = () => {
           <div className="mb-4">
             <input
               type="password"
-              placeholder="Confirm Password..."
+              placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
