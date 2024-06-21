@@ -50,12 +50,13 @@ export default class ApiService {
     }
   }
 
-  /**
+
+   /**
    * Fetches user data from the API based on UID.
    * @param {string} uid - The UID of the user.
    * @returns {Promise<UserData | null>} The user data.
    */
-  static async fetchUserData(uid: string): Promise<UserData | null> {
+   static async fetchUserData(uid: string): Promise<UserData | null> {
     try {
       const url = RERUM_PREFIX + "query";
       const headers = {
@@ -63,8 +64,8 @@ export default class ApiService {
       };
       const body = {
         "@context": "http://store.rerum.io/v1/context.json",
-      "uid": uid,
-      "@type": "Agent",
+        "uid": uid,
+        "@type": "Agent",
       };
 
       const response = await fetch(url, {
@@ -81,6 +82,8 @@ export default class ApiService {
     }
   }
 
+
+
   /**
    * Creates user data in the API.
    * @param {UserData} userData - The user data to be created.
@@ -94,7 +97,8 @@ export default class ApiService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          type: "user",
+          "@context": "http://store.rerum.io/v1/context.json",
+          "@type": "Agent",
           ...userData,
         }),
       });

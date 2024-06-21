@@ -1,9 +1,8 @@
-// utils/user_class.ts
 import { UserData } from "../../types";
 import { getItem, setItem } from "../utils/async_storage";
 import { auth } from "../config"; // Adjust the path as necessary
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
-import ApiService from '../utils/api_service'; 
+import ApiService from '../utils/api_service';
 
 export class User {
   private static instance: User;
