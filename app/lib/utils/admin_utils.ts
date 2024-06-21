@@ -3,6 +3,7 @@ import { JSONContent } from "@tiptap/core";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress"
 import { useState } from "react";
+import ApiService from "./api_service";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
@@ -185,6 +186,46 @@ export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) =>
     });
 
     return overwriteResponse;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+
+export const handleUpdateCreatorUid = async (oldRerumId: string, newFirebaseId: string) => {
+  try {
+    const notes = await ApiService.fetchMessages(false, false, oldRerumId);
+    
+    const updatePromises = notes.map(async (note: any) => {
+      note.creator = newFirebaseId;
+
+      try {
+        const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(note),
+        });
+        
+        return {
+          noteId: note["@id"],
+          status: overwriteResponse.ok ? "success" : "failure",
+          statusText: overwriteResponse.statusText,
+        };
+      } catch (error) {
+        console.error(`Failed to update note ${note["@id"]}:`, error);
+        return {
+          noteId: note["@id"],
+          status: "error",
+          error: error,
+        };
+      }
+    });
+
+    const results = await Promise.all(updatePromises);
+    return results;
   } catch (error) {
     console.error('Error:', error);
     throw error;

@@ -117,7 +117,7 @@ export class User {
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
-    return this.userData?.["@id"] ?? null;
+    return this.userData?.["uid"] ?? null;
   }
 
   public async getName(): Promise<string | null> {

@@ -13,7 +13,7 @@ import {
   };
   
   export type UserData = {
-    "@id": string;
+    uid: string;
     name: string;
     roles: {
       administrator: boolean;
@@ -33,6 +33,7 @@ import {
     longitude: string;
     published: boolean | undefined;
     tags: string[];
+    uid
   };
 
   export type CombinedResult =
