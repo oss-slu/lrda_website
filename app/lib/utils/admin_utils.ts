@@ -166,3 +166,27 @@ export const handleRemoveParameter = async (parameterName: string, setProgress: 
 };
 
 
+export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) => {
+  try {
+    const response = await fetch(oldRerumId);
+    const oldData = await response.json();
+
+    const updatedUser = {
+      ...oldData,
+      uid: newFirebaseId,
+    };
+
+    const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedUser),
+    });
+
+    return overwriteResponse;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};

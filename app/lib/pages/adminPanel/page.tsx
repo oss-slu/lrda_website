@@ -28,6 +28,7 @@ import {
   handleAddParameter,
   handleLogin,
   handleRemoveParameter,
+  handleAddUid
 } from "../../utils/admin_utils";
 import { Progress } from "@/components/ui/progress";
 
@@ -52,6 +53,9 @@ export default function AdminPanel() {
   const [deleteValue, setDeleteValue] = useState("");
   const [isUnlocked, setUnlocked] = useState(false);
   const [pasVal, setPasVal] = useState("");
+
+  const [oldRerumId, setOldRerumId] = useState("");
+  const [newFirebaseId, setNewFirebaseId] = useState("");
 
   useEffect(() => {
     if (pasVal == paskey) {
@@ -98,6 +102,20 @@ export default function AdminPanel() {
     return template;
   }
 
+  const handleSubmit = async (oldRerumId: string, newFirebaseId: string) => {
+    try {
+      const response = await handleAddUid(oldRerumId, newFirebaseId);
+      if (response.ok) {
+        alert('UID added successfully.');
+      } else {
+        alert('Failed to add UID.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred.');
+    }
+  };
+
   return (
     <div className="flex flex-col justify-center w-screen p-4 py-8 overflow-auto">
       <ScrollArea className="w-full max-w-4xl self-center justify-center">
@@ -128,6 +146,7 @@ export default function AdminPanel() {
                 <TabsList className="justify-center">
                   <TabsTrigger value="note">Note Schema</TabsTrigger>
                   <TabsTrigger value="account">Account Schema</TabsTrigger>
+                  <TabsTrigger value="uid">Add UID</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="account" className="w-full p-3">
@@ -339,6 +358,26 @@ export default function AdminPanel() {
                   </Tabs>
                 </Card>
               </TabsContent>
+
+              <TabsContent value="uid" className="w-full p-3">
+                <div className="text-lg font-semibold mb-2">
+                  Add UID to Rerum ID
+                </div>
+                <Input
+                  className="mb-2"
+                  placeholder="Old Rerum ID"
+                  value={oldRerumId}
+                  onChange={(e) => setOldRerumId(e.target.value)}
+                />
+                <Input
+                  className="mb-2"
+                  placeholder="New Firebase ID"
+                  value={newFirebaseId}
+                  onChange={(e) => setNewFirebaseId(e.target.value)}
+                />
+                <Button onClick={() => handleSubmit(oldRerumId, newFirebaseId)}>Submit</Button>
+              </TabsContent>
+
             </Tabs>
           )}
         </Card>

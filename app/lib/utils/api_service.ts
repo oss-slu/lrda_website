@@ -62,8 +62,9 @@ export default class ApiService {
         "Content-Type": "application/json",
       };
       const body = {
-        type: "user",
-        creator: uid,
+        "@context": "http://store.rerum.io/v1/context.json",
+      "uid": uid,
+      "@type": "Agent",
       };
 
       const response = await fetch(url, {
