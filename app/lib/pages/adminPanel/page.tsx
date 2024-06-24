@@ -113,7 +113,7 @@ const oldIdnewIdDictionary: { [key: string]: string } = {
   "https://devstore.rerum.io/v1/id/662141e65cc3848690279e8b": "w63WlxJTUtdpF1V7V6oQYXsxHmm1",
   "https://devstore.rerum.io/v1/id/65566d276d6aec4f5f2a9199": "vgjMNKc6GKX22Qzca9tdHembZK82",
   "https://devstore.rerum.io/v1/id/65721056c8758d146d4288b5": "DhxYnDMWYkZUpb1QT1ktYiIGGt03",
-  "https://devstore.rerum.io/v1/id/642d9f642e224e81da07cb00": "mPpZp21UPnZSqevTcExeLXC"
+  "https://devstore.rerum.io/v1/id/642d9f642e224e81da07cb00": "mPpZp21UPnZSqevTcExeLXCxhfP2"
 }
 
 // const oldIdnewIdDictionary: { [key: string]: string } = {
@@ -163,7 +163,7 @@ const oldIdnewIdDictionary: { [key: string]: string } = {
 //   "https://devstore.rerum.io/v1/id/662141e65cc3848690279e8b": "w63WlxJTUtdpF1V7V6oQYXsxHmm1",
 //   "https://devstore.rerum.io/v1/id/65566d276d6aec4f5f2a9199": "vgjMNKc6GKX22Qzca9tdHembZK82",
 //   "https://devstore.rerum.io/v1/id/65721056c8758d146d4288b5": "DhxYnDMWYkZUpb1QT1ktYiIGGt03",
-//   "https://devstore.rerum.io/v1/id/642d9f642e224e81da07cb00": "mPpZp21UPnZSqevTcExeLXC"
+//   "https://devstore.rerum.io/v1/id/642d9f642e224e81da07cb00": "mPpZp21UPnZSqevTcExeLXCxhfP2"
 //   };
 
 export default function AdminPanel() {
