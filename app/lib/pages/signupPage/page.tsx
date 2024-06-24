@@ -1,22 +1,22 @@
 // pages/signup.js
-'use client'
-import React, { useState } from 'react';
-import Image from 'next/image';
-import RegisterButton from '../../components/register_button';
-import { toast } from 'sonner';
-import { auth } from '../../config'; 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { validateEmail, validatePassword } from '../../utils/validation';
-import { User } from '../../models/user_class';
-import ApiService from '../../utils/api_service';
+"use client";
+import React, { useState } from "react";
+import Image from "next/image";
+import RegisterButton from "../../components/register_button";
+import { toast } from "sonner";
+import { auth } from "../../config";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { validateEmail, validatePassword } from "../../utils/validation";
+import { User } from "../../models/user_class";
+import ApiService from "../../utils/api_service";
 
 const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [institution, setInstitution] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [institution, setInstitution] = useState("");
 
   const handleSignup = async () => {
     if (!validateEmail(email)) return;
@@ -28,12 +28,16 @@ const SignupPage = () => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Create user data in the API
       const userData = {
-        'uid': user.uid,
+        uid: user.uid,
         name: `${firstName} ${lastName}`,
         roles: {
           administrator: false,
@@ -46,9 +50,13 @@ const SignupPage = () => {
 
       // Set the user as logged in
       const userInstance = User.getInstance();
-      userInstance.login(email, password);
+      await userInstance.login(email, password);
 
-      // Optionally, redirect the user or perform other actions
+      // Optional delay to ensure everything is set up
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Redirect the user
+      window.location.href = "/";
     } catch (error) {
       toast.error(`Signup failed: ${error}`);
     }
@@ -115,7 +123,10 @@ const SignupPage = () => {
             />
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center">
-            <button onClick={handleSignup} className="w-full bg-blue-500 text-white p-3 rounded-lg">
+            <button
+              onClick={handleSignup}
+              className="w-full bg-blue-500 text-white p-3 rounded-lg"
+            >
               Sign Up
             </button>
           </div>
