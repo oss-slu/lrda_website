@@ -96,12 +96,12 @@ export default function Navbar() {
             >
               Login
             </Button>
-            <Button
+            {/* <Button
               onClick={() => (window.location.href = "/lib/pages/signupPage")}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
             >
               Sign Up
-            </Button>
+            </Button> */}
           </>
         )}
       </div>
