@@ -33,7 +33,7 @@ const SignupPage = () => {
 
       // Create user data in the API
       const userData = {
-        "@id": user.uid,
+        'uid': user.uid,
         name: `${firstName} ${lastName}`,
         roles: {
           administrator: false,
