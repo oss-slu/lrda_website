@@ -63,10 +63,13 @@ export default class ApiService {
         "Content-Type": "application/json",
       };
       const body = {
-        "@context": "http://store.rerum.io/v1/context.json",
-        "uid": uid,
-        "@type": "Agent",
+        "$or": [
+          { "@type": "Agent", "uid": uid },
+          { "@type": "foaf:Agent", "uid": uid }
+        ]
       };
+
+      console.log(`Querying for user data with UID: ${uid}`);
 
       const response = await fetch(url, {
         method: "POST",
@@ -75,6 +78,7 @@ export default class ApiService {
       });
 
       const data = await response.json();
+      console.log(`User Data:`, data);
       return data.length ? data[0] : null;
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -97,7 +101,6 @@ export default class ApiService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          "@context": "http://store.rerum.io/v1/context.json",
           "@type": "Agent",
           ...userData,
         }),
@@ -318,24 +321,44 @@ export default class ApiService {
     }
   }
 
-  /**
-   * Fetches the name of the creator from a given URL.
-   * @param {string} creatorUrl - The URL pointing to the creator's information.
+ /**
+   * Fetches the name of the creator by querying the API with the given creatorId.
+   * @param {string} creatorId - The UID of the creator.
    * @returns {Promise<string>} The name of the creator.
    */
-  static async fetchCreatorName(creatorUrl: string): Promise<string> {
-    try {
-      const response = await fetch(creatorUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.name;
-    } catch (error) {
-      console.error("Error fetching creator name:", error);
-      throw error;
+ static async fetchCreatorName(creatorId: string): Promise<string> {
+  try {
+    const url = RERUM_PREFIX + "query";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = {
+      "$or": [
+        { "@type": "Agent", "uid": creatorId },
+        { "@type": "foaf:Agent", "uid": creatorId }
+      ]
+    };
+
+    console.log(`Querying with UID: ${creatorId}`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    console.log(`Data:`, data);
+    if (data.length && data[0].name) {
+      return data[0].name;
+    } else {
+      throw new Error("Creator not found or no name attribute.");
     }
+  } catch (error) {
+    console.error(`Error fetching creator name:`, error, creatorId);
+    throw error;
   }
+}
 }
 
 export function getVideoThumbnail(file: File, seekTo = 0.0) {
