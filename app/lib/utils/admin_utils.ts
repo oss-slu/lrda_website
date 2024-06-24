@@ -174,7 +174,7 @@ export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) =>
 
     const updatedUser = {
       ...oldData,
-      uid: newFirebaseId,
+      "wr:uid": newFirebaseId,
     };
 
     const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {

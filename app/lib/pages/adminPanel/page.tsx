@@ -121,7 +121,6 @@ const oldIdnewIdDictionary: { [key: string]: string } = {
   "https://devstore.rerum.io/v1/id/65c4f57ece3cc6a72dfc3623" : "TVtEoypsz4V44iHBbLFFov0nQHs2",
   "https://devstore.rerum.io/v1/id/65baa9c91d442f7c715c9b8b" :"ksQBkVMKbGOonzkWEJpw4ib1Iz82",
   "https://devstore.rerum.io/v1/id/65ef34165d508d3d84952362" : "YE6f3GtDHSTeye9b7rvKPGDjfkD2",
-
 }
 export default function AdminPanel() {
   const [noteTemplate, setnoteTemplate] = useState<noteTemplate | string>(
@@ -198,6 +197,15 @@ export default function AdminPanel() {
       console.error('Error:', error);
       alert('An error occurred.');
     }
+  };
+
+  const updateAllUids = async () => {
+    for (const oldRerumId in oldIdnewIdDictionary) {
+      const newFirebaseId = oldIdnewIdDictionary[oldRerumId];
+      console.log(`Updating UID for ${oldRerumId} to ${newFirebaseId}`);
+      await handleAddUid(oldRerumId, newFirebaseId);
+    }
+    alert('All UIDs updated successfully.');
   };
 
   const handleUpdateCreator = async (oldRerumId: string, newFirebaseId: string) => {
@@ -481,6 +489,7 @@ export default function AdminPanel() {
                   onChange={(e) => setNewFirebaseId(e.target.value)}
                 />
                 <Button onClick={() => handleSubmit(oldRerumId, newFirebaseId)}>Submit</Button>
+                <Button onClick={updateAllUids} className="mt-4">Update All UIDs</Button>
               </TabsContent>
 
               <TabsContent value="updateCreator" className="w-full p-3">
