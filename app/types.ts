@@ -33,7 +33,7 @@ import {
     longitude: string;
     published: boolean | undefined;
     tags: string[];
-    uid
+    uid : string
   };
 
   export type CombinedResult =
