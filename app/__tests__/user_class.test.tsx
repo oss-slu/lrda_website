@@ -1,4 +1,9 @@
 import { User } from '../lib/models/user_class';
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import ApiService from '../lib/utils/api_service';
+
+jest.mock('firebase/auth');
+jest.mock('../lib/utils/api_service');
 
 describe('User class', () => {
   let user: User;
@@ -8,7 +13,8 @@ describe('User class', () => {
     roles: {
       administrator: true,
       contributor: false,
-    }
+    },
+    uid: "mockId123"
   };
 
   beforeEach(() => {
@@ -19,32 +25,33 @@ describe('User class', () => {
 
   describe('login', () => {
     it('logs in the user successfully', async () => {
-      global.fetch = jest.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockUserData),
-        })
-      );
+      const mockUserCredential = {
+        user: { uid: mockUserData.uid }
+      };
+
+      signInWithEmailAndPassword.mockResolvedValue(mockUserCredential);
+      ApiService.fetchUserData.mockResolvedValue(mockUserData);
 
       await user.login('testUser', 'testPass');
       const userId = await user.getId();
-      expect(userId).toBe(mockUserData['@id']);
+      expect(userId).toBe(mockUserData.uid);
     });
 
     it('fails to log in due to server error', async () => {
-      global.fetch = jest.fn(() => Promise.resolve({ ok: false }));
+      const errorMessage = 'There was a server error logging in.';
+      signInWithEmailAndPassword.mockRejectedValue(new Error(errorMessage));
 
       try {
         await user.login('testUser', 'testPass');
       } catch (error) {
-        expect(error.message).toBe('There was a server error logging in.');
+        expect(error.message).toBe(errorMessage);
       }
     });
   });
 
   describe('logout', () => {
     it('logs out the user successfully', async () => {
-      global.fetch = jest.fn(() => Promise.resolve({ ok: true }));
+      signOut.mockResolvedValue();
       await user.logout();
 
       const userId = await user.getId();
@@ -56,7 +63,7 @@ describe('User class', () => {
     it("retrieves the user's ID successfully", async () => {
       localStorage.setItem('userData', JSON.stringify(mockUserData));
       const userId = await user.getId();
-      expect(userId).toBe(mockUserData['@id']);
+      expect(userId).toBe(mockUserData.uid);
     });
   });
 
@@ -75,5 +82,4 @@ describe('User class', () => {
       expect(userRoles).toEqual(mockUserData.roles);
     });
   });
-
 });

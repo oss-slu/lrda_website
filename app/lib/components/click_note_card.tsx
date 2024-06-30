@@ -63,12 +63,13 @@ const ClickableNote: React.FC<{
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
   const tags: string[] = note.tags;
+  console.log(note);
 
   useEffect(() => {
     ApiService.fetchCreatorName(note.creator)
       .then((name) => setCreator(name))
       .catch((error) => {
-        console.error("Error fetching creator name:", error);
+        console.error("Error fetching creator name:", error, note.creator);
         setCreator("Error loading name");
       });
   }, [note.creator]);

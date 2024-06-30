@@ -19,7 +19,7 @@ export default class DataConversion {
         var offsetInHours = date.getTimezoneOffset() / 60;
         time.setHours(time.getHours() - offsetInHours);
       } else {
-        time = new Date (message.time);
+        time = new Date(message.time);
       }
 
       const mediaItems = message.media.map((item: any) => {
@@ -72,6 +72,7 @@ export default class DataConversion {
         longitude: message.longitude || "",
         published: message.published || false,
         tags: message.tags || [],
+        uid: message.uid, // Add the uid property here
       };
     });
 
@@ -81,61 +82,13 @@ export default class DataConversion {
 
     return fetchedNotes;
   }
+
   /**
    * Extracts images from the fetched notes and returns an array of ImageNote objects.
    * @param {Note[]} fetchedNotes - The fetched notes containing media items.
    * @returns {ImageNote[]} The extracted images with corresponding note information.
    */
   static extractImages(fetchedNotes: Note[]): ImageNote[] {
-    /**
-     * Represents an image with its corresponding note information.
-     * @typedef {Object} ImageNote
-     * @property {any} image - The image data.
-     * @property {Note} note - The note information.
-     */
-
-    /**
-     * Represents a note with its properties.
-     * @typedef {Object} Note
-     * @property {string} id - The ID of the note.
-     * @property {string} title - The title of the note.
-     * @property {string} text - The text content of the note.
-     * @property {string} time - The timestamp of the note.
-     * @property {(VideoType | PhotoType)[]} media - The media items associated with the note.
-     * @property {AudioType[]} audio - The audio items associated with the note.
-     * @property {string} creator - The creator of the note.
-     * @property {string} latitude - The latitude coordinate of the note.
-     * @property {string} longitude - The longitude coordinate of the note.
-     * @property {boolean} published - The published status of the note.
-     */
-
-    /**
-     * Represents a video media item.
-     * @typedef {Object} VideoType
-     * @property {string} uuid - The UUID of the video.
-     * @property {string} type - The type of the media item (e.g., "video").
-     * @property {string} uri - The URI of the video.
-     * @property {string} thumbnail - The thumbnail URI of the video.
-     * @property {number} duration - The duration of the video in seconds.
-     */
-
-    /**
-     * Represents an audio media item.
-     * @typedef {Object} AudioType
-     * @property {string} uuid - The UUID of the audio.
-     * @property {string} type - The type of the media item (e.g., "audio").
-     * @property {string} uri - The URI of the audio.
-     * @property {number} duration - The duration of the audio in seconds.
-     * @property {string} name - The name of the audio.
-     */
-
-    /**
-     * Represents a photo media item.
-     * @typedef {Object} PhotoType
-     * @property {string} uuid - The UUID of the photo.
-     * @property {string} type - The type of the media item (e.g., "photo").
-     * @property {string} uri - The URI of the photo.
-     */
     const extractedImages: ImageNote[] = fetchedNotes.flatMap((note) => {
       return note.media.map((item: any) => {
         if (item.type === "video") {
@@ -169,6 +122,7 @@ export default class DataConversion {
               longitude: note.longitude,
               published: note?.published || false,
               tags: note?.tags || [],
+              uid: note.uid, // Add the uid property here
             },
           };
         } else {
@@ -202,6 +156,7 @@ export default class DataConversion {
               longitude: note.longitude,
               published: note?.published || false,
               tags: note?.tags || [],
+              uid: note.uid, // Add the uid property here
             },
           };
         }
