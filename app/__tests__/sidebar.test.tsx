@@ -22,7 +22,6 @@ jest.mock('firebase/auth', () => {
         user: {
           uid: 'mockUserId',
           email,
-          
         },
       });
     }),
