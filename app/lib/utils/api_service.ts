@@ -1,4 +1,5 @@
 import { Note } from "@/app/types";
+import { UserData } from "../../types";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 
@@ -49,6 +50,69 @@ export default class ApiService {
     }
   }
 
+
+   /**
+   * Fetches user data from the API based on UID.
+   * @param {string} uid - The UID of the user.
+   * @returns {Promise<UserData | null>} The user data.
+   */
+   static async fetchUserData(uid: string): Promise<UserData | null> {
+    try {
+      const url = RERUM_PREFIX + "query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const body = {
+        "$or": [
+          { "@type": "Agent", "uid": uid },
+          { "@type": "foaf:Agent", "uid": uid }
+        ]
+      };
+
+      console.log(`Querying for user data with UID: ${uid}`);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      console.log(`User Data:`, data);
+      return data.length ? data[0] : null;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      return null;
+    }
+  }
+
+
+
+  /**
+   * Creates user data in the API.
+   * @param {UserData} userData - The user data to be created.
+   * @returns {Promise<Response>} The response from the API.
+   */
+  static async createUserData(userData: UserData) {
+    try {
+      const response = await fetch(RERUM_PREFIX + "create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "@type": "Agent",
+          ...userData,
+        }),
+      });
+      return response;
+    } catch (error) {
+      console.error("Error creating user data:", error);
+      throw error;
+    }
+  }
+
+
   /**
    * Deletes a note from the API.
    * @param {string} id - The ID of the note to delete.
@@ -92,7 +156,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async writeNewNote(note: Note) {
-    return fetch(RERUM_PREFIX + "create", {
+    return fetch(RERUM_PREFIX + "creating", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -257,24 +321,44 @@ export default class ApiService {
     }
   }
 
-  /**
-   * Fetches the name of the creator from a given URL.
-   * @param {string} creatorUrl - The URL pointing to the creator's information.
+ /**
+   * Fetches the name of the creator by querying the API with the given creatorId.
+   * @param {string} creatorId - The UID of the creator.
    * @returns {Promise<string>} The name of the creator.
    */
-  static async fetchCreatorName(creatorUrl: string): Promise<string> {
-    try {
-      const response = await fetch(creatorUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.name;
-    } catch (error) {
-      console.error("Error fetching creator name:", error);
-      throw error;
+ static async fetchCreatorName(creatorId: string): Promise<string> {
+  try {
+    const url = RERUM_PREFIX + "query";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = {
+      "$or": [
+        { "@type": "Agent", "uid": creatorId },
+        { "@type": "foaf:Agent", "uid": creatorId }
+      ]
+    };
+
+    console.log(`Querying with UID: ${creatorId}`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    console.log(`Data:`, data);
+    if (data.length && data[0].name) {
+      return data[0].name;
+    } else {
+      throw new Error("Creator not found or no name attribute.");
     }
+  } catch (error) {
+    console.error(`Error fetching creator name:`, error, creatorId);
+    throw error;
   }
+}
 }
 
 export function getVideoThumbnail(file: File, seekTo = 0.0) {
