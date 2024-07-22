@@ -1,7 +1,9 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
+const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
@@ -11,8 +13,39 @@ export default class ApiService {
    * Fetches messages from the API.
    * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
    * @param {string} userId - The ID of the user for user-specific messages.
+   * @param {string} noteContent - The content of the note.
    * @returns {Promise<any[]>} The array of messages fetched from the API.
    */
+
+  static async generateTags(noteContent: string): Promise<string[]> {
+    const prompt = `Suggest one word tags for the following notes:\n${noteContent}\nTags as an ethnographer:`;
+    try {
+      const response = await fetch('https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          max_tokens: 30,
+          n: 1,
+          stop: ['\n'],
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Response from OpenAI:', data);
+
+      const tags = data.choices[0].text.trim().split(',').map(tag => tag.trim());
+      return tags;
+    } catch (error) {
+      console.error('Error generating tags:', error);
+      throw new Error('Failed to generate tags');
+    }
+  }
+
+  
   static async fetchMessages(
     global: boolean,
     published: boolean,
@@ -359,7 +392,33 @@ export default class ApiService {
     throw error;
   }
 }
+static async handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('Received request:', req.method, req.body);
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  const { notes } = req.body;
+
+  if (!notes || !Array.isArray(notes)) {
+    return res.status(400).json({ message: 'Invalid request body' });
+  }
+
+  const noteContents = notes.map(note => note.content).join('\n');
+  console.log('Note contents for tag generation:', noteContents);
+
+  try {
+    const tags = await ApiService.generateTags(noteContents);
+    res.status(200).json({ tags });
+  } catch (error) {
+    console.error('Error generating tags:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }
+}
+
+
 
 export function getVideoThumbnail(file: File, seekTo = 0.0) {
   console.log("getting video cover for file: ", file);
@@ -437,4 +496,7 @@ export function getVideoDuration(file: File) {
 export function uploadMedia(uploadMedia: any) {
     throw new Error('Function not implemented.');
 }
+
+
+
 
