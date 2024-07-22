@@ -4,6 +4,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
 
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
@@ -20,7 +21,7 @@ export default class ApiService {
   static async generateTags(noteContent: string): Promise<string[]> {
     const prompt = `Suggest one word tags for the following notes:\n${noteContent}\nTags as an ethnographer:`;
     try {
-      const response = await fetch('https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions', {
+      const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
