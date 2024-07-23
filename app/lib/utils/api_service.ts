@@ -33,7 +33,11 @@ export default class ApiService {
    * @throws Will throw an error if the tags could not be generated.
    */
   static async generateTags(noteContent: string): Promise<string[]> {
-    const prompt = `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city in the tags.`;
+    const messages = [
+      { role: "system", content: "You are a professional ethnographer suggesting the best web ontology tags for notes." },
+      { role: "user", content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city in the tags.` }
+    ];
+
     try {
       const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
@@ -42,7 +46,8 @@ export default class ApiService {
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          prompt,
+          model: 'gpt-4o-mini',
+          messages: messages,
           max_tokens: 1000,
           n: 1,
         }),
@@ -51,7 +56,7 @@ export default class ApiService {
       const data = await response.json();
       console.log('Response from OpenAI:', data);
 
-      const tags = data.choices[0].text.trim().split(',').map(tag => tag.trim());
+      const tags = data.choices[0].message.content.trim().split(',').map(tag => tag.trim());
       return tags;
     } catch (error) {
       console.error('Error generating tags:', error);
@@ -59,9 +64,6 @@ export default class ApiService {
     }
   }
 
-  
-  
-  
 
     /**
    * Fetches messages from the API.
