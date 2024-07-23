@@ -43,9 +43,8 @@ export default class ApiService {
         },
         body: JSON.stringify({
           prompt,
-          max_tokens: 30,
+          max_tokens: 1000,
           n: 1,
-         
         }),
       });
 
