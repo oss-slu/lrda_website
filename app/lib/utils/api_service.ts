@@ -35,7 +35,7 @@ export default class ApiService {
   static async generateTags(noteContent: string): Promise<string[]> {
     const messages = [
       { role: "system", content: "You are a professional ethnographer suggesting the best, most specific and descriptive web ontology tags for notes." },
-      { role: "user", content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city in the tags.` }
+      { role: "user", content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.` }
     ];
 
     try {

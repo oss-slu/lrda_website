@@ -87,6 +87,14 @@ export class User {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const token = await user.getIdToken();
+      console.log(`Login token: ${token}`);
+      
+      // Store the token in local storage
+      localStorage.setItem('authToken', token);
+      // Set the token as a cookie
+      document.cookie = `authToken=${token}; path=/`;
+  
       const userData = await ApiService.fetchUserData(user.uid);
       if (userData) {
         this.userData = userData;
@@ -99,13 +107,19 @@ export class User {
       return Promise.reject(error);
     }
   }
-
+  
   public async logout() {
     try {
       await signOut(auth);
       this.userData = null;
       this.clearUser();
       this.notifyLoginState();
+      
+      // Remove the token from local storage
+      localStorage.removeItem('authToken');
+      // Clear the cookie
+      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
       console.log("User logged out");
     } catch (error) {
       console.log("User did not successfully log out");
