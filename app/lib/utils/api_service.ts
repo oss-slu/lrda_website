@@ -173,41 +173,47 @@ export default class ApiService {
 
 
   /**
-   * Deletes a note from the API.
-   * @param {string} id - The ID of the note to delete.
-   * @param {string} userId - The ID of the user who owns the note.
-   * @returns {Promise<boolean>} A boolean indicating whether the deletion was successful.
-   */
-  static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
-    try {
+ * Deletes a note from the API.
+ * @param {string} id - The ID of the note to delete.
+ * @param {string} userId - The ID of the user who owns the note.
+ * @returns {Promise<boolean>} A boolean indicating whether the deletion was successful.
+ */
+static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
+  try {
+    const url = RERUM_PREFIX + "delete";
 
-      const url = RERUM_PREFIX + "delete";
+    // Retrieve the token from local storage
+    const token = localStorage.getItem('authToken');
 
-      const headers = {
-        "Content-Type": "text/plain; charset=utf-8",
-      };
-      const body = {
-        type: "message",
-        creator: userId,
-        "@id": id,
-      };
+    // Include the token in the headers
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}` 
+    };
 
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers,
-        body: JSON.stringify(body),
-      });
+    const body = {
+      type: "message",
+      creator: userId,
+      "@id": id,
+    };
 
-      if (response.status === 204) {
-        return true;
-      } else {
-        throw response;
-      }
-    } catch (error) {
-      console.error("Error deleting note:", error);
-      return false;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (response.status === 204) {
+      return true;
+    } else {
+      throw response;
     }
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    return false;
   }
+}
+
 
   /**
    * Writes a new note to the API.

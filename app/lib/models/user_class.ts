@@ -94,6 +94,8 @@ export class User {
       localStorage.setItem('authToken', token);
       // Set the token as a cookie
       document.cookie = `authToken=${token}; path=/`;
+      const testingToken = localStorage.getItem('authToken');
+      console.log("testing to see local storage: ", testingToken);
   
       const userData = await ApiService.fetchUserData(user.uid);
       if (userData) {
