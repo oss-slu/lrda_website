@@ -6,20 +6,34 @@ const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
 
+
+interface OpenAIResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: {
+    text: string;
+    index: number;
+    logprobs: any;
+    finish_reason: string;
+  }[];
+}
+
 /**
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
  */
 export default class ApiService {
+  
+  
   /**
-   * Fetches messages from the API.
-   * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
-   * @param {string} userId - The ID of the user for user-specific messages.
-   * @param {string} noteContent - The content of the note.
-   * @returns {Promise<any[]>} The array of messages fetched from the API.
+   * Generates one-word tags for ethnographic notes.
+   * @param {string} noteContent - The content of the ethnographic note.
+   * @returns {Promise<string[]>} A promise that resolves to an array of tags.
+   * @throws Will throw an error if the tags could not be generated.
    */
-
   static async generateTags(noteContent: string): Promise<string[]> {
-    const prompt = `Suggest one word tags for the following notes:\n${noteContent}\nTags as an ethnographer:`;
+    const prompt = `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city in the tags.`;
     try {
       const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
@@ -31,7 +45,7 @@ export default class ApiService {
           prompt,
           max_tokens: 30,
           n: 1,
-          stop: ['\n'],
+         
         }),
       });
 
@@ -47,6 +61,16 @@ export default class ApiService {
   }
 
   
+  
+  
+
+    /**
+   * Fetches messages from the API.
+   * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
+   * @param {string} userId - The ID of the user for user-specific messages.
+   * @param {string} noteContent - The content of the note.
+   * @returns {Promise<any[]>} The array of messages fetched from the API.
+   */
   static async fetchMessages(
     global: boolean,
     published: boolean,
