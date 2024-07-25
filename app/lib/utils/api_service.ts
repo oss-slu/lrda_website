@@ -156,7 +156,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async writeNewNote(note: Note) {
-    return fetch(RERUM_PREFIX + "creating", {
+    return fetch(RERUM_PREFIX + "create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
