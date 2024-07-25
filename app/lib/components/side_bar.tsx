@@ -76,10 +76,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
   return (
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
-      <div className="w-full mb-4">
+      <div className="w-full mb-4" id="tourStepSearchBar">
         <SearchBarNote onSearch={handleSearch} />
       </div>
-      <Button data-testid="add-note-button" onClick={handleAddNote}>
+      <Button data-testid="add-note-button" id="addNoteButton" onClick={handleAddNote}>
         Add Note
       </Button>
       <div>

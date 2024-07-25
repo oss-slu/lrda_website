@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 
 interface Location {
   lat: number;
@@ -206,6 +208,7 @@ const Page = () => {
           setActiveNote(null);
           marker.setIcon(createMarkerIcon(false));
         });
+
       };
 
       filteredNotes.forEach((note) => {
@@ -213,10 +216,16 @@ const Page = () => {
           position: new google.maps.LatLng(
             parseFloat(note.latitude),
             parseFloat(note.longitude)
+            
           ),
           icon: createMarkerIcon(false),
-        });
-
+          map: mapRef.current,
+          label: { text: note.id, color: "transparent" },
+          
+        }); 
+        
+  
+          
         attachMarkerEvents(marker, note);
         tempMarkers.set(note.id, marker);
       });
@@ -537,9 +546,10 @@ const Page = () => {
     }
   }
 
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-      <div className="flex-grow">
+      <div className="flex-grow" id="mapContainer">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -556,7 +566,7 @@ const Page = () => {
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                <div className="min-w-[80px] mr-3">
+                <div className="min-w-[80px] mr-3" id="tourStepSearchBar" >
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}
@@ -565,10 +575,10 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <div className="flex flex-row justify-evenly items-center">
-                    <GlobeIcon className="text-primary" />
+                  <div className="flex flex-row justify-evenly items-center" id="userInteractionIcons">
+                    <GlobeIcon className="text-primary" id="globeIcon" />
                     <Switch onClick={toggleFilter} />
-                    <UserIcon className="text-primary" />
+                    <UserIcon className="text-primary" id="userIcon" />
                   </div>
                 ) : null}
               </div>
@@ -583,7 +593,7 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" id="notesSection">
         {isLoading ? (
           [...Array(6)].map((_, index) => (
             <Skeleton

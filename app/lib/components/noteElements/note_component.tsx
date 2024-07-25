@@ -46,6 +46,8 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { init } from "next/dist/compiled/webpack/webpack";
+import introJs from 'intro.js';
+import 'intro.js/introjs.css';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const user = User.getInstance();
@@ -202,7 +204,7 @@ export default function NoteEditor({
       return newImages;
     });
   };
-  
+
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
@@ -216,21 +218,25 @@ export default function NoteEditor({
         }}
       >
         <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
-          <Input
-            value={noteState.title}
-            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-            placeholder="Title"
-            className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
-          />
-          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+        <Input
+         id="noteTitleInput"
+         value={noteState.title}
+        onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+        placeholder="Title"
+        className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
+        />
+          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center" id = "noteToolbar">
+          <div id="publishToggle">
             <PublishToggle
               isPublished={noteState.isPublished}
               onPublishChange={(bool) =>
                 handlePublishChange(noteHandlers.setIsPublished, bool)
               }
             />
+            </div>
             <div className="w-2 h-9 bg-border" />
             <button
+            id="saveButton"
               className="hover:text-green-500 flex justify-center items-center w-full"
               onClick={onSave}
             >
@@ -240,7 +246,7 @@ export default function NoteEditor({
             <div className="w-2 h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-full">
+                <button id="deleteButton" className="hover:text-red-500 flex justify-center items-center w-full">
                   <FileX2 className="text-current" />
                   <div className="ml-2">Delete</div>
                 </button>
@@ -270,7 +276,7 @@ export default function NoteEditor({
               </AlertDialogContent>
             </AlertDialog>
             <div className="w-2 h-9 bg-border" />
-            <div className="flex-grow">
+            <div className="flex-grow" id = "timePicker">
               <TimePicker
                 initialDate={noteState.time || new Date()}
                 onTimeChange={(newDate) =>
@@ -279,7 +285,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded">
+            <div className="bg-white p-2 rounded" id = "locationPicker">
               <LocationPicker
                 long={noteState.longitude}
                 lat={noteState.latitude}
@@ -293,8 +299,8 @@ export default function NoteEditor({
                 }
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded">
+            <div className="w-2 h-9 bg-border"/>
+            <div className="bg-white p-2 rounded" id = "videoComponent">
               <VideoComponent
                 videoArray={noteState.videos || []}
                 setVideo={noteHandlers.setVideos}
@@ -302,20 +308,23 @@ export default function NoteEditor({
             </div>
             <div className="w-2 h-9 bg-border" />
             <button
-              className="hover:text-orange-500 flex justify-center items-center w-full"
+              className="hover:text-orange-500 flex justify-center items-center w-full" id = "audioButton"
               onClick={() => setIsAudioModalOpen(true)}
             >
               <Music className="text-current" />
               <div className="ml-2">Audio</div>
             </button>
           </div>
-          <TagManager
+          <div id="tagManager">
+          <TagManager 
             inputTags={noteState.tags}
             onTagsChange={(newTags) =>
               handleTagsChange(noteHandlers.setTags, newTags)
             }
           />
         </div>
+        </div>
+      </div>
 
         {isAudioModalOpen && (
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -340,7 +349,7 @@ export default function NoteEditor({
           </div>
         )}
           <div className="flex-grow w-full p-4 flex flex-col">
-            <div className=" flex-grow flex flex-col bg-white w-full rounded">
+            <div className=" flex-grow flex flex-col bg-white w-full rounded" id= "richTextEditor">
               <RichTextEditor
                 ref={rteRef}
                 className="min-h-[712px]"
@@ -362,7 +371,6 @@ export default function NoteEditor({
               />
             </div>
           </div>
-        </div>
     </ScrollArea>
   );
 }

@@ -1,0 +1,5 @@
+/* customTourStyles.css */
+.introjs-overlay-hidden {
+    opacity: 0 !important; /* Fully transparent */
+  }
+  
