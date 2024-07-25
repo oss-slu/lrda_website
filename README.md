@@ -29,3 +29,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## We Are Using
+
+[Tiptap](https://tiptap.dev/) : A headless rich text editor framework, see [Tiptap Documentation](https://tiptap.dev/docs/).
+
+[mui-tiptap](https://www.npmjs.com/package/mui-tiptap): A customizable Material UI styled WYSIWYG rich text editor, using Tiptap.
+
+[shadcn](https://ui.shadcn.com/) : A beautifully designed UI Component Library.
