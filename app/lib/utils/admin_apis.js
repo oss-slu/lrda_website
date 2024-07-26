@@ -11,7 +11,7 @@ export default async function handler(req, res) {
           uid: newFirebaseId,
         };
   
-        const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {
+        const overwriteResponse = await fetch(`${RERUM_PREFIX}overwrite`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

@@ -178,41 +178,47 @@ export default class ApiService {
  * @param {string} userId - The ID of the user who owns the note.
  * @returns {Promise<boolean>} A boolean indicating whether the deletion was successful.
  */
-static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
-  try {
-    const url = RERUM_PREFIX + "delete";
-
-    // Retrieve the token from local storage
-    const token = localStorage.getItem('authToken');
-
-    // Include the token in the headers
-    const headers = {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}` 
-    };
-
-    const body = {
-      type: "message",
-      creator: userId,
-      "@id": id,
-    };
-
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers,
-      body: JSON.stringify(body),
-    });
-
-    if (response.status === 204) {
-      return true;
-    } else {
-      throw response;
+  static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
+    try {
+      const url = RERUM_PREFIX + "delete";
+  
+      // Retrieve the token from local storage
+      const token = localStorage.getItem('authToken');
+  
+      // Include the token in the headers
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      };
+  
+      const body = {
+        type: "message",
+        creator: userId,
+        "@id": id,
+      };
+  
+      // Log the details before making the request
+      console.log("Request URL:", url);
+      console.log("Request Headers:", headers);
+      console.log("Request Body:", JSON.stringify(body));
+  
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify(body),
+      });
+  
+      if (response.status === 204) {
+        return true;
+      } else {
+        throw response;
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      return false;
     }
-  } catch (error) {
-    console.error("Error deleting note:", error);
-    return false;
   }
-}
+  
 
 
   /**
