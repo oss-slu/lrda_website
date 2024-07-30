@@ -10,18 +10,15 @@ import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-
-import {
-  CompassIcon,
-  GlobeIcon,
-  LocateIcon,
-  Navigation,
-  UserIcon,
-} from "lucide-react";
-import { createRoot } from "react-dom/client";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+
+import {
+  GlobeIcon,
+  UserIcon,
+  Navigation,
+} from "lucide-react";
 
 interface Location {
   lat: number;
@@ -59,10 +56,8 @@ const Page = () => {
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [skip, setSkip] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const user = User.getInstance();
-
   const { isMapsApiLoaded } = useGoogleMaps();
 
   useEffect(() => {
@@ -144,7 +139,7 @@ const Page = () => {
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
-    if (!isNoteSelectedFromSearch) {
+    if (!isNoteSelectedFromSearch){
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
     const timer = setTimeout(() => {
@@ -154,7 +149,7 @@ const Page = () => {
     }, 2000);
     setIsLoaded(false);
     return () => clearTimeout(timer);
-  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global, skip]);
+  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -314,11 +309,11 @@ const Page = () => {
       let globalNotes: Note[] = [];
       if (userId) {
         setIsLoggedIn(true);
-        personalNotes = await ApiService.fetchUserMessages(userId, 150, skip);
+        personalNotes = await ApiService.fetchUserMessages(userId);
         personalNotes =
           DataConversion.convertMediaTypes(personalNotes).reverse();
       }
-      globalNotes = await ApiService.fetchPublishedNotes(150, skip);
+      globalNotes = await ApiService.fetchPublishedNotes();
       globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
 
       return { personalNotes, globalNotes };
@@ -421,22 +416,6 @@ const Page = () => {
     }
   };
 
-  // Old handle search that filters the locations by string
-  // const handleSearch = (searchQuery: string) => {
-  //   if (!searchQuery.trim()) {
-  //     setFilteredNotes(notes);
-  //     return;
-  //   }
-  //   const query = searchQuery.toLowerCase();
-  //   const filtered = notes.filter(
-  //     (note) =>
-  //       note.title.toLowerCase().includes(query) ||
-  //       note.tags.some((tag) => tag.toLowerCase().includes(query))
-  //   );
-  //   setFilteredNotes(filtered);
-  // };
-
-  // New handleSearch for location based searching
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
@@ -446,16 +425,16 @@ const Page = () => {
       const query = address.trim().toLowerCase();
       const filtered = query
         ? notes.filter(
-          (note) =>
-            note.title.toLowerCase().includes(query) ||
-            note.text.toLowerCase().includes(query) ||
-            note.tags.some((tag) => tag.toLowerCase().includes(query))
-        )
-        : [...notes];
-
+            (note) =>
+              note.title.toLowerCase().includes(query) ||
+              note.text.toLowerCase().includes(query) || 
+              note.tags.some((tag) => tag.toLowerCase().includes(query))
+          )
+        : [...notes]; 
+  
       setFilteredNotes(filtered);
     }
-
+  
     // If lat and lng are provided, move the map to that location
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
@@ -463,8 +442,8 @@ const Page = () => {
       mapRef.current?.setZoom(10);
     }
   };
-
-
+  
+  
 
   const handleNotesSearch = (searchText: string) => {
     // Filter notes based on the search query
@@ -482,7 +461,7 @@ const Page = () => {
     if (isHighlighted) {
       return {
         url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48),
+        scaledSize: new window.google.maps.Size(48, 48), 
       };
     } else {
       return {
@@ -506,6 +485,7 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
+
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
@@ -539,26 +519,34 @@ const Page = () => {
     }
   }
 
-  const handlePrevPage = async () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      setSkip(skip - 150);
-    }
-  };
-
-  const handleNextPage = async () => {
-    setSkip(skip + 150);
-    setCurrentPage(currentPage + 1);
+  const fetchNextPage = async () => {
+    const newSkip = skip + 150;
+    setSkip(newSkip);
 
     const newNotes = global
-      ? await ApiService.fetchPublishedNotes(150, skip + 150)
-      : await ApiService.fetchUserMessages(await user.getId(), 150, skip + 150);
+      ? await ApiService.fetchPublishedNotes(150, newSkip)
+      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
 
     if (newNotes.length === 0) {
       toast("No more notes to display");
-      setSkip(skip);
-      setCurrentPage(currentPage);
+    } else {
+      setFilteredNotes(newNotes);
     }
+  };
+
+  const fetchPreviousPage = async () => {
+    const newSkip = skip - 150;
+    if (newSkip < 0) {
+      toast("You are on the first page");
+      return;
+    }
+    setSkip(newSkip);
+
+    const newNotes = global
+      ? await ApiService.fetchPublishedNotes(150, newSkip)
+      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
+
+    setFilteredNotes(newNotes);
   };
 
   return (
@@ -616,23 +604,40 @@ const Page = () => {
             />
           ))
         ) : filteredNotes.length > 0 ? (
-          filteredNotes.map((note) => (
-            <div
-              ref={(el) => {
-                if (el) noteRefs.current[note.id] = el;
-              }}
-              className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                note.id === activeNote?.id
-                  ? "active-note"
-                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-              }`}
-              onMouseEnter={() => setHoveredNoteId(note.id)}
-              onMouseLeave={() => setHoveredNoteId(null)}
-              key={note.id}
-            >
-              <ClickableNote note={note} />
+          <>
+            {filteredNotes.map((note) => (
+              <div
+                ref={(el) => {
+                  if (el) noteRefs.current[note.id] = el;
+                }}
+                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                  note.id === activeNote?.id
+                    ? "active-note"
+                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                }`}
+                onMouseEnter={() => setHoveredNoteId(note.id)}
+                onMouseLeave={() => setHoveredNoteId(null)}
+                key={note.id}
+              >
+                <ClickableNote note={note} />
+              </div>
+            ))}
+            <div className="col-span-2 flex justify-between mt-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                onClick={fetchPreviousPage}
+                disabled={skip === 0}
+              >
+                Previous
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={fetchNextPage}
+              >
+                Next
+              </button>
             </div>
-          ))
+          </>
         ) : (
           [...Array(6)].map((_, index) => (
             <Skeleton
@@ -640,22 +645,12 @@ const Page = () => {
               className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
             />
           ))
+          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
+          //   <span className="self-center">
+          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
+          //   </span>
+          // </div>
         )}
-        <div className="flex justify-between mt-4 col-span-full">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={handleNextPage}
-            className="px-4 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
-          >
-            Next
-          </button>
-        </div>
       </div>
     </div>
   );
