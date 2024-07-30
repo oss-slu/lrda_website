@@ -9,6 +9,7 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 import {
   CompassIcon,
@@ -18,7 +19,6 @@ import {
   UserIcon,
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
-import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
@@ -58,8 +58,8 @@ const Page = () => {
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
-  const [skip, setSkip] = useState(0); // Pagination state
-  const [currentPage, setCurrentPage] = useState(1); // Current page state
+  const [skip, setSkip] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const user = User.getInstance();
 
@@ -144,7 +144,7 @@ const Page = () => {
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
-    if (!isNoteSelectedFromSearch){
+    if (!isNoteSelectedFromSearch) {
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
     const timer = setTimeout(() => {
@@ -182,7 +182,7 @@ const Page = () => {
         setNotes(initialNotes);
       });
     }
-  }, [locationFound, global, skip]);
+  }, [locationFound, global]);
 
   // useEffect that creates and updates Markers and MarkerClusters
   useEffect(() => {
@@ -446,16 +446,16 @@ const Page = () => {
       const query = address.trim().toLowerCase();
       const filtered = query
         ? notes.filter(
-            (note) =>
-              note.title.toLowerCase().includes(query) ||
-              note.text.toLowerCase().includes(query) || 
-              note.tags.some((tag) => tag.toLowerCase().includes(query))
-          )
-        : [...notes]; 
-  
+          (note) =>
+            note.title.toLowerCase().includes(query) ||
+            note.text.toLowerCase().includes(query) ||
+            note.tags.some((tag) => tag.toLowerCase().includes(query))
+        )
+        : [...notes];
+
       setFilteredNotes(filtered);
     }
-  
+
     // If lat and lng are provided, move the map to that location
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
@@ -463,8 +463,8 @@ const Page = () => {
       mapRef.current?.setZoom(10);
     }
   };
-  
-  
+
+
 
   const handleNotesSearch = (searchText: string) => {
     // Filter notes based on the search query
@@ -482,7 +482,7 @@ const Page = () => {
     if (isHighlighted) {
       return {
         url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48), 
+        scaledSize: new window.google.maps.Size(48, 48),
       };
     } else {
       return {
@@ -506,7 +506,6 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
-
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
@@ -540,17 +539,25 @@ const Page = () => {
     }
   }
 
-  const handleNextPage = () => {
-    console.log("Next button clicked");
-    setSkip(skip + 150);
-    setCurrentPage(currentPage + 1);
+  const handlePrevPage = async () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setSkip(skip - 150);
+    }
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      console.log("Previous button clicked");
-      setSkip(skip - 150);
-      setCurrentPage(currentPage - 1);
+  const handleNextPage = async () => {
+    setSkip(skip + 150);
+    setCurrentPage(currentPage + 1);
+
+    const newNotes = global
+      ? await ApiService.fetchPublishedNotes(150, skip + 150)
+      : await ApiService.fetchUserMessages(await user.getId(), 150, skip + 150);
+
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      setSkip(skip);
+      setCurrentPage(currentPage);
     }
   };
 
@@ -633,26 +640,18 @@ const Page = () => {
               className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
             />
           ))
-          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-          //   <span className="self-center">
-          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
-          //   </span>
-          // </div>
         )}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between mt-4 col-span-full">
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded">
-            Page {currentPage}
-          </span>
           <button
             onClick={handleNextPage}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+            className="px-4 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
           >
             Next
           </button>

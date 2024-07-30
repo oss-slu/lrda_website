@@ -6,6 +6,18 @@ const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
 
+if (!RERUM_PREFIX) {
+  throw new Error("RERUM_PREFIX is not defined in the environment variables.");
+}
+
+if (!OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY is not defined in the environment variables.");
+}
+
+if (!OPENAI_API_URL) {
+  throw new Error("OPENAI_API_URL is not defined in the environment variables.");
+}
+
 interface OpenAIResponse {
   id: string;
   object: string;
@@ -37,7 +49,7 @@ export default class ApiService {
     ];
 
     try {
-      const response = await fetch(OPENAI_API_URL, {
+      const response = await fetch(OPENAI_API_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +66,7 @@ export default class ApiService {
       const data = await response.json();
       console.log('Response from OpenAI:', data);
 
-      const tags = data.choices[0].message.content.trim().split(',').map(tag => tag.trim());
+      const tags = data.choices[0].message.content.trim().split(',').map((tag: string) => tag.trim());
       return tags;
     } catch (error) {
       console.error('Error generating tags:', error);
