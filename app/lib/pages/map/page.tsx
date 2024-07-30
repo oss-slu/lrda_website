@@ -9,16 +9,19 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import {
+  CompassIcon,
+  GlobeIcon,
+  LocateIcon,
+  Navigation,
+  UserIcon,
+} from "lucide-react";
+import * as ReactDOM from 'react-dom/client';
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
-
-import {
-  GlobeIcon,
-  UserIcon,
-  Navigation,
-} from "lucide-react";
 
 interface Location {
   lat: number;
@@ -58,6 +61,7 @@ const Page = () => {
   const [skip, setSkip] = useState(0);
 
   const user = User.getInstance();
+
   const { isMapsApiLoaded } = useGoogleMaps();
 
   useEffect(() => {
@@ -337,7 +341,7 @@ const Page = () => {
 
     if (map) {
       const popupContent = document.createElement("div");
-      const root = createRoot(popupContent);
+      const root = ReactDOM.createRoot(popupContent);
       root.render(<ClickableNote note={note} />);
 
       class Popup extends google.maps.OverlayView {
@@ -416,6 +420,22 @@ const Page = () => {
     }
   };
 
+  // Old handle search that filters the locations by string
+  // const handleSearch = (searchQuery: string) => {
+  //   if (!searchQuery.trim()) {
+  //     setFilteredNotes(notes);
+  //     return;
+  //   }
+  //   const query = searchQuery.toLowerCase();
+  //   const filtered = notes.filter(
+  //     (note) =>
+  //       note.title.toLowerCase().includes(query) ||
+  //       note.tags.some((tag) => tag.toLowerCase().includes(query))
+  //   );
+  //   setFilteredNotes(filtered);
+  // };
+
+  // New handleSearch for location based searching
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
@@ -485,7 +505,6 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
-
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
@@ -519,34 +538,30 @@ const Page = () => {
     }
   }
 
-  const fetchNextPage = async () => {
-    const newSkip = skip + 150;
-    setSkip(newSkip);
-
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
     const newNotes = global
       ? await ApiService.fetchPublishedNotes(150, newSkip)
       : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
-
     if (newNotes.length === 0) {
       toast("No more notes to display");
-    } else {
-      setFilteredNotes(newNotes);
-    }
-  };
-
-  const fetchPreviousPage = async () => {
-    const newSkip = skip - 150;
-    if (newSkip < 0) {
-      toast("You are on the first page");
       return;
     }
+    setFilteredNotes(newNotes);
     setSkip(newSkip);
+  };
 
+  const handleNext = async () => {
+    const newSkip = skip + 150;
     const newNotes = global
       ? await ApiService.fetchPublishedNotes(150, newSkip)
       : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
-
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
     setFilteredNotes(newNotes);
+    setSkip(newSkip);
   };
 
   return (
@@ -596,62 +611,56 @@ const Page = () => {
       </div>
 
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {isLoading ? (
-          [...Array(6)].map((_, index) => (
-            <Skeleton
-              key={index}
-              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-            />
-          ))
-        ) : filteredNotes.length > 0 ? (
-          <>
-            {filteredNotes.map((note) => (
-              <div
-                ref={(el) => {
-                  if (el) noteRefs.current[note.id] = el;
-                }}
-                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id
-                    ? "active-note"
-                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-                }`}
-                onMouseEnter={() => setHoveredNoteId(note.id)}
-                onMouseLeave={() => setHoveredNoteId(null)}
-                key={note.id}
-              >
-                <ClickableNote note={note} />
-              </div>
-            ))}
-            <div className="col-span-2 flex justify-between mt-4">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-                onClick={fetchPreviousPage}
-                disabled={skip === 0}
-              >
-                Previous
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-300 rounded"
-                onClick={fetchNextPage}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        ) : (
-          [...Array(6)].map((_, index) => (
-            <Skeleton
-              key={index}
-              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-            />
-          ))
-          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-          //   <span className="self-center">
-          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
-          //   </span>
-          // </div>
-        )}
+  {isLoading ? (
+    [...Array(6)].map((_, index) => (
+      <Skeleton
+        key={index}
+        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+      />
+    ))
+  ) : filteredNotes.length > 0 ? (
+    filteredNotes.map((note) => (
+      <div
+        ref={(el) => {
+          if (el) noteRefs.current[note.id] = el;
+        }}
+        className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+          note.id === activeNote?.id
+            ? "active-note"
+            : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+        }`}
+        onMouseEnter={() => setHoveredNoteId(note.id)}
+        onMouseLeave={() => setHoveredNoteId(null)}
+        key={note.id}
+      >
+        <ClickableNote note={note} />
       </div>
+    ))
+  ) : (
+    [...Array(6)].map((_, index) => (
+      <Skeleton
+        key={index}
+        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+      />
+    ))
+  )}
+  <div className="flex justify-center w-full mt-4 mb-2">
+    <button
+      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+      onClick={handlePrevious}
+      disabled={skip === 0}
+    >
+      Previous
+    </button>
+    <button
+      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+      onClick={handleNext}
+    >
+      Next
+    </button>
+  </div>
+</div>
+
     </div>
   );
 };
