@@ -58,6 +58,8 @@ const Page = () => {
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
+  const [skip, setSkip] = useState(0); // Pagination state
+  const [currentPage, setCurrentPage] = useState(1); // Current page state
 
   const user = User.getInstance();
 
@@ -152,7 +154,7 @@ const Page = () => {
     }, 2000);
     setIsLoaded(false);
     return () => clearTimeout(timer);
-  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
+  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global, skip]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -180,7 +182,7 @@ const Page = () => {
         setNotes(initialNotes);
       });
     }
-  }, [locationFound, global]);
+  }, [locationFound, global, skip]);
 
   // useEffect that creates and updates Markers and MarkerClusters
   useEffect(() => {
@@ -312,11 +314,11 @@ const Page = () => {
       let globalNotes: Note[] = [];
       if (userId) {
         setIsLoggedIn(true);
-        personalNotes = await ApiService.fetchUserMessages(userId);
+        personalNotes = await ApiService.fetchUserMessages(userId, 150, skip);
         personalNotes =
           DataConversion.convertMediaTypes(personalNotes).reverse();
       }
-      globalNotes = await ApiService.fetchPublishedNotes();
+      globalNotes = await ApiService.fetchPublishedNotes(150, skip);
       globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
 
       return { personalNotes, globalNotes };
@@ -504,6 +506,7 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
+
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
@@ -536,6 +539,20 @@ const Page = () => {
       console.error("Failed to set location", error);
     }
   }
+
+  const handleNextPage = () => {
+    console.log("Next button clicked");
+    setSkip(skip + 150);
+    setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      console.log("Previous button clicked");
+      setSkip(skip - 150);
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
@@ -622,6 +639,24 @@ const Page = () => {
           //   </span>
           // </div>
         )}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded">
+            Page {currentPage}
+          </span>
+          <button
+            onClick={handleNextPage}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

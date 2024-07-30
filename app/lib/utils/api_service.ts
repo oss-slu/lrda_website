@@ -6,7 +6,6 @@ const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
 
-
 interface OpenAIResponse {
   id: string;
   object: string;
@@ -24,8 +23,7 @@ interface OpenAIResponse {
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
  */
 export default class ApiService {
-  
-  
+
   /**
    * Generates one-word tags for ethnographic notes.
    * @param {string} noteContent - The content of the ethnographic note.
@@ -64,12 +62,11 @@ export default class ApiService {
     }
   }
 
-
-    /**
+  /**
    * Fetches messages from the API.
    * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
    * @param {string} userId - The ID of the user for user-specific messages.
-   * @param {string} noteContent - The content of the note.
+   * @param {boolean} published - Indicates whether to fetch only published messages.
    * @returns {Promise<any[]>} The array of messages fetched from the API.
    */
   static async fetchMessages(
@@ -109,13 +106,70 @@ export default class ApiService {
     }
   }
 
+ /**
+   * Implements a paged query to fetch messages in chunks.
+   * @param {number} lim - The limit of messages per page.
+   * @param {number} it - The iterator to skip messages for pagination.
+   * @param {Object} queryObj - The query object.
+   * @param {Array} allResults - The accumulated results.
+   * @returns {Promise<any[]>} The array of all messages fetched.
+   */
+ static async getPagedQuery(lim: number, it = 0, queryObj: object, allResults: any[] = []): Promise<any[]> {
+  try {
+    const response = await fetch(`${RERUM_PREFIX}query?limit=${lim}&skip=${it}`, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify(queryObj)
+    });
+    const results = await response.json();
+    if (results.length) {
+      allResults = allResults.concat(results);
+      return this.getPagedQuery(lim, it + results.length, queryObj, allResults);
+    }
+    return allResults;
+  } catch (err) {
+    console.warn("Could not process a result in paged query", err);
+    throw err;
+  }
+}
 
-   /**
+/**
+ * Fetches all messages for a specific user.
+ * @param {string} userId - The ID of the user whose messages are to be fetched.
+ * @param {number} limit - The limit of messages per page.
+ * @param {number} skip - The number of messages to skip for pagination.
+ * @returns {Promise<any[]>} - The array of messages fetched from the API.
+ */
+static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
+  const queryObj = {
+    type: "message",
+    creator: userId,
+  };
+  return await this.getPagedQuery(limit, skip, queryObj);
+}
+
+/**
+ * Fetches all Published Notes.
+ * @param {number} limit - The limit of messages per page.
+ * @param {number} skip - The number of messages to skip for pagination.
+ * @returns {Promise<any[]>} - The array of messages fetched from the API.
+ */
+static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
+  const queryObj = {
+    type: "message",
+    published: true,
+  };
+  return await this.getPagedQuery(limit, skip, queryObj);
+}
+  /**
    * Fetches user data from the API based on UID.
    * @param {string} uid - The UID of the user.
    * @returns {Promise<UserData | null>} The user data.
    */
-   static async fetchUserData(uid: string): Promise<UserData | null> {
+  static async fetchUserData(uid: string): Promise<UserData | null> {
     try {
       const url = RERUM_PREFIX + "query";
       const headers = {
@@ -145,8 +199,6 @@ export default class ApiService {
     }
   }
 
-
-
   /**
    * Creates user data in the API.
    * @param {UserData} userData - The user data to be created.
@@ -171,13 +223,12 @@ export default class ApiService {
     }
   }
 
-
   /**
- * Deletes a note from the API.
- * @param {string} id - The ID of the note to delete.
- * @param {string} userId - The ID of the user who owns the note.
- * @returns {Promise<boolean>} A boolean indicating whether the deletion was successful.
- */
+   * Deletes a note from the API.
+   * @param {string} id - The ID of the note to delete.
+   * @param {string} userId - The ID of the user who owns the note.
+   * @returns {Promise<boolean>} A boolean indicating whether the deletion was successful.
+   */
   static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
     try {
       const url = RERUM_PREFIX + "delete";
@@ -218,8 +269,6 @@ export default class ApiService {
       return false;
     }
   }
-  
-
 
   /**
    * Writes a new note to the API.
@@ -276,6 +325,11 @@ export default class ApiService {
     });
   }
 
+  /**
+   * Searches messages by query.
+   * @param {string} query - The search query.
+   * @returns {Promise<any[]>} The array of messages matching the query.
+   */
   static async searchMessages(query: string): Promise<any[]> {
     try {
       const url = RERUM_PREFIX + "query";
@@ -330,133 +384,69 @@ export default class ApiService {
   }
 
   /**
-   * Fetches all messages for a specific user.
-   * @param {string} userId - The ID of the user whose messages are to be fetched.
-   * @returns {Promise<any[]>} - The array of messages fetched from the API.
-   */
-
-  static async fetchUserMessages(userId: string): Promise<any[]> {
-    try {
-      const url = RERUM_PREFIX + "query";
-      const headers = {
-        "Content-Type": "application/json",
-      };
-
-      // Body for the request: fetch messages of type 'message' created by the specified user
-      const body = {
-        type: "message",
-        creator: userId,
-      };
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching user messages:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Fetches all Published Notes.
-   * @returns {Promise<any[]>} - The array of messages fetched from the API.
-   */
-  static async fetchPublishedNotes(): Promise<any[]> {
-    try {
-      const url = RERUM_PREFIX + "query";
-      const headers = {
-        "Content-Type": "application/json",
-      };
-
-      // Body for the request: fetch messages of type 'message' created by the specified user
-      const body = {
-        type: "message",
-        published: true,
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching user messages:", error);
-      throw error;
-    }
-  }
-
- /**
    * Fetches the name of the creator by querying the API with the given creatorId.
    * @param {string} creatorId - The UID of the creator.
    * @returns {Promise<string>} The name of the creator.
    */
- static async fetchCreatorName(creatorId: string): Promise<string> {
-  try {
-    const url = RERUM_PREFIX + "query";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const body = {
-      "$or": [
-        { "@type": "Agent", "uid": creatorId },
-        { "@type": "foaf:Agent", "uid": creatorId }
-      ]
-    };
+  static async fetchCreatorName(creatorId: string): Promise<string> {
+    try {
+      const url = RERUM_PREFIX + "query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const body = {
+        "$or": [
+          { "@type": "Agent", "uid": creatorId },
+          { "@type": "foaf:Agent", "uid": creatorId }
+        ]
+      };
 
-    console.log(`Querying with UID: ${creatorId}`);
+      console.log(`Querying with UID: ${creatorId}`);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
 
-    const data = await response.json();
-    console.log(`Data:`, data);
-    if (data.length && data[0].name) {
-      return data[0].name;
-    } else {
-      throw new Error("Creator not found or no name attribute.");
+      const data = await response.json();
+      console.log(`Data:`, data);
+      if (data.length && data[0].name) {
+        return data[0].name;
+      } else {
+        throw new Error("Creator not found or no name attribute.");
+      }
+    } catch (error) {
+      console.error(`Error fetching creator name:`, error, creatorId);
+      throw error;
     }
-  } catch (error) {
-    console.error(`Error fetching creator name:`, error, creatorId);
-    throw error;
+  }
+
+  static async handler(req: NextApiRequest, res: NextApiResponse) {
+    console.log('Received request:', req.method, req.body);
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ message: 'Method not allowed' });
+    }
+
+    const { notes } = req.body;
+
+    if (!notes || !Array.isArray(notes)) {
+      return res.status(400).json({ message: 'Invalid request body' });
+    }
+
+    const noteContents = notes.map(note => note.content).join('\n');
+    console.log('Note contents for tag generation:', noteContents);
+
+    try {
+      const tags = await ApiService.generateTags(noteContents);
+      res.status(200).json({ tags });
+    } catch (error) {
+      console.error('Error generating tags:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   }
 }
-static async handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Received request:', req.method, req.body);
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { notes } = req.body;
-
-  if (!notes || !Array.isArray(notes)) {
-    return res.status(400).json({ message: 'Invalid request body' });
-  }
-
-  const noteContents = notes.map(note => note.content).join('\n');
-  console.log('Note contents for tag generation:', noteContents);
-
-  try {
-    const tags = await ApiService.generateTags(noteContents);
-    res.status(200).json({ tags });
-  } catch (error) {
-    console.error('Error generating tags:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-}
-}
-
-
 
 export function getVideoThumbnail(file: File, seekTo = 0.0) {
   console.log("getting video cover for file: ", file);
@@ -465,12 +455,10 @@ export function getVideoThumbnail(file: File, seekTo = 0.0) {
       videoPlayer.setAttribute('src', URL.createObjectURL(file));
       videoPlayer.load();
       videoPlayer.addEventListener('error', (ex) => {
-          // Adjust this line to include only one argument for reject
           reject(new Error(`Error when loading video file: ${ex.message || ex.toString()}`));
       });
       videoPlayer.addEventListener('loadedmetadata', () => {
           if (videoPlayer.duration < seekTo) {
-              // Adjust this line as well
               reject(new Error("Video is too short."));
               return;
           }
@@ -497,7 +485,6 @@ export function getVideoThumbnail(file: File, seekTo = 0.0) {
       });
   });
 }
-
 
 function formatDuration(duration: number) {
   const hours = Math.floor(duration / 3600);
@@ -531,10 +518,7 @@ export function getVideoDuration(file: File) {
       video.src = URL.createObjectURL(file);
   });
 }
+
 export function uploadMedia(uploadMedia: any) {
     throw new Error('Function not implemented.');
 }
-
-
-
-
