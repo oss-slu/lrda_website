@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 interface TagManagerProps {
   inputTags?: string[];
-  onTagsChange: (tags: string[]) => void,
+  suggestedTags?: string[];
+  onTagsChange: (tags: string[]) => void;
 }
 
-const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
+const TagManager: React.FC<TagManagerProps> = ({ inputTags, suggestedTags, onTagsChange }) => {
   const [tags, setTags] = useState<string[]>(inputTags || []);
   const [tagInput, setTagInput] = useState("");
 
@@ -23,7 +24,7 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
       toast("Failed to add tag", {
         description: "Your tag must not contain spaces.",
         duration: 2000,
-      })
+      });
       setTagInput("");
       return;
     }
@@ -31,14 +32,14 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
       toast("Failed to add tag", {
         description: "Tags must be longer than 2 characters.",
         duration: 2000,
-      })
+      });
       return;
     }
     if (tags.includes(tag)) {
       toast("Failed to add tag", {
         description: "Duplicate tags are not allowed.",
         duration: 2000,
-      })
+      });
       setTagInput("");
       return;
     }
@@ -70,7 +71,12 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
     setTagInput(event.target.value);
   };
 
+  const handleSuggestedTagClick = (tag: string) => {
+    addTag(tag);
+  };
+
   return (
+    <div>
       <div className="flex flex-wrap items-center gap-2 bg-none">
         <Input
           value={tagInput}
@@ -94,6 +100,23 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags, onTagsChange }) => {
           </div>
         ))}
       </div>
+      {suggestedTags && suggestedTags.length > 0 && (
+        <div className="mt-4">
+          <h4>Suggested Tags:</h4>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {suggestedTags.map((tag, index) => (
+              <button
+                key={index}
+                onClick={() => handleSuggestedTagClick(tag)}
+                className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded hover:bg-purple-300"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

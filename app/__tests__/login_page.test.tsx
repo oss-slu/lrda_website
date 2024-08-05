@@ -25,7 +25,7 @@ jest.mock('firebase/auth', () => {
     onAuthStateChanged: jest.fn((auth, callback) => {
       callback({
         uid: 'mockUserId',
-        email: 'mock@example.com',
+        email: 'test@gmail.com',
       });
     }),
   };

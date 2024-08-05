@@ -17,7 +17,7 @@ import {
   Navigation,
   UserIcon,
 } from "lucide-react";
-import { createRoot } from "react-dom/client";
+import * as ReactDOM from 'react-dom/client';
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -58,6 +58,7 @@ const Page = () => {
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
+  const [skip, setSkip] = useState(0);
 
   const user = User.getInstance();
 
@@ -340,7 +341,7 @@ const Page = () => {
 
     if (map) {
       const popupContent = document.createElement("div");
-      const root = createRoot(popupContent);
+      const root = ReactDOM.createRoot(popupContent);
       root.render(<ClickableNote note={note} />);
 
       class Popup extends google.maps.OverlayView {
@@ -537,6 +538,32 @@ const Page = () => {
     }
   }
 
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
+    const newNotes = global
+      ? await ApiService.fetchPublishedNotes(150, newSkip)
+      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+
+  const handleNext = async () => {
+    const newSkip = skip + 150;
+    const newNotes = global
+      ? await ApiService.fetchPublishedNotes(150, newSkip)
+      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex-grow">
@@ -584,45 +611,56 @@ const Page = () => {
       </div>
 
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-        {isLoading ? (
-          [...Array(6)].map((_, index) => (
-            <Skeleton
-              key={index}
-              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-            />
-          ))
-        ) : filteredNotes.length > 0 ? (
-          filteredNotes.map((note) => (
-            <div
-              ref={(el) => {
-                if (el) noteRefs.current[note.id] = el;
-              }}
-              className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                note.id === activeNote?.id
-                  ? "active-note"
-                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-              }`}
-              onMouseEnter={() => setHoveredNoteId(note.id)}
-              onMouseLeave={() => setHoveredNoteId(null)}
-              key={note.id}
-            >
-              <ClickableNote note={note} />
-            </div>
-          ))
-        ) : (
-          [...Array(6)].map((_, index) => (
-            <Skeleton
-              key={index}
-              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-            />
-          ))
-          // <div className="flex flex-row w-full h-full justify-center align-middle items-center px-7 p-3 font-bold">
-          //   <span className="self-center">
-          //     {!isMapsApiLoaded ? "Loading..." : "No entries found"}
-          //   </span>
-          // </div>
-        )}
+  {isLoading ? (
+    [...Array(6)].map((_, index) => (
+      <Skeleton
+        key={index}
+        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+      />
+    ))
+  ) : filteredNotes.length > 0 ? (
+    filteredNotes.map((note) => (
+      <div
+        ref={(el) => {
+          if (el) noteRefs.current[note.id] = el;
+        }}
+        className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+          note.id === activeNote?.id
+            ? "active-note"
+            : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+        }`}
+        onMouseEnter={() => setHoveredNoteId(note.id)}
+        onMouseLeave={() => setHoveredNoteId(null)}
+        key={note.id}
+      >
+        <ClickableNote note={note} />
       </div>
+    ))
+  ) : (
+    [...Array(6)].map((_, index) => (
+      <Skeleton
+        key={index}
+        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+      />
+    ))
+  )}
+  <div className="flex justify-center w-full mt-4 mb-2">
+    <button
+      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+      onClick={handlePrevious}
+      disabled={skip === 0}
+    >
+      Previous
+    </button>
+    <button
+      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+      onClick={handleNext}
+    >
+      Next
+    </button>
+  </div>
+</div>
+
     </div>
   );
 };

@@ -26,11 +26,14 @@ describe('User class', () => {
   describe('login', () => {
     it('logs in the user successfully', async () => {
       const mockUserCredential = {
-        user: { uid: mockUserData.uid }
+        user: {
+          uid: mockUserData.uid,
+          getIdToken: jest.fn().mockResolvedValue('mockToken')
+        }
       };
 
-      signInWithEmailAndPassword.mockResolvedValue(mockUserCredential);
-      ApiService.fetchUserData.mockResolvedValue(mockUserData);
+      (signInWithEmailAndPassword as jest.Mock).mockResolvedValue(mockUserCredential);
+      (ApiService.fetchUserData as jest.Mock).mockResolvedValue(mockUserData);
 
       await user.login('testUser', 'testPass');
       const userId = await user.getId();
@@ -39,19 +42,19 @@ describe('User class', () => {
 
     it('fails to log in due to server error', async () => {
       const errorMessage = 'There was a server error logging in.';
-      signInWithEmailAndPassword.mockRejectedValue(new Error(errorMessage));
+      (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       try {
         await user.login('testUser', 'testPass');
       } catch (error) {
-        expect(error.message).toBe(errorMessage);
+        expect((error as Error).message).toBe(errorMessage);
       }
     });
   });
 
   describe('logout', () => {
     it('logs out the user successfully', async () => {
-      signOut.mockResolvedValue();
+      (signOut as jest.Mock).mockResolvedValue();
       await user.logout();
 
       const userId = await user.getId();

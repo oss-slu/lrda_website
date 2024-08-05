@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main # replace with the name of your default branch if different
-      - 121-merging-the-search-query-of-by-location-and-by-note
+      - openai_tags
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
-      - 108-uiux-improvements-map
+      - openai_tags
 
 jobs:
   build:

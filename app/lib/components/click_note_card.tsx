@@ -32,10 +32,11 @@ import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
 
-function formatDate(date: Date) {
-  if (!date) return "Pick a date";
+function formatDate(date: string | number | Date) {
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return "Invalid Date";
 
-  const dateString = date.toLocaleDateString("en-US", {
+  const dateString = parsedDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -44,11 +45,13 @@ function formatDate(date: Date) {
 
   return `${dateString}`;
 }
-function formatTime(date: Date) {
-  if (!date) return "Pick a date";
 
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+function formatTime(date: string | number | Date) {
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return "Invalid Date";
+
+  const hours = parsedDate.getHours();
+  const minutes = parsedDate.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
   const ampm = hours < 12 ? "AM" : "PM";
@@ -124,25 +127,6 @@ const ClickableNote: React.FC<{
           )}
         </ScrollArea>
         <DialogFooter>
-          {/* <div className=" absolute bottom-4 right-4 flex w-[220px] h-10 bg-popup shadow-sm rounded-full border border-border bg-white pt-2 pb-2 justify-around items-center">
-            <button
-              tabIndex={-1}
-              className="hover:text-green-500 flex justify-center items-center w-10"
-              onClick={() => setLikes(likes + 1)}
-            >
-              <ThumbsUp className="text-current" />
-            </button>
-            {likes}
-            <div className="w-1 h-7 bg-border" />
-            <button
-              tabIndex={-1}
-              className="hover:text-red-500 flex justify-center items-center w-10"
-              onClick={() => setDisLikes(disLikes - 1)}
-            >
-              <ThumbsDown className="text-current" />
-            </button>
-            {disLikes}
-          </div> */}
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (
               <Popover>

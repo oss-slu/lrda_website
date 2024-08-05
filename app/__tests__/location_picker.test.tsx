@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import LocationPicker from "../lib/components/noteElements/location_component";
 import "@testing-library/jest-dom";
 
+
 jest.mock("@react-google-maps/api", () => ({
   GoogleMap: ({ children }) => <div data-testid="google-map">{children}</div>,
   MarkerF: () => <div />,
