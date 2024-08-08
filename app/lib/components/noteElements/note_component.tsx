@@ -203,27 +203,6 @@ export default function NoteEditor({
     });
   };
 
-  const fetchSuggestedTags = async () => {
-    setLoadingTags(true);
-    try {
-      const editor = rteRef.current?.editor;
-      if (editor) {
-        const noteContent = editor.getHTML();
-        console.log('Fetching suggested tags for content:', noteContent);
-
-        const tags = await ApiService.generateTags(noteContent);
-        console.log('Suggested tags received:', tags);
-        setSuggestedTags(tags);
-      } else {
-        console.error('Editor instance is not available');
-      }
-    } catch (error) {
-      console.error('Error generating tags:', error);
-    } finally {
-      setLoadingTags(false);
-    }
-  };
-
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
   return (
@@ -328,15 +307,6 @@ export default function NoteEditor({
               <Music className="text-current" />
               <div className="ml-2">Audio</div>
             </button>
-            <div className="w-2 h-9 bg-border" />
-            <button
-              className="hover:text-purple-500 flex justify-center items-center w-full"
-              onClick={fetchSuggestedTags}
-            >
-              <div className="px-4 py-2 bg-white-200 text-black rounded-md hover:bg-purple-300 transition-all shadow-sm font-medium">
-                Generate Tags
-              </div>
-            </button>
           </div>
           <TagManager
             inputTags={noteState.tags}
@@ -344,10 +314,30 @@ export default function NoteEditor({
             onTagsChange={(newTags) =>
               handleTagsChange(noteHandlers.setTags, newTags)
             }
+            fetchSuggestedTags={async () => {
+              setLoadingTags(true);
+              try {
+                const editor = rteRef.current?.editor;
+                if (editor) {
+                  const noteContent = editor.getHTML();
+                  console.log("Fetching suggested tags for content:", noteContent);
+
+                  const tags = await ApiService.generateTags(noteContent);
+                  console.log("Suggested tags received:", tags);
+                  setSuggestedTags(tags);
+                } else {
+                  console.error("Editor instance is not available");
+                }
+              } catch (error) {
+                console.error("Error generating tags:", error);
+              } finally {
+                setLoadingTags(false);
+              }
+            }}
           />
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-  
+
         {isAudioModalOpen && (
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
@@ -396,5 +386,4 @@ export default function NoteEditor({
       </div>
     </ScrollArea>
   );
-  
 }

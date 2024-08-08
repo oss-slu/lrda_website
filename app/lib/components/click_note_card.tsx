@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
-import { Note } from "@/app/types";
+import { Note, Tag } from "@/app/types";
 import {
   CalendarDays,
   UserCircle,
@@ -32,6 +32,7 @@ import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
 
+// Format the date into a readable string
 function formatDate(date: string | number | Date) {
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) return "Invalid Date";
@@ -46,6 +47,7 @@ function formatDate(date: string | number | Date) {
   return `${dateString}`;
 }
 
+// Format the time into a readable string
 function formatTime(date: string | number | Date) {
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) return "Invalid Date";
@@ -59,15 +61,17 @@ function formatTime(date: string | number | Date) {
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
+// ClickableNote component
 const ClickableNote: React.FC<{
   note: Note;
 }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
-  const tags: string[] = note.tags;
+  const tags: Tag[] = note.tags; // Ensure Note type uses Tag interface
   console.log(note);
 
+  // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
     ApiService.fetchCreatorName(note.creator)
       .then((name) => setCreator(name))
@@ -78,8 +82,6 @@ const ClickableNote: React.FC<{
   }, [note.creator]);
 
   const data = note.text;
-
-  focus();
 
   return (
     <Dialog>
@@ -107,9 +109,13 @@ const ClickableNote: React.FC<{
                 {tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="bg-blue-100 text-blue-800 h-5 text-xs px-2 font-semibold rounded flex justify-center items-center"
+                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                      tag.origin === "user"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-purple-200 text-purple-800"
+                    }`}
                   >
-                    {tag}
+                    {tag.label}
                   </span>
                 ))}
               </div>
