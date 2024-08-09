@@ -205,6 +205,27 @@ export default function NoteEditor({
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
+  const fetchSuggestedTags = async () => {
+    setLoadingTags(true);
+    try {
+      const editor = rteRef.current?.editor;
+      if (editor) {
+        const noteContent = editor.getHTML();
+        console.log("Fetching suggested tags for content:", noteContent);
+
+        const tags = await ApiService.generateTags(noteContent);
+        console.log("Suggested tags received:", tags);
+        setSuggestedTags(tags);
+      } else {
+        console.error("Editor instance is not available");
+      }
+    } catch (error) {
+      console.error("Error generating tags:", error);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
   return (
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
       <div
@@ -314,26 +335,7 @@ export default function NoteEditor({
             onTagsChange={(newTags) =>
               handleTagsChange(noteHandlers.setTags, newTags)
             }
-            fetchSuggestedTags={async () => {
-              setLoadingTags(true);
-              try {
-                const editor = rteRef.current?.editor;
-                if (editor) {
-                  const noteContent = editor.getHTML();
-                  console.log("Fetching suggested tags for content:", noteContent);
-
-                  const tags = await ApiService.generateTags(noteContent);
-                  console.log("Suggested tags received:", tags);
-                  setSuggestedTags(tags);
-                } else {
-                  console.error("Editor instance is not available");
-                }
-              } catch (error) {
-                console.error("Error generating tags:", error);
-              } finally {
-                setLoadingTags(false);
-              }
-            }}
+            fetchSuggestedTags={fetchSuggestedTags}
           />
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
