@@ -16,7 +16,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   const title = note.title;
   const date = formatDateTime(note.time);
   const text = note.text;
-  const tags: string[] = note.tags;
+  const tags: string[] = note.tags.map(tag => tag.label); // Ensure correct mapping to labels
   const imageMedia = note.media.filter((media) => media.type === "image")[0];
   const [creator, setCreator] = useState<string>("Loading...");
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Note } from "@/app/types";
+import { Note, Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,

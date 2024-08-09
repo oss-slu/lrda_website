@@ -32,7 +32,7 @@ import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
 
-// Format the date into a readable string
+// Utility function to format the date into a readable string
 function formatDate(date: string | number | Date) {
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) return "Invalid Date";
@@ -47,7 +47,7 @@ function formatDate(date: string | number | Date) {
   return `${dateString}`;
 }
 
-// Format the time into a readable string
+// Utility function to format the time into a readable string
 function formatTime(date: string | number | Date) {
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) return "Invalid Date";
@@ -61,6 +61,13 @@ function formatTime(date: string | number | Date) {
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
+// Convert old tags (strings) to new format
+const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
+  return tags.map(tag =>
+    typeof tag === "string" ? { label: tag, origin: "user" } : tag
+  );
+};
+
 // ClickableNote component
 const ClickableNote: React.FC<{
   note: Note;
@@ -68,8 +75,7 @@ const ClickableNote: React.FC<{
   const [creator, setCreator] = useState<string>("Loading...");
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
-  const tags: Tag[] = note.tags; // Ensure Note type uses Tag interface
-  console.log(note);
+  const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
