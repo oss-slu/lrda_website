@@ -1,5 +1,5 @@
 import React from "react";
-import { Note } from "@/app/types";
+import { Note, Tag } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
 import { User } from "../../models/user_class";
@@ -36,10 +36,15 @@ export const handlePublishChange = (
 };
 
 export const handleTagsChange = (
-  setTags: React.Dispatch<React.SetStateAction<string[]>>,
-  newTags: string[]
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>, 
+  newTags: (Tag | string)[]
 ) => {
-  setTags(newTags);
+  const formattedTags = newTags.map((tag) =>
+    typeof tag === "string"
+      ? { label: tag, origin: "user" as const } // Ensure origin is correctly typed
+      : tag
+  );
+  setTags(formattedTags);
 };
 
 export const handleEditorChange = (
@@ -62,10 +67,11 @@ export const handleDeleteNote = async (
         userId || ""
       );
       if (success) {
-        toast("Error", {
-          description: "Note successfully Deleted.",
+        toast("Success", {
+          description: "Note successfully deleted.",
           duration: 4000,
         });
+        setNote(undefined); // Clear the note after successful deletion
         return true;
       }
     } catch (error) {
@@ -78,8 +84,9 @@ export const handleDeleteNote = async (
     }
   } else {
     toast("Error", {
-      description: "You must first save your note, before deleting it.",
+      description: "You must first save your note before deleting it.",
       duration: 4000,
     });
+    return false;
   }
 };

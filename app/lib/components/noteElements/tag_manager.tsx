@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -24,12 +24,14 @@ const TagManager: React.FC<TagManagerProps> = ({
   onTagsChange,
   fetchSuggestedTags,
 }) => {
-  // Convert old tags (strings) to new format
-  const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
-    return tags.map(tag => 
-      typeof tag === "string" ? { label: tag, origin: "user" } : tag
-    );
-  };
+  // Memoize conversion of old tags to new format to avoid unnecessary recalculations
+  const convertOldTags = useMemo(() => {
+    return (tags: (Tag | string)[]): Tag[] => {
+      return tags.map(tag => 
+        typeof tag === "string" ? { label: tag, origin: "user" } : tag
+      );
+    };
+  }, []);
 
   // Initialize state with converted tags
   const [tags, setTags] = useState<Tag[]>(convertOldTags(inputTags));
@@ -38,11 +40,10 @@ const TagManager: React.FC<TagManagerProps> = ({
   // Update local state when inputTags prop changes
   useEffect(() => {
     setTags(convertOldTags(inputTags));
-  }, [inputTags]);
+  }, [inputTags, convertOldTags]);
 
   // Function to add a tag
   const addTag = (tag: string, origin: "user" | "ai") => {
-    // Validate tag: no spaces and longer than 2 characters
     if (tag.includes(" ")) {
       toast("Failed to add tag", {
         description: "Your tag must not contain spaces.",
@@ -56,9 +57,9 @@ const TagManager: React.FC<TagManagerProps> = ({
         description: "Tags must be longer than 2 characters.",
         duration: 2000,
       });
+      setTagInput("");
       return;
     }
-    // Check for duplicate tags
     if (tags.find((t) => t.label === tag)) {
       toast("Failed to add tag", {
         description: "Duplicate tags are not allowed.",
@@ -67,16 +68,15 @@ const TagManager: React.FC<TagManagerProps> = ({
       setTagInput("");
       return;
     }
+
     // Add the tag if valid
-    if (tag && tag.length > 2 && !tag.includes(" ")) {
-      const newTag = { label: tag, origin };
-      setTags((prevTags) => {
-        const updatedTags = [...prevTags, newTag];
-        onTagsChange(updatedTags); // Notify parent component of tag changes
-        return updatedTags;
-      });
-      setTagInput(""); // Clear input field
-    }
+    const newTag = { label: tag, origin };
+    setTags((prevTags) => {
+      const updatedTags = [...prevTags, newTag];
+      onTagsChange(updatedTags); // Notify parent component of tag changes
+      return updatedTags;
+    });
+    setTagInput(""); // Clear input field
   };
 
   // Function to remove a tag

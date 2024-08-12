@@ -17,7 +17,7 @@ import {
   Navigation,
   UserIcon,
 } from "lucide-react";
-import * as ReactDOM from 'react-dom/client';
+import * as ReactDOM from "react-dom/client";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -66,7 +66,6 @@ const Page = () => {
 
   useEffect(() => {
     let isSubscribed = true;
-    // Immediately try to fetch the last known location from storage
     const fetchLastLocation = async () => {
       try {
         const lastLocationString = await getItem("LastLocation");
@@ -116,7 +115,6 @@ const Page = () => {
 
     fetchCurrentLocationAndUpdate();
 
-    // The cleanup function to run when the component unmounts
     return () => {
       isComponentMounted = false;
     };
@@ -143,7 +141,7 @@ const Page = () => {
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
-    if (!isNoteSelectedFromSearch){
+    if (!isNoteSelectedFromSearch) {
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
     const timer = setTimeout(() => {
@@ -183,7 +181,6 @@ const Page = () => {
     }
   }, [locationFound, global]);
 
-  // useEffect that creates and updates Markers and MarkerClusters
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
       const tempMarkers = new Map();
@@ -275,7 +272,6 @@ const Page = () => {
     }, 100);
   }, []);
 
-  // Filter function
   const filterNotesByMapBounds = (
     bounds: google.maps.LatLngBounds | null,
     notes: Note[]
@@ -328,14 +324,13 @@ const Page = () => {
   };
 
   const handleMarkerClick = (note: Note) => {
-    // Close the currently active popup if it exists
     if (currentPopup) {
-      currentPopup.setMap(null); // Close the currently open popup
-      setCurrentPopup(null); // Set the currentPopup to null immediately after closing
+      currentPopup.setMap(null);
+      setCurrentPopup(null);
     }
 
-    setActiveNote(note); // Set the new active note
-    scrollToNoteTile(note.id); // Scroll to the note tile if needed
+    setActiveNote(note);
+    scrollToNoteTile(note.id);
 
     const map = mapRef.current;
 
@@ -354,40 +349,33 @@ const Page = () => {
 
           content.classList.add("popup-bubble");
 
-          // This zero-height div is positioned at the bottom of the bubble.
           const bubbleAnchor = document.createElement("div");
 
           bubbleAnchor.classList.add("popup-bubble-anchor");
           bubbleAnchor.appendChild(content);
 
-          // This zero-height div is positioned at the bottom of the tip.
           this.containerDiv = document.createElement("div");
           this.containerDiv.classList.add("popup-container");
           this.containerDiv.appendChild(bubbleAnchor);
 
-          // Optionally stop clicks, etc., from bubbling up to the map.
           Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
         }
 
-        /** Called when the popup is added to the map. */
         onAdd() {
           this.getPanes()!.floatPane.appendChild(this.containerDiv);
         }
 
-        /** Called when the popup is removed from the map. */
         onRemove() {
           if (this.containerDiv.parentElement) {
             this.containerDiv.parentElement.removeChild(this.containerDiv);
           }
         }
 
-        /** Called each frame when the popup needs to draw itself. */
         draw() {
           const divPosition = this.getProjection().fromLatLngToDivPixel(
             this.position
           )!;
 
-          // Hide the popup when it is far out of view.
           const display =
             Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
               ? "block"
@@ -412,66 +400,48 @@ const Page = () => {
         popupContent
       );
 
-      // Set the new popup as the currentPopup before opening it
       setCurrentPopup(popup);
 
-      // Open the popup
       popup.setMap(map);
     }
   };
 
-  // Old handle search that filters the locations by string
-  // const handleSearch = (searchQuery: string) => {
-  //   if (!searchQuery.trim()) {
-  //     setFilteredNotes(notes);
-  //     return;
-  //   }
-  //   const query = searchQuery.toLowerCase();
-  //   const filtered = notes.filter(
-  //     (note) =>
-  //       note.title.toLowerCase().includes(query) ||
-  //       note.tags.some((tag) => tag.toLowerCase().includes(query))
-  //   );
-  //   setFilteredNotes(filtered);
-  // };
-
-  // New handleSearch for location based searching
-  const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
+  const handleSearch = (
+    address: string,
+    lat?: number,
+    lng?: number,
+    isNoteClick?: boolean
+  ) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
     } else {
-      // Otherwise, filter based on the search query as user types
       setIsNoteSelectedFromSearch(false);
       const query = address.trim().toLowerCase();
       const filtered = query
         ? notes.filter(
             (note) =>
               note.title.toLowerCase().includes(query) ||
-              note.text.toLowerCase().includes(query) || 
-              note.tags.some((tag) => tag.toLowerCase().includes(query))
+              note.text.toLowerCase().includes(query) ||
+              note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Accessing the label property
           )
-        : [...notes]; 
-  
+        : [...notes];
+
       setFilteredNotes(filtered);
     }
-  
-    // If lat and lng are provided, move the map to that location
+
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
     }
   };
-  
-  
 
   const handleNotesSearch = (searchText: string) => {
-    // Filter notes based on the search query
     const query = searchText.toLowerCase();
     const filtered = notes.filter(
       (note) =>
         note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.toLowerCase().includes(query))
+        note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Accessing the label property
     );
     setFilteredNotes(filtered);
     console.log("Filtered:", filtered);
@@ -481,7 +451,7 @@ const Page = () => {
     if (isHighlighted) {
       return {
         url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48), 
+        scaledSize: new window.google.maps.Size(48, 48),
       };
     } else {
       return {
@@ -505,6 +475,7 @@ const Page = () => {
       noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
+
   function getLocation() {
     toast("Fetching Location", {
       description: "Getting your location. This can take a second.",
@@ -542,7 +513,7 @@ const Page = () => {
     const newSkip = Math.max(0, skip - 150);
     const newNotes = global
       ? await ApiService.fetchPublishedNotes(150, newSkip)
-      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
+      : await ApiService.fetchUserMessages((await user.getId()) || "", 150, newSkip);
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
@@ -555,7 +526,7 @@ const Page = () => {
     const newSkip = skip + 150;
     const newNotes = global
       ? await ApiService.fetchPublishedNotes(150, newSkip)
-      : await ApiService.fetchUserMessages(await user.getId() || "", 150, newSkip);
+      : await ApiService.fetchUserMessages((await user.getId()) || "", 150, newSkip);
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
@@ -611,56 +582,53 @@ const Page = () => {
       </div>
 
       <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
-  {isLoading ? (
-    [...Array(6)].map((_, index) => (
-      <Skeleton
-        key={index}
-        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-      />
-    ))
-  ) : filteredNotes.length > 0 ? (
-    filteredNotes.map((note) => (
-      <div
-        ref={(el) => {
-          if (el) noteRefs.current[note.id] = el;
-        }}
-        className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-          note.id === activeNote?.id
-            ? "active-note"
-            : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-        }`}
-        onMouseEnter={() => setHoveredNoteId(note.id)}
-        onMouseLeave={() => setHoveredNoteId(null)}
-        key={note.id}
-      >
-        <ClickableNote note={note} />
+        {isLoading
+          ? [...Array(6)].map((_, index) => (
+              <Skeleton
+                key={index}
+                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+              />
+            ))
+          : filteredNotes.length > 0
+          ? filteredNotes.map((note) => (
+              <div
+                ref={(el) => {
+                  if (el) noteRefs.current[note.id] = el;
+                }}
+                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                  note.id === activeNote?.id
+                    ? "active-note"
+                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                }`}
+                onMouseEnter={() => setHoveredNoteId(note.id)}
+                onMouseLeave={() => setHoveredNoteId(null)}
+                key={note.id}
+              >
+                <ClickableNote note={note} />
+              </div>
+            ))
+          : [...Array(6)].map((_, index) => (
+              <Skeleton
+                key={index}
+                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+              />
+            ))}
+        <div className="flex justify-center w-full mt-4 mb-2">
+          <button
+            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            onClick={handlePrevious}
+            disabled={skip === 0}
+          >
+            Previous
+          </button>
+          <button
+            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            onClick={handleNext}
+          >
+            Next
+          </button>
+        </div>
       </div>
-    ))
-  ) : (
-    [...Array(6)].map((_, index) => (
-      <Skeleton
-        key={index}
-        className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-      />
-    ))
-  )}
-  <div className="flex justify-center w-full mt-4 mb-2">
-    <button
-      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-      onClick={handlePrevious}
-      disabled={skip === 0}
-    >
-      Previous
-    </button>
-    <button
-      className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-      onClick={handleNext}
-    >
-      Next
-    </button>
-  </div>
-</div>
-
     </div>
   );
 };

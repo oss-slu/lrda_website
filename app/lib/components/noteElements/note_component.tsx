@@ -34,7 +34,7 @@ import {
   handleDeleteNote,
   handleEditorChange,
   handleLocationChange,
-  handleTagsChange,
+  handleTagsChange, // Imported from note_handler
   handleTimeChange,
   handlePublishChange,
 } from "./note_handler";
@@ -103,6 +103,7 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
+
       noteHandlers.setImages(
         (initialNote.media.filter(
           (item) => item.getType() === "image"
@@ -111,7 +112,13 @@ export default function NoteEditor({
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
       noteHandlers.setLatitude(initialNote.latitude || "");
-      noteHandlers.setTags(initialNote.tags || []);
+
+      noteHandlers.setTags(
+        (initialNote.tags || []).map((tag) =>
+          typeof tag === "string" ? { label: tag, origin: "user" } : tag
+        )
+      );
+
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
@@ -175,11 +182,11 @@ export default function NoteEditor({
   const addImageToNote = (imageUrl: string) => {
     console.log("Before updating images", noteState.images);
     const newImage = {
-      type: 'image',
+      type: "image",
       attrs: {
         src: imageUrl,
-        alt: 'Image description',
-        loading: 'lazy',
+        alt: "Image description",
+        loading: "lazy",
       },
     };
 
@@ -193,11 +200,14 @@ export default function NoteEditor({
     }
 
     noteHandlers.setImages((prevImages) => {
-      const newImages = [...prevImages, new PhotoType({
-        uuid: uuidv4(),
-        uri: imageUrl,
-        type: "image",
-      })];
+      const newImages = [
+        ...prevImages,
+        new PhotoType({
+          uuid: uuidv4(),
+          uri: imageUrl,
+          type: "image",
+        }),
+      ];
       console.log("After updating images", newImages);
       return newImages;
     });
@@ -330,13 +340,14 @@ export default function NoteEditor({
             </button>
           </div>
           <TagManager
-            inputTags={noteState.tags}
-            suggestedTags={suggestedTags}
-            onTagsChange={(newTags) =>
-              handleTagsChange(noteHandlers.setTags, newTags)
-            }
-            fetchSuggestedTags={fetchSuggestedTags}
-          />
+  inputTags={noteState.tags}
+  suggestedTags={suggestedTags}
+  onTagsChange={(newTags) =>
+    handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+  }
+  fetchSuggestedTags={fetchSuggestedTags}
+/>
+
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
 

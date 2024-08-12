@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const filtered = notes.filter(
       (note) =>
         note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.toLowerCase().includes(query))
+        note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Access the label property
     );
     setFilteredNotes(filtered);
   };
