@@ -130,14 +130,13 @@ const ClickableNote: React.FC<{
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
-
         <ScrollArea>
-          {note.text.length > 0 ? (
-            <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
-          ) : (
-            "This Note has no content"
-          )}
-        </ScrollArea>
+  {note.text && note.text.length > 0 ? (
+    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+  ) : (
+    "This Note has no content"
+  )}
+</ScrollArea>
         <DialogFooter>
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (
