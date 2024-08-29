@@ -509,32 +509,36 @@ const Page = () => {
     }
   }
 
-  const handlePrevious = async () => {
-    const newSkip = Math.max(0, skip - 150);
-    const newNotes = global
-      ? await ApiService.fetchPublishedNotes(150, newSkip)
-      : await ApiService.fetchUserMessages((await user.getId()) || "", 150, newSkip);
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-
   const handleNext = async () => {
     const newSkip = skip + 150;
     const newNotes = global
-      ? await ApiService.fetchPublishedNotes(150, newSkip)
-      : await ApiService.fetchUserMessages((await user.getId()) || "", 150, newSkip);
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
+    
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-
+  
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex-grow">

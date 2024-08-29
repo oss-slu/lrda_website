@@ -75,48 +75,62 @@ export default class ApiService {
   }
 
   /**
-   * Fetches messages from the API.
-   * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
-   * @param {string} userId - The ID of the user for user-specific messages.
-   * @param {boolean} published - Indicates whether to fetch only published messages.
-   * @returns {Promise<any[]>} The array of messages fetched from the API.
-   */
-  static async fetchMessages(
-    global: boolean,
-    published: boolean,
-    userId: string
-  ): Promise<any[]> {
-    try {
-      const url = RERUM_PREFIX + "query";
+ * Fetches messages from the API, with optional pagination.
+ * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
+ * @param {boolean} published - Indicates whether to fetch only published messages.
+ * @param {string} userId - The ID of the user for user-specific messages.
+ * @param {number} [limit=150] - The limit of messages per page. Defaults to 150.
+ * @param {number} [skip=0] - The iterator to skip messages for pagination.
+ * @param {Array} [allResults=[]] - The accumulated results for pagination.
+ * @returns {Promise<any[]>} The array of messages fetched from the API.
+ */
+static async fetchMessages(
+  global: boolean,
+  published: boolean,
+  userId: string,
+  limit = 150,
+  skip = 0,
+  allResults: any[] = []
+): Promise<any[]> {
+  try {
+    const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
 
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      let body: { type: string; published?: boolean; creator?: string } = {
-        type: "message",
-      };
+    const headers = {
+      "Content-Type": "application/json",
+    };
 
-      if (global) {
-        body = { type: "message" };
-      } else if (published) {
-        body = { type: "message", published: true, creator: userId };
-      } else {
-        body = { type: "message", creator: userId };
-      }
+    let body: { type: string; published?: boolean; creator?: string } = {
+      type: "message",
+    };
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      throw error;
+    if (global) {
+      body = { type: "message" };
+    } else if (published) {
+      body = { type: "message", published: true, creator: userId };
+    } else {
+      body = { type: "message", creator: userId };
     }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (data.length > 0) {
+      allResults = allResults.concat(data);
+      return this.fetchMessages(global, published, userId, limit, skip + data.length, allResults);
+    }
+
+    return allResults;
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw error;
   }
+}
+
 
  /**
    * Implements a paged query to fetch messages in chunks.
