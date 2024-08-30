@@ -167,8 +167,10 @@ export default class DataConversion {
   }
 }
 
-export function formatDateTime(date: Date) {
-  if (!date) return 'Pick a date';
+export function formatDateTime(date: any) {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Pick a date'; // Handle invalid dates
+  }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
@@ -179,8 +181,10 @@ export function formatDateTime(date: Date) {
   return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
-export function format12hourTime(date: Date) {
-  if (!date) return 'Pick a date';
+export function format12hourTime(date: any) {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Pick a date'; // Handle invalid dates
+  }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
@@ -190,3 +194,4 @@ export function format12hourTime(date: Date) {
 
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }
+

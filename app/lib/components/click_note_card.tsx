@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
-import { Note } from "@/app/types";
+import { Note, Tag } from "@/app/types";
 import {
   CalendarDays,
   UserCircle,
@@ -32,10 +32,12 @@ import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
 
-function formatDate(date: Date) {
-  if (!date) return "Pick a date";
+// Utility function to format the date into a readable string
+function formatDate(date: string | number | Date) {
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return "Invalid Date";
 
-  const dateString = date.toLocaleDateString("en-US", {
+  const dateString = parsedDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -44,11 +46,14 @@ function formatDate(date: Date) {
 
   return `${dateString}`;
 }
-function formatTime(date: Date) {
-  if (!date) return "Pick a date";
 
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+// Utility function to format the time into a readable string
+function formatTime(date: string | number | Date) {
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return "Invalid Date";
+
+  const hours = parsedDate.getHours();
+  const minutes = parsedDate.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
   const ampm = hours < 12 ? "AM" : "PM";
@@ -56,15 +61,23 @@ function formatTime(date: Date) {
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
+// Convert old tags (strings) to new format
+const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
+  return tags.map(tag =>
+    typeof tag === "string" ? { label: tag, origin: "user" } : tag
+  );
+};
+
+// ClickableNote component
 const ClickableNote: React.FC<{
   note: Note;
 }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
-  const tags: string[] = note.tags;
-  console.log(note);
+  const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
 
+  // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
     ApiService.fetchCreatorName(note.creator)
       .then((name) => setCreator(name))
@@ -75,8 +88,6 @@ const ClickableNote: React.FC<{
   }, [note.creator]);
 
   const data = note.text;
-
-  focus();
 
   return (
     <Dialog>
@@ -104,9 +115,13 @@ const ClickableNote: React.FC<{
                 {tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="bg-blue-100 text-blue-800 h-5 text-xs px-2 font-semibold rounded flex justify-center items-center"
+                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                      tag.origin === "user"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-purple-200 text-purple-800"
+                    }`}
                   >
-                    {tag}
+                    {tag.label}
                   </span>
                 ))}
               </div>
@@ -115,34 +130,14 @@ const ClickableNote: React.FC<{
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
-
         <ScrollArea>
-          {note.text.length > 0 ? (
-            <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
-          ) : (
-            "This Note has no content"
-          )}
-        </ScrollArea>
+  {note.text && note.text.length > 0 ? (
+    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+  ) : (
+    "This Note has no content"
+  )}
+</ScrollArea>
         <DialogFooter>
-          {/* <div className=" absolute bottom-4 right-4 flex w-[220px] h-10 bg-popup shadow-sm rounded-full border border-border bg-white pt-2 pb-2 justify-around items-center">
-            <button
-              tabIndex={-1}
-              className="hover:text-green-500 flex justify-center items-center w-10"
-              onClick={() => setLikes(likes + 1)}
-            >
-              <ThumbsUp className="text-current" />
-            </button>
-            {likes}
-            <div className="w-1 h-7 bg-border" />
-            <button
-              tabIndex={-1}
-              className="hover:text-red-500 flex justify-center items-center w-10"
-              onClick={() => setDisLikes(disLikes - 1)}
-            >
-              <ThumbsDown className="text-current" />
-            </button>
-            {disLikes}
-          </div> */}
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (
               <Popover>

@@ -1,11 +1,9 @@
-"use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Note } from "@/app/types";
+import { Note, Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
-  MenuButtonEditLink,
   RichTextEditor,
   type RichTextEditorRef,
 } from "mui-tiptap";
@@ -36,7 +34,7 @@ import {
   handleDeleteNote,
   handleEditorChange,
   handleLocationChange,
-  handleTagsChange,
+  handleTagsChange, // Imported from note_handler
   handleTimeChange,
   handlePublishChange,
 } from "./note_handler";
@@ -45,7 +43,6 @@ import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
-import { init } from "next/dist/compiled/webpack/webpack";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const user = User.getInstance();
@@ -60,11 +57,13 @@ export default function NoteEditor({
   isNewNote,
 }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
-
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
   });
+
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState<boolean>(false);
 
   useEffect(() => {
     const editor = rteRef.current?.editor;
@@ -104,6 +103,7 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
+
       noteHandlers.setImages(
         (initialNote.media.filter(
           (item) => item.getType() === "image"
@@ -112,7 +112,13 @@ export default function NoteEditor({
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
       noteHandlers.setLatitude(initialNote.latitude || "");
-      noteHandlers.setTags(initialNote.tags || []);
+
+      noteHandlers.setTags(
+        (initialNote.tags || []).map((tag) =>
+          typeof tag === "string" ? { label: tag, origin: "user" } : tag
+        )
+      );
+
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
@@ -131,6 +137,7 @@ export default function NoteEditor({
       noteHandlers.setNote(initialNote as Note);
     }
   }, [initialNote]);
+
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -175,14 +182,14 @@ export default function NoteEditor({
   const addImageToNote = (imageUrl: string) => {
     console.log("Before updating images", noteState.images);
     const newImage = {
-      type: 'image',
+      type: "image",
       attrs: {
         src: imageUrl,
-        alt: 'Image description',
-        loading: 'lazy',
+        alt: "Image description",
+        loading: "lazy",
       },
     };
-  
+
     const editor = rteRef.current?.editor;
     if (editor) {
       editor
@@ -191,20 +198,43 @@ export default function NoteEditor({
         .setImage(newImage.attrs)
         .run();
     }
-  
+
     noteHandlers.setImages((prevImages) => {
-      const newImages = [...prevImages, new PhotoType({
-        uuid: uuidv4(),
-        uri: imageUrl,
-        type: "image",
-      })];
+      const newImages = [
+        ...prevImages,
+        new PhotoType({
+          uuid: uuidv4(),
+          uri: imageUrl,
+          type: "image",
+        }),
+      ];
       console.log("After updating images", newImages);
       return newImages;
     });
   };
-  
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
+
+  const fetchSuggestedTags = async () => {
+    setLoadingTags(true);
+    try {
+      const editor = rteRef.current?.editor;
+      if (editor) {
+        const noteContent = editor.getHTML();
+        console.log("Fetching suggested tags for content:", noteContent);
+
+        const tags = await ApiService.generateTags(noteContent);
+        console.log("Suggested tags received:", tags);
+        setSuggestedTags(tags);
+      } else {
+        console.error("Editor instance is not available");
+      }
+    } catch (error) {
+      console.error("Error generating tags:", error);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
 
   return (
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
@@ -310,11 +340,15 @@ export default function NoteEditor({
             </button>
           </div>
           <TagManager
-            inputTags={noteState.tags}
-            onTagsChange={(newTags) =>
-              handleTagsChange(noteHandlers.setTags, newTags)
-            }
-          />
+  inputTags={noteState.tags}
+  suggestedTags={suggestedTags}
+  onTagsChange={(newTags) =>
+    handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+  }
+  fetchSuggestedTags={fetchSuggestedTags}
+/>
+
+          {loadingTags && <p>Loading suggested tags...</p>}
         </div>
 
         {isAudioModalOpen && (
@@ -339,30 +373,30 @@ export default function NoteEditor({
             </div>
           </div>
         )}
-          <div className="flex-grow w-full p-4 flex flex-col">
-            <div className=" flex-grow flex flex-col bg-white w-full rounded">
-              <RichTextEditor
-                ref={rteRef}
-                className="min-h-[712px]"
-                extensions={extensions}
-                content={noteState.editorContent}
-                onUpdate={({ editor }) =>
-                  handleEditorChange(
-                    noteHandlers.setEditorContent,
-                    editor.getHTML()
-                  )
-                }
-                renderControls={() => (
-                  <EditorMenuControls onImageUpload={addImageToNote} />
-                )}
-                children={(editor) => {
-                  if (!editor) return null;
-                  return <LinkBubbleMenu />;
-                }}
-              />
-            </div>
+        <div className="flex-grow w-full p-4 flex flex-col">
+          <div className=" flex-grow flex flex-col bg-white w-full rounded">
+            <RichTextEditor
+              ref={rteRef}
+              className="min-h-[712px]"
+              extensions={extensions}
+              content={noteState.editorContent}
+              onUpdate={({ editor }) =>
+                handleEditorChange(
+                  noteHandlers.setEditorContent,
+                  editor.getHTML()
+                )
+              }
+              renderControls={() => (
+                <EditorMenuControls onImageUpload={addImageToNote} />
+              )}
+              children={(editor) => {
+                if (!editor) return null;
+                return <LinkBubbleMenu />;
+              }}
+            />
           </div>
         </div>
+      </div>
     </ScrollArea>
   );
 }

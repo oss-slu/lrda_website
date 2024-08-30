@@ -177,7 +177,7 @@ export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) =>
       "wr:uid": newFirebaseId,
     };
 
-    const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {
+    const overwriteResponse = await fetch(`${RERUM_PREFIX}overwrite`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ export const handleUpdateCreatorUid = async (oldRerumId: string, newFirebaseId: 
       note.creator = newFirebaseId;
 
       try {
-        const overwriteResponse = await fetch(`${RERUM_PREFIX}/overwrite`, {
+        const overwriteResponse = await fetch(`${RERUM_PREFIX}overwrite`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
