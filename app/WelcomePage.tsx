@@ -1,5 +1,7 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import 'intro.js/introjs.css';  // Import intro.js CSS
+import introJs from 'intro.js';  // Import intro.js
 
 interface MousePosition {
   x: number;
@@ -11,6 +13,9 @@ const WelcomePage: React.FC = () => {
   const textRef = useRef<HTMLHeadingElement>(null);
   const textContainerRef = useRef<HTMLDivElement>(null);
 
+  // Ref for login button
+  const loginButtonRef = useRef<HTMLButtonElement>(null);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (textRef.current) {
       const rect = textRef.current.getBoundingClientRect();
@@ -20,7 +25,26 @@ const WelcomePage: React.FC = () => {
       });
     }
   };
-  // the px-3 in the h1 is what makes it 3D
+
+  // Initialize Intro.js when the page loads
+  useEffect(() => {
+    if (loginButtonRef.current) {
+      const intro = introJs();
+      intro.setOptions({
+        steps: [
+          {
+            element: loginButtonRef.current,  // Target the login button
+            intro: "Click here to log in to your account."
+          }
+        ],
+        showProgress: true,  // Option to show progress bar
+        scrollToElement: true,  // Automatically scroll to element
+      });
+      
+      intro.start();  // Start the intro tour
+    }
+  }, []);
+
   return (
     <div
       className="flex flex-col justify-center items-center h-[90vh] bg-black overflow-visible"
@@ -90,6 +114,14 @@ const WelcomePage: React.FC = () => {
           <span className="text-gray-800">Center on Lived Religion (COLR)</span>
         </div>
       </div>
+      
+      {/* Add Login Button and reference it */}
+      <button 
+        ref={loginButtonRef}
+        className="mt-10 px-4 py-2 bg-blue-500 text-white rounded-lg"
+      >
+        Log In
+      </button>
     </div>
   );
 };
