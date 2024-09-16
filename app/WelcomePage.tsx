@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import 'intro.js/introjs.css';  // Import intro.js CSS
-import introJs from 'intro.js';  // Import intro.js
 
 interface MousePosition {
   x: number;

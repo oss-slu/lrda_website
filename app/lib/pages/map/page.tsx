@@ -66,10 +66,12 @@ const Page = () => {
 
   const { isMapsApiLoaded } = useGoogleMaps();
 
+  
   useEffect(() => {
     let isSubscribed = true;
 
     // write the popup following this format like the one on introjs site
+    console.log(noteRefs.current);
     if(noteRefs.current){
       const intro = introJs();
       intro.setOptions({
@@ -88,7 +90,7 @@ const Page = () => {
         scrollToElement: true,  // Automatically scroll to element
       });
       
-      intro.start();  // Start the intro tour
+      intro.start();  // Start thme intro tour
     }
     const fetchLastLocation = async () => {
       try {

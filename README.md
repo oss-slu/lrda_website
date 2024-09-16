@@ -38,4 +38,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 [shadcn](https://ui.shadcn.com/) : A beautifully designed UI Component Library.
 
-(comment for PR)
