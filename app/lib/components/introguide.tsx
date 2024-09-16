@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import introJs from 'intro.js';
+import introJs, { Step } from 'intro.js';
 import 'intro.js/introjs.css';
 
-const IntroGuide = () => {
+const IntroGuide: React.FC = () => {
   useEffect(() => {
     const intro = introJs();
     intro.setOptions({
@@ -13,7 +13,7 @@ const IntroGuide = () => {
           position: 'right'
         },
         // Add more steps as needed
-      ]
+      ] as Step[]
     });
 
     // Check if it's the user's first login

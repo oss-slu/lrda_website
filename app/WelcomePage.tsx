@@ -36,6 +36,7 @@ const WelcomePage: React.FC = () => {
             element: loginButtonRef.current,  // Target the login button
             intro: "Click here to log in to your account."
           }
+          
         ],
         showProgress: true,  // Option to show progress bar
         scrollToElement: true,  // Automatically scroll to element
