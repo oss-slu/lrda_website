@@ -9,6 +9,8 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import introJs from "intro.js"
+import "intro.js/introjs.css"
 
 import {
   CompassIcon,
@@ -66,6 +68,28 @@ const Page = () => {
 
   useEffect(() => {
     let isSubscribed = true;
+
+    // write the popup following this format like the one on introjs site
+    if(noteRefs.current){
+      const intro = introJs();
+      intro.setOptions({
+        steps: [
+          {
+            //steps using refs
+            element: noteRefs.current?.current, 
+            intro: "Welcome! Lets explore the website together"
+          },
+          {
+            element: noteRefs.current?.current, 
+            intro: "Now, lets check out how to create a note!"
+          }
+        ],
+        showProgress: true,  // Option to show progress bar
+        scrollToElement: true,  // Automatically scroll to element
+      });
+      
+      intro.start();  // Start the intro tour
+    }
     const fetchLastLocation = async () => {
       try {
         const lastLocationString = await getItem("LastLocation");

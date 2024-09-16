@@ -23,25 +23,6 @@ const WelcomePage: React.FC = () => {
     }
   };
 
-  // Initialize Intro.js when the page loads
-  useEffect(() => {
-    if (textRef.current) {
-      const intro = introJs();
-      intro.setOptions({
-        steps: [
-          {
-            element: textRef.current,  // Target the "Where's Religion?" text
-            intro: "Welcome! Lets explore the website together"
-          }
-        ],
-        showProgress: true,  // Option to show progress bar
-        scrollToElement: true,  // Automatically scroll to element
-      });
-      
-      intro.start();  // Start the intro tour
-    }
-  }, []);
-
   return (
     <div
       className="flex flex-col justify-center items-center h-[90vh] bg-black overflow-visible"
