@@ -1,5 +1,7 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import 'intro.js/introjs.css';  // Import intro.js CSS
+import introJs from 'intro.js';  // Import intro.js
 
 interface MousePosition {
   x: number;
@@ -20,7 +22,26 @@ const WelcomePage: React.FC = () => {
       });
     }
   };
-  // the px-3 in the h1 is what makes it 3D
+
+  // Initialize Intro.js when the page loads
+  useEffect(() => {
+    if (textRef.current) {
+      const intro = introJs();
+      intro.setOptions({
+        steps: [
+          {
+            element: textRef.current,  // Target the "Where's Religion?" text
+            intro: "Welcome! Lets explore the website together"
+          }
+        ],
+        showProgress: true,  // Option to show progress bar
+        scrollToElement: true,  // Automatically scroll to element
+      });
+      
+      intro.start();  // Start the intro tour
+    }
+  }, []);
+
   return (
     <div
       className="flex flex-col justify-center items-center h-[90vh] bg-black overflow-visible"
