@@ -2,13 +2,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
-import { Note } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+// first import introJs and introjs.css from library
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 
@@ -63,35 +64,79 @@ const Page = () => {
   const [skip, setSkip] = useState(0);
 
   const user = User.getInstance();
-
   const { isMapsApiLoaded } = useGoogleMaps();
 
+  const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
+    if (isNewNote) {
+      // Create a new Note from the newNote template, assigning default values for missing fields.
+      const newNoteWithDefaults: Note = {
+        ...note, // Spread existing newNote fields
+        id: "temporary-id", // Assign a temporary ID for new note
+        uid: "temporary-uid", // Assign a temporary UID
+      };
+      console.log("New note created:", newNoteWithDefaults);
+    } else {
+      console.log("Existing note selected:", note);
+    }
+  };
   
+
+  // create ref for the search bar
+  const searchBarRef = useRef<HTMLDivElement | null>(null);
+  const notesListRef= useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+      const observer = new MutationObserver(() => {
+      const navbarCreateNoteButton = document.getElementById("navbar-create-note");
+      const navbarLogoutButton = document.getElementById("navbar-logout");
+      console.log('Observer triggered');
+      console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
+      console.log('navbarLogoutButton:', navbarLogoutButton)
+      if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef) {
+        const intro = introJs();
+  
+        intro.setOptions({
+          steps: [
+            {
+              element: noteRefs.current?.current,
+              intro: "Welcome! Lets explore the website together."
+            },
+            {
+              element: searchBarRef.current,
+              intro: "First, here's the search bar. You can use it to help you find locations on the map.",
+            },
+            {
+              element: notesListRef.current,
+              intro: "Now, this is the notes list. You can use it to explore other peoples notes!"
+            },
+            {
+              element: navbarCreateNoteButton, 
+              intro: "Click here to create your own note!",
+            },
+            {
+              element: navbarLogoutButton,
+              intro: "Done for the day? Make sure to logout!"
+            }
+          ],
+          //showProgress: true,
+          scrollToElement: true,
+        });
+  
+        intro.start();
+        observer.disconnect(); // Stop observing once the elements are found
+      }
+    });
+  
+    // Start observing the body for changes
+    observer.observe(document.body, { childList: true, subtree: true });
+  
+    // Cleanup the observer when the component unmounts
+    return () => observer.disconnect();
+  }, []);  
+  // Fetch and render map and notes logic as before...
+  // Leaving out unchanged parts of the code for brevity 
+
   useEffect(() => {
     let isSubscribed = true;
-
-    // write the popup following this format like the one on introjs site
-    console.log(noteRefs.current);
-    if(noteRefs.current){
-      const intro = introJs();
-      intro.setOptions({
-        steps: [
-          {
-            //steps using refs
-            element: noteRefs.current?.current, 
-            intro: "Welcome! Lets explore the website together"
-          },
-          {
-            element: noteRefs.current?.current, 
-            intro: "Now, lets check out how to create a note!"
-          }
-        ],
-        showProgress: true,  // Option to show progress bar
-        scrollToElement: true,  // Automatically scroll to element
-      });
-      
-      intro.start();  // Start thme intro tour
-    }
     const fetchLastLocation = async () => {
       try {
         const lastLocationString = await getItem("LastLocation");
@@ -583,7 +628,10 @@ const Page = () => {
             }}
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+             {/* *** Attach ref to Search Bar Conatiner *** */}
+              <div 
+                className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center"
+                ref={searchBarRef}>
                 <div className="min-w-[80px] mr-3">
                   <SearchBarMap
                     onSearch={handleSearch}
@@ -611,7 +659,8 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2">
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2"
+      ref = {notesListRef}>
         {isLoading
           ? [...Array(6)].map((_, index) => (
               <Skeleton
