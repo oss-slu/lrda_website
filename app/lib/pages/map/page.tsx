@@ -2,13 +2,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
-import { Note } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+// import sidebar
+import Sidebar from "../../components/side_bar";
+// first import introJs and introjs.css from library
+import introJs from "intro.js"
+import "intro.js/introjs.css"
 
 import {
   CompassIcon,
@@ -61,8 +66,64 @@ const Page = () => {
   const [skip, setSkip] = useState(0);
 
   const user = User.getInstance();
-
   const { isMapsApiLoaded } = useGoogleMaps();
+
+  const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
+    if (isNewNote) {
+      // Create a new Note from the newNote template, assigning default values for missing fields.
+      const newNoteWithDefaults: Note = {
+        ...note, // Spread existing newNote fields
+        id: "temporary-id", // Assign a temporary ID for new note
+        uid: "temporary-uid", // Assign a temporary UID
+      };
+      console.log("New note created:", newNoteWithDefaults);
+    } else {
+      console.log("Existing note selected:", note);
+    }
+  };
+  
+
+  // create ref for the search bar
+  const searchBarRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const addNoteButton = document.getElementById("add-note-button");
+      const navbarCreateNoteButton = document.getElementById("navbar-create-note");
+  
+      console.log('Observer triggered');
+      console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
+  
+      if (searchBarRef.current && navbarCreateNoteButton) {
+        const intro = introJs();
+  
+        intro.setOptions({
+          steps: [
+            {
+              element: searchBarRef.current,
+              intro: "This is the search bar. Use it to find locations on the map.",
+            },
+            {
+              element: navbarCreateNoteButton,
+              intro: "Click here to create a new note.",
+            },
+          ],
+          showBullets: false,
+          scrollToElement: true,
+        });
+  
+        intro.start();
+        observer.disconnect(); // Stop observing once the elements are found
+      }
+    });
+  
+    // Start observing the body for changes
+    observer.observe(document.body, { childList: true, subtree: true });
+  
+    // Cleanup the observer when the component unmounts
+    return () => observer.disconnect();
+  }, []);  
+  // Fetch and render map and notes logic as before...
+  // Leaving out unchanged parts of the code for brevity 
 
   useEffect(() => {
     let isSubscribed = true;
@@ -541,6 +602,7 @@ const Page = () => {
   
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+      <Sidebar onNoteSelect={handleNoteSelect} /> {/* Render the Sidebar */}
       <div className="flex-grow">
         {isMapsApiLoaded && (
           <GoogleMap
@@ -557,7 +619,10 @@ const Page = () => {
             }}
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+             {/* *** Attach ref to Search Bar Conatiner *** */}
+              <div 
+                className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center"
+                ref={searchBarRef}>
                 <div className="min-w-[80px] mr-3">
                   <SearchBarMap
                     onSearch={handleSearch}
