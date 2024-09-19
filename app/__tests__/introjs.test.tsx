@@ -62,7 +62,7 @@ describe("Intro.js feature in Page component", () => {
     await waitFor(() => {
       const introTooltips = document.querySelector(".introjs-tooltip"); // Query for the introJs tooltip element
       if (introTooltips) { 
-        // Only check the tooltip content if the tooltip exists (handling possible null values)
+        // check the tooltip content if the tooltip exists (handling possible null values)
         expect(introTooltips.textContent).toContain("This is the search bar. Use it to find locations on the map."); // Verifies the content of the tooltip
       }
     });
