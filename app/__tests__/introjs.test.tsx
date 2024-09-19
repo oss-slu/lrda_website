@@ -9,15 +9,11 @@ import "intro.js/introjs.css"
 jest.mock('firebase/auth');
 jest.mock('../lib/utils/api_service');
 
-// Mock introJs to simulate tooltips being added
+// Mock introJs
 jest.mock('intro.js', () => {
   return jest.fn(() => ({
     setOptions: jest.fn(),
     start: jest.fn(() => {
-      // Simulate tooltips being added to the DOM
-      const tooltip = document.createElement('div');
-      tooltip.className = 'introjs-tooltip';
-      document.body.appendChild(tooltip);
     }),
   }));
 });
