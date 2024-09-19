@@ -2,8 +2,8 @@ import React from "react";
 import { render, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Page from "../lib/pages/map/page";
-import introJs from "intro.js";
-import "intro.js/introjs.css"
+// import introJs from "intro.js";
+// import "intro.js/introjs.css"
 
 // Mock Firebase Auth and API services
 jest.mock('firebase/auth');
