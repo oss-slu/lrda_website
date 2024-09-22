@@ -20,6 +20,13 @@ jest.mock('intro.js', () => {
   }));
 });
 
+// Suppress console logs, warnings, and errors
+beforeEach(() => {
+  jest.spyOn(console, 'log').mockImplementation(() => {});
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+
 // Restore all mocks after each test to prevent side effects between tests
 afterEach(() => {
   jest.restoreAllMocks(); // Reset and clean up any mocked functionality after each test
@@ -59,10 +66,18 @@ describe("Intro.js feature in Page component", () => {
 
     // This block waits for tooltips to be added by introJs and verifies their presence and content
     await waitFor(() => {
-      const introTooltips = document.querySelector(".introjs-tooltip"); // Query for the introJs tooltip element
-      if (introTooltips) { 
-        // check the tooltip content if the tooltip exists (handling possible null values)
-        expect(introTooltips.textContent).toContain("This is the search bar. Use it to find locations on the map."); // Verifies the content of the tooltip
+      const introTooltips = document.querySelectorAll(".introjs-tooltip"); // Query all introJs tooltips
+    
+      // Check the content of the first tooltip for the search bar
+      const searchBarTooltip = introTooltips[0];
+      if (searchBarTooltip) {
+        expect(searchBarTooltip.textContent).toContain("This is the search bar. Use it to find locations on the map.");
+      }
+    
+      // Check the content of the second tooltip for the "create note" button
+      const createNoteTooltip = introTooltips[1];
+      if (createNoteTooltip) {
+        expect(createNoteTooltip.textContent).toContain("Click here to create a new note.");
       }
     });
   });
