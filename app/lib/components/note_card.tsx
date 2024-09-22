@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "@/app/types";
 import ApiService from "../utils/api_service";
-import placeholderImage from "public/no-photo-placeholder.jpeg";
+// import placeholderImage from "public/no-photo-placeholder.jpeg";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PersonIcon } from "@radix-ui/react-icons";
 import { Calendar, TagIcon, TagsIcon, User2Icon } from "lucide-react";
@@ -35,7 +35,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
         <CompactCarousel mediaArray={note.media}></CompactCarousel>
       ) : (
         <img
-          src={placeholderImage.src}
+          src="\no-photo-placeholder.jpeg"
           alt="Placeholder"
           className="w-auto h-[180px] object-cover rounded-t-sm"
         />

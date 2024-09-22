@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  swcMinify: false,
+  
   images: {
     domains: ["livedreligion.s3.amazonaws.com"],
   },
