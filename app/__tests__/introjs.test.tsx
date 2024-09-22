@@ -26,6 +26,7 @@ beforeEach(() => {
   jest.spyOn(console, 'warn').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
 }
+
 // Restore all mocks after each test to prevent side effects between tests
 afterEach(() => {
   jest.restoreAllMocks(); // Reset and clean up any mocked functionality after each test
