@@ -121,8 +121,6 @@ const Page = () => {
           scrollToElement: true,
           dontShowAgain: true,
         });
-  
-        
 
         intro.start();
         observer.disconnect(); // Stop observing once the elements are found
