@@ -53,7 +53,7 @@ export default function Navbar() {
 
         {name ? (
           <Link legacyBehavior href="/lib/pages/notes" passHref>
-            <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+            <a id="navbar-create-note"className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
               Create a Note
             </a>
           </Link>
@@ -82,7 +82,7 @@ export default function Navbar() {
               Hi, {name}!
             </span>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+              id = "navbar-logout" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
               onClick={handleLogout}
             >
               Logout

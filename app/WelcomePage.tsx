@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface MousePosition {
   x: number;
@@ -20,7 +20,7 @@ const WelcomePage: React.FC = () => {
       });
     }
   };
-  // the px-3 in the h1 is what makes it 3D
+
   return (
     <div
       className="flex flex-col justify-center items-center h-[90vh] bg-black overflow-visible"

@@ -48,10 +48,10 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   };
 
   return (
-    <div className="my-4 flex flex-col">
+    <div id="notes-list" className="my-4 flex flex-col">
       {notes.map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
-
+  
         return (
           <div
             key={note.id}
@@ -75,7 +75,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
         );
       })}
     </div>
-  );
+  );  
 };
 
 export default NoteListView;

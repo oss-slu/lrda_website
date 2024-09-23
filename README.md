@@ -37,3 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 [mui-tiptap](https://www.npmjs.com/package/mui-tiptap): A customizable Material UI styled WYSIWYG rich text editor, using Tiptap.
 
 [shadcn](https://ui.shadcn.com/) : A beautifully designed UI Component Library.
+
