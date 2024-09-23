@@ -91,7 +91,7 @@ const Page = () => {
       console.log('navbarLogoutButton:', navbarLogoutButton)
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef) {
         const intro = introJs();
-  
+
         intro.setOptions({
           steps: [
             {
@@ -116,8 +116,9 @@ const Page = () => {
             }
           ],
           scrollToElement: true,
+          dontShowAgain: true,
         });
-  
+
         intro.start();
         observer.disconnect(); // Stop observing once the elements are found
       }
