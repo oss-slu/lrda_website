@@ -9,7 +9,6 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-// first import introJs and introjs.css from library
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 
@@ -81,7 +80,6 @@ const Page = () => {
   };
   
 
-  // create ref for the search bar
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -117,7 +115,6 @@ const Page = () => {
               intro: "Done for the day? Make sure to logout!"
             }
           ],
-          //showProgress: true,
           scrollToElement: true,
           dontShowAgain: true,
         });
