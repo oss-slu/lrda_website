@@ -117,6 +117,7 @@ const Page = () => {
           ],
           scrollToElement: true,
           dontShowAgain: true,
+          skipLabel: "Skip",
         });
 
         intro.start();
