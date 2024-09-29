@@ -125,16 +125,16 @@ const Page = () => {
           dontShowAgain: true,
         });
 
-        intro.onbeforeexit(() => {
-          const currentStep = intro._currentStep;  // Get the current step
-          sessionStorage.setItem('pageTourStep', currentStep); // Store the step in sessionStorage
-        });
-
         intro.oncomplete(() => { //navigate to create a note when tour is over
           window.location.href = "/lib/pages/notes";
         });
 
         intro.start();
+
+        intro.onbeforeexit(() => {
+          const currentStep = intro._currentStep;  // Get the current step
+          sessionStorage.setItem('pageTourStep', currentStep); // Store the step in sessionStorage
+        });
 
         observer.disconnect(); // Stop observing once the elements are found
       }
