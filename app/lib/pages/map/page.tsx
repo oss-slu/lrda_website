@@ -83,7 +83,10 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-      const observer = new MutationObserver(() => {
+
+    const pageTourStep = sessionStorage.getItem('pageTourStep'); //remember where page tour was
+
+    const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
       console.log('Observer triggered');
@@ -115,15 +118,24 @@ const Page = () => {
               intro: "Done for the day? Make sure to logout!"
             }
           ],
+
+          initialStep: pageTourStep ? parseInt(pageTourStep, 10) : 0, //save tour progress
+
           scrollToElement: true,
           dontShowAgain: true,
         });
 
-        intro.oncomplete(() => {
+        intro.onbeforeexit(() => {
+          const currentStep = intro._currentStep;  // Get the current step
+          sessionStorage.setItem('pageTourStep', currentStep); // Store the step in sessionStorage
+        });
+
+        intro.oncomplete(() => { //navigate to create a note when tour is over
           window.location.href = "/lib/pages/notes";
         });
 
         intro.start();
+
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
