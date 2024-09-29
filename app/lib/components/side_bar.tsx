@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import SearchBarNote from "./search_bar_note";
@@ -7,6 +7,9 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
+
+import introJs from "intro.js"
+import "intro.js/introjs.css"
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
@@ -38,6 +41,35 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       console.error("User ID is null - cannot create a new note");
     }
   };
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+    const  addNote = document.getElementById("add-note-button");
+    console.log('Observer triggered');
+
+    if (addNote) {
+      const intro = introJs();
+
+      intro.setOptions({
+        scrollToElement: false,
+        dontShowAgain: true,
+        skipLabel: "Skip",
+      });
+
+      intro.start();
+      if (addNote) {
+        addNote.click();
+      }
+      observer.disconnect(); // Stop observing once the elements are found
+    }
+  });
+
+  // Start observing the body for changes
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Cleanup the observer when the component unmounts
+  return () => observer.disconnect();
+  }, []); 
 
   useEffect(() => {
     const fetchUserMessages = async () => {
@@ -78,14 +110,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
       <div className="w-full mb-4">
         <SearchBarNote onSearch={handleSearch} />
-      </div>
-      <Button data-testid="add-note-button" onClick={handleAddNote}>
+        
+      </div >
+      
+      <Button id = 'add-note-button' data-testid="add-note-button" onClick={handleAddNote}>
         Add Note
-      </Button>
+      </Button> 
       <div>
         <NoteListView
           notes={filteredNotes}
           onNoteSelect={(note) => onNoteSelect(note, false)}
+           
         />
       </div>
     </div>

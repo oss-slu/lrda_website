@@ -67,6 +67,7 @@ export default function NoteEditor({
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
 
+
   const titleRef = useRef<HTMLDivElement | null>(null);
   const saveRef = useRef<HTMLDivElement | null>(null);
   const dateRef = useRef<HTMLDivElement | null>(null);
@@ -74,16 +75,17 @@ export default function NoteEditor({
   const locationRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const observer = new MutationObserver(() => {
-    //const  = document.getElementById("");
-    //const  = document.getElementById("");
+    const  addNote = document.getElementById("add-note-button");
     console.log('Observer triggered');
-    //console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
-    //console.log('navbarLogoutButton:', navbarLogoutButton)
-    if (titleRef.current && saveRef.current && dateRef.current && deleteRef && locationRef) {
+    if (addNote && titleRef.current && saveRef.current && dateRef.current && deleteRef && locationRef) {
       const intro = introJs();
 
       intro.setOptions({
         steps: [
+          {
+            element: addNote,
+            intro: "Click this button to add a note",
+          },
           {
             element: titleRef.current,
             intro: "You can name your note here!"
@@ -111,6 +113,7 @@ export default function NoteEditor({
       });
 
       intro.start();
+
       observer.disconnect(); // Stop observing once the elements are found
     }
   });

@@ -120,6 +120,10 @@ const Page = () => {
           skipLabel: "Skip",
         });
 
+        intro.oncomplete(() => {
+          window.location.href = "/lib/pages/notes";
+        });
+        
         intro.start();
         observer.disconnect(); // Stop observing once the elements are found
       }
