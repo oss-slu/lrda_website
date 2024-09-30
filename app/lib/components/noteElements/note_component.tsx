@@ -310,8 +310,7 @@ export default function NoteEditor({
             onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
-            ref = {titleRef}
-          />
+            ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
             <PublishToggle
               isPublished={noteState.isPublished}
@@ -373,8 +372,7 @@ export default function NoteEditor({
             </div>
             <div className="w-2 h-9 bg-border" />
             <div className="bg-white p-2 rounded"
-            ref = {locationRef}
-            >
+            ref = {locationRef} >
               <LocationPicker
                 long={noteState.longitude}
                 lat={noteState.latitude}
