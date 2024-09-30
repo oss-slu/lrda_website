@@ -7,7 +7,6 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
-
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 

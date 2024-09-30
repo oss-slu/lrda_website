@@ -52,7 +52,7 @@ describe("Intro.js feature in Page component", () => {
 
   // This test checks if the introJs tooltips appear when the search bar and note button are present on page load
   it("shows the popups on page load", async () => {
-    // Manually create and append DOM elements that will be targeted by Intro.js
+    // Manually create and append DOM elements that will be targeted by Intro.js for Page
     const searchBar = document.createElement("div"); 
     searchBar.setAttribute("id", "search-bar"); // Adds an ID to the search bar element
     document.body.appendChild(searchBar); // Appends the search bar to the DOM
@@ -69,6 +69,7 @@ describe("Intro.js feature in Page component", () => {
     notesList.setAttribute("id", "notes-list");
     document.body.appendChild(notesList);
 
+    // Manually create and append DOM elements that will be targeted by Intro.js for Page2
     const addNote = document.createElement("div");
     addNote.setAttribute("id", "add-note");
     document.body.appendChild(addNote);
@@ -97,7 +98,7 @@ describe("Intro.js feature in Page component", () => {
     await act(async () => {
       render(<Page />); 
     });
-
+    // Render the Page2 component and ensure all updates have finished processing
     await act(async () => {
       render(<Page2 isNewNote={false} />); 
     });
@@ -137,7 +138,7 @@ describe("Intro.js feature in Page component", () => {
   });
 
   it("does not trigger introJs if elements are missing", async () => {
-    // Render the Page component without adding the expected elements (search bar, note button)
+    // Render the Page2 component without adding the expected elements
     await act(async () => {
       render(<Page2 isNewNote={false} />); 
     });
