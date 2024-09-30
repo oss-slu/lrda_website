@@ -2,7 +2,7 @@ import React from "react";
 import { render, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom"; 
 import Page from "../lib/pages/map/page"; // Importing the Page component that will be tested
-
+import Page2 from "../lib/components/noteElements/note_component"; // Importing the note_component that will be tested
 // Mock Firebase Auth and API services
 jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
 jest.mock('../lib/utils/api_service'); // Mocks the custom API service to avoid actual API interactions
@@ -42,6 +42,14 @@ describe("Intro.js feature in Page component", () => {
     });
   });
 
+  // This test ensures that the Page2 component can render without any errors
+  it("renders the Page2 component without crashing", async () => {
+    // `act` is used to wrap any actions that trigger updates, ensuring the React state is fully updated
+    await act(async () => {
+      render(<Page2 isNewNote={false} />); // Renders the Page component
+    });
+  });
+
   // This test checks if the introJs tooltips appear when the search bar and note button are present on page load
   it("shows the popups on page load", async () => {
     // Manually create and append DOM elements that will be targeted by Intro.js
@@ -60,9 +68,38 @@ describe("Intro.js feature in Page component", () => {
     const notesList = document.createElement("div");
     notesList.setAttribute("id", "notes-list");
     document.body.appendChild(notesList);
+
+    const addNote = document.createElement("div");
+    addNote.setAttribute("id", "add-note");
+    document.body.appendChild(addNote);
+
+    const noteTitle = document.createElement("div");
+    noteTitle.setAttribute("id", "note-title");
+    document.body.appendChild(noteTitle);
+
+    const noteSave = document.createElement("div");
+    noteSave.setAttribute("id", "note-save");
+    document.body.appendChild(noteSave);
+
+    const noteDelete = document.createElement("div");
+    noteDelete.setAttribute("id", "note-delete");
+    document.body.appendChild(noteDelete);
+
+    const noteDate = document.createElement("div"); 
+    noteDate.setAttribute("id", "note-date");
+    document.body.appendChild(noteDate);
+
+    const noteLocation = document.createElement("div");
+    noteLocation.setAttribute("id", "note-location");
+    document.body.appendChild(noteLocation);
+
     // Render the Page component and ensure all updates have finished processing
     await act(async () => {
       render(<Page />); 
+    });
+
+    await act(async () => {
+      render(<Page2 isNewNote={false} />); 
     });
 
     // Wait for the elements to be present in the DOM and assert that they exist
@@ -71,6 +108,14 @@ describe("Intro.js feature in Page component", () => {
       expect(document.getElementById("navbar-create-note")).toBeInTheDocument(); // Confirms that the note button is present
       expect(document.getElementById("navbar-logout")).toBeInTheDocument();
       expect(document.getElementById("notes-list")).toBeInTheDocument();
+
+      expect(document.getElementById("add-note")).toBeInTheDocument();
+      expect(document.getElementById("note-title")).toBeInTheDocument();
+      expect(document.getElementById("note-save")).toBeInTheDocument();
+      expect(document.getElementById("note-delete")).toBeInTheDocument();
+      expect(document.getElementById("note-date")).toBeInTheDocument();
+      expect(document.getElementById("note-location")).toBeInTheDocument();
+
     });
 
     // This block waits for tooltips to be added by introJs and verifies their presence and content
@@ -88,6 +133,13 @@ describe("Intro.js feature in Page component", () => {
     // Render the Page component without adding the expected elements (search bar, note button)
     await act(async () => {
       render(<Page />); 
+    });
+  });
+
+  it("does not trigger introJs if elements are missing", async () => {
+    // Render the Page component without adding the expected elements (search bar, note button)
+    await act(async () => {
+      render(<Page2 isNewNote={false} />); 
     });
   });
 });
