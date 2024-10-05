@@ -8,11 +8,12 @@ interface Tag {
   origin: "user" | "ai";
 }
 
+// Define the props for the TagManager component
 interface TagManagerProps {
-  inputTags?: (Tag | string)[];
-  suggestedTags?: string[];
-  onTagsChange: (tags: Tag[]) => void;
-  fetchSuggestedTags: () => void;
+  inputTags?: (Tag | string)[];// Tags passed to the component, can be either strings or Tag objects
+  suggestedTags?: string[];// Suggested tags provided by AI
+  onTagsChange: (tags: Tag[]) => void;// Callback to notify parent components of tag changes
+  fetchSuggestedTags: () => void;// Function to fetch suggested tags
 }
 
 const TagManager: React.FC<TagManagerProps> = ({
