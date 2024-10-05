@@ -19,23 +19,34 @@ describe('User class', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    jest.resetAllMocks();
+    jest.clearAllMocks();
     user = User.getInstance(); // Assuming singleton pattern for user instance
+
+    // Mock the signInWithEmailAndPassword function
+    (signInWithEmailAndPassword as jest.Mock).mockImplementation(async () => {
+      return {
+        user: {
+          uid: mockUserData.uid,
+          getIdToken: jest.fn().mockResolvedValue('mockToken'),
+        },
+      };
+    });
+
+    // Mock the fetchUserData function
+    (ApiService.fetchUserData as jest.Mock).mockImplementation(async () => {
+      return mockUserData;
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks(); // Clear all mocks
+    jest.clearAllTimers(); // Clear all timers
+    console.log("All mocks and timers have been cleared");
   });
 
   describe('login', () => {
     it('logs in the user successfully', async () => {
-      const mockUserCredential = {
-        user: {
-          uid: mockUserData.uid,
-          getIdToken: jest.fn().mockResolvedValue('mockToken')
-        }
-      };
-
-      (signInWithEmailAndPassword as jest.Mock).mockResolvedValue(mockUserCredential);
-      (ApiService.fetchUserData as jest.Mock).mockResolvedValue(mockUserData);
-
-      await user.login('testUser', 'testPass');
+      await user.login('testUser', 'testPass'); // Ensure this resolves
       const userId = await user.getId();
       expect(userId).toBe(mockUserData.uid);
     });
@@ -44,17 +55,13 @@ describe('User class', () => {
       const errorMessage = 'There was a server error logging in.';
       (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
-      try {
-        await user.login('testUser', 'testPass');
-      } catch (error) {
-        expect((error as Error).message).toBe(errorMessage);
-      }
+      await expect(user.login('testUser', 'testPass')).rejects.toThrow(errorMessage);
     });
   });
 
   describe('logout', () => {
     it('logs out the user successfully', async () => {
-      (signOut as jest.Mock).mockResolvedValue();
+      (signOut as jest.Mock).mockResolvedValue(undefined); // Ensure signOut is mocked correctly
       await user.logout();
 
       const userId = await user.getId();
