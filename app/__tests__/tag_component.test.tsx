@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import TagManager from '../lib/components/noteElements/tag_manager';
 
 describe('TagManager', () => {
-  const initialTags = ['ExampleTag'];
+  const initialTags = [{ label: 'ExampleTag', origin: 'user' }];
 
   it('renders without crashing', () => {
     render(<TagManager onTagsChange={jest.fn()} />);
@@ -19,7 +19,10 @@ describe('TagManager', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(screen.getByText('NewTag')).toBeInTheDocument();
-    expect(mockOnTagsChange).toHaveBeenCalledWith([...initialTags, 'NewTag']);
+    expect(mockOnTagsChange).toHaveBeenCalledWith([
+      ...initialTags,
+      { label: 'NewTag', origin: 'user' } // Updated expected format
+    ]);
   });
 
   it('does not add a tag with spaces', () => {
@@ -54,8 +57,9 @@ describe('TagManager', () => {
     fireEvent.change(input, { target: { value: 'ExampleTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(mockOnTagsChange).not.toHaveBeenCalledWith(['ExampleTag', 'ExampleTag']);
+    expect(mockOnTagsChange).not.toHaveBeenCalledWith([
+      { label: 'ExampleTag', origin: 'user' },
+      { label: 'ExampleTag', origin: 'user' }
+    ]);
   });
-
-
 });
