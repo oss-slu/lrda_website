@@ -1,5 +1,3 @@
-// Full test code with unmounting included
-
 import React from "react";
 import { render, waitFor, act, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom"; 
@@ -63,10 +61,20 @@ beforeEach(() => {
   });
 });
 
-// Clean up mocks and DOM after each test
+// Clean up mocks, timers, DOM, and Intro.js elements after each test
 afterEach(() => {
-  cleanup(); // Cleanup to remove any leftover DOM elements
-  jest.clearAllTimers(); // Clear all timers after each test
+  // Remove Intro.js tooltips created during the tests
+  document.querySelectorAll('.introjs-tooltip').forEach(tooltip => tooltip.remove());
+
+  // Clear any pending timers and reset to real timers
+  jest.clearAllTimers();
+  jest.useRealTimers();
+
+  // Reset window.location and other global properties
+  window.location.href = 'http://localhost/';
+  navigator.geolocation.clearWatch(); // Clear any geolocation watchers
+
+  cleanup(); // Cleanup to remove any leftover DOM elements and unmount React components
   console.log("All mocks, timers, and global references have been cleared");
 });
 
@@ -74,9 +82,11 @@ describe("Intro.js feature in Page component", () => {
   
   // Test to ensure the Page component renders without crashing
   it("renders the Page component without crashing", async () => {
+    let component;
     await act(async () => {
-      render(<Page />);
+      component = render(<Page />);
     });
+    component.unmount(); // Explicitly unmount the component after the test
   });
 
   // Test to ensure that the Intro.js tooltips appear on page load
@@ -99,8 +109,9 @@ describe("Intro.js feature in Page component", () => {
     document.body.appendChild(notesList);
 
     // Render the Page component
+    let component;
     await act(async () => {
-      render(<Page />);
+      component = render(<Page />);
     });
 
     // Check for the presence of the elements
@@ -118,6 +129,9 @@ describe("Intro.js feature in Page component", () => {
         expect(introTooltips?.textContent).toContain("Welcome! Lets explore the website together.");
       }
     });
+
+    // Clean up the component after the test
+    component.unmount();
   });
 
   // Test to ensure introJs does not trigger if elements are missing
@@ -125,9 +139,12 @@ describe("Intro.js feature in Page component", () => {
     // Ensure there are no elements present
     document.body.innerHTML = ''; // Clear the body
 
+    let component;
     await act(async () => {
-      const { unmount } = render(<Page />);
-      unmount(); // Explicitly unmount the component to clean up
+      component = render(<Page />);
     });
+
+    // Explicitly unmount the component to clean up
+    component.unmount();
   });
 });
