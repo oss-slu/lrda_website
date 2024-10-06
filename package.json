@@ -10,6 +10,7 @@
     "test": "jest --runInBand"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.658.1",
     "@babel/core": "^7.23.0",
     "@babel/preset-env": "^7.22.20",
     "@babel/preset-react": "^7.22.15",
@@ -88,6 +89,8 @@
     "add": "^2.0.6",
     "appDir": "link:tss-react/next/appDir",
     "autoprefixer": "10.4.15",
+    "aws-sdk": "^2.1691.0",
+    "aws-secret": "^1.0.3",
     "axios": "^1.5.1",
     "babel-jest": "^29.7.0",
     "babel-loader": "^9.1.3",
