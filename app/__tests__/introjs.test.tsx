@@ -124,7 +124,8 @@ describe("Intro.js feature in Page component", () => {
     document.body.appendChild(notesList);
 
 
-    // Manually create and append DOM elements that will be targeted by Intro.js for Page2
+
+    // Manually create and append elements that will be targeted by Intro.js for Page2 
     const addNote = document.createElement("div");
     addNote.setAttribute("id", "add-note");
     document.body.appendChild(addNote);
