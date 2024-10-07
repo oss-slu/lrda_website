@@ -44,8 +44,10 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import introJs from "intro.js"
+import "intro.js/introjs.css"
 
-const user = User.getInstance();
+const user = User.getInstance(); 
 
 type NoteEditorProps = {
   note?: Note | newNote;
@@ -65,6 +67,64 @@ export default function NoteEditor({
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
 
+
+  const titleRef = useRef<HTMLInputElement | null>(null);
+
+  const saveRef = useRef<HTMLDivElement | null>(null);
+  const dateRef = useRef<HTMLDivElement | null>(null);
+  const deleteRef = useRef<HTMLDivElement | null>(null);
+  const locationRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+    const  addNote = document.getElementById("add-note-button");
+    console.log('Observer triggered');
+    if (addNote && titleRef.current && saveRef.current && dateRef.current && deleteRef && locationRef) {
+      const intro = introJs();
+
+      intro.setOptions({
+        steps: [
+          {
+            element: addNote,
+            intro: "Click this button to add a note",
+          },
+          {
+            element: titleRef.current,
+            intro: "You can name your note here!"
+          },
+          {
+            element: saveRef.current,
+            intro: "Make sure you save your note"
+          },
+          {
+            element: deleteRef.current,
+            intro: "If you don't like your note you can delete it here"
+          },
+          {
+            element: dateRef.current,
+            intro: "We will automatically date and time your entry!"
+          },
+          {
+            element: locationRef.current,
+            intro: "Make sure you specify the location of your note"
+          }
+        ],
+        scrollToElement: false,
+        dontShowAgain: true,
+        skipLabel: "Skip",
+      });
+
+      intro.start();
+
+      observer.disconnect(); // Stop observing once the elements are found
+    }
+  });
+
+  // Start observing the body for changes
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Cleanup the observer when the component unmounts
+  return () => observer.disconnect();
+  }, []); 
   useEffect(() => {
     const editor = rteRef.current?.editor;
     if (noteState.videos.length > 0 && editor) {
@@ -252,7 +312,7 @@ export default function NoteEditor({
             onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
-          />
+            ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
             <PublishToggle
               id="publish-toggle-button"
@@ -267,15 +327,15 @@ export default function NoteEditor({
               className="hover:text-green-500 flex justify-center items-center w-full"
               onClick={onSave}
             >
-              <SaveIcon className="text-current" />
-              <div className="ml-2">Save</div>
+              <SaveIcon className="text-current"/>
+              <div className="ml-2"  ref = {saveRef}>Save</div>
             </button>
             <div className="w-2 h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button className="hover:text-red-500 flex justify-center items-center w-full">
-                  <FileX2 className="text-current" />
-                  <div className="ml-2">Delete</div>
+                  <FileX2 className="text-current"/>
+                  <div className="ml-2" ref = {deleteRef}>Delete</div>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -303,7 +363,8 @@ export default function NoteEditor({
               </AlertDialogContent>
             </AlertDialog>
             <div className="w-2 h-9 bg-border" />
-            <div className="flex-grow">
+            <div className="flex-grow"
+            ref = {dateRef} >
               <TimePicker
                 initialDate={noteState.time || new Date()}
                 onTimeChange={(newDate) =>
@@ -312,7 +373,8 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded">
+            <div className="bg-white p-2 rounded"
+            ref = {locationRef} >
               <LocationPicker
                 long={noteState.longitude}
                 lat={noteState.latitude}
