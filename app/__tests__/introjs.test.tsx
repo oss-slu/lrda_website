@@ -1,18 +1,18 @@
 import React from "react";
-import { render, waitFor, act } from "@testing-library/react";
+import { render, waitFor, act, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom"; 
 import Page from "../lib/pages/map/page"; // Importing the Page component that will be tested
 
-// Mock Firebase Auth and API services
-jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
-jest.mock('../lib/utils/api_service'); // Mocks the custom API service to avoid actual API interactions
+// Mock Firebase
+jest.mock('firebase/auth');
 
-// Mock introJs to simulate tooltips being added
+// Mock the API service to avoid actual network calls
+jest.mock('../lib/utils/api_service');
+
+// Mock Intro.js to simulate tooltips being added
 jest.mock('intro.js', () => {
   return jest.fn(() => ({
-    // Mock the setOptions method of introJs to simulate setting up tooltips
     setOptions: jest.fn(), 
-    // Mock the start method of introJs, and simulate adding tooltips to the DOM when it runs
     start: jest.fn(() => {
       const tooltip = document.createElement('div'); // Create a new div element
       tooltip.className = 'introjs-tooltip'; // Set the class name to simulate an Intro.js tooltip
@@ -21,37 +21,84 @@ jest.mock('intro.js', () => {
   }));
 });
 
+// Mock data_conversion to avoid the need for reverse and map function errors
+jest.mock('../lib/utils/data_conversion', () => ({
+  convertMediaTypes: jest.fn(() => []), // Mock with an empty array
+}));
+
 beforeEach(() => {
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.spyOn(console, 'warn').mockImplementation(() => {});
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  jest.clearAllMocks();
+  jest.useFakeTimers(); // Ensure fake timers are used globally
+
+  // Mock the geolocation API
+  const mockGeolocation = {
+    getCurrentPosition: jest.fn().mockImplementation((success) => {
+      success({
+        coords: {
+          latitude: 51.1,
+          longitude: 45.3,
+        },
+      });
+    }),
+    watchPosition: jest.fn(),
+    clearWatch: jest.fn(),
+  };
+
+  Object.defineProperty(global.navigator, "geolocation", {
+    value: mockGeolocation,
+    writable: true,
+  });
+
+  // Mock window.location methods
+  Object.defineProperty(window, 'location', {
+    value: {
+      href: "http://localhost/",
+      assign: jest.fn(),
+      reload: jest.fn(),
+      replace: jest.fn(),
+    },
+    writable: true,
+  });
 });
 
-// Restore all mocks after each test to prevent side effects between tests
+// Clean up mocks, timers, DOM, and Intro.js elements after each test
 afterEach(() => {
-  jest.restoreAllMocks(); // Reset and clean up any mocked functionality after each test
+  // Remove Intro.js tooltips created during the tests
+  document.querySelectorAll('.introjs-tooltip').forEach(tooltip => tooltip.remove());
+
+  // Clear any pending timers and reset to real timers
+  jest.clearAllTimers();
+  jest.useRealTimers();
+
+  // Reset window.location and other global properties
+  window.location.href = 'http://localhost/';
+  navigator.geolocation.clearWatch(); // Clear any geolocation watchers
+
+  cleanup(); // Cleanup to remove any leftover DOM elements and unmount React components
+  console.log("All mocks, timers, and global references have been cleared");
 });
 
 describe("Intro.js feature in Page component", () => {
   
-  // This test ensures that the Page component can render without any errors
+  // Test to ensure the Page component renders without crashing
   it("renders the Page component without crashing", async () => {
-    // `act` is used to wrap any actions that trigger updates, ensuring the React state is fully updated
+    let component;
     await act(async () => {
-      render(<Page />); // Renders the Page component
+      component = render(<Page />);
     });
+    component.unmount(); // Explicitly unmount the component after the test
   });
 
-  // This test checks if the introJs tooltips appear when the search bar and note button are present on page load
+  // Test to ensure that the Intro.js tooltips appear on page load
   it("shows the popups on page load", async () => {
-    // Manually create and append DOM elements that will be targeted by Intro.js
-    const searchBar = document.createElement("div"); 
-    searchBar.setAttribute("id", "search-bar"); // Adds an ID to the search bar element
-    document.body.appendChild(searchBar); // Appends the search bar to the DOM
+    // Create and append DOM elements that will be targeted by Intro.js
+    const searchBar = document.createElement("div");
+    searchBar.setAttribute("id", "search-bar");
+    document.body.appendChild(searchBar);
 
-    const createNoteButton = document.createElement("button"); 
-    createNoteButton.setAttribute("id", "navbar-create-note"); // Adds an ID to the note button
-    document.body.appendChild(createNoteButton); // Appends the note button to the DOM
+    const createNoteButton = document.createElement("button");
+    createNoteButton.setAttribute("id", "navbar-create-note");
+    document.body.appendChild(createNoteButton);
 
     const navbarLogoutButton = document.createElement("button");
     navbarLogoutButton.setAttribute("id", "navbar-logout");
@@ -60,34 +107,44 @@ describe("Intro.js feature in Page component", () => {
     const notesList = document.createElement("div");
     notesList.setAttribute("id", "notes-list");
     document.body.appendChild(notesList);
-    // Render the Page component and ensure all updates have finished processing
+
+    // Render the Page component
+    let component;
     await act(async () => {
-      render(<Page />); 
+      component = render(<Page />);
     });
 
-    // Wait for the elements to be present in the DOM and assert that they exist
+    // Check for the presence of the elements
     await waitFor(() => {
-      expect(document.getElementById("search-bar")).toBeInTheDocument(); // Confirms that the search bar is present
-      expect(document.getElementById("navbar-create-note")).toBeInTheDocument(); // Confirms that the note button is present
+      expect(document.getElementById("search-bar")).toBeInTheDocument();
+      expect(document.getElementById("navbar-create-note")).toBeInTheDocument();
       expect(document.getElementById("navbar-logout")).toBeInTheDocument();
       expect(document.getElementById("notes-list")).toBeInTheDocument();
     });
 
-    // This block waits for tooltips to be added by introJs and verifies their presence and content
+    // Check for the Intro.js tooltip
     await waitFor(() => {
-      const introTooltips = document.querySelector(".introjs-tooltip"); // Query for the introJs tooltip element
-      if (introTooltips) { 
-        // check the tooltip content if the tooltip exists (handling possible null values)
-        expect(introTooltips.textContent).toContain("Welcome! Lets explore the website together."); // Verifies the content of the tooltip
+      const introTooltips = document.querySelector(".introjs-tooltip");
+      if (introTooltips) {
+        expect(introTooltips?.textContent).toContain("Welcome! Lets explore the website together.");
       }
     });
+
+    // Clean up the component after the test
+    component.unmount();
   });
 
-  // This test verifies that introJs does not trigger if required elements (e.g., search bar or note button) are missing from the page
+  // Test to ensure introJs does not trigger if elements are missing
   it("does not trigger introJs if elements are missing", async () => {
-    // Render the Page component without adding the expected elements (search bar, note button)
+    // Ensure there are no elements present
+    document.body.innerHTML = ''; // Clear the body
+
+    let component;
     await act(async () => {
-      render(<Page />); 
+      component = render(<Page />);
     });
+
+    // Explicitly unmount the component to clean up
+    component.unmount();
   });
 });
