@@ -83,9 +83,12 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
   useEffect(() => {
+<<<<<<< HEAD
 
     const pageTourStep = sessionStorage.getItem('pageTourStep'); //remember where page tour was
 
+=======
+>>>>>>> 5b231c684d46be6e5d2baf17d8515c0b9aa12ab2
     const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
@@ -125,11 +128,15 @@ const Page = () => {
           scrollToElement: true,
           dontShowAgain: true,
         });
+<<<<<<< HEAD
 
         intro.oncomplete(() => { //navigate to create a note when tour is over
           window.location.href = "/lib/pages/notes";
         });
 
+=======
+  
+>>>>>>> 5b231c684d46be6e5d2baf17d8515c0b9aa12ab2
         intro.start();
 
         intro.onbeforeexit(() => {
