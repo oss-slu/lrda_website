@@ -83,15 +83,16 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-      const observer = new MutationObserver(() => {
+    const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
       console.log('Observer triggered');
       console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
-      console.log('navbarLogoutButton:', navbarLogoutButton)
-      if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef) {
+      console.log('navbarLogoutButton:', navbarLogoutButton);
+  
+      if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
         const intro = introJs();
-
+  
         intro.setOptions({
           steps: [
             {
@@ -104,7 +105,7 @@ const Page = () => {
             },
             {
               element: notesListRef.current,
-              intro: "Now, this is the notes list. You can use it to explore other peoples notes!"
+              intro: "Now, this is the notes list. You can use it to explore other people's notes!"
             },
             {
               element: navbarCreateNoteButton, 
@@ -133,8 +134,10 @@ const Page = () => {
     observer.observe(document.body, { childList: true, subtree: true });
   
     // Cleanup the observer when the component unmounts
-    return () => observer.disconnect();
-  }, []);  
+    return () => {
+      observer.disconnect();
+    };
+  }, [searchBarRef, noteRefs, notesListRef]); // Add refs to the dependency array  
   // Fetch and render map and notes logic as before...
   // Leaving out unchanged parts of the code for brevity 
 
