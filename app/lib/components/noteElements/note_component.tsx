@@ -68,7 +68,8 @@ export default function NoteEditor({
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
 
 
-  const titleRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+
   const saveRef = useRef<HTMLDivElement | null>(null);
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLDivElement | null>(null);
@@ -326,17 +327,15 @@ export default function NoteEditor({
               className="hover:text-green-500 flex justify-center items-center w-full"
               onClick={onSave}
             >
-              <SaveIcon className="text-current" 
-              ref = {saveRef} />
-              <div className="ml-2">Save</div>
+              <SaveIcon className="text-current"/>
+              <div className="ml-2"  ref = {saveRef}>Save</div>
             </button>
             <div className="w-2 h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button className="hover:text-red-500 flex justify-center items-center w-full">
-                  <FileX2 className="text-current" 
-                  ref = {deleteRef}/>
-                  <div className="ml-2">Delete</div>
+                  <FileX2 className="text-current"/>
+                  <div className="ml-2" ref = {deleteRef}>Delete</div>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
