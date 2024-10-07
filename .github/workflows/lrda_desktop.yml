@@ -5,10 +5,12 @@ on:
     branches:
       - main # replace with the name of your default branch if different
       - openai_tags
+      - aws-secret
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
       - openai_tags
+      - aws-secret
 
 jobs:
   build:
@@ -19,13 +21,52 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      
+      # Set up Node.js environment
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+
+      # Install pnpm globally
       - name: Install pnpm
         run: npm install -g pnpm@8.11.0
+
+      # Install dependencies
       - name: Install dependencies
         run: pnpm install # Replace 'npm install' with 'pnpm install'
+
+      # Run your tests
       - name: Run tests
         run: pnpm test # or 'npm test' if you're using npm
+
+  docker:
+    # Run the Docker steps only after the build and test job completes successfully
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Log in to DockerHub using credentials stored in GitHub Secrets
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and push the Docker image
+      - name: Build and push Docker image
+        run: |
+          docker build -t my_dockerhub_username/my_app:${{ github.sha }} .
+          docker push my_dockerhub_username/my_app:${{ github.sha }}
+
+      # Optionally, tag and push the 'latest' version of the image
+      - name: Tag and push latest Docker image
+        run: |
+          docker tag my_dockerhub_username/my_app:${{ github.sha }} my_dockerhub_username/my_app:latest
+          docker push my_dockerhub_username/my_app:latest
