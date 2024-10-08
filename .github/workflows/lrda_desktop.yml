@@ -79,13 +79,13 @@ jobs:
             --build-arg NEXT_PUBLIC_OPENAI_API_KEY=${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }} \
             --build-arg NEXT_PUBLIC_OPENAI_API_URL=${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }} \
             --build-arg RERUM_PREFIX=${{ secrets.RERUM_PREFIX }} \
-            -t wheres_religion:${{ github.sha }} .
+            -t ${{ secrets.DOCKER_USERNAME }}/wheres_religion:${{ github.sha }} .
 
           # Push the image to DockerHub
-          docker push wheres_religion:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/wheres_religion:${{ github.sha }}
 
       # Optionally, tag and push the 'latest' version of the image
       - name: Tag and push latest Docker image
         run: |
-          docker tag wheres_religion:${{ github.sha }} wheres_religion:latest
-          docker push wheres_religion:latest
+          docker tag ${{ secrets.DOCKER_USERNAME }}/wheres_religion:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/wheres_religion:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/wheres_religion:latest
