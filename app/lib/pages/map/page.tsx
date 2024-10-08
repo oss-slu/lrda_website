@@ -117,8 +117,6 @@ const Page = () => {
             }
           ],
 
-          initialStep: pageTourStep ? parseInt(pageTourStep, 10) : 0, //save tour progress
-
           scrollToElement: true,
           dontShowAgain: true,
           skipLabel: "Skip",
@@ -129,11 +127,6 @@ const Page = () => {
         });
         
         intro.start();
-
-        intro.onbeforeexit(() => {
-          const currentStep = intro._currentStep;  // Get the current step
-          sessionStorage.setItem('pageTourStep', currentStep); // Store the step in sessionStorage
-        });
 
         observer.disconnect(); // Stop observing once the elements are found
       }
