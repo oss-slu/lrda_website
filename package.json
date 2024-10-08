@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest --runInBand"
+    "test": "jest"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.658.1",
