@@ -3,13 +3,13 @@ name: lrda_desktop CI
 on:
   push:
     branches:
-      - main # replace with the name of your default branch if different
+      - main
       - openai_tags
       - aws-secret
       - memoryleak
   pull_request:
     branches:
-      - main # replace with the name of your default branch if different
+      - main
       - openai_tags
       - aws-secret
       - memoryleak
@@ -43,7 +43,6 @@ jobs:
         run: pnpm test # or 'npm test' if you're using npm
 
   docker:
-    # Run the Docker steps only after the build and test job completes successfully
     needs: build
     runs-on: ubuntu-latest
 
@@ -80,12 +79,13 @@ jobs:
             --build-arg NEXT_PUBLIC_OPENAI_API_KEY=${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }} \
             --build-arg NEXT_PUBLIC_OPENAI_API_URL=${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }} \
             --build-arg RERUM_PREFIX=${{ secrets.RERUM_PREFIX }} \
-            -t my_dockerhub_username/my_app:${{ github.sha }} .
+            -t wheres_religion:${{ github.sha }} .
 
-          docker push my_dockerhub_username/my_app:${{ github.sha }}
+          # Push the image to DockerHub
+          docker push wheres_religion:${{ github.sha }}
 
       # Optionally, tag and push the 'latest' version of the image
       - name: Tag and push latest Docker image
         run: |
-          docker tag my_dockerhub_username/my_app:${{ github.sha }} my_dockerhub_username/my_app:latest
-          docker push my_dockerhub_username/my_app:latest
+          docker tag wheres_religion:${{ github.sha }} wheres_religion:latest
+          docker push wheres_religion:latest
