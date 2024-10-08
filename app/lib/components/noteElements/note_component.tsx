@@ -247,6 +247,7 @@ export default function NoteEditor({
       >
         <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
           <Input
+            id="note-title-input"
             value={noteState.title}
             onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
             placeholder="Title"
@@ -254,6 +255,7 @@ export default function NoteEditor({
           />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
             <PublishToggle
+              id="publish-toggle-button"
               isPublished={noteState.isPublished}
               onPublishChange={(bool) =>
                 handlePublishChange(noteHandlers.setIsPublished, bool)
@@ -261,6 +263,7 @@ export default function NoteEditor({
             />
             <div className="w-2 h-9 bg-border" />
             <button
+              id="save-note-button"
               className="hover:text-green-500 flex justify-center items-center w-full"
               onClick={onSave}
             >
