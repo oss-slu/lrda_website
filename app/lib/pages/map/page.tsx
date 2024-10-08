@@ -116,6 +116,7 @@ const Page = () => {
               intro: "Done for the day? Make sure to logout!"
             }
           ],
+
           scrollToElement: true,
           dontShowAgain: true,
           skipLabel: "Skip",
@@ -126,6 +127,7 @@ const Page = () => {
         });
         
         intro.start();
+
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
