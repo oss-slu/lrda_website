@@ -5,4 +5,3 @@ yarn.lock
 .env.local
 .env
 .env.test
-pnpm-lock.yaml
