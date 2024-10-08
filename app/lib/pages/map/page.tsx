@@ -121,8 +121,13 @@ const Page = () => {
 
           scrollToElement: true,
           dontShowAgain: true,
+          skipLabel: "Skip",
         });
-  
+
+        intro.oncomplete(() => {
+          window.location.href = "/lib/pages/notes";
+        });
+        
         intro.start();
 
         intro.onbeforeexit(() => {
