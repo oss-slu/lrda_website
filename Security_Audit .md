@@ -1,2 +1,2 @@
 Basics
-- [ ] The project website MUST succinctly describe what the software does 
+- [X] The project website MUST succinctly describe what the software does 
