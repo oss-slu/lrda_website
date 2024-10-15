@@ -38,3 +38,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 [shadcn](https://ui.shadcn.com/) : A beautifully designed UI Component Library.
 
+
+## Information regarding keys 
+This application uses **Firebase** **Google Maps** **ChatGpt** keys to gain access to the keys for development please get in touch with yashkamal.bhatia@slu.edu. 
+
