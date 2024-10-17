@@ -2,6 +2,7 @@ import { Note } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
@@ -73,6 +74,7 @@ export default class ApiService {
       throw new Error('Failed to generate tags');
     }
   }
+
 
   /**
  * Fetches messages from the API, with optional pagination.

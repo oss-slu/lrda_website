@@ -1,14 +1,8 @@
-// pages/signup.js
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
-import RegisterButton from "../../components/register_button";
-import { toast } from "sonner";
-import { auth } from "../../config";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { validateEmail, validatePassword } from "../../utils/validation";
-import { User } from "../../models/user_class";
-import ApiService from "../../utils/api_service";
+import { toast } from "sonner"; // For notifications
+import { auth } from "../../config"; // Firebase auth config
+import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase auth method
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -16,62 +10,75 @@ const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [institution, setInstitution] = useState("");
+  const [loading, setLoading] = useState(false); // State for loading spinner
+
+  // Optional: Type guard to check if error has a 'message' property
+  function isErrorWithMessage(error: unknown): error is { message: string } {
+    return (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      typeof (error as { message: string }).message === "string"
+    );
+  }
 
   const handleSignup = async () => {
-    if (!validateEmail(email)) return;
-    if (!validatePassword(password)) return;
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      setLoading(true); // Show loading spinner
+
+      // Step 1: Register user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Create user data in the API
+      // Step 2: Prepare user data (including Firebase UID)
       const userData = {
-        uid: user.uid,
-        name: `${firstName} ${lastName}`,
-        roles: {
-          administrator: false,
-          contributor: true,
-        },
+        uid: user.uid, // Firebase UID
+        fullName: `${firstName} ${lastName}`, // Concatenate first and last name
+        email: email, // Email used for Firebase
+        password: password, // Password used for both Firebase and RERUM
       };
-      await ApiService.createUserData(userData);
 
-      toast.success("Signup successful!");
+      // Step 3: Send the user data to the backend to trigger Selenium and create the user in RERUM
+      const response = await fetch('/api/run-selenium', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
 
-      // Set the user as logged in
-      const userInstance = User.getInstance();
-      await userInstance.login(email, password);
+      const result = await response.json();
 
-      // Optional delay to ensure everything is set up
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (response.ok) {
+        toast.success(result.message);
+      } else {
+        toast.error(`Error: ${result.message}`);
+      }
 
-      // Redirect the user
-      window.location.href = "/";
+      // Optional: Redirect user to homepage or success page after a delay
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
-      toast.error(`Signup failed: ${error}`);
+      // Use the type guard to check if error has a 'message' property
+      if (isErrorWithMessage(error)) {
+        toast.error(`Signup failed: ${error.message}`);
+      } else {
+        // Fallback for unknown error types
+        toast.error('Signup failed: An unknown error occurred');
+      }
+    } finally {
+      setLoading(false); // Stop loading spinner
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD]">
-      <div className="flex items-center justify-center">
-        <Image
-          src="/splash.png"
-          alt="Background Image"
-          width="2080"
-          height="300"
-        />
-      </div>
       <div className="absolute inset-10 flex flex-col items-center justify-center">
         <div className="w-3/4 bg-white p-8 rounded-lg shadow-lg">
           <h1 className="text-black-500 font-bold mb-20 text-center text-3xl">
@@ -126,8 +133,9 @@ const SignupPage = () => {
             <button
               onClick={handleSignup}
               className="w-full bg-blue-500 text-white p-3 rounded-lg"
+              disabled={loading}
             >
-              Sign Up
+              {loading ? "Signing Up..." : "Sign Up"} {/* Loading indication */}
             </button>
           </div>
         </div>

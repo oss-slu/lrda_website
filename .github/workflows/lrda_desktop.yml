@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x] # Adjust according to your project's Node.js version
+        node-version: [18.x]  # Adjust according to your project's Node.js version
 
     steps:
       - uses: actions/checkout@v2
-      
+
       # Set up Node.js environment
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
@@ -36,11 +36,22 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: pnpm install # Replace 'npm install' with 'pnpm install'
+        run: pnpm install
+
+      # Install Python dependencies (requirements.txt) - NEW STEP
+      - name: Set up Python and Install Python Dependencies
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Use Python 3.x
+
+      - name: Install Python Dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r ./requirements.txt  # Ensure requirements.txt is in your root directory
 
       # Run your tests
       - name: Run tests
-        run: pnpm test # or 'npm test' if you're using npm
+        run: pnpm test
 
   docker:
     needs: build
