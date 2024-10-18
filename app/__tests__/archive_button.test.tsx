@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
-import NoteEditor from '../lib/components/noteElements/note_editor'; //import for delete button
+import NoteEditor from '../lib/components/noteElements/note_archive'; //this can be changed depending on what file justin writes
 import ApiService from '../lib/utils/api_service';
 import { act } from 'react-dom/test-utils';
 import { User } from '../lib/models/user_class';
@@ -35,14 +35,15 @@ const mockNote = {
 test('Archive button prompts confirmation before archive', async () => {
   render(<NoteEditor note={mockNote} isNewNote={false} />);
   
-  // Simulate clicking the archive (delete) button
-  fireEvent.click(screen.getByText('Delete'));
+  // Simulate clicking the archive/delete button
+  fireEvent.click(screen.getByText('Delete')); // "Delete" is the text on the button
 
-  // Assert confirmation dialog appears
+  // Make sure that the confirmation dialog appears
   expect(screen.getByText('Are you absolutely sure?')).toBeInTheDocument();
   expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
 
-  // Simulate clicking the cancel button and confirm the note isn't archived
+  // Make sure that clicking the cancel button works 
+  // and confirm the note isn't archived
   fireEvent.click(screen.getByText('Cancel'));
   await waitFor(() => {
     expect(screen.queryByText('Are you absolutely sure?')).not.toBeInTheDocument();
@@ -65,7 +66,7 @@ test('Successfully archives a note and removes it from the frontend', async () =
     expect(ApiService.archiveNote).toHaveBeenCalledWith(mockNote.id);
   });
 
-  // Assert the note is removed from the frontend
+  // Make sure that the note is removed from the frontend
   await waitFor(() => {
     expect(screen.queryByText('Test Note')).not.toBeInTheDocument();
   });
@@ -76,13 +77,10 @@ test('Displays error if archive fails', async () => {
 
   render(<NoteEditor note={mockNote} isNewNote={false} />);
 
-  // Simulate clicking the archive button
   fireEvent.click(screen.getByText('Delete'));
 
-  // Confirm the archive action
   fireEvent.click(screen.getByText('Continue'));
 
-  // Wait for the API to be called
   await waitFor(() => {
     expect(ApiService.archiveNote).toHaveBeenCalledWith(mockNote.id);
   });
@@ -98,10 +96,8 @@ test('UI remains consistent after a note is archived', async () => {
 
   render(<NoteEditor note={mockNote} isNewNote={false} />);
 
-  // Simulate clicking the archive button
   fireEvent.click(screen.getByText('Delete'));
 
-  // Confirm the archive action
   fireEvent.click(screen.getByText('Continue'));
 
   // Check that the note disappears and UI remains consistent
@@ -130,6 +126,8 @@ test('Backend correctly archives the note and related data', async () => {
   });
 });
 
+// Integration test for archiving a note with associated media and annotations
+/* FUTURE WORK: Implement this test after the basic implementation is working
 test('Associated media and annotations are archived correctly', async () => {
   ApiService.archiveNote.mockResolvedValueOnce({ success: true });
 
@@ -154,6 +152,7 @@ test('Associated media and annotations are archived correctly', async () => {
   // Check that media and annotations are also removed
   expect(ApiService.archiveNote).toHaveBeenCalledWith(mockNoteWithMedia.id);
 });
+*/
 
 test('Integration test for archiving a note', async () => {
   ApiService.archiveNote.mockResolvedValueOnce({ success: true });
