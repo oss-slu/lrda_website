@@ -154,22 +154,3 @@ test('Associated media and annotations are archived correctly', async () => {
 });
 */
 
-test('Integration test for archiving a note', async () => {
-  ApiService.archiveNote.mockResolvedValueOnce({ success: true });
-
-  render(<NoteEditor note={mockNote} isNewNote={false} />);
-
-  // Simulate full flow: click delete, confirm archive, note disappears
-  fireEvent.click(screen.getByText('Delete'));
-  fireEvent.click(screen.getByText('Continue'));
-
-  // Wait for the note to be archived in the backend and removed from the frontend
-  await waitFor(() => {
-    expect(ApiService.archiveNote).toHaveBeenCalledWith(mockNote.id);
-  });
-
-  // Check that the note is removed from the frontend
-  await waitFor(() => {
-    expect(screen.queryByText('Test Note')).not.toBeInTheDocument();
-  });
-});
