@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
-import NoteEditor from '../lib/components/noteElements/note_archive'; //this can be changed depending on what file justin writes
+import NoteEditor from '../lib/components/noteElements/note_handler'; //this can be changed depending on what file justin writes
 import ApiService from '../lib/utils/api_service';
 import { act } from 'react-dom/test-utils';
 import { User } from '../lib/models/user_class';
