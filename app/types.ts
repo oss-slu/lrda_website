@@ -39,6 +39,7 @@ export type Note = {
   published: boolean | undefined;
   tags: Tag[];
   uid: string;
+  isArchived?: boolean;
 };
 
 export type CombinedResult =
