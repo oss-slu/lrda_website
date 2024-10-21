@@ -4,10 +4,11 @@ import time
 import json  # For handling JSON
 import requests  # For making the PUT request
 from collections import OrderedDict  # To maintain the order of the JSON fields
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By  # For locating elements
+from selenium.webdriver.support.ui import WebDriverWait  # To handle explicit waits
+from selenium.webdriver.support import expected_conditions as EC  # For conditions
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
 
 # Set up Chrome options for headless mode and other settings
@@ -18,7 +19,7 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 chrome_options.add_argument('--window-size=1920,1080')
 
 # Initialize the WebDriver with the Chrome options
-driver = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Chrome(executable_path='/path/to/chromedriver', options=chrome_options)
 
 # Step 1: Navigate to the login page
 driver.get("http://lived-religion-dev.rerum.io/deer-lr/login")
@@ -38,6 +39,8 @@ login_script = f"""
             var response = JSON.parse(xhr.responseText);
             console.log('Response received:', response);  // You can access response data here
             document.body.setAttribute('data-response', JSON.stringify(response));  // Storing the response
+        }} else if (xhr.readyState == 4) {{
+            console.log('Error: Status', xhr.status);
         }}
     }};
     
@@ -50,10 +53,19 @@ login_script = f"""
 """
 
 # Step 3: Execute the JavaScript code to perform the login and get the response
-driver.execute_script(login_script)
+try:
+    print("Executing login script...")
+    driver.execute_script(login_script)
+except Exception as e:
+    print(f"Error executing login script: {e}")
 
 # Step 4: Give time for the request to complete and response to be available
-time.sleep(5)  # You can adjust the wait time or use a more efficient method
+try:
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.TAG_NAME, 'body'))
+    )
+except Exception as e:
+    print(f"Error waiting for body element: {e}")
 
 # Step 5: Handle unexpected alert
 try:
@@ -65,14 +77,18 @@ except NoAlertPresentException:
     print("No alert present")
 
 # Step 6: Extract the response stored in the 'data-response' attribute
-user_data = driver.execute_script("return document.body.getAttribute('data-response');")
+response = driver.execute_script("return document.body.getAttribute('data-response');")
+
+# Debugging: Print out the page source to see if login actually worked
+page_source = driver.page_source
+print(f"Page source after login attempt:\n{page_source}")
 
 # Step 7: Print the user data (which should be in JSON format)
-if user_data:
-    print("User Data:", user_data)
+if response:
+    print("User Data:", response)
     
     # Step 8: Parse the user data to extract the "@id" field
-    user_data_json = json.loads(user_data)
+    user_data_json = json.loads(response)
     user_id_url = user_data_json.get('@id')
     
     if user_id_url:
@@ -141,4 +157,4 @@ else:
     print("No user data found. Please check the login process or payload.")
 
 # Close the WebDriver
-driver.quit()
+driver.quit()  # Now the driver quits at the very end after all steps are completed
