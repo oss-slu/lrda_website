@@ -119,7 +119,7 @@ const Page = () => {
 
           scrollToElement: true,
           dontShowAgain: true,
-          skipLabel: "Skip",
+          skipLabel: "Skip", //change the look of this button
         });
 
         intro.oncomplete(() => {
