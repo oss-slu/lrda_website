@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import "../../../globals.css";
 
 import {
   CompassIcon,
