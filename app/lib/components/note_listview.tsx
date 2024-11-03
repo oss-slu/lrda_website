@@ -17,7 +17,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
 
-  const visibleNotes = notes.filter(note => !note.isArchived); // Filter notes to exclude archived ones
+  const visibleNotes = notes.filter(note => !note.isArchived); //filter ?
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
