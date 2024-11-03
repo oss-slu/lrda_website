@@ -75,11 +75,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       try {
         const userId = await user.getId();
         if (userId) {
-          const userNotes = await ApiService.fetchUserMessages(userId);
-          const convertedNotes =
-            DataConversion.convertMediaTypes(userNotes).reverse();
-          setNotes(convertedNotes);
-          setFilteredNotes(convertedNotes);
+          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
+          const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
+          
+          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
+          
+          setNotes(unarchivedNotes);
+          setFilteredNotes(unarchivedNotes);
         } else {
           console.error("User not logged in");
         }
@@ -87,9 +89,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         console.error("Error fetching user messages:", error);
       }
     };
-
+  
     fetchUserMessages();
   }, []);
+  
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {

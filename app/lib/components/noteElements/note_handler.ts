@@ -54,45 +54,6 @@ export const handleEditorChange = (
   setEditorContent(content);
 };
 
-//
-// export const handleDeleteNote = async (
-//   note: Note | undefined,
-//   user: User,
-//   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
-// ) => {
-//   if (note?.id) {
-//     try {
-//       const userId = await user.getId();
-//       const success = await ApiService.deleteNoteFromAPI(
-//         note!.id,
-//         userId || ""
-//       );
-//       if (success) {
-//         toast("Success", {
-//           description: "Note successfully deleted.",
-//           duration: 4000,
-//         });
-//         setNote(undefined); // Clear the note after successful deletion
-//         return true;
-//       }
-//     } catch (error) {
-//       toast("Error", {
-//         description: "Failed to delete note. System failure. Try again later.",
-//         duration: 4000,
-//       });
-//       console.error("Error deleting note:", error);
-//       return false;
-//     }
-//   } else {
-//     toast("Error", {
-//       description: "You must first save your note before deleting it.",
-//       duration: 4000,
-//     });
-//     return false;
-//   }
-// };
-//
-
 export const handleDeleteNote = async ( //supposed to be archive but named as delete
   note: Note | undefined,
   user: User,
@@ -105,11 +66,11 @@ export const handleDeleteNote = async ( //supposed to be archive but named as de
       // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
       const updatedNote = {
         ...note,
-        isArchived: true, // Mark the note as archived
-        archivedAt: new Date().toISOString(), // Add a timestamp for archiving
+        isArchived: true, // Mark the note as archived; this IS happening
+        //archivedAt: new Date().toISOString(), // Add a timestamp for archiving
       };
 
-      // Step 2: Use the existing overwrite API to update the note
+      // update the note
       const response = await ApiService.overwriteNote(updatedNote);
 
       if (response.ok) {

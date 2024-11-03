@@ -17,13 +17,15 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
 
+  const visibleNotes = notes.filter(note => !note.isArchived); // Filter notes to exclude archived ones
+
   useEffect(() => {
-    if (notes.length > 0 && fresh) {
-      onNoteSelect(notes[0], false);
-      setSelectedNoteId(notes[0].id);
+    if (visibleNotes.length > 0 && fresh) {
+      onNoteSelect(visibleNotes[0], false);
+      setSelectedNoteId(visibleNotes[0].id);
       setFresh(false);
     }
-  }, [notes, onNoteSelect, fresh]);
+  }, [visibleNotes, onNoteSelect, fresh]);
 
   const handleLoadText = (note: Note) => {
     onNoteSelect(note, false);
@@ -49,7 +51,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
 
   return (
     <div id="notes-list" className="my-4 flex flex-col">
-      {notes.map((note) => {
+      {visibleNotes.map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
   
         return (
