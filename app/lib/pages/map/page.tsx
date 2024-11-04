@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import "../../../globals.css";
 
 import {
   CompassIcon,
@@ -119,7 +120,7 @@ const Page = () => {
 
           scrollToElement: true,
           dontShowAgain: true,
-          skipLabel: "Skip",
+          skipLabel: "Skip", //change the look of this button
         });
 
         intro.oncomplete(() => {
