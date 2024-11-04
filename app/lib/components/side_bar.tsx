@@ -34,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         longitude: "",
         published: undefined,
         tags: [],
+        isArchived: false
       };
       onNoteSelect(newBlankNote, true); // Notify that a new note is being added
     } else {
