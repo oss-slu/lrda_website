@@ -335,14 +335,14 @@ export default function NoteEditor({
               <AlertDialogTrigger asChild>
                 <button className="hover:text-red-500 flex justify-center items-center w-full">
                   <FileX2 className="text-current"/>
-                  <div className="ml-2" ref = {deleteRef}>Delete</div>
+                  <div className="ml-2" ref = {deleteRef}>Archive</div>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
+                    This action cannot be undone. This will permanently archive
                     this note.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
