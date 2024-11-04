@@ -54,7 +54,7 @@ export const handleEditorChange = (
   setEditorContent(content);
 };
 
-export const handleDeleteNote = async (
+export const handleDeleteNote = async ( //supposed to be archive but named as delete
   note: Note | undefined,
   user: User,
   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
@@ -62,29 +62,38 @@ export const handleDeleteNote = async (
   if (note?.id) {
     try {
       const userId = await user.getId();
-      const success = await ApiService.deleteNoteFromAPI(
-        note!.id,
-        userId || ""
-      );
-      if (success) {
+
+      // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
+      const updatedNote = {
+        ...note,
+        isArchived: true, // Mark the note as archived; this IS happening
+        archivedAt: new Date().toISOString(), // Add a timestamp for archiving
+      };
+
+      // update the note
+      const response = await ApiService.overwriteNote(updatedNote);
+
+      if (response.ok) {
         toast("Success", {
-          description: "Note successfully deleted.",
+          description: "Note successfully archived.",
           duration: 4000,
         });
-        setNote(undefined); // Clear the note after successful deletion
+        setNote(undefined); // Clear the note from the state after archiving
         return true;
+      } else {
+        throw new Error("Archiving failed");
       }
     } catch (error) {
       toast("Error", {
-        description: "Failed to delete note. System failure. Try again later.",
+        description: "Failed to archive note. System failure. Try again later.",
         duration: 4000,
       });
-      console.error("Error deleting note:", error);
+      console.error("Error archiving note:", error);
       return false;
     }
   } else {
     toast("Error", {
-      description: "You must first save your note before deleting it.",
+      description: "You must first save your note before archiving it.",
       duration: 4000,
     });
     return false;
