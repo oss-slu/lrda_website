@@ -103,7 +103,7 @@ const ClickableNote: React.FC<{
             <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
-            <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
+            <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
             <UserCircle className="w-5 h-5" />: {creator}
