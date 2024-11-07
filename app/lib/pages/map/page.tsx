@@ -647,7 +647,7 @@ const Page = () => {
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
               <div 
                 className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                {/* moving search bar ref here*/}
+                {/* moving search bar*/}
                 <div className="min-w-[80px] mr-3"
                 ref={searchBarRef}>
                   <SearchBarMap
