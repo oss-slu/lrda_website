@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef} from "react";
 
 interface MousePosition {
   x: number;
@@ -9,7 +9,6 @@ interface MousePosition {
 const WelcomePage: React.FC = () => {
   const [cursorPos, setCursorPos] = useState<MousePosition>({ x: 0, y: 0 });
   const textRef = useRef<HTMLHeadingElement>(null);
-  const textContainerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (textRef.current) {
@@ -43,7 +42,7 @@ const WelcomePage: React.FC = () => {
               color: "transparent",
             }}
           >
-            Where's Religion?
+            &lsquo;Where&apos;s Religion?&rsquo;
           </span>
           <span
             className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500"
@@ -55,10 +54,10 @@ const WelcomePage: React.FC = () => {
               WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 15px, black 30%)`,
             }}
           >
-            Where's Religion?
+            &lsquo;Where&apos;s Religion?&rsquo;
           </span>
           {/* 3D effect layer */}
-          <span className="text-gray-800">Where's Religion?</span>
+          <span className="text-gray-800">&lsquo;Where&apos;s Religion?&rsquo;</span>
         </h1>
         {/* "Center on Lived Religion" text block */}
         <div

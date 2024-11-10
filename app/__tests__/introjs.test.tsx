@@ -97,7 +97,7 @@ describe("Intro.js feature in Page component", () => {
 
   // This test ensures that the Page2 component can render without any errors
   it("renders the Page2 component without crashing", async () => {
-    let component;
+    // let component;
     // `act` is used to wrap any actions that trigger updates, ensuring the React state is fully updated
     await act(async () => {
       render(<Page2 isNewNote={false} />); // Renders the Page component

@@ -1,6 +1,6 @@
 // __mocks__/firebaseAuth.js
 
-export const signInWithEmailAndPassword = jest.fn((auth, email, password) => {
+export const signInWithEmailAndPassword = jest.fn((auth, email) => {
   return Promise.resolve({
     user: {
       uid: 'mockUserId',

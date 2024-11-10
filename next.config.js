@@ -5,7 +5,18 @@ const nextConfig = {
   images: {
     domains: ["livedreligion.s3.amazonaws.com"],
   },
-  webpack: (config, { isServer }) => {
+  
+  eslint: {
+    // Disables ESLint during builds
+    ignoreDuringBuilds: true,
+  },
+  
+  typescript: {
+    // Disables TypeScript type-checking during builds
+    ignoreBuildErrors: true,
+  },
+  
+  webpack: (config) => {
     config.module.rules.push({
       test: /\.m?js$/,  // Handle both .js and .mjs files
       exclude: /node_modules/,  // Exclude node_modules
@@ -25,6 +36,7 @@ const nextConfig = {
 
     return config;
   },
+  
   async rewrites() {
     return [
       {

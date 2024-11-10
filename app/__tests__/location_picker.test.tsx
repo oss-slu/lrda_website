@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render} from "@testing-library/react";
 import LocationPicker from "../lib/components/noteElements/location_component";
 import "@testing-library/jest-dom";
 

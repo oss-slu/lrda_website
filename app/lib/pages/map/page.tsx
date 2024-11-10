@@ -11,11 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import "../../../globals.css";
 
 import {
-  CompassIcon,
+  // CompassIcon,
   GlobeIcon,
-  LocateIcon,
+  // LocateIcon,
   Navigation,
   UserIcon,
 } from "lucide-react";
@@ -78,7 +79,7 @@ const Page = () => {
       console.log("Existing note selected:", note);
     }
   };
-  
+
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
@@ -89,10 +90,10 @@ const Page = () => {
       console.log('Observer triggered');
       console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
       console.log('navbarLogoutButton:', navbarLogoutButton);
-  
+
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
         const intro = introJs();
-  
+
         intro.setOptions({
           steps: [
             {
@@ -116,25 +117,19 @@ const Page = () => {
               intro: "Done for the day? Make sure to logout!"
             }
           ],
-
           scrollToElement: true,
           dontShowAgain: true,
           skipLabel: "Skip",
         });
 
-        intro.oncomplete(() => {
-          window.location.href = "/lib/pages/notes";
-        });
-        
         intro.start();
-
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
-  
+
     // Start observing the body for changes
     observer.observe(document.body, { childList: true, subtree: true });
-  
+
     // Cleanup the observer when the component unmounts
     return () => {
       observer.disconnect();
@@ -593,31 +588,31 @@ const Page = () => {
     const newNotes = global
       ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
       : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   const handlePrevious = async () => {
     const newSkip = Math.max(0, skip - 150);
     const newNotes = global
       ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
       : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex-grow">

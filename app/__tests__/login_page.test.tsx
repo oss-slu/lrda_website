@@ -13,7 +13,7 @@ jest.mock('firebase/auth', () => {
         email: 'mock@example.com',
       },
     })),
-    signInWithEmailAndPassword: jest.fn((auth, email, password) => {
+    signInWithEmailAndPassword: jest.fn((auth, email) => {
       return Promise.resolve({
         user: {
           uid: 'mockUserId',
