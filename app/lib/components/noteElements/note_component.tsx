@@ -115,6 +115,18 @@ export default function NoteEditor({
 
       intro.start();
 
+      // Apply inline styling to the skip button after a short delay to ensure it has rendered
+      setTimeout(() => {
+        const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+        if (skipButton) {
+          skipButton.style.position = 'absolute';
+          skipButton.style.top = '2px'; // Move it up by decreasing the top value
+          skipButton.style.right = '20px'; // Adjust positioning as needed
+          skipButton.style.fontSize = '18px'; // Adjust font size as needed
+          skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+        }
+      }, 100); // 100ms delay to wait for rendering
+
       observer.disconnect(); // Stop observing once the elements are found
     }
   });
