@@ -39,6 +39,7 @@ export type Note = {
   published: boolean | undefined;
   tags: Tag[];
   uid: string;
+  isArchived?: boolean; //add property of archived, then filter for it
 };
 
 export type CombinedResult =
@@ -56,6 +57,7 @@ export type newNote = {
   longitude: string;
   published: boolean | undefined;
   tags: Tag[];
+  isArchived?: boolean;
 };
 
 export type RootStackParamList = {

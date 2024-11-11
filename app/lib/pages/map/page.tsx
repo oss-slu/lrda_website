@@ -400,12 +400,19 @@ const Page = () => {
       let globalNotes: Note[] = [];
       if (userId) {
         setIsLoggedIn(true);
-        personalNotes = await ApiService.fetchUserMessages(userId);
-        personalNotes =
-          DataConversion.convertMediaTypes(personalNotes).reverse();
+        personalNotes = (await ApiService.fetchUserMessages(userId)).filter(note => !note.isArchived); //filter here?
+
+        // Convert media types and filter out archived notes for personal notes
+        personalNotes = DataConversion.convertMediaTypes(personalNotes)
+        .reverse()
+        .filter(note => !note.isArchived); // Filter out archived personal notes
       }
-      globalNotes = await ApiService.fetchPublishedNotes();
-      globalNotes = DataConversion.convertMediaTypes(globalNotes).reverse();
+      globalNotes = (await ApiService.fetchPublishedNotes()).filter(note => !note.isArchived);
+
+      // Convert media types and filter out archived notes for global notes
+      globalNotes = DataConversion.convertMediaTypes(globalNotes)
+        .reverse()
+        .filter(note => !note.isArchived); // Filter out archived global notes
 
       return { personalNotes, globalNotes };
     } catch (error) {

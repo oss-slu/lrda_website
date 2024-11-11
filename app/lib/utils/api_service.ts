@@ -347,6 +347,7 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
         published: note.published,
         tags: note.tags,
         time: note.time,
+        isArchived: note.isArchived,
       }),
     });
   }
