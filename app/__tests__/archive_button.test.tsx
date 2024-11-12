@@ -6,6 +6,9 @@ import { User } from '../lib/models/user_class';
 // Mocking necessary modules
 jest.mock('firebase/auth');
 jest.mock('../lib/utils/api_service');
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
 jest.useFakeTimers().setSystemTime(new Date('2024-11-12T07:43:02.627Z'));
 jest.mock('sonner', () => ({
   toast: jest.fn(),
