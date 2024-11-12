@@ -1,8 +1,9 @@
 import { UserData } from "../../types";
 import { getItem, setItem } from "../utils/async_storage";
-import { auth } from "../config"; // Adjust the path as necessary
+import { auth, db } from "../config/firebase"; // Import Firestore database
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
 import ApiService from '../utils/api_service';
+import { doc, getDoc } from "firebase/firestore"; // Firestore imports
 
 export class User {
   private static instance: User;
@@ -67,21 +68,33 @@ export class User {
   private async initializeUser() {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in.
+        // First, try to fetch user data from the API
         const userData = await ApiService.fetchUserData(user.uid);
+        
         if (userData) {
+          // If found in the API, set user data and persist it
           this.userData = userData;
           this.persistUser(userData);
+        } else {
+          // If not found in the API, try Firestore
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            this.userData = userDoc.data() as UserData;
+            this.persistUser(this.userData);
+          } else {
+            console.log("User not found in API or Firestore.");
+          }
         }
         this.notifyLoginState();
       } else {
-        // User is signed out.
+        // User is signed out
         this.userData = null;
         this.clearUser();
         this.notifyLoginState();
       }
     });
   }
+
 
   public async login(email: string, password: string): Promise<string> {
     try {
