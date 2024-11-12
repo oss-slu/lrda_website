@@ -7,17 +7,6 @@ import Image from "next/image";
 import background from '../public/background.jpg'; 
 
 
-const teamImages = [
-    '/aboutPageImages/Scrolling/one.jpg',
-    '/aboutPageImages/Scrolling/two.jpg',
-    '/aboutPageImages/Scrolling/three.jpg',
-    '/aboutPageImages/Scrolling/four.jpg',
-    '/aboutPageImages/Scrolling/five.jpg',
-    '/aboutPageImages/Scrolling/six.jpg',
-    '/aboutPageImages/Scrolling/seven.jpg',
-    '/aboutPageImages/Scrolling/eight.jpg',
-  ];
-
   const Page = () => {
     // Settings for the slider
     const settings = {
@@ -39,11 +28,9 @@ const teamImages = [
     <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="text-center text-white p-10 max-w-xl">
         <h1 className="text-5xl font-bold mb-4">
-          Where is Religion in The Digital Age?
+        What is <p>Where's Religion </p>
         </h1>
-        <p className="mb-4">
-          Seeking to better understand the sights, sounds, tastes, rituals, beliefs, and overall experiences of religion in the everyday lives of practitioners.
-        </p>
+       
         <a href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale." target="_blank" rel="noopener noreferrer">
   <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
     Learn More
@@ -78,33 +65,12 @@ const teamImages = [
               Our Mission
             </h2>
             <p>
-              *This will be updated with Dr. Park's input.*
+            Where’s Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where’s Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
             </p>
+            <p>Where’s Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).</p>
           </section>
-  
-          <section className="mb-8">
-            <h2 className="text-4xl font-bold">
-              What We Do
-            </h2>
-            <p>
-            *This will be updated with Dr. Park's input.*
-            </p>
-          </section>
-  
-          <section className="mb-8">
-            <h2 className="text-4xl font-bold">
-              Who We Are
-            </h2>
-            <p>
-            *This will be updated with Dr. Park's input.*
-            </p>
-          </section>
+
         </main>
-  
-        {/* Section with festival.jpg */}
-        <div className="bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/festival.jpg")' }}>
-          {/* You can add additional content or leave it just as a visual section */}
-        </div>
   
         {/* Additional content section */}
        {/* Team section */}
@@ -113,9 +79,6 @@ const teamImages = [
           <h2 className="text-4xl font-bold mb-8">
             The Team
           </h2>
-          <p className="mb-8">
-          Driven by the vision of Dr. Adam Park, our dynamic team at Saint Louis University is united by a shared passion for exploring and understanding the diverse landscape of religion. With a spirit of innovation and collaboration, we are dedicated to creating engaging public forums, immersive exhibits, and comprehensive pedagogical resources. Our multifaceted approach includes organizing conferences, offering research support, and producing thought-provoking digital publications, all aimed at enriching the discourse on religion's role in society.
-          </p>
           
           {/* Team Lead */}
           <div className="flex justify-center mb-8">
@@ -167,35 +130,7 @@ const teamImages = [
 </div>
         </div>
 
-       {/* Horizontally scrolling gallery with react-slick */}
-       <div className="max-w-4xl mx-auto px-4 py-16">
-        <Slider {...settings}>
-          {teamImages.map((image, index) => (
-            <div key={index}>
-              <img
-                src={image}
-                alt={`Gallery image ${index + 1}`}
-                style={{ width: '100%', height: 'auto' }} // Adjust the height and width as needed
-              />
-            </div>
-          ))}
-        </Slider>
-      </div>
-
-      </main>
-      <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/study.jpg")' }}>
-  <div className="absolute inset-0 flex justify-center items-center">
-    <div className="bg-gray-200 text-black p-4 max-w-lg mx-auto rounded" style={{ backgroundColor: 'rgba(211, 211, 211, 0.8)', maxWidth: '90%' }}>
-      <p className="text-xl font-semibold">
-        "Culture or civilization, taken in its wide ethnographic sense, is that complex whole which includes knowledge, belief, art, morals, law, custom, and any other capabilities and habits acquired by man as a member of society."
-      </p>
-      <p className="text-right">
-        - Edward B. Tylor, Primitive Culture 1871
-      </p>
-    </div>
-  </div>
-</div>
-  
+      </main> 
         {/* Footer or final content section */}
         <footer className="w-full py-16 bg-white-100"> 
   <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> 
