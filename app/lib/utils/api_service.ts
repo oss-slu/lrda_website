@@ -1,6 +1,8 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -197,6 +199,18 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
    */
   static async fetchUserData(uid: string): Promise<UserData | null> {
     try {
+
+      const userDocRef = doc(db, "users", uid); // Assume users collection
+      const userDoc = await getDoc(userDocRef);
+  
+      if (userDoc.exists()) {
+        const firestoreData = userDoc.data() as UserData;
+        console.log("User data retrieved from Firestore:", firestoreData);
+        return firestoreData; // Return data from Firestore as UserData
+      } else {
+        console.log("No user data found in Firestore, using API fallback.");
+      }
+      
       const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",

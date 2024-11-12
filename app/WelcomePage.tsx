@@ -75,19 +75,7 @@ const WelcomePage: React.FC = () => {
           >
             Center on Lived Religion (COLR)
           </span>
-          <span
-            className="absolute inset-0 bg-gradient-to-r from-pink-500 to-yellow-500"
-            style={{
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              mask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 15px, black 30%)`,
-              WebkitMask: `radial-gradient(circle at ${cursorPos.x}px ${cursorPos.y}px, transparent 15px, black 30%)`,
-            }}
-          >
-            Center on Lived Religion (COLR)
-          </span>
-          <span className="text-gray-800">Center on Lived Religion (COLR)</span>
+ 
         </div>
       </div>
     </div>

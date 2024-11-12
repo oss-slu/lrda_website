@@ -6,6 +6,10 @@ import Page from "../lib/pages/map/page"; // Importing the Page component that w
 // Mock Firebase Auth and API services
 jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
 
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
+
 // Mock introJs to simulate tooltips being added
 jest.mock('intro.js', () => {
   return jest.fn(() => ({

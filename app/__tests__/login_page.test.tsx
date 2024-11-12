@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Page from "../lib/pages/loginPage/page";
 import moxios from 'moxios';
 
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
+
 jest.mock('firebase/auth', () => {
   const originalModule = jest.requireActual('firebase/auth');
   return {
