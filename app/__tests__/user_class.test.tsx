@@ -5,6 +5,10 @@ import ApiService from '../lib/utils/api_service';
 jest.mock('firebase/auth');
 jest.mock('../lib/utils/api_service');
 
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
+
 describe('User class', () => {
   let user: User;
   const mockUserData = {

@@ -1,14 +1,14 @@
-// pages/signup.js
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
 import RegisterButton from "../../components/register_button";
 import { toast } from "sonner";
-import { auth } from "../../config";
+import { auth, db } from "../../config/firebase"; // Ensure you import Firestore as well
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { validateEmail, validatePassword } from "../../utils/validation";
 import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
+import { Timestamp, doc, setDoc } from "firebase/firestore";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -28,26 +28,29 @@ const SignupPage = () => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      // Create the user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Create user data in the API
+  
+      // Combine firstName and lastName for the name field
+      const fullName = `${firstName} ${lastName}`;
+  
+      // Prepare user data for Firestore
       const userData = {
         uid: user.uid,
-        name: `${firstName} ${lastName}`,
+        email,
+        name: fullName,
+        institution,
         roles: {
-          administrator: false,
+          administrator: true,
           contributor: true,
         },
+        createdAt: Timestamp.now(),
       };
-      await ApiService.createUserData(userData);
-
-      toast.success("Signup successful!");
-
+  
+      // Store the user data in Firestore under the "users" collection
+      await setDoc(doc(db, "users", user.uid), userData);
+  
       // Set the user as logged in
       const userInstance = User.getInstance();
       await userInstance.login(email, password);
@@ -55,7 +58,7 @@ const SignupPage = () => {
       // Optional delay to ensure everything is set up
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Redirect the user
+      // Redirect the user to the home page
       window.location.href = "/";
     } catch (error) {
       toast.error(`Signup failed: ${error}`);
