@@ -73,7 +73,8 @@ export default class DataConversion {
         published: message.published || false,
         tags: message.tags || [],
         uid: message.uid, // Add the uid property here
-        //isArchived: message.isArchived
+        // isArchived: note.isArchived,
+
       };
     });
 

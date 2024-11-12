@@ -4,9 +4,12 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'; // Allows us to 
 import MapPage from '../lib/pages/map/page'; // Import the MapPage component
 import NotePage from '../lib/pages/notes/page';
 import introJs from 'intro.js'; // Mock intro.js
-jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
-jest.mock('../lib/utils/api_service');
-jest.mock('intro.js'); // Mock intro.js to control its behavior
+jest.mock("firebase/auth"); // Mock Firebase Auth
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
+jest.mock("../lib/utils/api_service");
+jest.mock("intro.js"); // Mock intro.js to control its behavior
 describe('MapPage Tour', () => {
   it('does not start the tour or complete it', async () => {
     const history = createMemoryHistory(); // Create a mock history object for testing

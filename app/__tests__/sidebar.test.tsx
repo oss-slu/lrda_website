@@ -6,6 +6,9 @@ import Sidebar from '../lib/components/side_bar'; // Update the path to your Sid
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
 }));
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
 
 jest.mock('firebase/auth', () => {
   const originalModule = jest.requireActual('firebase/auth');
