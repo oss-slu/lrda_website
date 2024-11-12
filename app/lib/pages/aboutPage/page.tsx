@@ -1,164 +1,233 @@
-"use client"
+"use client";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import Image from "next/image";
-import background from '../public/background.jpg'; 
 
+const Page = () => {
+  // Settings for the slider
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 800,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 7000,
+    cssEase: "linear"
+  };
 
-  const Page = () => {
-    // Settings for the slider
-    const settings = {
-      dots: true,
-      infinite: true,
-      speed: 800,
-      slidesToShow: 3, 
-      slidesToScroll: 1,
-      autoplay: true,
-      autoplaySpeed: 7000,
-      cssEase: "linear"
-    };
-  
-    
-    return (
-<div className="font-sans leading-6">
-  {/* Section with culture.jpg */}
-  <div className="relative bg-cover bg-center bg-no-repeat min-h-screen" style={{ backgroundImage: 'url("/aboutPageImages/culture.jpg")' }}>
-    <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="text-center text-white p-10 max-w-xl">
-        <h1 className="text-5xl font-bold mb-4">
-        What is <p>Where's Religion </p>
-        </h1>
-       
-        <a href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale." target="_blank" rel="noopener noreferrer">
-  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
-    Learn More
-  </button>
-</a>
-        <div> {/* Container for logos */}
-        <a href="https://www.instagram.com/livedreligion/" target="_blank" rel="noopener noreferrer">
-         <img
-              src="/instagram.jpg" 
-              alt="Instagram"
-               className="h-8 mx-2 inline-block" 
-           />
-         </a>
-        <a href="https://twitter.com/livedreligion" target="_blank" rel="noopener noreferrer">
-          <img
-          src="/X.jpg" 
-          alt="Twitter"
-          className="h-8 mx-2 inline-block" 
-        />
-           </a>
-
+  return (
+    <div className="font-sans leading-6">
+      {/* Section with background image */}
+      <div
+        className="relative bg-cover bg-center bg-no-repeat min-h-screen"
+        style={{ backgroundImage: 'url("/aboutPageImages/background.jpg")' }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="text-center text-white p-10 max-w-xl">
+            <h1 className="text-5xl font-bold mb-4">
+             <p>Where's Religion </p>
+            </h1>
+            <a
+              href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale."
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+                Learn More
+              </button>
+            </a>
+            <div>
+              <a
+                href="https://www.instagram.com/livedreligion/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="/instagram.jpg"
+                  alt="Instagram"
+                  className="h-8 mx-2 inline-block"
+                />
+              </a>
+              <a
+                href="https://twitter.com/livedreligion"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="/X.jpg"
+                  alt="Twitter"
+                  className="h-8 mx-2 inline-block"
+                />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-    
-  
-        {/* Main content section */}
-        <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
-          <section className="mb-8">
-            <h2 className="text-4xl font-bold">
-              Our Mission
-            </h2>
-            <p>
-            Where’s Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where’s Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
-            </p>
-            <p>Where’s Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).</p>
-          </section>
 
-        </main>
-  
-        {/* Additional content section */}
-       {/* Team section */}
+      {/* Main content section */}
+      <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
+  <section className="mb-8">
+    <h2 className="text-4xl font-bold">About</h2>
+    <br/>
+    <p className="text-[25px] font-normal">
+      Where’s Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where’s Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
+    </p>
+    <br/>
+    <p className="text-[25px] font-normal">
+      Where’s Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).
+    </p>
+  </section>
+</main>
+
+      {/* Team Section */}
       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
         <div className="text-center py-16">
-          <h2 className="text-4xl font-bold mb-8">
-            The Team
-          </h2>
-          
-          {/* Team Lead */}
-          <div className="flex justify-center mb-8">
-  <div className="hover:scale-110 transition-transform duration-300">
-    <img
-      className="w-32 h-32 rounded-full mx-auto"
-      src="/aboutPageImages/Yash.jpg"
-      alt="Yash Bhatia"
-    />
-    <p className="mt-2 font-semibold">Yash Bhatia</p>
-    <p className="mt-2 font-semibold">Tech Lead</p>
-  </div>
-</div>
+          <h2 className="text-4xl font-bold mb-8">The Saint Louis University Where's Religion Team</h2>
 
-{/* Team Members */}
-<div className="grid grid-cols-3 gap-10 justify-items-center">
-  {/* Josh Hogan */}
-  <div className="hover:scale-110 transition-transform duration-300">
-    <img
-      className="w-32 h-32 rounded-full"
-      src="/aboutPageImages/F-22.jpg"
-      alt="Josh Hogan"
-    />
-    <p className="mt-2 font-semibold">Josh Hogan</p>
-    <p className="mt-2 font-semibold">Developer</p>
-  </div>
-  
-  {/* Izak Robles */}
-  <div className="hover:scale-110 transition-transform duration-300">
-    <img
-      className="w-32 h-32 rounded-full"
-      src="/aboutPageImages/Izak.jpg"
-      alt="Izak Robles"
-    />
-    <p className="mt-2 font-semibold">Izak Robles</p>
-    <p className="mt-2 font-semibold">Developer</p>
-  </div>
+          {/* Initiative Team Section */}
+          <div className="grid grid-cols-2 gap-10 justify-items-center mb-12">
+            {/* Rachel Lindsey */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Rachel.jpg"
+                alt="Rachel Lindsey"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Rachel Lindsey</p>
+              <p className="font-semibold text-center">Director of Center on Lived Religion</p>
+            </div>
 
-  {/* Stuart Ray */}
-  <div className="hover:scale-110 transition-transform duration-300">
-    <img
-      className="w-32 h-32 rounded-full"
-      src="/aboutPageImages/Stuart.jpg"
-      alt="Stuart Ray"
-    />
-    <p className="mt-2 font-semibold">Stuart Ray</p>
-    <p className="mt-2 font-semibold">Developer</p>
-  </div>
-</div>
+            {/* Adam Park */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Adam.jpg"
+                alt="Adam Park"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Adam Park</p>
+              <p className="font-semibold text-center">Associate Director of Research (COLR)</p>
+            </div>
+
+            {/* Pauline Lee */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Pauline.jpg"
+                alt="Pauline Lee"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Pauline Lee</p>
+              <p className="font-semibold text-center">Associate Director of Public Humanities (COLR)</p>
+            </div>
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Yash.jpg"
+                alt="Yash Bhatia"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Yash Bhatia</p>
+              <p className="font-semibold text-center">Software Engineer/Tech Lead</p>
+            </div>
+          </div>
+          <h2 className="text-4xl font-bold mb-8">The Development Team</h2>
+
+          {/* Tech Team Members */}
+          <div className="grid grid-cols-3 gap-10 justify-items-center">
+
+          <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Patrick.jpg"
+                alt="Patrick Cuba"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Patrick Cuba</p>
+              <p className="font-semibold text-center">IT Architect</p>
+            </div>
+
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Bryan.jpg"
+                alt="Bryan Haberberger"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Bryan Haberberger</p>
+              <p className="font-semibold text-center">Full Stack Developer</p>
+            </div>
+
+
+         
+            {/* Josh Hogan */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/F-22.jpg"
+                alt="Josh Hogan"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Josh Hogan</p>
+              <p className="font-semibold text-center">Developer</p>
+            </div>
+
+            {/* Izak Robles */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Izak.jpg"
+                alt="Izak Robles"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Izak Robles</p>
+              <p className="font-semibold text-center">Developer</p>
+            </div>
+
+            {/* Stuart Ray */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Stuart.jpg"
+                alt="Stuart Ray"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Stuart Ray</p>
+              <p className="font-semibold text-center">Developer</p>
+            </div>
+          </div>
         </div>
+      </main>
 
-      </main> 
-        {/* Footer or final content section */}
-        <footer className="w-full py-16 bg-white-100"> 
-  <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20"> 
-  <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
-      <img 
-        src="/LivedReligion.png" 
-        alt="Lived Religion in the Digital Age"
-        className="object-cover h-56 w-auto" 
-      />
-    </a>
-    <a href="https://oss-slu.github.io/" target="_blank" rel="noopener noreferrer">
-  <img 
-    src="/OpenSourceWithSLU.png" 
-    alt="Open Source with SLU"
-    className="object-cover h-56 w-auto" 
-  />
-</a>
-<a href="https://www.slu.edu/science-and-engineering/index.php" target="_blank" rel="noopener noreferrer">
-  <img 
-    src="/three.jpg" 
-    alt="Third Image"
-    className="object-cover h-72 w-auto" 
-  />
-</a>
-  </div>
-</footer>
-      </div>
-    );
-  };
-  
-  export default Page;
+      {/* Footer Section */}
+      <footer className="w-full py-16 bg-white-100">
+        <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20">
+          <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
+            <img src="/LivedReligion.png" alt="Lived Religion in the Digital Age" className="object-cover h-56 w-auto" />
+          </a>
+          <a href="https://oss-slu.github.io/" target="_blank" rel="noopener noreferrer">
+            <img src="/OpenSourceWithSLU.png" alt="Open Source with SLU" className="object-cover h-56 w-auto" />
+          </a>
+          <a href="https://www.slu.edu/science-and-engineering/index.php" target="_blank" rel="noopener noreferrer">
+            <img src="/three.jpg" alt="Third Image" className="object-cover h-72 w-auto" />
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Page;
