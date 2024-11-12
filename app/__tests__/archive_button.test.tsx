@@ -6,6 +6,7 @@ import { User } from '../lib/models/user_class';
 // Mocking necessary modules
 jest.mock('firebase/auth');
 jest.mock('../lib/utils/api_service');
+jest.useFakeTimers().setSystemTime(new Date('2024-11-12T07:43:02.627Z'));
 jest.mock('sonner', () => ({
   toast: jest.fn(),
 }));
@@ -23,6 +24,7 @@ describe('Archive Note Functionality Tests', () => {
       title: 'Test Note',
       text: 'This is a test note',
       isArchived: false,
+      published:false
     };
   });
 
@@ -38,11 +40,15 @@ describe('Archive Note Functionality Tests', () => {
 
       const result = await handleDeleteNote(mockNote, mockUser, mockSetNote);
 
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
-        ...mockNote,
-        isArchived: true,
-        archivedAt: expect.any(String),
-      });
+   // Update across all relevant test cases to ensure consistent expectations
+expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+  ...mockNote,
+  isArchived: true,
+  archivedAt: expect.any(String), // Matches any string date format
+  published: false,              // Consistently include this field
+});
+
+      
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
       expect(toast).toHaveBeenCalledWith('Success', {
         description: 'Note successfully archived.',
@@ -87,11 +93,14 @@ describe('Archive Note Functionality Tests', () => {
       });
 
       expect(response.ok).toBe(true);
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
-        ...mockNote,
-        isArchived: true,
-        archivedAt: expect.any(String),
-      });
+      // Update across all relevant test cases to ensure consistent expectations
+expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+  ...mockNote,
+  isArchived: true,
+  archivedAt: "2024-11-12T07:43:02.627Z", // Matches any string date format
+  published: false,              // Consistently include this field
+});
+
     });
 
     test('associated annotations are also archived', async () => {
@@ -112,11 +121,14 @@ describe('Archive Note Functionality Tests', () => {
 
       const result = await handleDeleteNote(mockNote, mockUser, mockSetNote);
 
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
-        ...mockNote,
-        isArchived: true,
-        archivedAt: expect.any(String),
-      });
+      // Update across all relevant test cases to ensure consistent expectations
+expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+  ...mockNote,
+  isArchived: true,
+  archivedAt: "2024-11-12T07:43:02.627Z", // Matches any string date format
+  published: false,              // Consistently include this field
+});
+
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
       expect(toast).toHaveBeenCalledWith('Success', {
         description: 'Note successfully archived.',
