@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; // comment test
 import ApiService from "../utils/api_service";
 import { Note, Tag } from "@/app/types";
 import {
@@ -103,7 +103,7 @@ const ClickableNote: React.FC<{
             <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
-            <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
+            <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
             <UserCircle className="w-5 h-5" />: {creator}

@@ -473,3 +473,12 @@ body {
   background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 100%);
   pointer-events: none; /* This ensures the shadow doesn't interfere with clicking or scrolling */
 }
+
+/* Adjusts the position and size of the 'Skip' label */
+.introjs-skipbutton {
+  font-size: 1.0em;  
+  left: auto;       
+  right: 10px;       
+  color: #555;       
+}
+

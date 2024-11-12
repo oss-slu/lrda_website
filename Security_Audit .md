@@ -1,0 +1,28 @@
+- [X] The project website MUST succinctly describe what the software does
+   - This MUST be in language that potential users can understand   
+- [X] The project website MUST provide information on how to: obtain, provide feedback (as bug reports or enhancements), and contribute to the software.
+- [X] The information on how to contribute MUST explain the contribution process
+- [X] It is SUGGESTED that any required license(s) for the software produced by the project be approved by the Open Source Initiative (OSI).
+   - The OSI uses a rigorous approval process to determine which licenses are OSS.    
+- [X] The project MUST post the license(s) of its results in a standard location in their source repository.
+- [X] The project MUST provide basic documentation for the software produced by the project.
+- [X] The project MUST provide reference documentation that describes the external interface (both input and output) of the software produced by the project.
+- [X] The project sites (website, repository, and download URLs) MUST support HTTPS using TLS.
+- [X] The project MUST have one or more mechanisms for discussion (including proposed changes and issues) that are searchable, allow messages and topics to be addressed by URL, enable new people to participate in some of the discussions, and do not require client-side installation of proprietary software.
+- [X] The project SHOULD provide documentation in English and be able to accept bug reports and comments about code in English.
+- [X] The project MUST be maintained.
+- [X] The project MUST have a version-controlled source repository that is publicly readable and has a URL.
+- [X] The project's source repository MUST track what changes were made, who made the changes, and when the changes were made.
+- [X] It is SUGGESTED that common distributed version control software be used (e.g., git) for the project's source repository.
+- [X] The project MUST provide a process for users to submit bug reports (e.g., using an issue tracker or a mailing list).
+- [X] The project SHOULD use an issue tracker for tracking individual issues
+- [X] The project MUST acknowledge a majority of bug reports submitted in the last 2-12 months (inclusive); the response need not include a fix.
+- [X] If the software produced by the project requires building for use, the project MUST provide a working build system that can automatically rebuild the software from source code.
+- [X] It is SUGGESTED that common tools be used for building the software.
+- [X] The project MUST use at least one automated test suite that is publicly released as FLOSS (this test suite may be maintained as a separate FLOSS project). The project MUST clearly show or document how to run the test suite(s) (e.g., via a continuous integration (CI) script or via documentation in files such as BUILD.md, README.md, or CONTRIBUTING.md).
+- [X] A test suite SHOULD be invocable in a standard way for that language.
+- [X] It is SUGGESTED that the test suite cover most (or ideally all) the code branches, input fields, and functionality.
+- [X] It is SUGGESTED that the project implement continuous integration
+- [X] The project MUST have a general policy (formal or not) that as major new functionality is added to the software produced by the project, tests of that functionality should be added to an automated test suite.
+- [X] It is SUGGESTED that this policy on adding tests (see test_policy) be documented in the instructions for change proposals.
+- [X] The project MUST have at least one primary developer who knows how to design secure software.

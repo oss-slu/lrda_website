@@ -67,7 +67,9 @@ export const handleDeleteNote = async ( //supposed to be archive but named as de
       const updatedNote = {
         ...note,
         isArchived: true, // Mark the note as archived; this IS happening
+
         published: false,
+
         archivedAt: new Date().toISOString(), // Add a timestamp for archiving
       };
 

@@ -74,6 +74,7 @@ export default class DataConversion {
         tags: message.tags || [],
         uid: message.uid, // Add the uid property here
         // isArchived: note.isArchived,
+
       };
     });
 
@@ -158,6 +159,7 @@ export default class DataConversion {
               published: note?.published || false,
               tags: note?.tags || [],
               uid: note.uid, // Add the uid property here
+              //isArchived: note.isArchived
             },
           };
         }

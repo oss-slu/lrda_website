@@ -93,6 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
           const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
 
+
           setNotes(unarchivedNotes);
           setFilteredNotes(unarchivedNotes);
         } else {
@@ -102,9 +103,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         console.error("Error fetching user messages:", error);
       }
     };
-
+  
     fetchUserMessages();
   }, []);
+  
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {

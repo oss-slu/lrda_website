@@ -13,6 +13,7 @@ import introJs from "intro.js"
 import "intro.js/introjs.css"
 // import "../../../globals.css";
 
+
 import {
   CompassIcon,
   GlobeIcon,
@@ -117,9 +118,10 @@ const Page = () => {
               intro: "Done for the day? Make sure to logout!"
             }
           ],
+
           scrollToElement: true,
           dontShowAgain: true,
-          skipLabel: "Skip",
+          skipLabel: "Skip", //change the look of this button
         });
 
         intro.oncomplete(() => {
@@ -127,6 +129,7 @@ const Page = () => {
         });
         
         intro.start();
+
 
         // Apply inline styling to the skip button after a short delay to ensure it has rendered
         setTimeout(() => {
@@ -139,6 +142,7 @@ const Page = () => {
             skipButton.style.padding = '4px 10px'; // Adjust padding as needed
           }
         }, 100); // 100ms delay to wait for rendering
+
 
         observer.disconnect(); // Stop observing once the elements are found
       }
@@ -395,7 +399,7 @@ const Page = () => {
   const fetchNotes = async () => {
     try {
       const userId = await user.getId();
-
+  
       let personalNotes: Note[] = [];
       let globalNotes: Note[] = [];
       if (userId) {
@@ -407,19 +411,23 @@ const Page = () => {
         .reverse()
         .filter(note => !note.isArchived); // Filter out archived personal notes
       }
+
       globalNotes = (await ApiService.fetchPublishedNotes()).filter(note => !note.isArchived);
+
 
       // Convert media types and filter out archived notes for global notes
       globalNotes = DataConversion.convertMediaTypes(globalNotes)
         .reverse()
         .filter(note => !note.isArchived); // Filter out archived global notes
 
+
+
       return { personalNotes, globalNotes };
     } catch (error) {
       console.error("Error fetching messages:", error);
       return { personalNotes: [], globalNotes: [] };
     }
-  };
+  };  
 
   const handleMarkerClick = (note: Note) => {
     if (currentPopup) {
