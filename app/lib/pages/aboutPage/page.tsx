@@ -71,12 +71,12 @@ const Page = () => {
       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
   <section className="mb-8">
     <h2 className="text-4xl font-bold">About</h2>
-    <br/>
-    <p className="text-[25px] font-normal">
+    <br />
+    <p className="text-lg font-normal leading-7">
       Where’s Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where’s Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
     </p>
-    <br/>
-    <p className="text-[25px] font-normal">
+    <br />
+    <p className="text-lg font-normal leading-7">
       Where’s Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).
     </p>
   </section>
@@ -116,7 +116,7 @@ const Page = () => {
             </div>
 
             {/* Pauline Lee */}
-            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+            {/* <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
                 src="/aboutPageImages/Pauline.jpg"
                 alt="Pauline Lee"
@@ -126,7 +126,7 @@ const Page = () => {
               />
               <p className="mt-4 font-semibold text-center">Pauline Lee</p>
               <p className="font-semibold text-center">Associate Director of Public Humanities (COLR)</p>
-            </div>
+            </div> */}
             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
                 src="/aboutPageImages/Yash.jpg"
@@ -136,7 +136,7 @@ const Page = () => {
                 className="rounded-full"
               />
               <p className="mt-4 font-semibold text-center">Yash Bhatia</p>
-              <p className="font-semibold text-center">Software Engineer/Tech Lead</p>
+              <p className="font-semibold text-center">Software Engineer&Tech Lead</p>
             </div>
           </div>
           <h2 className="text-4xl font-bold mb-8">The Development Team</h2>
@@ -171,7 +171,7 @@ const Page = () => {
 
          
             {/* Josh Hogan */}
-            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+            {/* <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
                 src="/aboutPageImages/F-22.jpg"
                 alt="Josh Hogan"
@@ -181,7 +181,7 @@ const Page = () => {
               />
               <p className="mt-4 font-semibold text-center">Josh Hogan</p>
               <p className="font-semibold text-center">Developer</p>
-            </div>
+            </div> */}
 
             {/* Izak Robles */}
             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
@@ -213,7 +213,7 @@ const Page = () => {
       </main>
 
       {/* Footer Section */}
-      <footer className="w-full py-16 bg-white-100">
+      {/* <footer className="w-full py-16 bg-white-100">
         <div className="flex items-center justify-between mx-auto px-10 max-w-7xl space-x-20">
           <a href="https://religioninplace.org/blog/" target="_blank" rel="noopener noreferrer">
             <img src="/LivedReligion.png" alt="Lived Religion in the Digital Age" className="object-cover h-56 w-auto" />
@@ -225,7 +225,7 @@ const Page = () => {
             <img src="/three.jpg" alt="Third Image" className="object-cover h-72 w-auto" />
           </a>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 };
