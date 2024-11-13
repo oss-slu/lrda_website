@@ -326,13 +326,12 @@ export default function NoteEditor({
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
-            <PublishToggle
+          <PublishToggle
               id="publish-toggle-button"
-              isPublished={noteState.isPublished}
-              onPublishChange={(bool) =>
-                handlePublishChange(noteHandlers.setIsPublished, bool)
-              }
+              isPublished={Boolean(noteState.isPublished)}
+              onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
             />
+
             <div className="w-2 h-9 bg-border" />
             <button
               id="save-note-button"
