@@ -10,7 +10,7 @@ interface PublishToggleProps {
 }
 
 // Define the PublishToggle component
-const PublishToggle: React.FC<PublishToggleProps> = ({ id, onPublishClick }) => {
+const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublishClick }) => {
   const handlePublishClick = () => {
     if (onPublishClick) {
       onPublishClick(); // Call the publish handler if provided
@@ -20,15 +20,21 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, onPublishClick }) => 
   return (
     <div
       id={id}
-      className="flex flex-row items-center p-3 justify-between cursor-pointer group" // Add `group` class here
+      className="flex flex-row items-center p-3 justify-between cursor-pointer group" // Add group class here
       onClick={handlePublishClick}
     >
       <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center space-x-2">
-              <UploadIcon className="h-6 w-6 text-black group-hover:text-green-500" /> {/* Icon turns green on hover */}
-              <span className="font-semibold text-black group-hover:text-green-500">Publish</span> {/* Text turns green on hover */}
+              <UploadIcon
+                className={`h-6 w-6 ${isPublished ? 'text-green-500' : 'text-black group-hover:text-green-500'}`}
+              /> {/* Icon stays green if published */}
+              <span
+                className={`font-semibold ${isPublished ? 'text-green-500' : 'text-black group-hover:text-green-500'}`}
+              >
+                Publish
+              </span> {/* Text stays green if published */}
             </div>
           </TooltipTrigger>
           <TooltipContent className="flex flex-col justify-center items-center">
