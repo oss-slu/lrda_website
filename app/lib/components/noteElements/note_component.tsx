@@ -313,8 +313,10 @@ export default function NoteEditor({
       <div
         key={noteState.counter}
         style={{
-          backgroundImage: `url('/note_background.jpg')`,
-          height: "full",
+          backgroundImage: `url('/splash.png')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          height: "100%",
         }}
       >
         <div aria-label="Top Bar" className="w-full flex flex-col mx-4">

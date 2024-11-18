@@ -47,21 +47,21 @@ export default function Navbar() {
       <div className="flex w-full justify-start">
         <Link legacyBehavior href="/" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-            Where's Religion
+            Home
           </a>
         </Link>
 
         {name ? (
           <Link legacyBehavior href="/lib/pages/notes" passHref>
             <a id="navbar-create-note"className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-              Create a Note
+              Notes
             </a>
           </Link>
         ) : null}
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
-            Explore
+            Map
           </a>
         </Link>
 
