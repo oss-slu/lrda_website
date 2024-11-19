@@ -52,10 +52,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
       intro.setOptions({
         scrollToElement: false,
-        dontShowAgain: true,
         skipLabel: "Skip",
       });
-
+      
+      
       intro.start();
       
       if (addNote) {

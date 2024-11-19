@@ -93,57 +93,61 @@ const Page = () => {
       console.log('navbarLogoutButton:', navbarLogoutButton);
   
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
-        const intro = introJs();
+        // Check if the intro has been shown before
+        const hasIntroBeenShown = localStorage.getItem('introShown');
+        const hasAddNoteIntroBeenShown = localStorage.getItem('addNoteIntroShown');
+        // If intro hasn't been shown, show it
+        if (!hasIntroBeenShown) {
+          const intro = introJs();
   
-        intro.setOptions({
-          steps: [
-            {
-              element: noteRefs.current?.current,
-              intro: "Welcome! Lets explore the website together."
-            },
-            {
-              element: searchBarRef.current,
-              intro: "First, here's the search bar. You can use it to help you find locations on the map.",
-            },
-            {
-              element: notesListRef.current,
-              intro: "Now, this is the notes list. You can use it to explore other people's notes!"
-            },
-            {
-              element: navbarCreateNoteButton, 
-              intro: "Click here to create your own note!",
-            },
-            {
-              element: navbarLogoutButton,
-              intro: "Done for the day? Make sure to logout!"
+          intro.setOptions({
+            steps: [
+              {
+                element: noteRefs.current?.current,
+                intro: "Welcome! Let's explore the website together."
+              },
+              {
+                element: searchBarRef.current,
+                intro: "First, here's the search bar. You can use it to help you find locations on the map.",
+              },
+              {
+                element: notesListRef.current,
+                intro: "Now, this is the notes list. You can use it to explore other people's notes!"
+              },
+              {
+                element: navbarCreateNoteButton, 
+                intro: "Click here to create your own note!",
+              },
+              {
+                element: navbarLogoutButton,
+                intro: "Done for the day? Make sure to logout!"
+              }
+            ],
+            scrollToElement: true,
+            skipLabel: "Skip", // Change the look of this button
+          });
+  
+          intro.oncomplete(() => {
+            // After intro is completed, set the flag in localStorage
+            localStorage.setItem('introShown', 'true');
+            window.location.href = "/lib/pages/notes";
+          });
+          
+          intro.start();
+  
+          // Apply inline styling to the skip button after a short delay to ensure it has rendered
+          setTimeout(() => {
+            const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+            if (skipButton) {
+              skipButton.style.position = 'absolute';
+              skipButton.style.top = '2px'; // Move it up by decreasing the top value
+              skipButton.style.right = '20px'; // Adjust positioning as needed
+              skipButton.style.fontSize = '18px'; // Adjust font size as needed
+              skipButton.style.padding = '4px 10px'; // Adjust padding as needed
             }
-          ],
-
-          scrollToElement: true,
-          dontShowAgain: true,
-          skipLabel: "Skip", //change the look of this button
-        });
-
-        intro.oncomplete(() => {
-          window.location.href = "/lib/pages/notes";
-        });
-        
-        intro.start();
-
-
-        // Apply inline styling to the skip button after a short delay to ensure it has rendered
-        setTimeout(() => {
-          const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
-          if (skipButton) {
-            skipButton.style.position = 'absolute';
-            skipButton.style.top = '2px'; // Move it up by decreasing the top value
-            skipButton.style.right = '20px'; // Adjust positioning as needed
-            skipButton.style.fontSize = '18px'; // Adjust font size as needed
-            skipButton.style.padding = '4px 10px'; // Adjust padding as needed
-          }
-        }, 100); // 100ms delay to wait for rendering
-
-
+          }, 100); // 100ms delay to wait for rendering
+        }
+  
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
@@ -155,7 +159,7 @@ const Page = () => {
     return () => {
       observer.disconnect();
     };
-  }, [searchBarRef, noteRefs, notesListRef]); // Add refs to the dependency array  
+  }, [searchBarRef, noteRefs, notesListRef]); // Add refs to the dependency array
   // Fetch and render map and notes logic as before...
   // Leaving out unchanged parts of the code for brevity 
 
@@ -663,11 +667,11 @@ const Page = () => {
             }}
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-             {/* *** Attach ref to Search Bar Conatiner *** */}
               <div 
-                className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center"
+                className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+                {/* moving search bar*/}
+                <div className="min-w-[80px] mr-3"
                 ref={searchBarRef}>
-                <div className="min-w-[80px] mr-3">
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}

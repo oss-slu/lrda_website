@@ -59,50 +59,60 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   return (
-    <div className="flex flex-row items-center p-2 h-9 group">
+    <div className="flex flex-row items-center p-2 h-9">
+      <Popover>
+        <PopoverTrigger asChild>
+          <button className="flex items-center justify-start w-full h-full text-sm">
+            <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
+            <div>Location</div>
+            {/* <div>
+              {longitude.toPrecision(8)}
+              {"_"}
+            </div>x
+            <div>{latitude.toPrecision(8)}</div> */}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="z-30">
+          <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
+            <div className="absolute top-2 left-2 z-50">
+              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} onNotesSearch={() => {}} filteredNotes={[]} />
+            </div>
+            {isLoaded && (
+              <GoogleMap
+                mapContainerStyle={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "calc(var(--radius) - 2px)",
+                }}
+                center={{ lat: latitude, lng: longitude }}
+                zoom={9}
+                options={{
+                  streetViewControl: false,
+                  mapTypeControl: false,
+                  fullscreenControl: false,
+                }}
+              >
+                <MarkerF
+                  position={{ lat: latitude, lng: longitude }}
+                  draggable={true}
+                  onDragEnd={onMarkerDragEnd}
+                />
+              </GoogleMap>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
       <TooltipProvider delayDuration={100}>
         <Tooltip>
-          <Popover>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <button className="flex items-center text-black group-hover:text-green-500">
-                  <MapPin aria-label="map pin" className="mx-2 h-5 w-5 group-hover:text-green-500" />
-                  <span className="group-hover:text-green-500">Location</span> {/* No font-semibold class */}
-                </button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <PopoverContent className="z-30">
-              <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
-                <div className="absolute top-2 left-2 z-50">
-                  <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} onNotesSearch={() => {}} filteredNotes={[]} />
-                </div>
-                {isLoaded && (
-                  <GoogleMap
-                    mapContainerStyle={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "calc(var(--radius) - 2px)",
-                    }}
-                    center={{ lat: latitude, lng: longitude }}
-                    zoom={9}
-                    options={{
-                      streetViewControl: false,
-                      mapTypeControl: false,
-                      fullscreenControl: false,
-                    }}
-                  >
-                    <MarkerF position={{ lat: latitude, lng: longitude }} draggable onDragEnd={(event) => {
-                      const newLat = event?.latLng?.lat() || 0;
-                      const newLng = event?.latLng?.lng() || 0;
-                      setLatitude(newLat);
-                      setLongitude(newLng);
-                      onLocationChange(newLng, newLat);
-                    }} />
-                  </GoogleMap>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleGetCurrentLocation}
+              aria-label="compass"
+              className="h-9 flex justify-center items-center cursor-pointer"
+            >
+              <Compass className="h-5 w-5 mx-2" />
+            </button>
+          </TooltipTrigger>
           <TooltipContent>
             <p>Click to choose a location.</p>
           </TooltipContent>
