@@ -130,9 +130,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         <PopoverContent className="z-30">
           <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
             <div className="absolute top-2 left-2 z-50">
-              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} onNotesSearch={function (searchText: string): void {
-                throw new Error("Function not implemented.");
-              } } filteredNotes={[]} />
+              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} onNotesSearch={() => {}} filteredNotes={[]} />
             </div>
             {isLoaded && (
               <GoogleMap
