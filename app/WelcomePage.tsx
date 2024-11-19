@@ -18,7 +18,11 @@ const WelcomePage: React.FC = () => {
 
       {/* Centered "Where's Religion?" Text */}
       <div className="text-center">
-        <h1 className="text-black text-9xl font-extrabold">Where's Religion?</h1>
+        <h1 className="text-black text-9xl font-extrabold" style={{ 
+          textShadow: "2px 2px 4px rgba(255, 255, 255, 0.8)" 
+        }}>
+          Where's Religion?
+        </h1>
       </div>
     </div>
   );
