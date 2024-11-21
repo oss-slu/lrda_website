@@ -1,17 +1,16 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"; // Import act from testing-library
 import Navbar from "../lib/components/navbar";
 import { User } from "../lib/models/user_class";
-import { act } from "react-dom/test-utils";
 
 interface MockUser extends User {
-    getName: jest.Mock;
-    login: jest.Mock;
-    logout: jest.Mock;
-    getId: jest.Mock;
-    hasOnboarded: jest.Mock;
-    getRoles: jest.Mock;
-  }
+  getName: jest.Mock;
+  login: jest.Mock;
+  logout: jest.Mock;
+  getId: jest.Mock;
+  hasOnboarded: jest.Mock;
+  getRoles: jest.Mock;
+}
 
 jest.mock("../lib/models/user_class", () => {
   return {
@@ -48,7 +47,7 @@ Object.defineProperty(window, "localStorage", {
 });
 
 describe("Navbar Component", () => {
-    const userMock = User.getInstance() as unknown as MockUser;
+  const userMock = User.getInstance() as unknown as MockUser;
 
   beforeEach(() => {
     userMock.getName.mockReset();
@@ -75,11 +74,11 @@ describe("Navbar Component", () => {
     expect(screen.queryByText(/login/i)).toBeNull();
   });
 
-  it("renders correctly", async () => {
+  it("renders Notes link when logged in", async () => {
     await act(async () => {
       render(<Navbar />);
     });
-    expect(screen.getByText(/Create a note/i)).toBeInTheDocument();
+    expect(screen.getByText(/Notes/i)).toBeInTheDocument(); // Updated text
     expect(screen.getByRole("navigation")).toBeInTheDocument();
   });
 });

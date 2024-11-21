@@ -1,14 +1,9 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@radix-ui/react-popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { Input } from "@/components/ui/input";
 
 interface TimePickerProps {
@@ -18,14 +13,7 @@ interface TimePickerProps {
 
 function formatDateTime(date: Date) {
   if (!date) return "Pick a date";
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? "AM" : "PM";
-
-  return `${date.toDateString()}`; // ${formattedHours}:${formattedMinutes} ${ampm}`;
+  return `${date.toDateString()}`;
 }
 
 export default function TimePicker({
@@ -68,12 +56,12 @@ export default function TimePicker({
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="flex flex-row justify-center w-[180px]"
+          className="flex flex-row items-center justify-center w-[180px] group" // Add `group` here
           aria-label="Open Calendar"
           type="button"
         >
-          <CalendarIcon className="mx-2 h-5 w-5" />
-          {formatDateTime(date)}
+          <CalendarIcon className="mx-2 h-5 w-5 text-black group-hover:text-green-500" /> {/* Icon turns green on hover */}
+          <span className="text-black group-hover:text-green-500">{formatDateTime(date)}</span> {/* Date text turns green on hover */}
         </button>
       </PopoverTrigger>
 

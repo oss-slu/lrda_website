@@ -6,10 +6,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
 
-import { VideoType, PhotoType, Media } from "../models/media_class";
-import Image from "next/image";
+import { Media } from "../models/media_class";
 import ReactPlayer from "react-player";
 
 export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
@@ -21,6 +19,7 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
             key={index}
             className="flex justify-center items-center h-full self-center"
           >
+            {/* Render Image */}
             {media.type === "image" && (
               <img
                 src={media.uri}
@@ -28,6 +27,8 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
                 alt="Media content"
               />
             )}
+
+            {/* Render Video */}
             {media.type === "video" && (
               <ReactPlayer
                 url={media.uri}
@@ -36,6 +37,17 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
                 height="100%"
                 className="self-center"
               />
+            )}
+
+            {/* Render Audio */}
+            {media.type === "audio" && (
+              <audio
+                controls
+                src={media.uri}
+                className="w-full self-center"
+              >
+                Your browser does not support the audio element.
+              </audio>
             )}
           </CarouselItem>
         ))}
