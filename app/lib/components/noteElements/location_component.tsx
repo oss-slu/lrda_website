@@ -1,22 +1,10 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Compass, MapPin, SearchCheck } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@radix-ui/react-popover";
+import { MapPin, Compass } from "lucide-react"; // Import MapPin and Compass icons
+import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { GoogleMap, MarkerF } from "@react-google-maps/api";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/tooltip";
-import {
-  useGoogleMaps,
-  GoogleMapsProvider,
-} from "../../utils/GoogleMapsContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
+import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import SearchBarMap from "../search_bar_map";
 
 interface LocationPickerProps {
@@ -35,81 +23,53 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const mapRef = useRef<google.maps.Map>();
   const isLoaded = useGoogleMaps();
 
+  // Update map center when latitude or longitude changes
   useEffect(() => {
     if (mapRef.current && latitude && longitude) {
       const newCenter = new google.maps.LatLng(latitude, longitude);
       mapRef.current.panTo(newCenter);
-      mapRef.current.setZoom(10); // Adjust zoom level as needed
+      mapRef.current.setZoom(10);
     }
   }, [latitude, longitude]);
-  
 
-  const updateLongitude = (newLongitude: number) => {
-    setLongitude((prevLongitude) => {
-      const updatedLongitude = newLongitude;
-      onLocationChange && onLocationChange(updatedLongitude, latitude);
-      return updatedLongitude;
-    });
-  };
-
-  const updateLatitude = (newLatitude: number) => {
-    setLatitude((prevLatitude) => {
-      const updatedLatitude = newLatitude;
-      onLocationChange && onLocationChange(longitude, updatedLatitude);
-      return updatedLatitude;
-    });
-  };
-
+  // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        function (position) {
+        (position) => {
           const newLongitude = position.coords.longitude;
           const newLatitude = position.coords.latitude;
           setLongitude(newLongitude);
           setLatitude(newLatitude);
-          onLocationChange(newLongitude, newLatitude); // Notify parent about the change
+          onLocationChange(newLongitude, newLatitude);
         },
-        () => {
-          console.log("Error fetching location");
-        }
+        () => console.log("Error fetching location")
       );
     } else {
       console.log("Geolocation is not supported by this browser.");
     }
-  }, [onLocationChange]); // Adding onLocationChange to dependency array
+  }, [onLocationChange]);
 
-  const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
-    const newLat = event?.latLng?.lat() || 0;
-    const newLng = event?.latLng?.lng() || 0;
-    setLatitude(newLat);
-    setLongitude(newLng);
-    onLocationChange(newLng, newLat); // Notify parent component about the change
-  };
-
-  useEffect(() => {
-    const validLong =
-      long && !isNaN(parseFloat(long)) && parseFloat(long) !== 0;
-    const validLat = lat && !isNaN(parseFloat(lat)) && parseFloat(lat) !== 0;
-
-    if (validLong && validLat) {
-      setLongitude(parseFloat(long));
-      setLatitude(parseFloat(lat));
-    }
-    if (lat == "0" || long == "0" || long == "" || lat == "") {
-      handleGetCurrentLocation();
-    }
-  }, [long, lat, handleGetCurrentLocation]);
-
+  // Handle search result click
   const handleSearch = (address: string, lat?: number, lng?: number) => {
     if (lat != null && lng != null) {
       setLatitude(lat);
       setLongitude(lng);
       onLocationChange(lng, lat);
-      const newCenter = { lat, lng };
-      mapRef.current?.panTo(newCenter);
+      mapRef.current?.panTo({ lat, lng });
       mapRef.current?.setZoom(10);
-      console.log("lat: ",lat," lng: ",lng);
+    }
+  };
+
+  // Handle marker drag event
+  const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
+    const lat = event.latLng?.lat();
+    const lng = event.latLng?.lng();
+
+    if (lat != null && lng != null) {
+      setLatitude(lat);
+      setLongitude(lng);
+      onLocationChange(lng, lat); // Notify parent component of location change
     }
   };
 
@@ -120,19 +80,17 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           <button className="flex items-center justify-start w-full h-full text-sm">
             <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
             <div>Location</div>
-            {/* <div>
-              {longitude.toPrecision(8)}
-              {"_"}
-            </div>x
-            <div>{latitude.toPrecision(8)}</div> */}
           </button>
         </PopoverTrigger>
         <PopoverContent className="z-30">
           <div className="flex justify-center items-center w-96 h-96 bg-white shadow-lg rounded-md">
             <div className="absolute top-2 left-2 z-50">
-              <SearchBarMap onSearch={handleSearch} isLoaded={isLoaded !== null} onNotesSearch={function (searchText: string): void {
-                throw new Error("Function not implemented.");
-              } } filteredNotes={[]} />
+              <SearchBarMap
+                onSearch={handleSearch}
+                isLoaded={isLoaded !== null}
+                onNotesSearch={() => {}}
+                filteredNotes={[]}
+              />
             </div>
             {isLoaded && (
               <GoogleMap
@@ -152,7 +110,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 <MarkerF
                   position={{ lat: latitude, lng: longitude }}
                   draggable={true}
-                  onDragEnd={onMarkerDragEnd}
+                  onDragEnd={onMarkerDragEnd} // Handle marker drag event
                 />
               </GoogleMap>
             )}
@@ -167,11 +125,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
               aria-label="compass"
               className="h-9 flex justify-center items-center cursor-pointer"
             >
-              <Compass className="h-5 w-5 mx-2" />
+              <Compass className="h-5 w-5 mx-2" /> {/* Compass Icon */}
             </button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Click to set as current location.</p>
+            <p>Click to choose a location.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

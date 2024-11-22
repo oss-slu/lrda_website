@@ -76,67 +76,83 @@ export default function NoteEditor({
   const locationRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const observer = new MutationObserver(() => {
-    const  addNote = document.getElementById("add-note-button");
-    console.log('Observer triggered');
-    if (addNote && titleRef.current && saveRef.current && dateRef.current && deleteRef && locationRef) {
-      const intro = introJs();
-
-      intro.setOptions({
-        steps: [
-          {
-            element: addNote,
-            intro: "Click this button to add a note",
-          },
-          {
-            element: titleRef.current,
-            intro: "You can name your note here!"
-          },
-          {
-            element: saveRef.current,
-            intro: "Make sure you save your note"
-          },
-          {
-            element: deleteRef.current,
-            intro: "If you don't like your note you can delete it here"
-          },
-          {
-            element: dateRef.current,
-            intro: "We will automatically date and time your entry!"
-          },
-          {
-            element: locationRef.current,
-            intro: "Make sure you specify the location of your note"
-          }
-        ],
-        scrollToElement: false,
-        dontShowAgain: true,
-        skipLabel: "Skip",
-      });
-
-      intro.start();
-
-      // Apply inline styling to the skip button after a short delay to ensure it has rendered
-      setTimeout(() => {
-        const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
-        if (skipButton) {
-          skipButton.style.position = 'absolute';
-          skipButton.style.top = '2px'; // Move it up by decreasing the top value
-          skipButton.style.right = '20px'; // Adjust positioning as needed
-          skipButton.style.fontSize = '18px'; // Adjust font size as needed
-          skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+      const addNote = document.getElementById("add-note-button");
+      const title = titleRef.current;
+      const save = saveRef.current;
+      const deleteButton = deleteRef.current;
+      const date = dateRef.current;
+      const location = locationRef.current;
+  
+      console.log('Observer triggered');
+  
+      // Check if all elements are present
+      if (addNote && title && save && deleteButton && date && location) {
+        const intro = introJs();
+        const hasAddNoteIntroBeenShown = localStorage.getItem('addNoteIntroShown');
+  
+        if (!hasAddNoteIntroBeenShown) {
+          intro.setOptions({
+            steps: [
+              {
+                element: addNote,
+                intro: "Click this button to add a note",
+              },
+              {
+                element: title,
+                intro: "You can name your note here!"
+              },
+              {
+                element: save,
+                intro: "Make sure you save your note"
+              },
+              {
+                element: deleteButton,
+                intro: "If you don't like your note, you can delete it here"
+              },
+              {
+                element: date,
+                intro: "We will automatically date and time your entry!"
+              },
+              {
+                element: location,
+                intro: "Make sure you specify the location of your note"
+              }
+            ],
+            scrollToElement: false,
+            skipLabel: "Skip",
+          });
+  
+          intro.oncomplete(() => {
+            // After the intro is completed, set the flag in localStorage
+            localStorage.setItem('addNoteIntroShown', 'true');
+          });
+  
+          intro.start();
+  
+          // Apply inline styling to the skip button after a short delay to ensure it has rendered
+          setTimeout(() => {
+            const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+            if (skipButton) {
+              skipButton.style.position = 'absolute';
+              skipButton.style.top = '2px'; // Move it up by decreasing the top value
+              skipButton.style.right = '20px'; // Adjust positioning as needed
+              skipButton.style.fontSize = '18px'; // Adjust font size as needed
+              skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+            }
+          }, 100); // 100ms delay to wait for rendering
+  
+          observer.disconnect(); // Stop observing once the elements are found and the intro is set up
         }
-      }, 100); // 100ms delay to wait for rendering
-
-      observer.disconnect(); // Stop observing once the elements are found
-    }
-  });
-
-  // Start observing the body for changes
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Cleanup the observer when the component unmounts
-  return () => observer.disconnect();
-  }, []); 
+      }
+    });
+  
+    // Start observing the body for changes to detect when the elements appear
+    observer.observe(document.body, { childList: true, subtree: true });
+  
+    // Cleanup the observer when the component unmounts
+    return () => observer.disconnect();
+  }, []);  // Empty dependency array ensures this effect runs only once
+  
   useEffect(() => {
     const editor = rteRef.current?.editor;
     if (noteState.videos.length > 0 && editor) {
@@ -313,8 +329,10 @@ export default function NoteEditor({
       <div
         key={noteState.counter}
         style={{
-          backgroundImage: `url('/note_background.jpg')`,
-          height: "full",
+          backgroundImage: `url('/splash.png')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          height: "100%",
         }}
       >
         <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
@@ -326,13 +344,12 @@ export default function NoteEditor({
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
-            <PublishToggle
+          <PublishToggle
               id="publish-toggle-button"
-              isPublished={noteState.isPublished}
-              onPublishChange={(bool) =>
-                handlePublishChange(noteHandlers.setIsPublished, bool)
-              }
+              isPublished={Boolean(noteState.isPublished)}
+              onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
             />
+
             <div className="w-2 h-9 bg-border" />
             <button
               id="save-note-button"
