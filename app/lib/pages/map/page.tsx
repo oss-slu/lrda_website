@@ -434,87 +434,99 @@ const Page = () => {
   };  
 
   const handleMarkerClick = (note: Note) => {
+    const map = mapRef.current;
+  
+    // Clear any existing popup
     if (currentPopup) {
       currentPopup.setMap(null);
       setCurrentPopup(null);
     }
-
+  
     setActiveNote(note);
     scrollToNoteTile(note.id);
-
-    const map = mapRef.current;
-
+  
     if (map) {
       const popupContent = document.createElement("div");
       const root = ReactDOM.createRoot(popupContent);
+  
+      // Render the ClickableNote component inside the popup
       root.render(<ClickableNote note={note} />);
-
+  
       class Popup extends google.maps.OverlayView {
         position: google.maps.LatLng;
         containerDiv: HTMLDivElement;
-
+  
         constructor(position: google.maps.LatLng, content: HTMLElement) {
           super();
           this.position = position;
-
+  
+          // Ensure unique popup containers
+          document.querySelectorAll(".popup-container").forEach((element) => {
+            element.remove();
+          });
+  
           content.classList.add("popup-bubble");
-
+  
           const bubbleAnchor = document.createElement("div");
-
           bubbleAnchor.classList.add("popup-bubble-anchor");
           bubbleAnchor.appendChild(content);
-
+  
           this.containerDiv = document.createElement("div");
           this.containerDiv.classList.add("popup-container");
+          this.containerDiv.style.position = "absolute";
+          this.containerDiv.style.zIndex = "1000"; // Ensure it overlays map elements
           this.containerDiv.appendChild(bubbleAnchor);
-
+  
           Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
         }
-
+  
         onAdd() {
           this.getPanes()!.floatPane.appendChild(this.containerDiv);
         }
-
+  
         onRemove() {
           if (this.containerDiv.parentElement) {
             this.containerDiv.parentElement.removeChild(this.containerDiv);
           }
         }
-
+  
         draw() {
           const divPosition = this.getProjection().fromLatLngToDivPixel(
             this.position
-          )!;
-
+          );
+  
+          // Safeguard against undefined projection
+          if (!divPosition) return;
+  
+          this.containerDiv.style.left = `${divPosition.x}px`;
+          this.containerDiv.style.top = `${divPosition.y}px`;
+  
           const display =
             Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
               ? "block"
               : "none";
-
-          if (display === "block") {
-            this.containerDiv.style.left = divPosition.x + "px";
-            this.containerDiv.style.top = divPosition.y + "px";
-          }
-
+  
           if (this.containerDiv.style.display !== display) {
             this.containerDiv.style.display = display;
           }
         }
       }
-
-      let popup = new Popup(
+  
+      const popup = new Popup(
         new google.maps.LatLng(
           parseFloat(note.latitude),
           parseFloat(note.longitude)
         ),
         popupContent
       );
-
+  
+      // Attach the new popup to the map
       setCurrentPopup(popup);
-
       popup.setMap(map);
     }
   };
+  
+  
 
   const handleSearch = (
     address: string,
