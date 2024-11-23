@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { useTheme } from "@mui/material";
 import {
   MenuButtonAddTable,
@@ -9,7 +10,6 @@ import {
   MenuButtonEditLink,
   MenuButtonHighlightColor,
   MenuButtonHorizontalRule,
-  MenuButtonImageUpload,
   MenuButtonIndent,
   MenuButtonItalic,
   MenuButtonOrderedList,
@@ -34,147 +34,212 @@ import {
 import { uploadMedia } from "../utils/s3_proxy";
 
 type EditorMenuControlsProps = {
-  onImageUpload: any;
+  onMediaUpload: (media: { type: string; uri: string }) => void;
 };
 
 export default function EditorMenuControls({
-  onImageUpload,
+  onMediaUpload,
 }: EditorMenuControlsProps) {
   const theme = useTheme();
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [uploading, setUploading] = useState(false); // To handle upload status
 
-  async function uploadImage(file: any) {
-    const address = await uploadMedia(file, "image");
-    return address;
+  // Unified upload handler
+  async function handleFileUpload(file: File) {
+    const fileType = file.type;
+    let mediaType = "image";
+
+    if (fileType.startsWith("video/")) mediaType = "video";
+    else if (fileType.startsWith("audio/")) mediaType = "audio";
+
+    try {
+      setUploading(true); // Indicate uploading
+      const uri = await uploadMedia(file, mediaType);
+      setUploading(false); // Done uploading
+      return { type: mediaType, uri };
+    } catch (error) {
+      console.error("Media upload failed:", error);
+      setUploading(false); // Reset uploading status on error
+      throw error;
+    }
   }
 
   return (
-    <MenuControlsContainer>
-      <MenuButtonUndo />
-      <MenuButtonRedo />
-      <MenuDivider />
+    <>
+      <MenuControlsContainer>
+        <MenuButtonUndo />
+        <MenuButtonRedo />
+        <MenuDivider />
 
-      <MenuSelectFontFamily
-        options={[
-          { label: "Comic Sans", value: "Comic Sans MS, Comic Sans" },
-          { label: "Cursive", value: "cursive" },
-          { label: "Monospace", value: "monospace" },
-          { label: "Serif", value: "serif" },
-        ]}
-      />
+        <MenuSelectFontFamily
+          options={[
+            { label: "Comic Sans", value: "Comic Sans MS, Comic Sans" },
+            { label: "Cursive", value: "cursive" },
+            { label: "Monospace", value: "monospace" },
+            { label: "Serif", value: "serif" },
+          ]}
+        />
 
-      <MenuDivider />
+        <MenuDivider />
 
-      <MenuSelectHeading />
+        <MenuSelectHeading />
 
-      <MenuDivider />
+        <MenuDivider />
 
-      <MenuSelectFontSize />
+        <MenuSelectFontSize />
 
-      <MenuDivider />
+        <MenuDivider />
 
-      <MenuButtonBold />
+        <MenuButtonBold />
+        <MenuButtonItalic />
+        <MenuButtonUnderline />
+        <MenuButtonStrikethrough />
+        <MenuButtonSubscript />
+        <MenuButtonSuperscript />
 
-      <MenuButtonItalic />
+        <MenuDivider />
 
-      <MenuButtonUnderline />
+        <MenuButtonTextColor
+          defaultTextColor={theme.palette.text.primary}
+          swatchColors={[
+            { value: "#000000", label: "Black" },
+            { value: "#ffffff", label: "White" },
+            { value: "#888888", label: "Grey" },
+            { value: "#ff0000", label: "Red" },
+            { value: "#ff9900", label: "Orange" },
+            { value: "#ffff00", label: "Yellow" },
+            { value: "#00d000", label: "Green" },
+            { value: "#0000ff", label: "Blue" },
+          ]}
+        />
 
-      <MenuButtonStrikethrough />
+        <MenuButtonHighlightColor
+          swatchColors={[
+            { value: "#595959", label: "Dark grey" },
+            { value: "#dddddd", label: "Light grey" },
+            { value: "#ffa6a6", label: "Light red" },
+            { value: "#ffd699", label: "Light orange" },
+            { value: "#ffff00", label: "Yellow" },
+            { value: "#99cc99", label: "Light green" },
+            { value: "#90c6ff", label: "Light blue" },
+            { value: "#8085e9", label: "Light purple" },
+          ]}
+        />
 
-      <MenuButtonSubscript />
+        <MenuDivider />
 
-      <MenuButtonSuperscript />
+        <MenuButtonEditLink />
+        <MenuDivider />
 
-      <MenuDivider />
+        <MenuSelectTextAlign />
+        <MenuDivider />
 
-      <MenuButtonTextColor
-        defaultTextColor={theme.palette.text.primary}
-        swatchColors={[
-          { value: "#000000", label: "Black" },
-          { value: "#ffffff", label: "White" },
-          { value: "#888888", label: "Grey" },
-          { value: "#ff0000", label: "Red" },
-          { value: "#ff9900", label: "Orange" },
-          { value: "#ffff00", label: "Yellow" },
-          { value: "#00d000", label: "Green" },
-          { value: "#0000ff", label: "Blue" },
-        ]}
-      />
+        <MenuButtonOrderedList />
+        <MenuButtonBulletedList />
+        <MenuButtonTaskList />
 
-      <MenuButtonHighlightColor
-        swatchColors={[
-          { value: "#595959", label: "Dark grey" },
-          { value: "#dddddd", label: "Light grey" },
-          { value: "#ffa6a6", label: "Light red" },
-          { value: "#ffd699", label: "Light orange" },
-          // Plain yellow matches the browser default `mark` like when using Cmd+Shift+H
-          { value: "#ffff00", label: "Yellow" },
-          { value: "#99cc99", label: "Light green" },
-          { value: "#90c6ff", label: "Light blue" },
-          { value: "#8085e9", label: "Light purple" },
-        ]}
-      />
+        {isTouchDevice() && (
+          <>
+            <MenuButtonIndent />
+            <MenuButtonUnindent />
+          </>
+        )}
 
-      <MenuDivider />
+        <MenuDivider />
 
-      <MenuButtonEditLink />
+        <MenuButtonBlockquote />
+        <MenuDivider />
 
-      <MenuDivider />
+        {/* Upload Media Button */}
+        <button
+          style={{
+            border: "none",
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            fontSize: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+          }}
+          onClick={() => setIsPopupOpen(true)}
+        >
+          📁 <span>Upload Media</span>
+        </button>
 
-      <MenuSelectTextAlign />
+        <MenuDivider />
 
-      <MenuDivider />
+        <MenuButtonHorizontalRule />
+        <MenuButtonAddTable />
+        <MenuDivider />
+        <MenuButtonRemoveFormatting />
+        <MenuDivider />
+      </MenuControlsContainer>
 
-      <MenuButtonOrderedList />
-
-      <MenuButtonBulletedList />
-
-      <MenuButtonTaskList />
-
-      {/* On touch devices, we'll show indent/unindent buttons, since they're
-      unlikely to have a keyboard that will allow for using Tab/Shift+Tab. These
-      buttons probably aren't necessary for keyboard users and would add extra
-      clutter. */}
-      {isTouchDevice() && (
-        <>
-          <MenuButtonIndent />
-
-          <MenuButtonUnindent />
-        </>
+      {/* Popup Component */}
+      {isPopupOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#fff",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            zIndex: 1000,
+          }}
+        >
+          <h3>Upload Media</h3>
+          <input
+            type="file"
+            accept="image/*,video/*,audio/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                try {
+                  const uploadedMedia = await handleFileUpload(file);
+                  onMediaUpload(uploadedMedia); // Pass media back to parent
+                  setIsPopupOpen(false); // Close popup on success
+                } catch (error) {
+                  console.error("Error uploading media:", error);
+                }
+              }
+            }}
+          />
+          {uploading && <p>Uploading...</p>}
+          <button
+            style={{
+              marginTop: "10px",
+              padding: "8px 12px",
+              backgroundColor: "#007BFF",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            onClick={() => setIsPopupOpen(false)}
+          >
+            Cancel
+          </button>
+        </div>
       )}
 
-      <MenuDivider />
-
-      <MenuButtonBlockquote />
-
-      <MenuDivider />
-
-      <MenuButtonImageUpload
-        onUploadFiles={async (files): Promise<any[]> => {
-          const uploadPromises = files.map(async (file): Promise<any> => {
-            const imageSrc = await uploadImage(file);
-            onImageUpload(imageSrc);
-            return {
-              src: imageSrc,
-              alt: file.name,
-            };
-          });
-
-          const images = await Promise.all(uploadPromises);
-          return images;
-        }}
-      />
-
-      <MenuDivider />
-
-      <MenuButtonHorizontalRule />
-
-      <MenuButtonAddTable />
-
-      <MenuDivider />
-
-      <MenuButtonRemoveFormatting />
-
-      <MenuDivider />
-    </MenuControlsContainer>
+      {/* Overlay */}
+      {isPopupOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
+          }}
+          onClick={() => setIsPopupOpen(false)}
+        />
+      )}
+    </>
   );
 }

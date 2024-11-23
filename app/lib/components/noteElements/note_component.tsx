@@ -38,7 +38,7 @@ import {
   handleTimeChange,
   handlePublishChange,
 } from "./note_handler";
-import { PhotoType, VideoType } from "../../models/media_class";
+import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
@@ -469,19 +469,91 @@ export default function NoteEditor({
         )}
         <div className="flex-grow w-full p-4 flex flex-col">
           <div className=" flex-grow flex flex-col bg-white w-full rounded">
-            <RichTextEditor
+          <RichTextEditor
               ref={rteRef}
               className="min-h-[712px]"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) =>
-                handleEditorChange(
-                  noteHandlers.setEditorContent,
-                  editor.getHTML()
-                )
+                handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())
               }
               renderControls={() => (
-                <EditorMenuControls onImageUpload={addImageToNote} />
+                <EditorMenuControls
+                  onMediaUpload={(media) => {
+                    if (media.type === "image") {
+                      const newImage = {
+                        type: "image",
+                        attrs: {
+                          src: media.uri,
+                          alt: "Image description",
+                          loading: "lazy",
+                        },
+                      };
+              
+                      const editor = rteRef.current?.editor;
+                      if (editor) {
+                        editor.chain().focus().setImage(newImage.attrs).run();
+                      }
+              
+                      noteHandlers.setImages((prevImages) => [
+                        ...prevImages,
+                        new PhotoType({
+                          uuid: uuidv4(),
+                          uri: media.uri,
+                          type: "image",
+                        }),
+                      ]);
+                    } else if (media.type === "video") {
+                      const newVideo = new VideoType({
+                        uuid: uuidv4(),
+                        uri: media.uri,
+                        type: "video",
+                        thumbnail: "",
+                        duration: "0:00",
+                      });
+              
+                      noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
+              
+                      const editor = rteRef.current?.editor;
+                      if (editor) {
+                        const videoLink = `Video ${noteState.videos.length + 1}`;
+                        editor
+                          .chain()
+                          .focus()
+                          .command(({ tr, dispatch }) => {
+                            if (dispatch) {
+                              const endPos = tr.doc.content.size;
+                              const paragraphNodeForNewLine = editor.schema.node("paragraph");
+                              const textNode = editor.schema.text(videoLink, [
+                                editor.schema.marks.link.create({ href: media.uri }),
+                              ]);
+                              const paragraphNodeForLink = editor.schema.node("paragraph", null, [
+                                textNode,
+                              ]);
+              
+                              const transaction = tr
+                                .insert(endPos, paragraphNodeForNewLine)
+                                .insert(endPos + 1, paragraphNodeForLink);
+                              dispatch(transaction);
+                            }
+                            return true;
+                          })
+                          .run();
+                      }
+                    } else if (media.type === "audio") {
+                      const newAudio = new AudioType({
+                        uuid: uuidv4(),
+                        uri: media.uri,
+                        type: "audio", // Explicitly set the type
+                        duration: "0:00", // Default duration
+                        name: `Audio Note ${noteState.audio.length + 1}`,
+                        isPlaying: false, // Default play status
+                      });
+                    
+                      noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
+                    }                          
+                  }}
+                />
               )}
               children={(editor) => {
                 if (!editor) return null;

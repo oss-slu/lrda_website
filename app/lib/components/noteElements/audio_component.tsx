@@ -32,12 +32,13 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   setAudio,
   editable,
 }) => {
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [curRec, setCurRec] = useState<string | undefined>();
-  const [placeVal, setPlaceVal] = useState<string>("No Recordings");
-  const audioPlayerRef = useRef<AudioPlayer>(null);
+  const [currentIdx, setCurrentIdx] = useState(0); // Current index of the selected audio
+  const [curRec, setCurRec] = useState<string | undefined>(); // Current audio URI
+  const [placeVal, setPlaceVal] = useState<string>("No Recordings"); // Placeholder text for the select dropdown
+  const audioPlayerRef = useRef<AudioPlayer>(null); // Reference to the audio player
 
   useEffect(() => {
+    // Reset state when audioArray changes
     if (audioArray.length >= 1) {
       setPlaceVal("Select Recording");
     } else {
@@ -49,10 +50,9 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
     }
     setCurRec(undefined);
     setCurrentIdx(0);
-
-    audioPlayerRef?.current?.audio?.current?.pause();
   }, [audioArray]);
 
+  // Handle the selection of an audio recording
   const handleSelectChange = (selectedURI: string) => {
     const selectedIdx = audioArray.findIndex(
       (audio) => audio.uri === selectedURI
@@ -63,54 +63,65 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
     }
   };
 
+  // Navigate to the next recording in the array
   const handleIncrementRecs = () => {
     const nextIdx = (currentIdx + 1) % audioArray.length;
     setCurrentIdx(nextIdx);
     setCurRec(audioArray[nextIdx].uri);
   };
 
+  // Navigate to the previous recording in the array
   const handleDecrementRecs = () => {
     const prevIdx = (currentIdx - 1 + audioArray.length) % audioArray.length;
     setCurrentIdx(prevIdx);
     setCurRec(audioArray[prevIdx].uri);
   };
 
-  async function handleFileChange(event: any) {
+  // Unified upload handler for audio files
+  async function handleFileUpload(file: File) {
+    if (file.type !== "audio/mpeg") {
+      toast("Error", { description: "Only MP3 files are supported.", duration: 4000 });
+      return;
+    }
+
     toast("Status Update", {
       description: "Audio upload in progress.",
       duration: 2000,
     });
 
-    const file = event.target.files[0];
-    const location = await uploadAudio(file);
-    if (location != "error") {
-      const newAudio = new AudioType({
-        type: "audio",
-        uuid: uuidv4(),
-        uri: location,
-        name: file.name,
-        isPlaying: false,
-        duration: "0:00",
-      });
+    try {
+      const location = await uploadAudio(file);
+      if (location !== "error") {
+        const newAudio = new AudioType({
+          type: "audio",
+          uuid: uuidv4(),
+          uri: location,
+          name: file.name,
+          isPlaying: false,
+          duration: "0:00", // Placeholder duration, as duration extraction isn't implemented
+        });
 
-      toast("Status Update", {
-        description: "Audio upload success!",
-        duration: 4000,
-      });
+        toast("Status Update", {
+          description: "Audio upload success!",
+          duration: 4000,
+        });
 
-      if (setAudio) {
-        setAudio([...audioArray, newAudio]);
+        if (setAudio) {
+          setAudio((prev) => [...prev, newAudio]);
+        }
+      } else {
+        throw new Error("Upload failed");
       }
-    } else {
-      console.log("UPLOAD FAILED");
-      toast("Status Update", {
+    } catch (error) {
+      console.error("Audio upload failed:", error);
+      toast("Error", {
         description: "Audio Upload Failed! Please try again later.",
         duration: 4000,
       });
     }
   }
 
-  const currentAudio = audioArray.find((audio) => audio.uri === curRec);
+  const currentAudio = audioArray.find((audio) => audio.uri === curRec); // Current audio based on selected URI
   const currentUUID = currentAudio ? currentAudio.uuid : null;
 
   return (
@@ -125,15 +136,22 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
               <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
                 <div className="px-4">Upload Audio Here.</div>
                 <div className="px-4 mb-3">It must be of type '.mp3'</div>
+
+                {/* File input for audio upload */}
                 <Input
                   type="file"
                   accept=".mp3"
-                  onChange={(e) => handleFileChange(e)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
                 />
               </div>
             </PopoverContent>
           </Popover>
         ) : null}
+
+        {/* Audio selection dropdown */}
         <Select
           data-testid="audio-select"
           onValueChange={handleSelectChange}
@@ -165,6 +183,8 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
           </SelectContent>
         </Select>
       </div>
+
+      {/* Audio player for playback */}
       <AudioPlayer
         ref={audioPlayerRef}
         data-testid="audio-player"
