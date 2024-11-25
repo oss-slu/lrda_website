@@ -12,7 +12,7 @@ const NoteToolbar = () => {
           <span title="Location">
             <MapPin className="cursor-pointer text-gray-600 hover:text-gray-800" />
           </span>
-          <span title="Music">
+          <span title="Music"> {/* moving this icon to... */}
             <Music className="cursor-pointer text-gray-600 hover:text-gray-800" />
           </span>
         </div>
