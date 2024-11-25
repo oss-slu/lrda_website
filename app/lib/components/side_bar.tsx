@@ -87,6 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const fetchUserMessages = async () => {
       try {
         const userId = await user.getId();
+        
         if (userId) {
           const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
           const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
