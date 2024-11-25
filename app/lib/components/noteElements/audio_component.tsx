@@ -33,30 +33,30 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   editable,
 }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [curRec, setCurRec] = useState<string | undefined>();
+  const [curRec, setCurRec] = useState<string | undefined>(audioArray[0]?.uri);
   const [placeVal, setPlaceVal] = useState<string>("No Recordings");
   const audioPlayerRef = useRef<AudioPlayer>(null);
 
   useEffect(() => {
-    if (audioArray.length >= 1) {
+    if (audioArray.length > 0) {
       setPlaceVal("Select Recording");
+      setCurRec(audioArray[0]?.uri);
     } else {
       setPlaceVal("No Recordings");
+      setCurRec(undefined);
     }
+    resetAudioPlayer();
+  }, [audioArray]);
+
+  const resetAudioPlayer = () => {
     if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
       audioPlayerRef.current.audio.current.pause();
       audioPlayerRef.current.audio.current.currentTime = 0;
     }
-    setCurRec(undefined);
-    setCurrentIdx(0);
-
-    audioPlayerRef?.current?.audio?.current?.pause();
-  }, [audioArray]);
+  };
 
   const handleSelectChange = (selectedURI: string) => {
-    const selectedIdx = audioArray.findIndex(
-      (audio) => audio.uri === selectedURI
-    );
+    const selectedIdx = audioArray.findIndex((audio) => audio.uri === selectedURI);
     if (selectedIdx >= 0) {
       setCurRec(selectedURI);
       setCurrentIdx(selectedIdx);
@@ -64,26 +64,32 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   };
 
   const handleIncrementRecs = () => {
-    const nextIdx = (currentIdx + 1) % audioArray.length;
-    setCurrentIdx(nextIdx);
-    setCurRec(audioArray[nextIdx].uri);
+    if (audioArray.length > 0) {
+      const nextIdx = (currentIdx + 1) % audioArray.length;
+      setCurrentIdx(nextIdx);
+      setCurRec(audioArray[nextIdx].uri);
+    }
   };
 
   const handleDecrementRecs = () => {
-    const prevIdx = (currentIdx - 1 + audioArray.length) % audioArray.length;
-    setCurrentIdx(prevIdx);
-    setCurRec(audioArray[prevIdx].uri);
+    if (audioArray.length > 0) {
+      const prevIdx = (currentIdx - 1 + audioArray.length) % audioArray.length;
+      setCurrentIdx(prevIdx);
+      setCurRec(audioArray[prevIdx].uri);
+    }
   };
 
-  async function handleFileChange(event: any) {
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     toast("Status Update", {
       description: "Audio upload in progress.",
       duration: 2000,
     });
 
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     const location = await uploadAudio(file);
-    if (location != "error") {
+    if (location !== "error") {
       const newAudio = new AudioType({
         type: "audio",
         uuid: uuidv4(),
@@ -99,10 +105,9 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
       });
 
       if (setAudio) {
-        setAudio([...audioArray, newAudio]);
+        setAudio((prevAudio) => [...prevAudio, newAudio]);
       }
     } else {
-      console.log("UPLOAD FAILED");
       toast("Status Update", {
         description: "Audio Upload Failed! Please try again later.",
         duration: 4000,
@@ -111,12 +116,11 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   }
 
   const currentAudio = audioArray.find((audio) => audio.uri === curRec);
-  const currentUUID = currentAudio ? currentAudio.uuid : null;
 
   return (
     <div className="flex flex-col items-center p-2 h-min min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
       <div className="flex flex-row max-w-[280px] w-[100%] justify-evenly align-center items-center cursor-pointer h-10">
-        {editable ? (
+        {editable && (
           <Popover>
             <PopoverTrigger asChild>
               <FileUp className="primary" />
@@ -133,22 +137,18 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
               </div>
             </PopoverContent>
           </Popover>
-        ) : null}
+        )}
         <Select
           data-testid="audio-select"
           onValueChange={handleSelectChange}
-          key={currentUUID}
-          defaultValue={curRec}
+          value={curRec}
         >
           <SelectTrigger placeholder={placeVal} className="w-[180px]">
-            <SelectValue
-              placeholder={placeVal}
-              defaultValue={"SelectRecording"}
-            />
+            <SelectValue placeholder={placeVal} />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {audioArray.length >= 1 ? (
+              {audioArray.length > 0 ? (
                 audioArray.map((audio) => (
                   <SelectItem
                     key={audio.uuid}
@@ -165,15 +165,16 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
           </SelectContent>
         </Select>
       </div>
-      <AudioPlayer
-        ref={audioPlayerRef}
-        data-testid="audio-player"
-        src={curRec}
-        className="flex flex-row p-3 rounded-md w-[90]"
-        onClickNext={handleIncrementRecs}
-        onClickPrevious={handleDecrementRecs}
-        key={currentUUID}
-      />
+      {curRec && (
+        <AudioPlayer
+          ref={audioPlayerRef}
+          src={curRec}
+          data-testid="audio-player"
+          className="flex flex-row p-3 rounded-md w-[90]"
+          onClickNext={handleIncrementRecs}
+          onClickPrevious={handleDecrementRecs}
+        />
+      )}
     </div>
   );
 };

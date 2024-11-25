@@ -24,6 +24,7 @@ export type UserData = {
     administrator: boolean;
     contributor: boolean;
   };
+  agreementAccepted: boolean;
 };
 
 export type Note = {

@@ -12,30 +12,42 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await user.logout();
-      localStorage.removeItem(name || "");
+      console.log("User logged out successfully.");
 
+      // Clear the cached name and redirect
+      setName(null);
+      localStorage.removeItem("authName");
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
     } catch (error) {
-      console.error("Logout failed", error);
+      console.error("Logout failed:", error);
     }
   };
 
   useEffect(() => {
     const fetchName = async () => {
       try {
+        console.log("Fetching user name from User class...");
         const userName = await user.getName();
-        setName(userName);
 
         if (userName) {
-          const item = localStorage.getItem(userName);
-          if (item) {
-            await user.login(userName, item);
+          console.log("Retrieved user name:", userName);
+          setName(userName);
+
+          // Retrieve cached credentials from localStorage
+          const cachedCredentials = localStorage.getItem(`auth_${userName}`);
+          if (cachedCredentials) {
+            console.log("Attempting auto-login with cached credentials...");
+            await user.login(userName, cachedCredentials);
+          } else {
+            console.log("No cached credentials found in localStorage.");
           }
+        } else {
+          console.log("No user name retrieved. User might not be logged in.");
         }
       } catch (error) {
-        console.log("No user cached or login failed");
+        console.error("Error while fetching user name or performing login:", error);
       }
     };
 
@@ -51,13 +63,16 @@ export default function Navbar() {
           </a>
         </Link>
 
-        {name ? (
+        {name && (
           <Link legacyBehavior href="/lib/pages/notes" passHref>
-            <a id="navbar-create-note"className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+            <a
+              id="navbar-create-note"
+              className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4"
+            >
               Notes
             </a>
           </Link>
-        ) : null}
+        )}
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
           <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
@@ -71,7 +86,6 @@ export default function Navbar() {
           </a>
         </Link>
       </div>
-      
 
       <div className="">
         {name ? (
@@ -83,27 +97,20 @@ export default function Navbar() {
               Hi, {name}!
             </span>
             <Button
-              id = "navbar-logout" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+              id="navbar-logout"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
               onClick={handleLogout}
             >
               Logout
             </Button>
           </div>
         ) : (
-          <>
-            <Button
-              onClick={() => (window.location.href = "/lib/pages/loginPage")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
-            >
-              Login
-            </Button>
-            {/* <Button
-              onClick={() => (window.location.href = "/lib/pages/signupPage")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
-            >
-              Sign Up
-            </Button> */}
-          </>
+          <Button
+            onClick={() => (window.location.href = "/lib/pages/loginPage")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+          >
+            Login
+          </Button>
         )}
       </div>
     </nav>

@@ -3,7 +3,9 @@ import { getItem, setItem } from "../utils/async_storage";
 import { auth, db } from "../config/firebase"; // Import Firestore database
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
 import ApiService from '../utils/api_service';
-import { doc, getDoc } from "firebase/firestore"; // Firestore imports
+import { doc, getDoc,setDoc } from "firebase/firestore"; // Firestore imports
+
+
 
 export class User {
   private static instance: User;
@@ -95,51 +97,63 @@ export class User {
     });
   }
 
+  public async acceptAgreement(uid: string): Promise<void> {
+    try {
+      // Update Firestore to reflect agreement acceptance
+      const userDocRef = doc(db, "users", uid);
+      await setDoc(userDocRef, { agreementAccepted: true }, { merge: true });
+      console.log("User agreement status updated successfully.");
+  
+      // Optionally, update local user data
+      if (this.userData) {
+        this.userData.agreementAccepted = true; // No more TypeScript error
+        this.persistUser(this.userData);
+      }
+    } catch (error) {
+      console.error("Failed to update user agreement status:", error);
+      throw error;
+    }
+  }
+  
+  
 
   public async login(email: string, password: string): Promise<string> {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+  
       const token = await user.getIdToken();
-      console.log(`Login token: ${token}`);
-      
-      // Store the token in local storage
-      localStorage.setItem('authToken', token);
-      // Set the token as a cookie
-      document.cookie = `authToken=${token}; path=/`;
-      const testingToken = localStorage.getItem('authToken');
-      console.log("testing to see local storage: ", testingToken);
+      localStorage.setItem("authToken", token);
   
       const userData = await ApiService.fetchUserData(user.uid);
-       
+  
       if (userData) {
-        // If user data is found in the API
         this.userData = userData;
-        console.log("User data found in API:", userData);
+        this.persistUser(userData);
       } else {
-        // If not found in the API, try fetching from Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           this.userData = userDoc.data() as UserData;
-          console.log("User data found in Firestore:", this.userData);
+          this.persistUser(this.userData);
         } else {
-          console.log("User data not found in Firestore or API.");
+          console.log("No user data found in Firestore or API.");
+          this.userData = null;
         }
       }
   
-      // Persist user data and update login state
-      if (this.userData) {
-        await this.persistUser(this.userData);
-        console.log("User data persisted locally");
-        this.notifyLoginState();
-      }
-
       return "success";
     } catch (error) {
-      console.error("Login error: ", error);
-      return Promise.reject(error);
+      console.error("Login error:", error);
+      throw error;
     }
   }
+  
+  
+  
+  
+
+  
+
   
   public async logout() {
     try {
@@ -167,11 +181,41 @@ export class User {
   }
 
   public async getName(): Promise<string | null> {
-    if (!this.userData) {
-      this.userData = await this.loadUser();
+    try {
+      // Load userData from storage if not already set
+      if (!this.userData) {
+        console.log("No userData found, loading from storage...");
+        this.userData = await this.loadUser();
+      }
+  
+      // Debugging log to check userData
+      console.log("Current userData in getName:", this.userData);
+  
+      // Return name if available
+      if (this.userData?.name) {
+        console.log("Retrieved name from userData:", this.userData.name);
+        return this.userData.name;
+      }
+  
+      // Fallback to Firebase auth displayName or email
+      const currentUser = auth.currentUser;
+      if (currentUser?.displayName) {
+        console.log("Retrieved name from Firebase auth:", currentUser.displayName);
+        return currentUser.displayName;
+      }
+      if (currentUser?.email) {
+        console.log("Using email as fallback:", currentUser.email);
+        return currentUser.email;
+      }
+  
+      console.log("No name found in userData or Firebase auth.");
+      return null;
+    } catch (error) {
+      console.error("Error in getName:", error);
+      return null;
     }
-    return this.userData?.name ?? null;
   }
+  
 
   public async hasOnboarded(): Promise<boolean> {
     const onboarded = await getItem("onboarded");
