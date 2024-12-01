@@ -424,14 +424,14 @@ export default function NoteEditor({
                 setVideo={noteHandlers.setVideos}
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
+            {/* <div className="w-2 h-9 bg-border" />
             <button
               className="hover:text-orange-500 flex justify-center items-center w-full"
               onClick={() => setIsAudioModalOpen(true)}
             >
               <Music className="text-current" />
               <div className="ml-2">Audio</div>
-            </button>
+            </button> */}
           </div>
           <TagManager
   inputTags={noteState.tags}
@@ -445,7 +445,7 @@ export default function NoteEditor({
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
 
-        {isAudioModalOpen && (
+        {/* {isAudioModalOpen && (
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
               <h2 className="text-lg font-semibold mb-2 text-center">
@@ -466,7 +466,7 @@ export default function NoteEditor({
               </div>
             </div>
           </div>
-        )}
+        )} */}
         <div className="flex-grow w-full p-4 flex flex-col">
           <div className=" flex-grow flex flex-col bg-white w-full rounded">
           <RichTextEditor
