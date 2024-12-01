@@ -163,7 +163,7 @@ export default function EditorMenuControls({
           }}
           onClick={() => setIsPopupOpen(true)}
         >
-          📁 <span>Upload Media</span>
+          📁 
         </button>
 
         <MenuDivider />
