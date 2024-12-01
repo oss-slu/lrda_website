@@ -38,7 +38,7 @@ import {
   handleTimeChange,
   handlePublishChange,
 } from "./note_handler";
-import { PhotoType, VideoType } from "../../models/media_class";
+import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
 import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
@@ -424,14 +424,6 @@ export default function NoteEditor({
                 setVideo={noteHandlers.setVideos}
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
-            <button
-              className="hover:text-orange-500 flex justify-center items-center w-full"
-              onClick={() => setIsAudioModalOpen(true)}
-            >
-              <Music className="text-current" />
-              <div className="ml-2">Audio</div>
-            </button>
           </div>
           <TagManager
   inputTags={noteState.tags}
@@ -444,44 +436,93 @@ export default function NoteEditor({
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-
-        {isAudioModalOpen && (
-          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-              <h2 className="text-lg font-semibold mb-2 text-center">
-                Select Audio
-              </h2>
-              <div className="flex flex-col justify-between h-auto">
-                <AudioPicker
-                  audioArray={noteState.audio || []}
-                  setAudio={noteHandlers.setAudio}
-                  editable={true}
-                />
-                <button
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-                  onClick={() => setIsAudioModalOpen(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="flex-grow w-full p-4 flex flex-col">
           <div className=" flex-grow flex flex-col bg-white w-full rounded">
-            <RichTextEditor
+          <RichTextEditor
               ref={rteRef}
               className="min-h-[712px]"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) =>
-                handleEditorChange(
-                  noteHandlers.setEditorContent,
-                  editor.getHTML()
-                )
+                handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())
               }
               renderControls={() => (
-                <EditorMenuControls onImageUpload={addImageToNote} />
+                <EditorMenuControls
+                  onMediaUpload={(media) => {
+                    if (media.type === "image") {
+                      const newImage = {
+                        type: "image",
+                        attrs: {
+                          src: media.uri,
+                          alt: "Image description",
+                          loading: "lazy",
+                        },
+                      };
+              
+                      const editor = rteRef.current?.editor;
+                      if (editor) {
+                        editor.chain().focus().setImage(newImage.attrs).run();
+                      }
+              
+                      noteHandlers.setImages((prevImages) => [
+                        ...prevImages,
+                        new PhotoType({
+                          uuid: uuidv4(),
+                          uri: media.uri,
+                          type: "image",
+                        }),
+                      ]);
+                    } else if (media.type === "video") {
+                      const newVideo = new VideoType({
+                        uuid: uuidv4(),
+                        uri: media.uri,
+                        type: "video",
+                        thumbnail: "",
+                        duration: "0:00",
+                      });
+              
+                      noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
+              
+                      const editor = rteRef.current?.editor;
+                      if (editor) {
+                        const videoLink = `Video ${noteState.videos.length + 1}`;
+                        editor
+                          .chain()
+                          .focus()
+                          .command(({ tr, dispatch }) => {
+                            if (dispatch) {
+                              const endPos = tr.doc.content.size;
+                              const paragraphNodeForNewLine = editor.schema.node("paragraph");
+                              const textNode = editor.schema.text(videoLink, [
+                                editor.schema.marks.link.create({ href: media.uri }),
+                              ]);
+                              const paragraphNodeForLink = editor.schema.node("paragraph", null, [
+                                textNode,
+                              ]);
+              
+                              const transaction = tr
+                                .insert(endPos, paragraphNodeForNewLine)
+                                .insert(endPos + 1, paragraphNodeForLink);
+                              dispatch(transaction);
+                            }
+                            return true;
+                          })
+                          .run();
+                      }
+                    } else if (media.type === "audio") {
+                      const newAudio = new AudioType({
+                        uuid: uuidv4(),
+                        uri: media.uri,
+                        type: "audio", // Explicitly set the type
+                        duration: "0:00", // Default duration
+                        name: `Audio Note ${noteState.audio.length + 1}`,
+                        isPlaying: false, // Default play status
+                      });
+                    
+                      noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
+                    }                          
+                  }}
+                />
               )}
               children={(editor) => {
                 if (!editor) return null;
