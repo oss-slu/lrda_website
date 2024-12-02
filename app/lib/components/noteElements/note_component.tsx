@@ -417,13 +417,13 @@ export default function NoteEditor({
                 }
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
+            {/* <div className="w-2 h-9 bg-border" />
             <div className="bg-white p-2 rounded">
               <VideoComponent
                 videoArray={noteState.videos || []}
                 setVideo={noteHandlers.setVideos}
               />
-            </div>
+            </div> */}
           </div>
           <TagManager
   inputTags={noteState.tags}

@@ -117,22 +117,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           </div>
         </PopoverContent>
       </Popover>
-      <TooltipProvider delayDuration={100}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={handleGetCurrentLocation}
-              aria-label="compass"
-              className="h-9 flex justify-center items-center cursor-pointer"
-            >
-              <Compass className="h-5 w-5 mx-2" /> {/* Compass Icon */}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Click to choose a location.</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
     </div>
   );
 };

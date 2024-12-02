@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"; //what if i just delete this file lol 
 import { VideoType } from "../../models/media_class";
 import { UploadIcon, VideoIcon } from "lucide-react";
 import {
@@ -83,61 +83,7 @@ const VideoComponent: React.FC<VideoPickerProps> = ({
     }
   }
 
-  return (
-    <div className="flex flex-row items-center p-3 justify-between">
-      {/* Dialog to display the list of videos */}
-      <Dialog>
-        <DialogTrigger asChild>
-          <div>
-            <VideoIcon className="hover:text-green-500 cursor-pointer h-6 w-6 mx-2" />
-          </div>
-        </DialogTrigger>
-        <DialogContent className="w-full sm:max-w-[70%] h-[100vh] px-20 overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="text-3xl">Videos</DialogTitle>
-            <div className="h-1 w-full bg-black bg-opacity-70 rounded-full" />
-          </DialogHeader>
-
-          {/* Render videos if present, otherwise display 'No Videos' */}
-          {videoArray.length > 0 ? (
-            <div className="flex flex-col items-center justify-center max-w-full h-full object-fit">
-              <MediaViewer mediaArray={videoArray} />
-            </div>
-          ) : (
-            <div className="flex justify-center items-center h-full">
-              <p>No Videos</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <div>Video</div>
-
-      {/* Upload button for video files */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <UploadIcon className="hover:text-green-500 cursor-pointer h-5 w-5 mx-2" />
-        </PopoverTrigger>
-        <PopoverContent className="z-30">
-          <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
-            <div className="px-4">Upload Videos Here.</div>
-            <div className="px-4 mb-3">It must be of type '.mp4'</div>
-
-            {/* File input for uploading videos */}
-            <Input
-              type="file"
-              accept=".mp4" // Restrict file types to MP4 videos
-              onChange={(e) => {
-                const file = e.target.files?.[0]; // Get the selected file
-                if (file) handleUnifiedUpload(file); // Pass the file to the unified upload handler
-              }}
-              data-testid="file-input"
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
+  return null;
 };
 
 export default VideoComponent;
