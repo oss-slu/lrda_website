@@ -14,6 +14,8 @@ import EditorMenuControls from "../editor_menu_controls";
 import NoteToolbar from "./note_toolbar";
 import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
+import { Document, Packer, Paragraph } from "docx"; // For DOCX
+import jsPDF from "jspdf"; // For PDF
 import ApiService from "../../utils/api_service";
 import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
 import {
@@ -74,6 +76,8 @@ export default function NoteEditor({
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLDivElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
+
+  const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const addNote = document.getElementById("add-note-button");
@@ -267,6 +271,62 @@ export default function NoteEditor({
     }
   };
 
+  const handleDownload = async () => {
+    if (!selectedFileType) {
+      alert("Please select a file type.");
+      return;
+    }
+  
+    // Extract plain text from HTML content
+    const plainTextContent = new DOMParser()
+      .parseFromString(noteState.editorContent, "text/html")
+      .body.innerText;
+  
+    const noteContent = `
+      Title: ${noteState.title}
+      Content: ${plainTextContent}
+      Tags: ${noteState.tags.map((tag) => tag.label).join(", ")}
+      Location: ${noteState.latitude}, ${noteState.longitude}
+      Time: ${noteState.time}
+    `;
+  
+    if (selectedFileType === "pdf") {
+      // Generate PDF using jsPDF
+      const pdf = new jsPDF();
+      pdf.text(noteContent, 10, 10); // Add text to the PDF
+      pdf.save(`${noteState.title || "note"}.pdf`); // Save the PDF file
+    } else if (selectedFileType === "docx") {
+      // Generate Word document using docx
+      const doc = new Document({
+        sections: [
+          {
+            children: [
+              new Paragraph({
+                text: `Title: ${noteState.title}`,
+                bold: true,
+              }),
+              new Paragraph(`Content: ${plainTextContent}`),
+              new Paragraph(`Tags: ${noteState.tags.map((tag) => tag.label).join(", ")}`),
+              new Paragraph(`Location: ${noteState.latitude}, ${noteState.longitude}`),
+              new Paragraph(`Time: ${noteState.time}`),
+            ],
+          },
+        ],
+      });
+  
+      const blob = await Packer.toBlob(doc); // Generate DOCX file as Blob
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${noteState.title || "note"}.docx`; // Set the filename
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  
+    toast(`Your note has been downloaded as ${selectedFileType.toUpperCase()}`);
+  };
+
+
   const addImageToNote = (imageUrl: string) => {
     console.log("Before updating images", noteState.images);
     const newImage = {
@@ -350,7 +410,7 @@ export default function NoteEditor({
               onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
             />
 
-            <div className="w-2 h-9 bg-border" />
+            <div className="w-1 h-9 bg-border" />
             <button
               id="save-note-button"
               className="hover:text-green-500 flex justify-center items-center w-full"
@@ -359,7 +419,7 @@ export default function NoteEditor({
               <SaveIcon className="text-current"/>
               <div className="ml-2"  ref = {saveRef}>Save</div>
             </button>
-            <div className="w-2 h-9 bg-border" />
+            <div className="w-1  h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button className="hover:text-red-500 flex justify-center items-center w-full">
@@ -391,7 +451,7 @@ export default function NoteEditor({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <div className="w-2 h-9 bg-border" />
+            <div className="w-1 h-7 bg-border" />
             <div className="flex-grow"
             ref = {dateRef} >
               <TimePicker
@@ -417,13 +477,68 @@ export default function NoteEditor({
                 }
               />
             </div>
-            {/* <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded">
-              <VideoComponent
-                videoArray={noteState.videos || []}
-                setVideo={noteHandlers.setVideos}
-              />
-            </div> */}
+            <div className="w-2 h-9 bg-border" />
+            <AlertDialog>
+  <AlertDialogTrigger asChild>
+    <button
+      id="download-note-button"
+      className="hover:text-blue-500 flex justify-center items-center w-full"
+    >
+      <SaveIcon className="text-current" />
+      <div className="ml-2">Download</div>
+    </button>
+  </AlertDialogTrigger>
+  <AlertDialogContent
+    onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        // Close the popup and go back to the note
+      }
+    }}
+  >
+    <AlertDialogHeader>
+      <AlertDialogTitle>Select File Type</AlertDialogTitle>
+      <AlertDialogDescription>
+        Choose a file format for downloading your note.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="flex flex-col items-start px-6 mt-2 space-y-4">
+      <label className="flex items-center space-x-2">
+        <input
+          type="radio"
+          name="fileType"
+          value="pdf"
+          checked={selectedFileType === "pdf"}
+          onChange={() => setSelectedFileType("pdf")}
+        />
+        <span>PDF</span>
+      </label>
+      <label className="flex items-center space-x-2">
+        <input
+          type="radio"
+          name="fileType"
+          value="docx"
+          checked={selectedFileType === "docx"}
+          onChange={() => setSelectedFileType("docx")}
+        />
+        <span>DOCX</span>
+      </label>
+    </div>
+    <AlertDialogFooter>
+      <AlertDialogCancel
+        className="bg-gray-300 text-black hover:bg-gray-400 px-4 py-2 rounded"
+      >
+        Cancel
+      </AlertDialogCancel>
+      <AlertDialogAction
+        onClick={handleDownload}
+        className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded"
+      >
+        Download
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
           </div>
           <TagManager
   inputTags={noteState.tags}

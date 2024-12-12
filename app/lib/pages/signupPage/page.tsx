@@ -9,6 +9,7 @@ import { validateEmail, validatePassword } from "../../utils/validation";
 import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
+import Link from "next/link"; // Import Link for routing
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -78,7 +79,7 @@ const SignupPage = () => {
       <div className="absolute inset-10 flex flex-col items-center justify-center">
         <div className="w-3/4 bg-white p-8 rounded-lg shadow-lg">
           <h1 className="text-black-500 font-bold mb-20 text-center text-3xl">
-            Sign Up
+           User Sign Up
           </h1>
           <div className="mb-4">
             <input
@@ -133,6 +134,16 @@ const SignupPage = () => {
               Sign Up
             </button>
           </div>
+          <div className="mt-6 text-center">
+  <p className="text-gray-600 text-right">
+    If you wish to become an Instructor, please{" "}
+    <Link href="/lib/pages/InstructorSignupPage" className="text-blue-500 underline">
+      Register Here
+    </Link>
+    .
+  </p>
+</div>
+
         </div>
       </div>
     </div>
