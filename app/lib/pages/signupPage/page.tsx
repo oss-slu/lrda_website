@@ -136,9 +136,9 @@ const SignupPage = () => {
           </div>
           <div className="mt-6 text-center">
   <p className="text-gray-600 text-right">
-    If you wish to become an Instructor, please{" "}
+    If you wish to sign-up an Instructor, please{" "}
     <Link href="/lib/pages/InstructorSignupPage" className="text-blue-500 underline">
-      Register Here
+      Register Here.
     </Link>
     .
   </p>
