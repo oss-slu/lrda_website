@@ -169,16 +169,31 @@ class SearchBarMap extends React.Component<
         ]
       : [];
 
-    const combinedResults: CombinedResult[] = [
-      ...typedLocation,
-      ...suggestions.map((s) => ({ ...s, type: "suggestion" as const })),
-      ...filteredNotes
-        .filter((note) => note && note.title) // Safeguard: Ensure note is valid
-        .map((note) => ({
-          ...note,
-          type: "note" as const,
+      const combinedResults: CombinedResult[] = [
+        ...typedLocation.map((location) => ({
+          ...location,
+          matched_substrings: [],
+          structured_formatting: {
+            main_text: location.description,
+            main_text_matched_substrings: [], // Add this to fulfill the requirement
+            secondary_text: "",
+          },
+          terms: [],
+          types: [],
+          type: "suggestion" as const,
         })),
-    ];
+        ...suggestions.map((s) => ({
+          ...s,
+          type: "suggestion" as const,
+        })),
+        ...filteredNotes
+          .filter((note) => note && note.title) // Ensure note is valid
+          .map((note) => ({
+            ...note,
+            type: "note" as const,
+          })),
+      ];
+      
 
     // Sort combined results alphabetically
     combinedResults.sort((a, b) => {
@@ -202,8 +217,7 @@ class SearchBarMap extends React.Component<
         <SearchBarUI
           searchText={this.state.searchText}
           onInputChange={this.handleInputChange}
-          onFocus={this.handleFocus}
-          onBlur={this.handleBlur}
+
         />
         {isDropdownVisible && combinedResults.length > 0 && (
           <ul

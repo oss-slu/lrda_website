@@ -68,6 +68,7 @@ export default function NoteEditor({
 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
+  const [notes, setNotes] = useState<Note[]>([]); // Add this to define state for notes
 
 
   const titleRef = useRef<HTMLInputElement | null>(null);
@@ -76,6 +77,20 @@ export default function NoteEditor({
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLDivElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
+
+
+
+  const getCookie = (name: string) => {
+    const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    return match ? match[2] : null;
+  };
+
+  // Helper function to set a cookie
+  const setCookie = (name: string, value: string, days: number) => {
+    const date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}`;
+  };
 
   const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
   useEffect(() => {
@@ -89,11 +104,11 @@ export default function NoteEditor({
   
       console.log('Observer triggered');
   
-      // Check if all elements are present
+     // Check if all elements are present
       if (addNote && title && save && deleteButton && date && location) {
         const intro = introJs();
-        const hasAddNoteIntroBeenShown = localStorage.getItem('addNoteIntroShown');
-  
+        const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
+
         if (!hasAddNoteIntroBeenShown) {
           intro.setOptions({
             steps: [
@@ -103,34 +118,39 @@ export default function NoteEditor({
               },
               {
                 element: title,
-                intro: "You can name your note here!"
+                intro: "You can name your note here!",
               },
               {
                 element: save,
-                intro: "Make sure you save your note"
+                intro: "Make sure you save your note.",
               },
               {
                 element: deleteButton,
-                intro: "If you don't like your note, you can delete it here"
+                intro: "If you don't like your note, you can delete it here.",
               },
               {
                 element: date,
-                intro: "We will automatically date and time your entry!"
+                intro: "We will automatically date and time your entry!",
               },
               {
                 element: location,
-                intro: "Make sure you specify the location of your note"
-              }
+                intro: "Make sure you specify the location of your note.",
+              },
             ],
             scrollToElement: false,
             skipLabel: "Skip",
           });
-  
+
           intro.oncomplete(() => {
-            // After the intro is completed, set the flag in localStorage
-            localStorage.setItem('addNoteIntroShown', 'true');
+            // After the intro is completed, set the cookie
+            setCookie("addNoteIntroShown", "true", 365);
           });
-  
+
+          intro.onexit(() => {
+            // Set the cookie if the user exits the intro
+            setCookie("addNoteIntroShown", "true", 365);
+          });
+
           intro.start();
   
           // Apply inline styling to the skip button after a short delay to ensure it has rendered
@@ -245,7 +265,7 @@ export default function NoteEditor({
       id: noteState.note?.id || "",
       creator: noteState.note?.creator || "",
     };
-
+  
     try {
       if (isNewNote) {
         await ApiService.writeNewNote(updatedNote);
@@ -253,14 +273,33 @@ export default function NoteEditor({
           description: "Your new note has been successfully created.",
           duration: 2000,
         });
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       } else {
         await ApiService.overwriteNote(updatedNote);
         toast("Note Saved", {
           description: "Your note has been successfully saved.",
           duration: 2000,
         });
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+      }
+  
+      // Trigger mini-refresh: Fetch updated notes and clear input fields
+      const userId = await user.getId(); // Await the user ID
+      if (userId) {
+        const updatedNotes = await ApiService.fetchUserMessages(userId); // Fetch updated notes
+        noteHandlers.setNote(undefined); // Clear current note state
+        noteHandlers.setEditorContent(""); // Clear text editor
+        noteHandlers.setTitle(""); // Clear title field
+        noteHandlers.setTags([]); // Clear tags
+        noteHandlers.setImages([]); // Clear images
+        noteHandlers.setVideos([]); // Clear videos
+        noteHandlers.setAudio([]); // Clear audio
+        noteHandlers.setTime(new Date()); // Reset time
+        noteHandlers.setLatitude("");
+        noteHandlers.setLongitude("");
+        setNotes(updatedNotes); // Update the note list
+  
+        noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
+      } else {
+        throw new Error("User ID is null or undefined.");
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -270,7 +309,8 @@ export default function NoteEditor({
       });
     }
   };
-
+  
+  
   const handleDownload = async () => {
     if (!selectedFileType) {
       alert("Please select a file type.");
@@ -303,7 +343,6 @@ export default function NoteEditor({
             children: [
               new Paragraph({
                 text: `Title: ${noteState.title}`,
-                bold: true,
               }),
               new Paragraph(`Content: ${plainTextContent}`),
               new Paragraph(`Tags: ${noteState.tags.map((tag) => tag.label).join(", ")}`),
@@ -478,7 +517,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            <AlertDialog>
+            {/* <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
       id="download-note-button"
@@ -489,7 +528,7 @@ export default function NoteEditor({
     </button>
   </AlertDialogTrigger>
   <AlertDialogContent
-    onOpenChange={(isOpen) => {
+    onChange={(isOpen) => {
       if (!isOpen) {
         // Close the popup and go back to the note
       }
@@ -537,7 +576,7 @@ export default function NoteEditor({
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog>
+</AlertDialog> */}
 
           </div>
           <TagManager
