@@ -192,6 +192,38 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
   };
   return await this.getPagedQuery(limit, skip, queryObj);
 }
+
+// New method in ApiService
+/**
+ * Fetches all Published Notes.
+ * @param {number} limit - The limit of messages per page.
+ * @param {number} skip - The number of messages to skip for pagination.
+ * @param {number} neLat - The latitude of the NE corner of the bounding box.
+ * @param {number} neLng - The longitude of the NE corner of the bounding box.
+ * @param {number} swLat - The latitude of the SW corner of the bounding box.
+ * @param {number} swLng - The longitude of the SW corner of the bounding box.
+ * @returns {Promise<any[]>} - The array of messages fetched from the API.
+ * 
+ */
+static async fetchPublishedNotesByBounds(
+  limit: number = 150,
+  skip: number = 0,
+  neLat: number,
+  neLng: number,
+  swLat: number,
+  swLng: number
+): Promise<any[]> {
+  const queryObj = {
+    type: "message",
+    published: true,
+    "latitude[gte]": swLat, // Greater than or equal to SW latitude
+    "latitude[lte]": neLat, // Less than or equal to NE latitude
+    "longitude[gte]": swLng, // Greater than or equal to SW longitude
+    "longitude[lte]": neLng, // Less than or equal to NE longitude
+  };
+  return await this.getPagedQuery(limit, skip, queryObj);
+}
+
   /**
    * Fetches user data from the API based on UID.
    * @param {string} uid - The UID of the user.

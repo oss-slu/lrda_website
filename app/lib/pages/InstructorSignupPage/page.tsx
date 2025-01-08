@@ -18,9 +18,9 @@ const InstructorSignupPage = () => {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [emailError, setEmailError] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState(null);
+  const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const validateEmail = (email) => {
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -32,26 +32,26 @@ const InstructorSignupPage = () => {
     number: /\d/.test(password),
   };
 
-  const calculatePasswordStrength = (password) => {
+  const calculatePasswordStrength = (password: string | any[]) => {
     if (password.length === 0) return 0; // Ensure strength is 0 for an empty password
     const checks = Object.values(passwordValidationFeedback).filter(Boolean);
     return (checks.length / Object.keys(passwordValidationFeedback).length) * 100;
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: { target: { value: any; }; }) => {
     const value = e.target.value;
     setPassword(value);
     setPasswordStrength(calculatePasswordStrength(value));
   };
 
-  const handleEmailChange = (e) => {
+  const handleEmailChange = (e: { target: { value: any } }) => {
     const value = e.target.value;
     setEmail(value);
     setEmailError(false); // Reset error state while typing
-
+  
     // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
-
+  
     // Set a timeout to validate the email after the user stops typing
     setTypingTimeout(
       setTimeout(() => {
@@ -151,10 +151,16 @@ const InstructorSignupPage = () => {
       setLastName("");
       setDescription("");
     } catch (error) {
-      console.error("Error during signup: ", error.message);
-      toast.error(`Signup failed: ${error.message}`);
+      if (error instanceof Error) {
+        console.error("Error during signup: ", error.message);
+        toast.error(`Signup failed: ${error.message}`);
+      } else {
+        console.error("Unexpected error during signup: ", error);
+        toast.error("Signup failed: An unexpected error occurred.");
+      }
     }
   };
+  
   
 
   return (
@@ -287,7 +293,7 @@ const InstructorSignupPage = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-3 mb-4 border border-gray-300 rounded-lg resize-none"
-            rows="4"
+            rows={4}
             required
           />
 

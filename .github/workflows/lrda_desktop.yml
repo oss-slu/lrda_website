@@ -6,11 +6,13 @@ on:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
+      -december-sprint
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
+      -december-sprint
 
 jobs:
   build:

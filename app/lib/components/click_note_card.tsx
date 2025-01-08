@@ -62,11 +62,16 @@ function formatTime(date: string | number | Date) {
 }
 
 // Convert old tags (strings) to new format
-const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
-  return tags.map(tag =>
+// Convert old tags (strings) to new format
+const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
+  if (!Array.isArray(tags)) {
+    return []; // Return an empty array if tags is undefined or not an array
+  }
+  return tags.map((tag) =>
     typeof tag === "string" ? { label: tag, origin: "user" } : tag
   );
 };
+
 
 // ClickableNote component
 const ClickableNote: React.FC<{

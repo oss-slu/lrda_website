@@ -303,7 +303,6 @@ export default function NoteEditor({
             children: [
               new Paragraph({
                 text: `Title: ${noteState.title}`,
-                bold: true,
               }),
               new Paragraph(`Content: ${plainTextContent}`),
               new Paragraph(`Tags: ${noteState.tags.map((tag) => tag.label).join(", ")}`),
@@ -489,7 +488,7 @@ export default function NoteEditor({
     </button>
   </AlertDialogTrigger>
   <AlertDialogContent
-    onOpenChange={(isOpen) => {
+    onChange={(isOpen) => {
       if (!isOpen) {
         // Close the popup and go back to the note
       }
