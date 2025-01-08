@@ -6,13 +6,13 @@ on:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
-      - december-sprint
+      -december-sprint
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
-      - december-sprint
+      -december-sprint
 
 jobs:
   build:
@@ -30,25 +30,6 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@8.11.0
       - name: Install dependencies
-        run: pnpm install
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Kill any existing processes on port 3000
-        run: |
-          pkill -f "next start" || true
-          pkill -f "next dev" || true
-          sleep 2
+        run: pnpm install # Replace 'npm install' with 'pnpm install'
       - name: Run tests
-        run: pnpm test
-        env:
-          # Mock environment variables for CI
-          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
-          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
-          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
-          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
-          CI: "true"
+        run: pnpm test # or 'npm test' if you're using npm

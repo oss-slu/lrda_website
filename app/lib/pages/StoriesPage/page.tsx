@@ -5,96 +5,40 @@ import ApiService from "../../utils/api_service";
 import EnhancedClickableNote from "../../components/stories_card"; // Updated import
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 
 const StoriesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [users, setUsers] = useState<{ uid: string; name: string }[]>([]); // To store unique user IDs
-  const [selectedUser, setSelectedUser] = useState<string>(""); // For dropdown selection
-  
-  // Infinite scrolling hook
-  const infinite = useInfiniteNotes<Note>({
-    items: filteredNotes,
-    pageSize: NOTES_PAGE_SIZE,
-  });
+  const [skip, setSkip] = useState(0);
+  const [hasMoreNotes, setHasMoreNotes] = useState(true);
 
-
-   // Fetch user names by resolving UIDs to names
-   const fetchUserNames = async (uids: string[]) => {
-    try {
-      const uniqueUsers = new Set(uids);
-      const userPromises = Array.from(uniqueUsers).map(async (uid) => {
-        try {
-          const name = await ApiService.fetchCreatorName(uid); // Fetch name from Firestore or RERUM
-          return { uid, name };
-        } catch (error) {
-          console.error(`Error fetching name for UID ${uid}:`, error);
-          return { uid, name: "Unknown User" }; // Fallback for failed lookups
-        }
-      });
-      return Promise.all(userPromises); // Resolve all user name fetches
-    } catch (error) {
-      console.error("Error fetching user names:", error);
-      return [];
-    }
-  };
-
-  const fetchStories = async (limit = 150) => { // Increased limit to 150 for better performance
+  const fetchStories = async (offset = 0, limit = 10) => {
     try {
       setIsLoading(true);
-      const fetchedNotes = await ApiService.fetchPublishedNotes(0, limit);
+      const fetchedNotes = await ApiService.fetchPublishedNotes(offset, limit);
 
       // Debugging log to check fetched data
       console.log("Fetched Notes:", fetchedNotes);
 
       if (fetchedNotes.length === 0) {
+        setHasMoreNotes(false);
         toast("No more stories to display.");
       } else {
-        const uids = fetchedNotes.map((note) => note.creator); // Collect UIDs from notes
-        const userList = await fetchUserNames(uids); // Resolve UIDs to names
-
-        setUsers((prevUsers) => {
-          const mergedUsers = [...prevUsers, ...userList];
-          // Remove duplicates (if user IDs are already in the state)
-          return mergedUsers.filter(
-            (user, index, self) =>
-              index === self.findIndex((u) => u.uid === user.uid)
-          );
-        });
-
-        setNotes(fetchedNotes);
-        setFilteredNotes(fetchedNotes);
+        setNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
+        setFilteredNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
       }
     } catch (error) {
-      console.error("Error fetching notes:", error);
-      toast.error("Failed to fetch notes. Please try again.");
+      console.error("Error fetching stories:", error);
+      toast.error("Failed to fetch stories. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const fetchFilteredNotesByUser = async (creatorId: string) => {
-    try {
-      setIsLoading(true);
-      const userNotes = await ApiService.getPagedQueryWithParams(150, 0, creatorId); // Increased limit to 150
-      setFilteredNotes(userNotes); // Display only notes for the selected user
-    } catch (error) {
-      console.error(`Error fetching notes for user ${creatorId}:`, error);
-      toast.error("Failed to fetch user notes. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-
-
 
   useEffect(() => {
-    fetchStories();
-  }, []);
+    fetchStories(skip);
+  }, [skip]);
 
   const handleSearch = (query: string) => {
     if (!query.trim()) {
@@ -113,88 +57,73 @@ const StoriesPage = () => {
     setFilteredNotes(results);
   };
 
-  const handleUserFilter = (userId: string) => {
-    setSelectedUser(userId);
-    if (userId === "") {
-      setFilteredNotes(notes); // Show all notes if no user is selected
-    } else {
-      const results = notes.filter(
-        (note) => note.creator === userId && note.approvalRequested
-      );
-      setFilteredNotes(results);
+  const handleNext = () => {
+    if (hasMoreNotes) {
+      setSkip((prevSkip) => prevSkip + 10);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (skip > 0) {
+      setSkip((prevSkip) => Math.max(0, prevSkip - 10));
+      setFilteredNotes(notes.slice(skip - 10, skip));
     }
   };
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-100 p-2 sm:p-4">
-      {/* Search Bar - Mobile Optimized */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 w-full">
+    <div className="flex flex-col w-screen h-[90vh] min-w-[600px] bg-gray-100 p-4">
+      {/* Search Bar */}
+      <div className="flex justify-center mb-4">
         <input
           type="text"
           placeholder="Search stories..."
-          className="w-full sm:max-w-md p-2 sm:p-3 border rounded-lg shadow-sm text-sm sm:text-base"
+          className="w-full max-w-md p-2 border rounded-lg shadow-sm"
           onChange={(e) => handleSearch(e.target.value)}
         />
-        {/* Dropdown for filtering by user */}
-        <select
-          value={selectedUser}
-          onChange={async (e) => {
-            const userId = e.target.value;
-            setSelectedUser(userId); // Update the selected user in state
-            if (userId === "") {
-              setFilteredNotes(notes); // Show all notes if no user is selected
-            } else {
-              await fetchFilteredNotesByUser(userId); // Dynamically fetch and filter notes
-            }
-          }}
-          className="w-full sm:w-auto p-2 sm:p-3 border rounded-lg shadow-sm text-sm sm:text-base"
-        >
-          <option value="">All Users</option>
-          {users.map((user) => (
-            <option key={user.uid} value={user.uid}>
-              {user.name} {/* Display user names */}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {/* Stories Grid - Mobile Responsive */}
-      <div className="flex justify-center w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 w-full max-w-7xl">
+      {/* Stories Grid */}
+      <div className="flex justify-center">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-screen-lg">
           {isLoading
             ? [...Array(6)].map((_, index) => (
                 <Skeleton
-                  key={`skeleton-${index}`}
-                  className="w-full h-[300px] sm:h-[350px] lg:h-[400px] rounded-lg border border-gray-200"
+                  key={`skeleton-${index}`} // Add a unique key for each skeleton
+                  className="w-full h-[400px] rounded-sm border border-gray-200"
                 />
               ))
             : filteredNotes.length > 0
-            ? infinite.visibleItems.map((note, index) => (
+            ? filteredNotes.map((note, index) => (
                 <EnhancedClickableNote
-                  key={note.id || `note-${index}`}
+                  key={note.id || `note-${index}`} // Ensures unique keys even if note.id is missing
                   note={note}
                 />
               ))
             : (
-                <div key="no-stories" className="text-center col-span-full py-8">
-                  <p className="text-gray-600 text-lg">No stories found.</p>
+                <div key="no-stories" className="text-center col-span-full">
+                  No stories found.
                 </div>
               )}
         </div>
       </div>
 
-      {/* Infinite Scroll Loader */}
-      {filteredNotes.length > 0 && (
-        <div className="flex justify-center mt-6 mb-4">
-          {infinite.hasMore ? (
-            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
-              {infinite.isLoading && (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more stories" />
-              )}
-            </div>
-          ) : null}
-        </div>
-      )}
+      {/* Pagination */}
+      <div className="flex justify-center mt-6">
+        <button
+          className="mx-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
+          onClick={handlePrevious}
+          disabled={skip === 0}
+        >
+          Previous
+        </button>
+        <button
+          className="mx-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
+          onClick={handleNext}
+          disabled={!hasMoreNotes}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };

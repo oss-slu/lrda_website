@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
 import { Note, Tag } from "@/app/types";
-import DOMPurify from "dompurify";
 import {
   CalendarDays,
   UserCircle,
@@ -27,7 +26,7 @@ import NoteCard from "./note_card";
 
 /**
  * Extracts the first few sentences from a string of HTML content.
- * @param {string} BodyText - The HTML content to extract from.
+ * @param {string} bodyText - The HTML content to extract from.
  * @param {number} sentenceCount - The number of sentences to extract.
  * @returns {string} The extracted sentences as plain text.
  */
@@ -136,13 +135,13 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition-all w-full max-w-sm">
-          {/* Image at the Top with Spinner or Placeholder */}
-          {coverImage ? (
-            <div className="relative w-full h-32 sm:h-36 md:h-40">
+        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition-all max-w-sm">
+          {/* Image at the Top with Spinner */}
+          {coverImage && (
+            <div className="relative w-full h-40">
               {isImageLoading && (
                 <div className="absolute inset-0 flex justify-center items-center bg-gray-100">
-                  <div className="spinner-border animate-spin inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-gray-300 border-t-gray-600 rounded-full" />
+                  <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full" />
                 </div>
               )}
               <img
@@ -155,36 +154,30 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 onError={() => setIsImageLoading(false)}
               />
             </div>
-          ) : (
-            <div className="w-full h-32 sm:h-36 md:h-40 bg-gray-100 rounded-t-lg flex items-center justify-center">
-              <ImageIcon aria-label="No photo present" className="text-gray-400" size={72} strokeWidth={1} />
-            </div>
           )}
-          <div className="p-3 sm:p-4">
+          <div className="p-4">
             {/* Title */}
-            <div className="text-base sm:text-lg font-bold mb-2 line-clamp-2">{note.title}</div>
+            <div className="text-lg font-bold mb-2">{note.title}</div>
             {/* Creator */}
-            <div className="text-xs sm:text-sm text-gray-500 mb-2 flex items-center">
-              <UserCircle size={14} className="mr-1 sm:mr-1" /> {creator}
+            <div className="text-sm text-gray-500 mb-2 flex items-center">
+              <UserCircle size={16} className="mr-1" /> {creator}
             </div>
             {/* Date and Time */}
-            <div className="text-xs sm:text-sm text-gray-500 mb-2 space-y-1">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <CalendarDays size={14} className="flex-shrink-0" /> 
-                <span className="truncate">{formatDate(note.time)}</span>
+            <div className="text-sm text-gray-500 mb-2">
+              <div className="flex items-center gap-2">
+                <CalendarDays size={16} /> {formatDate(note.time)}
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Clock3 size={14} className="flex-shrink-0" />
-                <span className="truncate">{note.time ? formatTime(note.time) : "Unknown Time"}</span>
+              <div className="flex items-center gap-2">
+                <Clock3 size={16} />
+                {note.time ? formatTime(note.time) : "Unknown Time"}
               </div>
             </div>
             {/* Location */}
-            <div className="text-xs sm:text-sm text-gray-500 mb-2 flex items-center">
-              <ImageIcon size={14} className="mr-1 sm:mr-1 flex-shrink-0" /> 
-              <span className="truncate">{location}</span>
+            <div className="text-sm text-gray-500 mb-2 flex items-center">
+              <ImageIcon size={16} className="mr-1" /> {location}
             </div>
             {/* Body Preview */}
-            <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">{bodyPreview}</p>
+            <p className="text-sm text-gray-700">{bodyPreview}</p>
           </div>
         </div>
       </DialogTrigger>
@@ -225,7 +218,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
           {note.text ? (
             <div
               className="mt-4 text-base"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(note.text) }}
+              dangerouslySetInnerHTML={{ __html: note.text }}
             />
           ) : (
             <p className="text-gray-500">No content available.</p>

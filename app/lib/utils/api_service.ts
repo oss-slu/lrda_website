@@ -1,9 +1,8 @@
-import { Note, Comment } from "@/app/types"; // You'll add Comment type
+import { Note } from "@/app/types";
 import { UserData } from "../../types";
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { addDoc, collection, doc, getDoc, getFirestore } from "firebase/firestore";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { request } from "node:http";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -86,155 +85,33 @@ export default class ApiService {
   }
 
   /**
-   * Creates a new Comment object in Rerum.
-   * @param {Comment} comment - Comment object to save.
+   * Fetches messages from the API, with optional pagination.
+   * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
+   * @param {boolean} published - Indicates whether to fetch only published messages.
+   * @param {string} userId - The ID of the user for user-specific messages.
+   * @param {number} [limit=150] - The limit of messages per page. Defaults to 150.
+   * @param {number} [skip=0] - The iterator to skip messages for pagination.
+   * @param {Array} [allResults=[]] - The accumulated results for pagination.
+   * @returns {Promise<any[]>} The array of messages fetched from the API.
    */
-  static async createComment(comment: Comment) {
+  static async fetchMessages(
+    global: boolean,
+    published: boolean,
+    userId: string,
+    limit = 150,
+    skip = 0,
+    allResults: any[] = []
+  ): Promise<any[]> {
     try {
-      const response = await fetch(`${RERUM_PREFIX}create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "comment",   // Special Rerum type
-          noteId: comment.noteId, // Associate comment with a Note
-          text: comment.text,
-          authorId: comment.authorId,
-          authorName: comment.authorName,
-          createdAt: comment.createdAt,
-          position: comment.position || null,
-          threadId: comment.threadId || null,
-          parentId: comment.parentId || null,
-          resolved: !!comment.resolved,
-          archived: !!comment.archived,
-        }),
-      });
+      const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
 
-      if (!response.ok) {
-        throw new Error("Failed to create comment.");
-      }
-
-      return await response.json(); // Return the Rerum object metadata
-    } catch (error) {
-      console.error("Error creating comment:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * 🔥 Fetches all comments linked to a specific note.
-   * @param {string} noteId - The ID of the note.
-   */
-  static async fetchCommentsForNote(noteId: string): Promise<Comment[]> {
-    try {
-      const queryObj = {
-        type: "comment",
-        noteId: noteId,
+      const headers = {
+        "Content-Type": "application/json",
       };
 
-      const response = await fetch(`${RERUM_PREFIX}query`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(queryObj),
-      });
-
-      const data = await response.json();
-      return data
-        .filter((item: any) => !item.archived)
-        .map((item: any) => ({
-        id: item["@id"],
-        noteId: item.noteId,
-        text: item.text,
-        authorId: item.authorId,
-        authorName: item.authorName,
-        createdAt: new Date(item.createdAt),
-        position: item.position ? { from: item.position.from, to: item.position.to } : null,
-        threadId: item.threadId || null,
-        parentId: item.parentId || null,
-        resolved: !!item.resolved,
-        archived: !!item.archived,
-      }));
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-      throw error;
-    }
-  }
-
-  static async resolveThread(threadId: string) {
-    try {
-      const response = await fetch(`${RERUM_PREFIX}overwrite`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "comment-thread",
-          "@id": threadId,
-          resolved: true,
-          resolvedAt: new Date().toISOString(),
-        }),
-      });
-      if (!response.ok) throw new Error("Failed to resolve thread");
-      return await response.json();
-    } catch (error) {
-      console.error("Error resolving thread:", error);
-      throw error;
-    }
-  }
-
-  static async archiveComment(commentId: string) {
-    try {
-      const response = await fetch(`${RERUM_PREFIX}overwrite`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "comment",
-          "@id": commentId,
-          archived: true,
-          archivedAt: new Date().toISOString(),
-        }),
-      });
-      if (!response.ok) throw new Error("Failed to archive comment");
-      return true;
-    } catch (error) {
-      console.error("Error archiving comment:", error);
-      throw error;
-    }
-  }
-
-  /**
- * Fetches messages from the API, with optional pagination.
- * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
- * @param {boolean} published - Indicates whether to fetch only published messages.
- * @param {string} userId - The ID of the user for user-specific messages.
- * @param {number} [limit=150] - The limit of messages per page. Defaults to 150.
- * @param {number} [skip=0] - The iterator to skip messages for pagination.
- * @param {Array} [allResults=[]] - The accumulated results for pagination.
- * @returns {Promise<any[]>} The array of messages fetched from the API.
- */
-static async fetchMessages(
-  global: boolean,
-  published: boolean,
-  userId: string,
-  limit = 150,
-  skip = 0,
-  allResults: any[] = []
-): Promise<any[]> {
-  try {
-    const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
-
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
-    let body: { type: string; published?: boolean; creator?: string; } = {
-      type: "message",
-    };
+      let body: { type: string; published?: boolean; creator?: string } = {
+        type: "message",
+      };
 
       if (global) {
         body = { type: "message" };
@@ -264,87 +141,7 @@ static async fetchMessages(
     }
   }
 
-static async requestApproval(noteData: any): Promise<void> {
-  try {
-    const { instructorId, ...noteDetails } = noteData;
-
-
-    const instructorRef = doc(db, "users", instructorId);
-    const approvalsRef = collection(instructorRef, "approvalRequests");
-
-    await addDoc(approvalsRef, {
-      ...noteDetails,
-      status: "pending",
-      submittedAt: new Date(),
-    });
-
-    console.log(`Approval request sent to instructor: ${instructorId}`);
-  } catch (error) {
-    console.error("Error requesting approval:", error);
-    throw new Error("Failed to request approval.");
-  }
-}
-
-
-/**
- * Fetches notes created by a list of students, excluding archived notes.
- * @param {string[]} studentUids - An array of student UIDs whose notes need to be fetched.
- * @returns {Promise<any[]>} A promise that resolves to an array of notes created by the specified students.
- */
-static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
-  try {
-    const queryObj = {
-      type: "message",
-      published: false,
-      approvalRequested: true,
-      creator: {
-        $in: studentUids,
-      },
-      $or: [
-        { isArchived: { $exists: false } },
-        { isArchived: false },
-      ],
-    };
-
-    console.log("🔍 Rerum Query - fetchNotesByStudents:", JSON.stringify(queryObj));
-
-    const notes = await this.getPagedQuery(150, 0, queryObj);
-
-    console.log(`📥 Response (${notes.length} notes) for fetchNotesByStudents:`);
-    notes.forEach((note, idx) => {
-      console.log(`  Note ${idx + 1}:`, {
-        "@id": note.id,
-      title: note.title,
-      BodyText: note.text,
-      type: "message",
-      creator: note.creator,
-      media: note.media,
-      latitude: note.latitude,
-      longitude: note.longitude,
-      audio: note.audio,
-      published: note.published,
-      approvalRequested: note.approvalRequested,
-      tags: note.tags,
-      time: note.time,
-      isArchived: note.isArchived,
-      comments: note.comments || [], // Ensure comments are included
-      });
-    });
-
-    return notes;
-  } catch (error) {
-    console.error("❌ Error in fetchNotesByStudents:", error);
-    throw new Error("Failed to fetch notes by students.");
-  }
-}
-
-
-
-
-
-
-
- /**
+  /**
    * Implements a paged query to fetch messages in chunks.
    * @param {number} lim - The limit of messages per page.
    * @param {number} it - The iterator to skip messages for pagination.
@@ -394,108 +191,43 @@ static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
     return await response.json();
   }
 
-/**
- * Implements a paged query to fetch messages based on type and creator in chunks.
- * @param {number} lim - The limit of messages per page.
- * @param {number} it - The iterator to skip messages for pagination.
- * @param {string} creatorId - The UID of the creator to filter messages.
- * @param {Array} allResults - The accumulated results.
- * @returns {Promise<any[]>} The array of all messages fetched.
- */
-static async getPagedQueryWithParams(
-  lim: number,
-  it = 0,
-  creatorId: string,
-  allResults: any[] = []
-): Promise<any[]> {
-  try {
+  /**
+   * Fetches all messages for a specific user.
+   */
+  static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
+    const queryObj = { type: "message", creator: userId };
+    return await this.getPagedQuery(limit, skip, queryObj);
+  }
+
+  /**
+   * Fetches all Published Notes.
+   */
+  static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
+    const queryObj = { type: "message", published: true };
+    return await this.getPagedQuery(limit, skip, queryObj);
+  }
+
+  /**
+   * Fetches published notes within map bounds.
+   */
+  static async fetchPublishedNotesByBounds(
+    limit: number = 150,
+    skip: number = 0,
+    neLat: number,
+    neLng: number,
+    swLat: number,
+    swLng: number
+  ): Promise<any[]> {
     const queryObj = {
       type: "message",
-      creator: creatorId,
-    };
-
-    const response = await fetch(`${RERUM_PREFIX}query?limit=${lim}&skip=${it}`, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify(queryObj),
-    });
-
-    const results = await response.json();
-    if (results.length) {
-      allResults = allResults.concat(results);
-      return this.getPagedQueryWithParams(lim, it + results.length, creatorId, allResults);
-    }
-    return allResults;
-  } catch (err) {
-    console.warn("Could not process a result in paged query with params", err);
-    throw err;
+      published: true,
+      "latitude[gte]": swLat,
+      "latitude[lte]": neLat,
+      "longitude[gte]": swLng,
+      "longitude[lte]": neLng,
+    } as any;
+    return await this.getPagedQuery(limit, skip, queryObj);
   }
-}
-
-
-/**
- * Fetches all messages for a specific user.
- * @param {string} userId - The ID of the user whose messages are to be fetched.
- * @param {number} limit - The limit of messages per page.
- * @param {number} skip - The number of messages to skip for pagination.
- * @returns {Promise<any[]>} - The array of messages fetched from the API.
- */
-static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
-  const queryObj = {
-    type: "message",
-    creator: userId,
-  };
-  return await this.getPagedQuery(limit, skip, queryObj);
-}
-
-/**
- * Fetches all Published Notes.
- * @param {number} limit - The limit of messages per page.
- * @param {number} skip - The number of messages to skip for pagination.
- * @returns {Promise<any[]>} - The array of messages fetched from the API.
- */
-static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
-  const queryObj = {
-    type: "message",
-    published: true,
-  };
-  return await this.getPagedQuery(limit, skip, queryObj);
-}
-
-// New method in ApiService
-/**
- * Fetches all Published Notes.
- * @param {number} limit - The limit of messages per page.
- * @param {number} skip - The number of messages to skip for pagination.
- * @param {number} neLat - The latitude of the NE corner of the bounding box.
- * @param {number} neLng - The longitude of the NE corner of the bounding box.
- * @param {number} swLat - The latitude of the SW corner of the bounding box.
- * @param {number} swLng - The longitude of the SW corner of the bounding box.
- * @returns {Promise<any[]>} - The array of messages fetched from the API.
- * 
- */
-static async fetchPublishedNotesByBounds(
-  limit: number = 150,
-  skip: number = 0,
-  neLat: number,
-  neLng: number,
-  swLat: number,
-  swLng: number
-): Promise<any[]> {
-  const queryObj = {
-    type: "message",
-    published: true,
-    "latitude[gte]": swLat, // Greater than or equal to SW latitude
-    "latitude[lte]": neLat, // Less than or equal to NE latitude
-    "longitude[gte]": swLng, // Greater than or equal to SW longitude
-    "longitude[lte]": neLng, // Less than or equal to NE longitude
-  };
-  return await this.getPagedQuery(limit, skip, queryObj);
-}
-
   /**
    * Fetches user data from the API based on UID.
    * @param {string} uid - The UID of the user.
@@ -507,23 +239,9 @@ static async fetchPublishedNotesByBounds(
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
-        const firestoreData = userDoc.data();
-        console.log("Raw Firestore data:", firestoreData);
-        console.log("Roles object:", firestoreData.roles);
-        console.log("Administrator role:", firestoreData.roles?.administrator);
-        
-        // Ensure the data has the required structure
-        const userData: UserData = {
-          uid: firestoreData.uid || uid,
-          name: firestoreData.name || '',
-          roles: firestoreData.roles || { administrator: false, contributor: false },
-          isInstructor: firestoreData.isInstructor || false,
-          students: firestoreData.students || [],
-          parentInstructorId: firestoreData.parentInstructorId
-        };
-        
-        console.log("Processed UserData:", userData);
-        return userData;
+        const firestoreData = userDoc.data() as UserData;
+        console.log("User data retrieved from Firestore:", firestoreData);
+        return firestoreData; // Return data from Firestore as UserData
       } else {
         console.log("No user data found in Firestore, using API fallback.");
       }
@@ -648,7 +366,6 @@ static async fetchPublishedNotesByBounds(
         longitude: note.longitude || "",
         audio: note.audio,
         published: note.published,
-        approvalRequested: note.approvalRequested,
         tags: note.tags,
         time: note.time || new Date(),
       }),
@@ -661,36 +378,28 @@ static async fetchPublishedNotesByBounds(
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
-    const payload = {
-      "@id": note.id,
-      title: note.title,
-      BodyText: note.text,
-      type: "message",
-      creator: note.creator,
-      media: note.media,
-      latitude: note.latitude,
-      longitude: note.longitude,
-      audio: note.audio,
-      published: note.published,
-      approvalRequested: note.approvalRequested,
-      tags: note.tags,
-      time: note.time,
-      isArchived: note.isArchived,
-      comments: note.comments || [], // Ensure comments are included
-    };
-  
-    // ✅ Add this for debugging
-    console.log("Sending overwriteNote payload:", payload);
-  
     return await fetch(RERUM_PREFIX + "overwrite", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        "@id": note.id,
+        title: note.title,
+        BodyText: note.text,
+        type: "message",
+        creator: note.creator,
+        media: note.media,
+        latitude: note.latitude,
+        longitude: note.longitude,
+        audio: note.audio,
+        published: note.published,
+        tags: note.tags,
+        time: note.time,
+        isArchived: note.isArchived,
+      }),
     });
   }
-  
 
   /**
    * Searches messages by query.
@@ -742,178 +451,44 @@ static async fetchPublishedNotesByBounds(
     }
   }
 
- /**
- * Fetches the name of the creator by querying the API with the given creatorId.
- * If the API does not return a valid name, it will fetch the creator's name from Firestore.
- * @param {string} creatorId - The UID of the creator.
- * @returns {Promise<string>} The name of the creator.
- */
-static async fetchCreatorName(creatorId: string): Promise<string> {
-  try {
-    const url = RERUM_PREFIX + "query";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const body = {
-      "$or": [
-        { "@type": "Agent", "uid": creatorId },
-        { "@type": "foaf:Agent", "uid": creatorId }
-      ]
-    };
+  /**
+   * Fetches the name of the creator by querying the API with the given creatorId.
+   * @param {string} creatorId - The UID of the creator.
+   * @returns {Promise<string>} The name of the creator.
+   */
+  static async fetchCreatorName(creatorId: string): Promise<string> {
+    try {
+      const url = RERUM_PREFIX + "query";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const body = {
+        $or: [
+          { "@type": "Agent", uid: creatorId },
+          { "@type": "foaf:Agent", uid: creatorId },
+        ],
+      };
 
-    console.log(`Querying API with UID: ${creatorId}`);
+      console.log(`Querying with UID: ${creatorId}`);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
 
-    const data = await response.json();
-    console.log(`API Response Data:`, data);
-
-    if (data.length && data[0].name) {
-      return data[0].name;
-    } else {
-      console.warn(`No name found in API for UID: ${creatorId}. Querying Firestore.`);
-      
-      // If the API doesn't return the name, fetch it from Firestore
-      return await this.fetchCreatorNameFromFirestore(creatorId);
-    }
-  } catch (error) {
-    console.error(`Error fetching creator name from API:`, error, creatorId);
-    console.warn(`Attempting to fetch creator name from Firestore...`);
-    
-    // Fallback to Firestore in case of error
-    return await this.fetchCreatorNameFromFirestore(creatorId);
-  }
-}
-
-/**
- * Fetches the name of a user from Firestore using their UID.
- * @param {string} userId - The UID of the user.
- * @returns {Promise<string>} - The name of the user.
- */
-static async fetchCreatorNameFromFirestore(userId: string): Promise<string> {
-  try {
-    console.log("Fetching user name from Firestore for UID:", userId);
-
-    // Check if userId is a valid devstore.rerum.io URL and fetch name from API
-    if (userId.startsWith("https://devstore.rerum.io/") || userId.startsWith("http://devstore.rerum.io/")) {
-      try {
-        console.log("Fetching user data from devstore API:", userId);
-        const response = await fetch(userId);
-        if (response.ok) {
-          const userData = await response.json();
-          if (userData.name) {
-            console.log("Found name from devstore API:", userData.name);
-            return userData.name;
-          }
-        }
-        console.warn("Could not fetch name from devstore API, falling back to Firestore");
-      } catch (error) {
-        console.warn("Error fetching from devstore API:", error);
-      }
-    }
-
-    // Initialize Firestore
-    const db = getFirestore();
-
-    // Reference the user's document
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      console.log("User document data:", data);
-
-      // Check if the name field is available
-      if (data.name) {
-        return data.name;
+      const data = await response.json();
+      console.log(`Creator name fetched data:`, data);
+      if (data.length && data[0].name) {
+        return data[0].name;
       } else {
-        console.warn(`No 'name' field found for UID: ${userId}`);
-        return "Unknown User";
+        throw new Error("Creator not found or no name attribute.");
       }
-    } else {
-      console.warn(`No user found with UID: ${userId}`);
-      return "Unknown User";
+    } catch (error) {
+      console.error(`Error fetching creator name:`, error, creatorId);
+      throw error;
     }
-  } catch (error) {
-    console.error("Error fetching user name from Firestore:", error);
-
-    // Handle insufficient permissions
-    if (error instanceof Error && error.message.includes("Missing or insufficient permissions")) {
-      console.warn("Insufficient permissions. Returning fallback name.");
-      return "Unknown User";
-    }
-
-    throw error; // Re-throw other errors
   }
-}
-
-
-/**
- * Fetches the list of users (students) associated with a given instructor from Firestore.
- * @param {string} instructorId - The UID of the instructor.
- * @returns {Promise<{ uid: string; name: string; email: string }[]>} A list of student objects under the instructor.
- */
-static async fetchUsersByInstructor(instructorId: string): Promise<{ uid: string; name: string; email: string }[]> {
-  try {
-    const firestore = await import("firebase/firestore");
-    const db = firestore.getFirestore();
-
-    const usersQuery = firestore.query(
-      firestore.collection(db, "users"),
-      firestore.where("parentInstructorId", "==", instructorId),
-      firestore.where("isInstructor", "==", false)
-    );
-
-    const querySnapshot = await firestore.getDocs(usersQuery);
-    const users: { uid: string; name: string; email: string }[] = [];
-
-    querySnapshot.forEach((doc) => {
-      const userData = doc.data();
-      if (userData?.uid && userData?.name && userData?.email) {
-        users.push({ uid: userData.uid, name: userData.name, email: userData.email });
-      } else {
-        console.warn(`User document with ID ${doc.id} is missing required fields.`);
-      }
-    });
-
-    console.log(`Fetched students under instructor ${instructorId}:`, users);
-    if (users.length === 0) {
-      console.warn(`No students found for instructor with ID: ${instructorId}`);
-    }
-    return users;
-  } catch (error: any) {
-    console.error(`Error fetching students for instructor with ID ${instructorId}:`, error);
-    const message = typeof error?.message === "string" ? error.message : "";
-
-    // Fallback: use API user profile to get students list (avoids Firestore permission issues)
-    if (message.includes("Missing or insufficient permissions") || message.includes("permission")) {
-      console.warn("Falling back to API-based students list due to Firestore permissions.");
-      const instructorProfile = await ApiService.fetchUserData(instructorId);
-      const studentUids: string[] = instructorProfile?.students || [];
-
-      if (!studentUids.length) {
-        return [];
-      }
-
-      const resolved = await Promise.all(
-        studentUids.map(async (uid) => {
-          const name = await ApiService.fetchCreatorName(uid).catch(() => "Unknown User");
-          return { uid, name, email: "" };
-        })
-      );
-      return resolved;
-    }
-
-    throw new Error(`Unable to fetch students for instructor with ID: ${instructorId}`);
-  }
-}
-
-
-
 
   static async handler(req: NextApiRequest, res: NextApiResponse) {
     console.log("Received request:", req.method, req.body);
