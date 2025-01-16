@@ -11,10 +11,8 @@ import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc, collection, getDocs, query, where, arrayUnion } from "firebase/firestore";
 import Link from "next/link";
 import Select from "react-select"; // Import react-select
-import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,11 +57,10 @@ const SignupPage = () => {
     if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
   
-    if (password !== confirmPassword) {
+  if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
-
     if (!validateFirstName(firstName)) return;
     if (!validateLastName(lastName)) return;
 
@@ -81,7 +78,6 @@ const SignupPage = () => {
         email,
         name: fullName,
         institution,
-        isInstructor: false, // Default to false unless specified
         roles: workingUnderInstructor === "yes"
           ? { contributor: true } // Contributor if under an instructor
           : { administrator: true, contributor: true }, // Full roles for independent users
@@ -94,7 +90,7 @@ const SignupPage = () => {
       // Store the user data in Firestore under the "users" collection
       await setDoc(doc(db, "users", user.uid), userData);
   
-      // If working under an instructor, add the student ID to the instructor's record
+      // If working under an instructor, update the instructor's students array
       if (workingUnderInstructor === "yes" && selectedInstructor) {
         const instructorRef = doc(db, "users", selectedInstructor.value);
   
@@ -102,30 +98,14 @@ const SignupPage = () => {
         await setDoc(
           instructorRef,
           { students: arrayUnion(user.uid) },
-          { merge: true } // Ensure we're only updating the `students` array
+          { merge: true } // Ensure we're only updating the `students` array without overwriting the entire document
         );
   
         console.log(`Added student (${user.uid}) to instructor (${selectedInstructor.value})`);
       }
   
-      // Success feedback and auto-login
-      toast.success("Account created successfully! Logging you in...");
-      
-      // Auto-login the user using the User class
-      const userInstance = User.getInstance();
-      try {
-        await userInstance.login(email, password);
-        console.log("User auto-logged in successfully");
-        
-        // Redirect to map page
-        router.push('/lib/pages/map');
-      } catch (loginError) {
-        console.error("Auto-login failed:", loginError);
-        // Still show success message and reset form even if auto-login fails
-        toast.success("Account created! Please log in manually.");
-      }
-      
-      // Reset form fields
+      // Success feedback and reset form
+      toast.success("Account created successfully!");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
@@ -134,14 +114,10 @@ const SignupPage = () => {
       setInstitution("");
       setWorkingUnderInstructor("");
       setSelectedInstructor(null);
-    } catch (err: unknown) {
-      console.error("Signup failed:", err);
-      const message =
-        err instanceof Error ? err.message : String(err);
-      toast.error(`Signup failed: ${message}`);
+    } catch (error) {
+      toast.error(`Signup failed: ${error}`);
     }
   };
-  
   
 
   return (
@@ -201,7 +177,7 @@ const SignupPage = () => {
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">
-              Will you be working with an instructor?
+              Will you be working under an instructor?
             </label>
             <div className="flex space-x-4">
               <label>
@@ -246,15 +222,6 @@ const SignupPage = () => {
             >
               Sign Up
             </button>
-          </div>
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-right">
-              If you wish to sign-up an Instructor, please{" "}
-              <Link href="/lib/pages/InstructorSignupPage" className="text-blue-500 underline">
-                Register Here.
-              </Link>
-              .
-            </p>
           </div>
         </div>
       </div>
