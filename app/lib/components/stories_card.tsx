@@ -26,7 +26,7 @@ import NoteCard from "./note_card";
 
 /**
  * Extracts the first few sentences from a string of HTML content.
- * @param {string} bodyText - The HTML content to extract from.
+ * @param {string} BodyText - The HTML content to extract from.
  * @param {number} sentenceCount - The number of sentences to extract.
  * @returns {string} The extracted sentences as plain text.
  */
@@ -215,10 +215,10 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         </DialogHeader>
         <ScrollArea>
           {/* Display BodyText content */}
-          {note.text ? (
+          {note.BodyText ? (
             <div
               className="mt-4 text-base"
-              dangerouslySetInnerHTML={{ __html: note.text }}
+              dangerouslySetInnerHTML={{ __html: note.BodyText }}
             />
           ) : (
             <p className="text-gray-500">No content available.</p>

@@ -19,6 +19,7 @@ const InstructorSignupPage = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [emailError, setEmailError] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [isInstructor, setIsInstructor] = useState(false); // New state to determine if user is an instructor
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -90,76 +91,46 @@ const InstructorSignupPage = () => {
     try {
       console.log("Starting user registration with Firebase Authentication...");
   
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log("User successfully registered:", user.uid);
-  
-      // Check if the user already exists in the "Instructors" collection
-      const userDocRef = doc(db, "Instructors", email);
-      const userDocSnap = await getDoc(userDocRef);
-  
-      if (userDocSnap.exists()) {
-        console.log("User already exists. Creating new entry in AdditionalDetails...");
-  
-        // Existing user: Add to "AdditionalDetails" subcollection
-        const newDbRef = collection(db, `Instructors/${email}/AdditionalDetails`);
-        if (userDocSnap.exists()) {
-          console.log("Instructor already exists, adding new entry to AdditionalDetails.");
-          const newDbRef = collection(db, `Instructors/${email}/AdditionalDetails`);
-          await addDoc(newDbRef, {
-            email,
-            name: `${firstName} ${lastName}`,
-            description, // Add description to subcollection entry
-            createdAt: Timestamp.now(),
-          });
-          toast.success("Additional details added to your Instructor account!");
-        } else {
-          console.log("Creating new Instructor document...");
-          const userData = {
-            email,
-            name: `${firstName} ${lastName}`,
-            description, // Include description in main document
-            createdAt: Timestamp.now(),
-            canAddUsers: true, // Ability to add multiple users under them
-          };
-          await setDoc(userDocRef, userData);
-          toast.success("Instructor account created successfully!");
-        }
-        toast.success("New database entry created under your account!");
-      } else {
-        console.log("New user. Creating main Instructor document...");
-  
-        // New user: Add to "Instructors" collection
-        const userData = {
-          email,
-          name: `${firstName} ${lastName}`,
-          description, // Include description in main document
-          canAddUsers: true, // Ability to add multiple users under them
-          createdAt: Timestamp.now(),
-        };
-  
-        await setDoc(userDocRef, userData);
-        toast.success("Instructor account created successfully!");
-      }
-  
-      // Reset form fields
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setFirstName("");
-      setLastName("");
-      setDescription("");
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error during signup: ", error.message);
-        toast.error(`Signup failed: ${error.message}`);
-      } else {
-        console.error("Unexpected error during signup: ", error);
-        toast.error("Signup failed: An unexpected error occurred.");
-      }
-    }
-  };
+     // Create user in Firebase Authentication
+     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+     const user = userCredential.user;
+     console.log("User successfully registered:", user.uid);
+
+     // Prepare user data
+     const userData = {
+       uid: user.uid,
+       email,
+       name: `${firstName} ${lastName}`,
+       description: isInstructor ? description : null, // Only instructors have a description
+       isInstructor, // Boolean field to indicate if the user is an instructor
+       students: isInstructor ? [] : null, // Empty array to store students if the user is an instructor
+       createdAt: Timestamp.now(),
+     };
+
+     // Save user data in Firestore `users` collection
+     const userDocRef = doc(db, "users", user.uid);
+     await setDoc(userDocRef, userData);
+
+     toast.success("Account created successfully!");
+
+     // Reset form fields
+     setEmail("");
+     setPassword("");
+     setConfirmPassword("");
+     setFirstName("");
+     setLastName("");
+     setDescription("");
+     setIsInstructor(false);
+   } catch (error) {
+     if (error instanceof Error) {
+       console.error("Error during signup: ", error.message);
+       toast.error(`Signup failed: ${error.message}`);
+     } else {
+       console.error("Unexpected error during signup: ", error);
+       toast.error("Signup failed: An unexpected error occurred.");
+     }
+   }
+ };
   
   
 
