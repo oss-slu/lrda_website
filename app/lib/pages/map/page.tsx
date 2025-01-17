@@ -88,23 +88,22 @@ const Page = () => {
     const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
-      console.log('Observer triggered');
-      console.log('navbarCreateNoteButton:', navbarCreateNoteButton); // Log to check if the button is found
-      console.log('navbarLogoutButton:', navbarLogoutButton);
   
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
-        // Check if the intro has been shown before
-        const hasIntroBeenShown = localStorage.getItem('introShown');
-        const hasAddNoteIntroBeenShown = localStorage.getItem('addNoteIntroShown');
-        // If intro hasn't been shown, show it
-        if (!hasIntroBeenShown) {
+        // Check if the intro has been shown before (from cookies)
+        const introShown = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("introShown="))
+          ?.split("=")[1];
+  
+        if (!introShown) {
           const intro = introJs();
   
           intro.setOptions({
             steps: [
               {
                 element: noteRefs.current?.current,
-                intro: "Welcome! Let's explore the website together."
+                intro: "Welcome! Let's explore the website together.",
               },
               {
                 element: searchBarRef.current,
@@ -112,38 +111,41 @@ const Page = () => {
               },
               {
                 element: notesListRef.current,
-                intro: "Now, this is the notes list. You can use it to explore other people's notes!"
+                intro: "Now, this is the notes list. You can use it to explore other people's notes!",
               },
               {
-                element: navbarCreateNoteButton, 
+                element: navbarCreateNoteButton,
                 intro: "Click here to create your own note!",
               },
               {
                 element: navbarLogoutButton,
-                intro: "Done for the day? Make sure to logout!"
-              }
+                intro: "Done for the day? Make sure to logout!",
+              },
             ],
             scrollToElement: true,
             skipLabel: "Skip", // Change the look of this button
           });
   
+          // When the user skips or completes the intro
           intro.oncomplete(() => {
-            // After intro is completed, set the flag in localStorage
-            localStorage.setItem('introShown', 'true');
-            window.location.href = "/lib/pages/notes";
+            document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
           });
-          
+  
+          intro.onexit(() => {
+            document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
+          });
+  
           intro.start();
   
           // Apply inline styling to the skip button after a short delay to ensure it has rendered
           setTimeout(() => {
-            const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+            const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
             if (skipButton) {
-              skipButton.style.position = 'absolute';
-              skipButton.style.top = '2px'; // Move it up by decreasing the top value
-              skipButton.style.right = '20px'; // Adjust positioning as needed
-              skipButton.style.fontSize = '18px'; // Adjust font size as needed
-              skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+              skipButton.style.position = "absolute";
+              skipButton.style.top = "2px"; // Move it up by decreasing the top value
+              skipButton.style.right = "20px"; // Adjust positioning as needed
+              skipButton.style.fontSize = "18px"; // Adjust font size as needed
+              skipButton.style.padding = "4px 10px"; // Adjust padding as needed
             }
           }, 100); // 100ms delay to wait for rendering
         }
@@ -159,9 +161,8 @@ const Page = () => {
     return () => {
       observer.disconnect();
     };
-  }, [searchBarRef, noteRefs, notesListRef]); // Add refs to the dependency array
-  // Fetch and render map and notes logic as before...
-  // Leaving out unchanged parts of the code for brevity 
+  }, [searchBarRef, noteRefs, notesListRef]);
+  
 
   useEffect(() => {
     let isSubscribed = true;
@@ -528,34 +529,65 @@ const Page = () => {
       setIsNoteSelectedFromSearch(false);
       const query = address.trim().toLowerCase();
       const filtered = query
-        ? notes.filter(
-            (note) =>
-              note.title.toLowerCase().includes(query) ||
-              note.text.toLowerCase().includes(query) ||
-              note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Accessing the label property
-          )
+        ? notes.filter((note) => {
+            const titleMatch =
+              note.title && typeof note.title === "string"
+                ? note.title.toLowerCase().includes(query)
+                : false;
+  
+            const textMatch =
+              note.text && typeof note.text === "string"
+                ? note.text.toLowerCase().includes(query)
+                : false;
+  
+            const tagsMatch =
+              Array.isArray(note.tags) &&
+              note.tags.some(
+                (tag) =>
+                  tag.label &&
+                  typeof tag.label === "string" &&
+                  tag.label.toLowerCase().includes(query)
+              );
+  
+            return titleMatch || textMatch || tagsMatch;
+          })
         : [...notes];
-
+  
       setFilteredNotes(filtered);
     }
-
+  
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
     }
   };
+  
 
   const handleNotesSearch = (searchText: string) => {
     const query = searchText.toLowerCase();
-    const filtered = notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Accessing the label property
-    );
+    const filtered = notes.filter((note) => {
+      const titleMatch =
+        note.title && typeof note.title === "string"
+          ? note.title.toLowerCase().includes(query)
+          : false;
+  
+      const tagsMatch =
+        Array.isArray(note.tags) &&
+        note.tags.some(
+          (tag) =>
+            tag.label &&
+            typeof tag.label === "string" &&
+            tag.label.toLowerCase().includes(query)
+        );
+  
+      return titleMatch || tagsMatch;
+    });
+  
     setFilteredNotes(filtered);
     console.log("Filtered:", filtered);
   };
+  
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
@@ -731,7 +763,7 @@ const Page = () => {
                 className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
               />
             ))}
-        <div className="flex justify-center w-full mt-4 mb-2">
+        {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
             className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
             onClick={handlePrevious}
@@ -745,7 +777,7 @@ const Page = () => {
           >
             Next
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
