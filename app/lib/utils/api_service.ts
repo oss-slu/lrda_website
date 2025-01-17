@@ -1,7 +1,7 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
@@ -132,6 +132,29 @@ static async fetchMessages(
     throw error;
   }
 }
+
+// New method to request approval
+static async requestApproval(noteData: any): Promise<void> {
+  try {
+    const { instructorId, ...noteDetails } = noteData;
+
+    // Save the approval request in the instructor's Firestore document
+    const instructorRef = doc(db, "users", instructorId);
+    const approvalsRef = collection(instructorRef, "approvalRequests");
+
+    await addDoc(approvalsRef, {
+      ...noteDetails,
+      status: "pending", // Track approval status
+      submittedAt: new Date(),
+    });
+
+    console.log(`Approval request sent to instructor: ${instructorId}`);
+  } catch (error) {
+    console.error("Error requesting approval:", error);
+    throw new Error("Failed to request approval.");
+  }
+}
+
 
 
  /**

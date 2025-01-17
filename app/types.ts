@@ -24,7 +24,10 @@ export type UserData = {
     administrator: boolean;
     contributor: boolean;
   };
+  isInstructor?: boolean; // New field for instructors
+  parentInstructorId?: string; // New field for students
 };
+
 
 export type Note = {
   id: string;

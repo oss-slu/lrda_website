@@ -230,46 +230,78 @@ export default function NoteEditor({
     }
   }, [initialNote]);
 
+  const [userId, setUserId] = useState<string | null>(null);
+  const [instructorId, setInstructorId] = useState<string | null>(null);
+
+
+  // Fetch userId and instructorId asynchronously
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const fetchedUserId = await user.getId();
+      const fetchedInstructorId = await user.getInstructorId();
+      setUserId(fetchedUserId);
+      setInstructorId(fetchedInstructorId);
+    };
+    fetchUserDetails();
+  }, []);
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
       text: noteState.editorContent,
       title: noteState.title,
       media: [...noteState.images, ...noteState.videos],
-      published: noteState.isPublished,
+      published: false, // Notes are not directly published by default
       time: noteState.time,
       longitude: noteState.longitude,
       latitude: noteState.latitude,
       tags: noteState.tags,
       audio: noteState.audio,
       id: noteState.note?.id || "",
-      creator: noteState.note?.creator || "",
+      creator: noteState.note?.creator || user.getId(), // Add the current user as the creator
     };
-
+  
     try {
-      if (isNewNote) {
-        await ApiService.writeNewNote(updatedNote);
-        toast("Note Created", {
-          description: "Your new note has been successfully created.",
-          duration: 2000,
+      const roles = await user.getRoles();
+  
+      if (roles?.contributor && !(roles?.administrator)) {
+        // If the user is a student, request instructor approval
+        updatedNote.approvalRequested = true; // Custom field to track approval status
+        updatedNote.instructorId = await user.getInstructorId(); // Fetch instructor ID for this student
+  
+        await ApiService.requestApproval(updatedNote); // Send request to the instructor
+        toast("Approval Requested", {
+          description: "Your note has been submitted for instructor approval.",
+          duration: 4000,
         });
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       } else {
-        await ApiService.overwriteNote(updatedNote);
-        toast("Note Saved", {
-          description: "Your note has been successfully saved.",
-          duration: 2000,
-        });
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+        // If the user is an instructor or administrator, publish the note directly
+        updatedNote.published = true;
+  
+        if (isNewNote) {
+          await ApiService.writeNewNote(updatedNote);
+          toast("Note Created", {
+            description: "Your new note has been successfully published.",
+            duration: 2000,
+          });
+        } else {
+          await ApiService.overwriteNote(updatedNote);
+          toast("Note Saved", {
+            description: "Your note has been successfully updated.",
+            duration: 2000,
+          });
+        }
       }
+  
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
     } catch (error) {
       console.error("Error saving note:", error);
       toast("Error", {
-        description: "Failed to save note. Try again later.",
+        description: "Failed to save or request approval. Try again later.",
         duration: 4000,
       });
     }
   };
+  
 
   const handleDownload = async () => {
     if (!selectedFileType) {
@@ -404,10 +436,12 @@ export default function NoteEditor({
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
-              id="publish-toggle-button"
-              isPublished={Boolean(noteState.isPublished)}
-              onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
-            />
+            id="publish-toggle-button"
+            isPublished={Boolean(noteState.isPublished)}
+            noteId={noteState.note?.id || ""}
+            userId={userId || ""}
+            instructorId={instructorId || ""}
+          />
 
             <div className="w-1 h-9 bg-border" />
             <button
