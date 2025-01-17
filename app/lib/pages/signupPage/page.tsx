@@ -78,6 +78,7 @@ const SignupPage = () => {
         email,
         name: fullName,
         institution,
+        isInstructor: false, // Default to false unless specified
         roles: workingUnderInstructor === "yes"
           ? { contributor: true } // Contributor if under an instructor
           : { administrator: true, contributor: true }, // Full roles for independent users
@@ -90,7 +91,7 @@ const SignupPage = () => {
       // Store the user data in Firestore under the "users" collection
       await setDoc(doc(db, "users", user.uid), userData);
   
-      // If working under an instructor, update the instructor's students array
+      // If working under an instructor, add the student ID to the instructor's record
       if (workingUnderInstructor === "yes" && selectedInstructor) {
         const instructorRef = doc(db, "users", selectedInstructor.value);
   
@@ -98,7 +99,7 @@ const SignupPage = () => {
         await setDoc(
           instructorRef,
           { students: arrayUnion(user.uid) },
-          { merge: true } // Ensure we're only updating the `students` array without overwriting the entire document
+          { merge: true } // Ensure we're only updating the `students` array
         );
   
         console.log(`Added student (${user.uid}) to instructor (${selectedInstructor.value})`);
@@ -115,9 +116,11 @@ const SignupPage = () => {
       setWorkingUnderInstructor("");
       setSelectedInstructor(null);
     } catch (error) {
-      toast.error(`Signup failed: ${error}`);
+      console.error("Signup failed:", error);
+      toast.error(`Signup failed: ${error.message}`);
     }
   };
+  
   
 
   return (
