@@ -71,6 +71,8 @@ export default function NoteEditor({
   const [notes, setNotes] = useState<Note[]>([]); // Add this to define state for notes
 
 
+
+
   const titleRef = useRef<HTMLInputElement | null>(null);
 
   const saveRef = useRef<HTMLDivElement | null>(null);
@@ -233,6 +235,9 @@ export default function NoteEditor({
 
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
+      noteHandlers.setApprovalRequested(
+        initialNote.approvalRequested ?? false
+      );
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       noteHandlers.setVideos(
         (initialNote.media.filter(
@@ -247,81 +252,228 @@ export default function NoteEditor({
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
+      noteHandlers.setEditorContent(initialNote.text || "");
+      noteHandlers.setTitle(initialNote.title || "");
+      noteHandlers.setApprovalRequested(initialNote.approvalRequested || false);
     }
   }, [initialNote]);
 
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [instructorId, setInstructorId] = useState<string | null>(null);
+  const [isStudent, setIsStudent] = useState<boolean>(false);
 
-
-  // Fetch userId and instructorId asynchronously
   useEffect(() => {
     const fetchUserDetails = async () => {
-      const fetchedUserId = await user.getId();
-      const fetchedInstructorId = await user.getInstructorId();
+      const roles = await User.getInstance().getRoles();
+      const fetchedUserId = await User.getInstance().getId();
+      const fetchedInstructorId = await User.getInstance().getInstructorId();
+      setIsStudent(!!roles?.contributor && !roles?.administrator);
       setUserId(fetchedUserId);
       setInstructorId(fetchedInstructorId);
     };
     fetchUserDetails();
   }, []);
+
+  useEffect(() => {
+    if (initialNote) {
+      noteHandlers.setNote(initialNote as Note);
+      noteHandlers.setEditorContent(initialNote.text || "");
+      noteHandlers.setTitle(initialNote.title || "");
+
+      noteHandlers.setImages(
+        (initialNote.media.filter(
+          (item) => item.getType() === "image"
+        ) as PhotoType[]) || []
+      );
+      noteHandlers.setTime(initialNote.time || new Date());
+      noteHandlers.setLongitude(initialNote.longitude || "");
+      noteHandlers.setLatitude(initialNote.latitude || "");
+
+      noteHandlers.setTags(
+        (initialNote.tags || []).map((tag) =>
+          typeof tag === "string" ? { label: tag, origin: "user" } : tag
+        )
+      );
+
+      noteHandlers.setAudio(initialNote.audio || []);
+      noteHandlers.setIsPublished(initialNote.published || false);
+
+      // Set approvalRequested if present in initialNote
+      noteHandlers.setApprovalRequested(
+        initialNote.approvalRequested ?? false
+      );
+
+      noteHandlers.setVideos(
+        (initialNote.media.filter(
+          (item) => item.getType() === "video"
+        ) as VideoType[]) || []
+      );
+    }
+  }, [initialNote]);
+
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
       text: noteState.editorContent,
       title: noteState.title,
       media: [...noteState.images, ...noteState.videos],
-      published: false, // Notes are not directly published by default
+      published: noteState.isPublished,
+      approvalRequested: noteState.approvalRequested,
       time: noteState.time,
       longitude: noteState.longitude,
       latitude: noteState.latitude,
       tags: noteState.tags,
       audio: noteState.audio,
       id: noteState.note?.id || "",
-      creator: noteState.note?.creator || user.getId(), // Add the current user as the creator
+      creator: noteState.note?.creator || user.getId(), // Ensure the creator is set
     };
   
-  
     try {
-      const roles = await user.getRoles();
-  
-      if (roles?.contributor && !(roles?.administrator)) {
-        // If the user is a student, request instructor approval
-        updatedNote.approvalRequested = true; // Custom field to track approval status
-        updatedNote.instructorId = await user.getInstructorId(); // Fetch instructor ID for this student
-  
-        await ApiService.requestApproval(updatedNote); // Send request to the instructor
-        toast("Approval Requested", {
-          description: "Your note has been submitted for instructor approval.",
-          duration: 4000,
-        });
-      } else {
-        // If the user is an instructor or administrator, publish the note directly
-        updatedNote.published = true;
-  
-        if (isNewNote) {
-          await ApiService.writeNewNote(updatedNote);
-          toast("Note Created", {
-            description: "Your new note has been successfully published.",
-            duration: 2000,
-          });
-        } else {
-          await ApiService.overwriteNote(updatedNote);
-          toast("Note Saved", {
-            description: "Your note has been successfully updated.",
-            duration: 2000,
-          });
-        }
+      const roles = await user.getRoles(); // Fetch user roles
+      const userId = await user.getId(); // Fetch user ID
+      if (!userId) {
+        throw new Error("User ID is null or undefined.");
       }
   
-      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+      if (roles?.contributor && !roles?.administrator) {
+        // If the user is a student (part of teacher-student model)
+        updatedNote.approvalRequested = true; // Set approvalRequested field
+        updatedNote.instructorId = await user.getInstructorId(); // Set instructorId field
+      }
+  
+      if (isNewNote) {
+        await ApiService.writeNewNote(updatedNote); // Create a new note
+        toast("Note Created", {
+          description: "Your new note has been successfully created.",
+          duration: 2000,
+        });
+      } else {
+        await ApiService.overwriteNote(updatedNote); // Overwrite existing note
+        toast("Note Saved", {
+          description: "Your note has been successfully saved.",
+          duration: 2000,
+        });
+      }
+  
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
     } catch (error) {
       console.error("Error saving note:", error);
       toast("Error", {
-        description: "Failed to save or request approval. Try again later.",
+        description: "Failed to save note. Try again later.",
         duration: 4000,
       });
     }
   };
+  
+
+
+  const handlePublishChange = async () => {
+    const updatedNote: any = {
+      ...noteState.note,
+      text: noteState.editorContent,
+      title: noteState.title,
+      media: [...noteState.images, ...noteState.videos],
+      time: noteState.time,
+      longitude: noteState.longitude,
+      latitude: noteState.latitude,
+      tags: noteState.tags,
+      audio: noteState.audio,
+      id: noteState.note?.id || "",
+      creator: noteState.note?.creator || user.getId(),
+    };
+
+    try {
+      if (isStudent) {
+        // Toggle approvalRequested for students
+        updatedNote.approvalRequested = !noteState.approvalRequested;
+        updatedNote.published = false; // Notes are not published until approval
+        updatedNote.instructorId = instructorId;
+  
+        await ApiService.overwriteNote(updatedNote);
+  
+        noteHandlers.setApprovalRequested(!noteState.approvalRequested);
+  
+        toast(
+          updatedNote.approvalRequested
+            ? "Approval Requested"
+            : "Approval Request Canceled",
+          {
+            description: updatedNote.approvalRequested
+              ? "Your note has been submitted for instructor approval."
+              : "Your approval request has been canceled.",
+            duration: 4000,
+          }
+        );
+      } else {
+        // Toggle published for instructors/admins
+        updatedNote.published = !noteState.isPublished;
+        updatedNote.approvalRequested = false; // Admin/instructors don't need approval
+  
+        await ApiService.overwriteNote(updatedNote);
+  
+        noteHandlers.setIsPublished(!noteState.isPublished);
+  
+        toast(
+          updatedNote.published ? "Note Published" : "Note Unpublished",
+          {
+            description: updatedNote.published
+              ? "Your note has been published successfully."
+              : "Your note has been unpublished successfully.",
+            duration: 4000,
+          }
+        );
+      }
+  
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Trigger re-render
+    } catch (error) {
+      console.error("Error updating note state:", error);
+      toast("Error", {
+        description: "Failed to update note state. Please try again later.",
+        duration: 4000,
+      });
+    }
+  };
+
+  const handleRequestApprovalClick = async () => {
+    try {
+      const updatedNote: any = {
+        ...noteState.note,
+        approvalRequested: !noteState.approvalRequested, // Toggle approval request
+        instructorId: instructorId || null,
+      };
+
+      // Update backend
+      const response = await ApiService.overwriteNote(updatedNote);
+
+      if (response.ok) {
+        const updatedApprovalStatus = !noteState.approvalRequested;
+
+        // Update the local state
+        noteHandlers.setApprovalRequested(updatedApprovalStatus);
+
+        toast(
+          updatedApprovalStatus
+            ? "Approval Requested"
+            : "Approval Request Canceled",
+          {
+            description: updatedApprovalStatus
+              ? "Your note has been submitted for instructor approval."
+              : "Your approval request has been canceled.",
+          }
+        );
+      } else {
+        throw new Error("Failed to update approval status in backend.");
+      }
+    } catch (error) {
+      console.error("Error requesting approval:", error);
+      toast("Error", {
+        description: "Failed to request approval. Please try again later.",
+      });
+    }
+  };
+
+  
   
 
   const handleDownload = async () => {
@@ -457,12 +609,15 @@ export default function NoteEditor({
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
-            id="publish-toggle-button"
-            isPublished={Boolean(noteState.isPublished)}
-            noteId={noteState.note?.id || ""}
-            userId={userId || ""}
-            instructorId={instructorId || ""}
-          />
+        id="publish-toggle-button"
+        isPublished={Boolean(noteState.isPublished)}
+        isApprovalRequested={Boolean(noteState.approvalRequested)}
+        noteId={noteState.note?.id || ""}
+        userId={userId || ""}
+        instructorId={instructorId || ""}
+        onPublishClick={handlePublishChange}
+        onRequestApprovalClick={handleRequestApprovalClick}
+      />
 
             <div className="w-1 h-9 bg-border" />
             <button

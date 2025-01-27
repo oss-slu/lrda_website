@@ -40,6 +40,7 @@ export type Note = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
+  approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   uid: string;
   isArchived?: boolean; //add property of archived, then filter for it
@@ -59,8 +60,11 @@ export type newNote = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
+  approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   isArchived?: boolean;
+
+ 
 };
 
 export type RootStackParamList = {

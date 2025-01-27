@@ -1,7 +1,7 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getFirestore } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
@@ -156,6 +156,41 @@ static async requestApproval(noteData: any): Promise<void> {
 }
 
 
+/**
+ * Fetches notes created by a list of students, excluding archived notes.
+ * @param {string[]} studentUids - An array of student UIDs whose notes need to be fetched.
+ * @returns {Promise<any[]>} A promise that resolves to an array of notes created by the specified students.
+ */
+static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
+  try {
+    const queryObj = {
+      type: "message",
+      published: false,
+      creator: {
+        $in: studentUids, // Filter notes by the provided list of student UIDs
+      },
+      $or: [
+        { isArchived: { $exists: false } }, // Include notes where isArchived does not exist
+        { isArchived: false }, // Include notes where isArchived is explicitly false
+      ],
+    };
+
+    // Fetch notes from the API using the getPagedQuery method
+    const notes = await this.getPagedQuery(150, 0, queryObj);
+
+    console.log(`Fetched ${notes.length} notes for students:`, studentUids);
+    return notes;
+  } catch (error) {
+    console.error("Error fetching notes by students:", error);
+    throw new Error("Failed to fetch notes by students.");
+  }
+}
+
+
+
+
+
+
 
  /**
    * Implements a paged query to fetch messages in chunks.
@@ -186,6 +221,48 @@ static async requestApproval(noteData: any): Promise<void> {
     throw err;
   }
 }
+
+/**
+ * Implements a paged query to fetch messages based on type and creator in chunks.
+ * @param {number} lim - The limit of messages per page.
+ * @param {number} it - The iterator to skip messages for pagination.
+ * @param {string} creatorId - The UID of the creator to filter messages.
+ * @param {Array} allResults - The accumulated results.
+ * @returns {Promise<any[]>} The array of all messages fetched.
+ */
+static async getPagedQueryWithParams(
+  lim: number,
+  it = 0,
+  creatorId: string,
+  allResults: any[] = []
+): Promise<any[]> {
+  try {
+    const queryObj = {
+      type: "message",
+      creator: creatorId,
+    };
+
+    const response = await fetch(`${RERUM_PREFIX}query?limit=${lim}&skip=${it}`, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(queryObj),
+    });
+
+    const results = await response.json();
+    if (results.length) {
+      allResults = allResults.concat(results);
+      return this.getPagedQueryWithParams(lim, it + results.length, creatorId, allResults);
+    }
+    return allResults;
+  } catch (err) {
+    console.warn("Could not process a result in paged query with params", err);
+    throw err;
+  }
+}
+
 
 /**
  * Fetches all messages for a specific user.
@@ -386,6 +463,7 @@ static async fetchPublishedNotesByBounds(
         longitude: note.longitude || "",
         audio: note.audio,
         published: note.published,
+        approvalRequested: note.approvalRequested,
         tags: note.tags,
         time: note.time || new Date(),
       }),
@@ -414,6 +492,7 @@ static async fetchPublishedNotesByBounds(
         longitude: note.longitude,
         audio: note.audio,
         published: note.published,
+        approvalRequested: note.approvalRequested,
         tags: note.tags,
         time: note.time,
         isArchived: note.isArchived,
@@ -479,44 +558,147 @@ static async fetchPublishedNotesByBounds(
     }
   }
 
-  /**
-   * Fetches the name of the creator by querying the API with the given creatorId.
-   * @param {string} creatorId - The UID of the creator.
-   * @returns {Promise<string>} The name of the creator.
-   */
-  static async fetchCreatorName(creatorId: string): Promise<string> {
-    try {
-      const url = RERUM_PREFIX + "query";
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      const body = {
-        "$or": [
-          { "@type": "Agent", "uid": creatorId },
-          { "@type": "foaf:Agent", "uid": creatorId }
-        ]
-      };
+ /**
+ * Fetches the name of the creator by querying the API with the given creatorId.
+ * If the API does not return a valid name, it will fetch the creator's name from Firestore.
+ * @param {string} creatorId - The UID of the creator.
+ * @returns {Promise<string>} The name of the creator.
+ */
+static async fetchCreatorName(creatorId: string): Promise<string> {
+  try {
+    const url = RERUM_PREFIX + "query";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = {
+      "$or": [
+        { "@type": "Agent", "uid": creatorId },
+        { "@type": "foaf:Agent", "uid": creatorId }
+      ]
+    };
 
-      console.log(`Querying with UID: ${creatorId}`);
+    console.log(`Querying API with UID: ${creatorId}`);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
 
-      const data = await response.json();
-      console.log(`Data:`, data);
-      if (data.length && data[0].name) {
-        return data[0].name;
-      } else {
-        throw new Error("Creator not found or no name attribute.");
-      }
-    } catch (error) {
-      console.error(`Error fetching creator name:`, error, creatorId);
-      throw error;
+    const data = await response.json();
+    console.log(`API Response Data:`, data);
+
+    if (data.length && data[0].name) {
+      return data[0].name;
+    } else {
+      console.warn(`No name found in API for UID: ${creatorId}. Querying Firestore.`);
+      
+      // If the API doesn't return the name, fetch it from Firestore
+      return await this.fetchCreatorNameFromFirestore(creatorId);
     }
+  } catch (error) {
+    console.error(`Error fetching creator name from API:`, error, creatorId);
+    console.warn(`Attempting to fetch creator name from Firestore...`);
+    
+    // Fallback to Firestore in case of error
+    return await this.fetchCreatorNameFromFirestore(creatorId);
   }
+}
+
+/**
+ * Fetches the name of a user from Firestore using their UID.
+ * @param {string} userId - The UID of the user.
+ * @returns {Promise<string>} - The name of the user.
+ */
+static async fetchCreatorNameFromFirestore(userId: string): Promise<string> {
+  try {
+    console.log("Fetching user name from Firestore for UID:", userId);
+
+    // Initialize Firestore
+    const db = getFirestore();
+
+    // Reference the user's document
+    const docRef = doc(db, "users", userId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log("User document data:", data);
+
+      // Check if the name field is available
+      if (data.name) {
+        return data.name;
+      } else {
+        console.warn(`No 'name' field found for UID: ${userId}`);
+        return "Unknown User";
+      }
+    } else {
+      console.warn(`No user found with UID: ${userId}`);
+      return "Unknown User";
+    }
+  } catch (error) {
+    console.error("Error fetching user name from Firestore:", error);
+
+    // Handle insufficient permissions
+    if (error instanceof Error && error.message.includes("Missing or insufficient permissions")) {
+      console.warn("Insufficient permissions. Returning fallback name.");
+      return "Unknown User";
+    }
+
+    throw error; // Re-throw other errors
+  }
+}
+
+
+/**
+ * Fetches the list of users (students) associated with a given instructor from Firestore.
+ * @param {string} instructorId - The UID of the instructor.
+ * @returns {Promise<{ uid: string; name: string; email: string }[]>} A list of student objects under the instructor.
+ */
+static async fetchUsersByInstructor(instructorId: string): Promise<{ uid: string; name: string; email: string }[]> {
+  try {
+    const firestore = await import("firebase/firestore"); // Lazy load Firestore if not already imported
+    const db = firestore.getFirestore(); // Initialize Firestore instance
+
+    // Query Firestore to get all users where `parentInstructorId` matches the instructorId
+    const usersQuery = firestore.query(
+      firestore.collection(db, "users"),
+      firestore.where("parentInstructorId", "==", instructorId),
+      firestore.where("isInstructor", "==", false) // Exclude instructors
+    );
+
+    const querySnapshot = await firestore.getDocs(usersQuery);
+    const users: { uid: string; name: string; email: string }[] = [];
+
+    // Extract data from query snapshot
+    querySnapshot.forEach((doc) => {
+      const userData = doc.data();
+      if (userData?.uid && userData?.name && userData?.email) {
+        users.push({
+          uid: userData.uid,
+          name: userData.name,
+          email: userData.email,
+        });
+      } else {
+        console.warn(`User document with ID ${doc.id} is missing required fields.`);
+      }
+    });
+
+    console.log(`Fetched students under instructor ${instructorId}:`, users);
+
+    if (users.length === 0) {
+      console.warn(`No students found for instructor with ID: ${instructorId}`);
+    }
+
+    return users;
+  } catch (error) {
+    console.error(`Error fetching students for instructor with ID ${instructorId}:`, error);
+    throw new Error(`Unable to fetch students for instructor with ID: ${instructorId}`);
+  }
+}
+
+
+
 
   static async handler(req: NextApiRequest, res: NextApiResponse) {
     console.log('Received request:', req.method, req.body);

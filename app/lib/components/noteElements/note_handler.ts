@@ -28,11 +28,36 @@ export const handleTimeChange = (
   setTime(newDate);
 };
 
-export const handlePublishChange = (
-  setIsPublished: React.Dispatch<React.SetStateAction<boolean>>,
-  published: boolean
-) => {
-  setIsPublished(published);
+export const handlePublishChange = async ({
+  noteId,
+  userId,
+  isPublished,
+}: {
+  noteId: string;
+  userId: string;
+  isPublished: boolean;
+}) => {
+  try {
+    const response = await fetch(`/api/notes/${noteId}/publish`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        isPublished,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update publish state.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating publish state:", error);
+    throw error;
+  }
 };
 
 export const handleTagsChange = (

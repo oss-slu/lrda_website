@@ -10,8 +10,31 @@ const StoriesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<{ uid: string; name: string }[]>([]); // To store unique user IDs
+  const [selectedUser, setSelectedUser] = useState<string>(""); // For dropdown selection
   const [skip, setSkip] = useState(0);
   const [hasMoreNotes, setHasMoreNotes] = useState(true);
+
+
+   // Fetch user names by resolving UIDs to names
+   const fetchUserNames = async (uids: string[]) => {
+    try {
+      const uniqueUsers = new Set(uids);
+      const userPromises = Array.from(uniqueUsers).map(async (uid) => {
+        try {
+          const name = await ApiService.fetchCreatorName(uid); // Fetch name from Firestore or RERUM
+          return { uid, name };
+        } catch (error) {
+          console.error(`Error fetching name for UID ${uid}:`, error);
+          return { uid, name: "Unknown User" }; // Fallback for failed lookups
+        }
+      });
+      return Promise.all(userPromises); // Resolve all user name fetches
+    } catch (error) {
+      console.error("Error fetching user names:", error);
+      return [];
+    }
+  };
 
   const fetchStories = async (offset = 0, limit = 10) => {
     try {
@@ -25,16 +48,44 @@ const StoriesPage = () => {
         setHasMoreNotes(false);
         toast("No more stories to display.");
       } else {
+        const uids = fetchedNotes.map((note) => note.creator); // Collect UIDs from notes
+        const userList = await fetchUserNames(uids); // Resolve UIDs to names
+
+        setUsers((prevUsers) => {
+          const mergedUsers = [...prevUsers, ...userList];
+          // Remove duplicates (if user IDs are already in the state)
+          return mergedUsers.filter(
+            (user, index, self) =>
+              index === self.findIndex((u) => u.uid === user.uid)
+          );
+        });
+
         setNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
         setFilteredNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
       }
     } catch (error) {
-      console.error("Error fetching stories:", error);
-      toast.error("Failed to fetch stories. Please try again.");
+      console.error("Error fetching notes:", error);
+      toast.error("Failed to fetch notes. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const fetchFilteredNotesByUser = async (creatorId: string) => {
+    try {
+      setIsLoading(true);
+      const userNotes = await ApiService.getPagedQueryWithParams(10, 0, creatorId);
+      setFilteredNotes(userNotes); // Display only notes for the selected user
+    } catch (error) {
+      console.error(`Error fetching notes for user ${creatorId}:`, error);
+      toast.error("Failed to fetch user notes. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
 
   useEffect(() => {
     fetchStories(skip);
@@ -55,6 +106,18 @@ const StoriesPage = () => {
         )
     );
     setFilteredNotes(results);
+  };
+
+  const handleUserFilter = (userId: string) => {
+    setSelectedUser(userId);
+    if (userId === "") {
+      setFilteredNotes(notes); // Show all notes if no user is selected
+    } else {
+      const results = notes.filter(
+        (note) => note.creator === userId && note.approvalRequested
+      );
+      setFilteredNotes(results);
+    }
   };
 
   const handleNext = () => {
@@ -80,7 +143,31 @@ const StoriesPage = () => {
           className="w-full max-w-md p-2 border rounded-lg shadow-sm"
           onChange={(e) => handleSearch(e.target.value)}
         />
+       {/* Dropdown for filtering by user */}
+       <select
+  value={selectedUser}
+  onChange={async (e) => {
+    const userId = e.target.value;
+    setSelectedUser(userId); // Update the selected user in state
+    if (userId === "") {
+      setFilteredNotes(notes); // Show all notes if no user is selected
+    } else {
+      await fetchFilteredNotesByUser(userId); // Dynamically fetch and filter notes
+    }
+  }}
+  className="p-2 border rounded-lg shadow-sm"
+>
+  <option value="">All Users</option>
+  {users.map((user) => (
+    <option key={user.uid} value={user.uid}>
+      {user.name} {/* Display user names */}
+    </option>
+  ))}
+</select>
+
       </div>
+
+      
 
       {/* Stories Grid */}
       <div className="flex justify-center">
