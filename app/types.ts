@@ -85,6 +85,8 @@ export type newNote = {
   approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   isArchived?: boolean;
+
+ 
 };
 
 export type RootStackParamList = {
