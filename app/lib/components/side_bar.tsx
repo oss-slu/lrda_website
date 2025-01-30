@@ -123,6 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
+//move this button to a circle button with a plus icon at the bottom of the side bar
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
       <div className="w-full mb-4">
         <SearchBarNote onSearch={handleSearch} />
