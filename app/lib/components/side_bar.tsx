@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react"; // Importing Plus icon
 import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
@@ -123,14 +124,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-//move this button to a circle button with a plus icon at the bottom of the side bar
     <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
       <div className="w-full mb-4">
         <SearchBarNote onSearch={handleSearch} />
       </div >
-      <Button id = 'add-note-button' data-testid="add-note-button" onClick={handleAddNote}>
-        Add Note
-      </Button> 
+
       <div>
         <NoteListView
           notes={filteredNotes}
@@ -138,6 +136,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
            
         />
       </div>
+
+      {/* floating add note button */}
+      <Button
+        id="add-note-button"
+        data-testid = "add-note-button"
+        onClick={handleAddNote}
+        //aria-label="Add Note">
+        className = "absolute bottom-4 left-1/2 transform - translate-x-1/2 bg-blue-600 hover:bg-blue-700
+text-white p-4 rounded-full shadow-lg"
+      >
+        <Plus size ={24}/>
+      </Button>
     </div>
   );
 };
