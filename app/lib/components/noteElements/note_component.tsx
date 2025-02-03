@@ -442,7 +442,7 @@ export default function NoteEditor({
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
-          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+          <div className="flex flex-row bg-popup shadow-sm my-4 mr-8 rounded-md border border-border bg-white justify-stretch items-center">
           <PublishToggle
               id="publish-toggle-button"
               isPublished={Boolean(noteState.isPublished)}
@@ -452,16 +452,16 @@ export default function NoteEditor({
             <div className="w-1 h-9 bg-border" />
             <button
               id="save-note-button"
-              className="hover:text-green-500 flex justify-center items-center w-full"
+              className="hover:text-green-500 flex justify-center items-center w-1/2 h-12"
               onClick={onSave}
-            >
+            > {/*Should the other buttons in this toolbar have tooltips like the PublishToggle does?*/}
               <SaveIcon className="text-current"/>
-              <div className="ml-2"  ref = {saveRef}>Save</div>
+              <div className="ml-2"  ref = {saveRef}>Save as Draft</div>
             </button>
-            <div className="w-1  h-9 bg-border" />
+            <div className="w-1 h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-full">
+                <button className="hover:text-red-500 flex justify-center items-center w-1/2 h-12"> {/*Is there any reason why some buttons are defined here, while others have their own files?*/}
                   <FileX2 className="text-current"/>
                   <div className="ml-2" ref = {deleteRef}>Archive</div>
                 </button>
@@ -490,7 +490,7 @@ export default function NoteEditor({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <div className="w-1 h-7 bg-border" />
+            <div className="w-1 h-9 bg-border" />
             <div className="flex-grow"
             ref = {dateRef} >
               <TimePicker
@@ -500,7 +500,7 @@ export default function NoteEditor({
                 }
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
+            <div className="w-1 h-9 bg-border" />
             <div className="bg-white p-2 rounded"
             ref = {locationRef} >
               <LocationPicker
@@ -516,7 +516,7 @@ export default function NoteEditor({
                 }
               />
             </div>
-            <div className="w-2 h-9 bg-border" />
+            {/*<div className="w-2 h-9 bg-border" />*/}
             {/* <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
