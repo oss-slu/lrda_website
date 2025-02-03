@@ -47,7 +47,7 @@ describe('Sidebar Component', () => {
       push: mockPush,
     }));
   });
-
+//fix this test for the new sidebar buttons/changes
   it('renders the sidebar correctly', () => {
     render(<Sidebar setNoteComponentVisible={jest.fn()} />);
     // Query for a child element of the sidebar to confirm it's rendered

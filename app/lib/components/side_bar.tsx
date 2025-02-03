@@ -124,29 +124,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
+    <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
         <SearchBarNote onSearch={handleSearch} />
-      </div >
+      </div>
 
       <div>
         <NoteListView
           notes={filteredNotes}
           onNoteSelect={(note) => onNoteSelect(note, false)}
-           
         />
       </div>
 
       {/* floating add note button */}
       <Button
         id="add-note-button"
-        data-testid = "add-note-button"
+        data-testid="add-note-button"
         onClick={handleAddNote}
-        //aria-label="Add Note">
-        className = "absolute bottom-4 left-1/2 transform - translate-x-1/2 bg-blue-600 hover:bg-blue-700
-text-white p-4 rounded-full shadow-lg"
+        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg"
       >
-        <Plus size ={24}/>
+        <Plus size={24} />
       </Button>
     </div>
   );
