@@ -15,31 +15,28 @@ public class enemyPatrol : MonoBehaviour
 	void Start()
 	{
 		rb = GetComponent<Rigidbody2D>();
-		//anim = GetComponent<Animator>();
+		rb.gravityScale = 0;
 		currentPoint = pointB.transform;
+		//anim = GetComponent<Animator>();
 		//anim.SetBool("isRunning", true);
 	}
 
 	//Update is called once per frame
-	void Update()
-	{
-		Vector2 point = currentPoint.position - transform.position;
-		if(currentPoint == pointB.transform)
-		{
-			rb.velocity = new Vector2(speed, 0);
-		}
-		else
-		{
-			rb.velocity = new Vector2(-speed, 0);
-		}
+    	void Update()
+    	{
+        	Vector2 direction = (currentPoint.position - transform.position).normalized;
+        	rb.velocity = new Vector2(direction.x * speed, direction.y * speed); 
 
-		if(Vector2.Distance(transform.position, currentPoint.position) < 0.5f && currentPoint == pointB.transform)
-		{
-			currentPoint = pointA.transform;
-		}
-		if(Vector2.Distance(transform.position, currentPoint.position) < 0.5f && currentPoint == pointA.transform)
-		{
-			currentPoint = pointB.transform;
-		}
-	}
+        	if (Vector2.Distance(transform.position, currentPoint.position) < 1f)
+        	{
+            		if (currentPoint == pointB.transform)
+            		{
+                		currentPoint = pointA.transform;
+            		}
+            		else if (currentPoint == pointA.transform)
+            		{
+                		currentPoint = pointB.transform;
+            		}
+        	}
+    	}
 }
