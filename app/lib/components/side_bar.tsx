@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react"; // Importing Plus icon
 import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
@@ -9,6 +10,8 @@ import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+
+import { Switch } from "@/components/ui/switch";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
@@ -19,6 +22,7 @@ const user = User.getInstance();
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [showPublished, setShowPublished] = useState(true);
 
   const handleAddNote = async () => {
     const userId = await user.getId();
@@ -44,44 +48,43 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-    const  addNote = document.getElementById("add-note-button");
-    console.log('Observer triggered');
+      const addNote = document.getElementById("add-note-button");
+      console.log('Observer triggered');
 
-    if (addNote) {
-      const intro = introJs();
-
-      intro.setOptions({
-        scrollToElement: false,
-        skipLabel: "Skip",
-      });
-      
-      
-      intro.start();
-      
       if (addNote) {
-        addNote.click();
-      }
-      // Apply inline styling to the skip button after a short delay to ensure it has rendered
-      setTimeout(() => {
-        const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
-        if (skipButton) {
-          skipButton.style.position = 'absolute';
-          skipButton.style.top = '2px'; // Move it up by decreasing the top value
-          skipButton.style.right = '20px'; // Adjust positioning as needed
-          skipButton.style.fontSize = '18px'; // Adjust font size as needed
-          skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+        const intro = introJs();
+        intro.setOptions({
+          scrollToElement: false,
+          skipLabel: "Skip",
+        });
+        intro.start();
+
+        if (addNote) {
+          addNote.click();
         }
-      }, 100); // 100ms delay to wait for rendering
-      observer.disconnect(); // Stop observing once the elements are found
-    }
-  });
 
-  // Start observing the body for changes
-  observer.observe(document.body, { childList: true, subtree: true });
+        // Apply inline styling to the skip button after a short delay to ensure it has rendered
+        setTimeout(() => {
+          const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+          if (skipButton) {
+            skipButton.style.position = 'absolute';
+            skipButton.style.top = '2px'; // Move it up by decreasing the top value
+            skipButton.style.right = '20px'; // Adjust positioning as needed
+            skipButton.style.fontSize = '18px'; // Adjust font size as needed
+            skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+          }
+        }, 100); // 100ms delay to wait for rendering
 
-  // Cleanup the observer when the component unmounts
-  return () => observer.disconnect();
-  }, []); 
+        observer.disconnect(); // Stop observing once the elements are found
+      }
+    });
+
+    // Start observing the body for changes
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Cleanup the observer when the component unmounts
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchUserMessages = async () => {
@@ -93,7 +96,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
           const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
 
-
           setNotes(unarchivedNotes);
           setFilteredNotes(unarchivedNotes);
         } else {
@@ -103,40 +105,62 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         console.error("Error fetching user messages:", error);
       }
     };
-  
     fetchUserMessages();
   }, []);
-  
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
-      setFilteredNotes(notes);
+      filterNotesByPublished(showPublished);
       return;
     }
     const query = searchQuery.toLowerCase();
     const filtered = notes.filter(
       (note) =>
-        note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.label.toLowerCase().includes(query)) // Access the label property
+        (note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
+        (showPublished ? note.published : !note.published)
     );
     setFilteredNotes(filtered);
   };
 
+  const filterNotesByPublished = (showPublished: boolean) => {
+    const filtered = notes.filter(note => showPublished ? note.published : !note.published);
+    setFilteredNotes(filtered);
+  };
+
+  const togglePublished = () => {
+    const newShowPublished = !showPublished;
+    setShowPublished(newShowPublished);
+    filterNotesByPublished(newShowPublished);
+  };
+
   return (
-    <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30">
+    <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
         <SearchBarNote onSearch={handleSearch} />
-      </div >
-      <Button id = 'add-note-button' data-testid="add-note-button" onClick={handleAddNote}>
-        Add Note
-      </Button> 
+        <div className="flex items-center mt-2">
+          <span className="mr-2 text-sm">Unpublished</span>
+          <Switch checked={showPublished} onCheckedChange={togglePublished} />
+          <span className="ml-2 text-sm">Published</span>
+        </div>
+      </div>
+
       <div>
         <NoteListView
           notes={filteredNotes}
           onNoteSelect={(note) => onNoteSelect(note, false)}
-           
         />
       </div>
+
+      {/* floating add note button */}
+      <Button
+        id="add-note-button"
+        data-testid="add-note-button"
+        onClick={handleAddNote}
+        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black hover:bg-blue-600 text-white p-4 rounded-full shadow-lg"
+      >
+        <Plus size={24} />
+      </Button>
     </div>
   );
 };
