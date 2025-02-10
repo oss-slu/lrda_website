@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UploadIcon } from "lucide-react"; // Import UploadIcon for the publish button
+import { FileCheck2 } from "lucide-react"; // Import FileCheck2 for the publish button
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip"; // Import Tooltip components
 
 // Define the type for your component's props
@@ -40,7 +40,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center space-x-2">
-                <UploadIcon
+                <FileCheck2
                   className={`h-6 w-6 ${isPublished ? 'text-green-500' : 'text-black group-hover:text-green-500'}`}
                 /> {/* Icon stays green if published */}
                 <span
