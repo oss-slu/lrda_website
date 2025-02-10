@@ -74,10 +74,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   return (
-    <div className="flex flex-row items-center pr-6 pl-2 h-8 w-full">
+    <div className="flex flex-row items-center p-2 h-9">
       <Popover>
         <PopoverTrigger asChild>
-          <button className="flex items-center justify-center px-12 h-full text-sm">
+          <button className="flex items-center justify-start w-full h-full text-sm">
             <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
             <div>Location</div>
           </button>

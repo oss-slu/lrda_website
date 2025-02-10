@@ -33,7 +33,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
       {/* Publish Button */}
       <div
         id={id}
-        className="flex flex-row items-center px-16 h-12 justify-between cursor-pointer group"
+        className="flex flex-row items-center p-3 justify-between cursor-pointer group"
         onClick={handlePublishClick}
       >
         <TooltipProvider delayDuration={200}>

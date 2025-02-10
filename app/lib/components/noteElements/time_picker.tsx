@@ -56,7 +56,7 @@ export default function TimePicker({
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="flex flex-row items-center justify-center w-[240px] h-12 pr-2 group" // Add `group` here
+          className="flex flex-row items-center justify-center w-[180px] group" // Add `group` here
           aria-label="Open Calendar"
           type="button"
         >
