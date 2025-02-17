@@ -135,13 +135,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="h-[90vh] bg-gray-200 p-4 overflow-y-auto flex flex-col z-30 relative">
+    <div className="h-[90vh] bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
+        <div className="text-center justify-center mb-1">
+          <span className="justify-center text-xl font-semibold">My Notes</span>
+        </div>
         <SearchBarNote onSearch={handleSearch} />
-        <div className="flex items-center mt-2">
-          <span className="mr-2 text-sm">Unpublished</span>
-          <Switch checked={showPublished} onCheckedChange={togglePublished} />
-          <span className="ml-2 text-sm">Published</span>
+        <div className="p-2 pt-1 m-1 mt-2 rounded truncate cursor-pointer bg-gray-300">
+          <div className="flex flex-row items-center text-center justify-between">
+            <span className="mr-2 text-lg font-semibold">View</span>
+          </div>
+          <div className="flex flex-row items-center text-center justify-between">
+            <span className="mr-2 text-sm font-semibold">Unpublished</span>
+            <Switch checked={showPublished} onCheckedChange={togglePublished} />
+            <span className="ml-2 text-sm font-semibold">Published</span>
+          </div>
         </div>
       </div>
 
