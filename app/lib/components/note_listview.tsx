@@ -18,6 +18,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [fresh, setFresh] = useState(true);
 
   const visibleNotes = notes.filter(note => !note.isArchived); //filter ?
+  //Does this filter always control which notes are visible based on whether or not they are archived? If so, how is the publish toggle display handled?
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
