@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
 
+//Is the Tabs component used anywhere in the project other than for the note view slider? If not, its styling could be changed for better contrast in the slider on the Notes page.
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>

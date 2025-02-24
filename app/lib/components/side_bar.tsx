@@ -11,7 +11,12 @@ import DataConversion from "../utils/data_conversion";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 
+/*
+//Bring this import back to use switch toggle for note view.
 import { Switch } from "@/components/ui/switch";
+*/
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
@@ -141,15 +146,30 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           <span className="justify-center text-xl font-semibold">My Notes</span>
         </div>
         <SearchBarNote onSearch={handleSearch} />
-        <div className="p-2 pt-1 m-1 mt-2 rounded truncate cursor-pointer bg-gray-300">
+        <div className="p-2 pt-1 pb-1 m-1 mt-2 rounded truncate cursor-pointer bg-gray-300">
           <div className="flex flex-row items-center text-center justify-between">
             <span className="mr-2 text-lg font-semibold">View</span>
           </div>
+
+          <div className="flex flex-row items-center text-center justify-between pt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
+            <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
+                <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
+              </TabsList>
+              {/*Using Tabs for this is not ideal, though it is the closest UI component to the desired appearance for this slider. The previously used Switch toggle is below.*/}
+              <TabsContent value="unpublished"></TabsContent>
+              <TabsContent value="published"></TabsContent>
+            </Tabs>
+          </div>
+
+          {/*
           <div className="flex flex-row items-center text-center justify-between">
             <span className="mr-2 text-sm font-semibold">Unpublished</span>
             <Switch checked={showPublished} onCheckedChange={togglePublished} />
             <span className="ml-2 text-sm font-semibold">Published</span>
           </div>
+          */}
         </div>
       </div>
 
