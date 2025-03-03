@@ -145,13 +145,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         <div className="text-center justify-center mb-1">
           <span className="justify-center text-xl font-semibold">My Notes</span>
         </div>
+        {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
         <SearchBarNote onSearch={handleSearch} />
-        <div className="p-2 pt-1 pb-1 m-1 mt-2 rounded truncate cursor-pointer bg-gray-300">
-          <div className="flex flex-row items-center text-center justify-between">
-            <span className="mr-2 text-lg font-semibold">View</span>
-          </div>
 
-          <div className="flex flex-row items-center text-center justify-between pt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
+          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
             <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
@@ -171,7 +168,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           </div>
           */}
         </div>
-      </div>
 
       <div>
         <NoteListView
