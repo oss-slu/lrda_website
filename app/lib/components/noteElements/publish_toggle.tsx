@@ -33,7 +33,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
       {/* Publish Button */}
       <div
         id={id}
-        className="flex flex-row items-center p-3 justify-between cursor-pointer group"
+        className="flex flex-row items-center p-3 justify-evenly cursor-pointer group"
         onClick={handlePublishClick}
       >
         <TooltipProvider delayDuration={200}>
@@ -41,10 +41,10 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
             <TooltipTrigger asChild>
               <div className="flex items-center space-x-2">
                 <FileCheck2
-                  className={`h-6 w-6 ${isPublished ? 'text-blue-500' : 'text-black group-hover:text-blue-500'}`}
+                  className={`h-6 w-6 ${isPublished ? 'text-green-500' : 'text-black group-hover:text-green-500'}`}
                 /> {/* Icon stays green if published */}
                 <span
-                  className={`font-semibold ${isPublished ? 'text-blue-500' : 'text-black group-hover:text-blue-500'}`}
+                  className={`font-semibold ${isPublished ? 'text-green-500' : 'text-black group-hover:text-green-500'}`}
                 >
                   Publish
                 </span> {/* Text stays green if published */}
