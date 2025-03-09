@@ -95,9 +95,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
 
           const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
+          const publishedNotes = convertedNotes.filter((note) => note.published); //filter out archived notes
 
           setNotes(unarchivedNotes);
-          setFilteredNotes(unarchivedNotes);
+          setFilteredNotes(publishedNotes);
         } else {
           console.error("User not logged in");
         }
