@@ -442,7 +442,7 @@ export default function NoteEditor({
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
-          <div className="flex flex-row bg-popup shadow-sm my-4 mr-8 rounded-md border border-border bg-white justify-stretch mr-8 items-center">
+          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
               id="publish-toggle-button"
               isPublished={Boolean(noteState.isPublished)}
@@ -452,7 +452,7 @@ export default function NoteEditor({
             <div className="w-1 h-9 bg-border" />
             <button
               id="save-note-button"
-              className="hover:text-green-500 flex justify-center items-center w-1/2 h-12"
+              className="hover:text-green-500 flex justify-center items-center w-full"
               onClick={onSave}
             >
               <SaveIcon className="text-current"/>
@@ -461,7 +461,7 @@ export default function NoteEditor({
             <div className="w-1  h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-1/2 h-12">
+                <button className="hover:text-red-500 flex justify-center items-center w-full">
                   <FileX2 className="text-current"/>
                   <div className="ml-2" ref = {deleteRef}>Archive</div>
                 </button>
@@ -490,7 +490,7 @@ export default function NoteEditor({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <div className="w-1 h-9 bg-border" />
+            <div className="w-1 h-7 bg-border" />
             <div className="flex-grow"
             ref = {dateRef} >
               <TimePicker
