@@ -5,9 +5,9 @@ using UnityEngine;
 public class BoatMovement : MonoBehaviour
 {
     public float bobbingHeight = 0.5f; // boat bobbing
-    public float bobbingSpeed = 2f; 
-    public float rowingDistance = 3f; // boat moving
-    public float rowingSpeed = 1f; 
+    public float bobbingSpeed = 1f; 
+    public float rowingDistance = 1f; // boat moving
+    public float rowingSpeed = 0.5f; 
     private Vector3 startPos;
     private float time;
 
