@@ -50,13 +50,12 @@ describe('Publish and Unpublish Notes Slider', () => {
   });
 
   //Commented tests still need to be rewritten to test the Tabs UI component instead of a Switch.
-  /*
-  it('renders the sidebar correctly with the toggle switch', () => {
+
+  it('renders the sidebar correctly with the toggle', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(switchElement).toBeInTheDocument();
+    const tabsElement = screen.getByRole('tablist');
+    expect(tabsElement).toBeInTheDocument();
   });
-  */
 
   it('displays the correct labels for published and unpublished notes', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
@@ -69,8 +68,8 @@ describe('Publish and Unpublish Notes Slider', () => {
   /*
   it('toggles between published and unpublished notes correctly', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(switchElement).toBeChecked(); // Default state should be published
+    const tabsElement = screen.getByRole('tablist');
+    expect(tabsElement).toBeChecked(); // Default state should be published
 
     fireEvent.click(switchElement);
     expect(switchElement).not.toBeChecked(); // Should switch to unpublished
