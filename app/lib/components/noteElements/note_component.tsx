@@ -48,6 +48,7 @@ import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import { initializeApp } from "firebase/app";
 
 const user = User.getInstance(); 
 
@@ -250,6 +251,35 @@ export default function NoteEditor({
     }
   }, [initialNote]);
 
+  useEffect(() => {
+    if (initialNote){
+      noteHandlers.setEditorContent(initialNote.text || "");
+      noteHandlers.setTitle(initialNote.title || "");
+      noteHandlers.setImages(
+        (initialNote.media.filter(
+          (item) => item.getType() === "image"
+        ) as PhotoType[]) || []
+      );
+      noteHandlers.setTime(initialNote.time || new Date());
+      noteHandlers.setLongitude(initialNote.longitude || "");
+      noteHandlers.setLatitude(initialNote.latitude || "");
+      noteHandlers.setTags(
+        (initialNote.tags || []).map((tag) =>
+          typeof tag === "string" ? { label: tag, origin: "user" } : tag
+        )
+      );
+      noteHandlers.setAudio(initialNote.audio || []);
+      noteHandlers.setIsPublished(initialNote.published || false);
+
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+      noteHandlers.setVideos(
+        (initialNote.media.filter(
+          (item) => item.getType() === "video"
+        ) as VideoType[]) || []
+      );
+    }
+  }, [initialNote]);
+
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -263,7 +293,7 @@ export default function NoteEditor({
       tags: noteState.tags,
       audio: noteState.audio,
       id: noteState.note?.id || "",
-      creator: noteState.note?.creator || "",
+      creator: noteState.note?.creator || user.getId(),
     };
   
     try {
@@ -310,6 +340,45 @@ export default function NoteEditor({
     }
   };
   
+  const handlePublishChange = async (noteState, noteHandlers) => {
+  const updatedNote = {
+    ...noteState.note,
+    text: noteState.editorContent,
+    title: noteState.title,
+    media: [...noteState.images, ...noteState.videos],
+    time: noteState.time,
+    longitude: noteState.longitude,
+    latitude: noteState.latitude,
+    tags: noteState.tags,
+    audio: noteState.audio,
+    id: noteState.note?.id || "",
+    creator: noteState.note?.creator || User.getInstance().getId(),
+    published: !noteState.isPublished, // Toggle the published state
+  };
+
+  try {
+    await ApiService.overwriteNote(updatedNote);
+
+    // Update local state
+    noteHandlers.setIsPublished(!noteState.isPublished);
+
+    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+      description: updatedNote.published
+        ? "Your note has been published successfully."
+        : "Your note has been unpublished successfully.",
+      duration: 4000,
+    });
+
+    noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
+  } catch (error) {
+    console.error("Error updating note state:", error);
+    toast("Error", {
+      description: "Failed to update note state. Please try again later.",
+      duration: 4000,
+    });
+  }
+};
+
   
   const handleDownload = async () => {
     if (!selectedFileType) {
@@ -444,10 +513,11 @@ export default function NoteEditor({
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
-              id="publish-toggle-button"
-              isPublished={Boolean(noteState.isPublished)}
-              onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
-            />
+            id="publish-toggle-button"
+            isPublished={Boolean(noteState.isPublished)}
+            onPublishClick={() => handlePublishChange(noteState, noteHandlers)} // Fixed function call
+          />
+
 
             <div className="w-1 h-9 bg-border" />
             <button
