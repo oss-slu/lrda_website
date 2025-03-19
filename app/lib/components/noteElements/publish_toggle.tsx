@@ -61,4 +61,4 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
   );
 };
 
-export default PublishToggle; // Export the component
+export default PublishToggle; 
