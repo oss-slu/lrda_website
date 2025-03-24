@@ -28,12 +28,55 @@ export const handleTimeChange = (
   setTime(newDate);
 };
 
-export const handlePublishChange = (
-  setIsPublished: React.Dispatch<React.SetStateAction<boolean>>,
-  published: boolean
+export const handlePublishChange = async (
+  noteState,
+  noteHandlers
 ) => {
-  setIsPublished(published);
+  if (!noteState.note) {
+    console.error("No note found.");
+    return;
+  }
+
+  const updatedNote = {
+    ...noteState.note,
+    text: noteState.editorContent,
+    title: noteState.title,
+    media: [...noteState.images, ...noteState.videos],
+    time: noteState.time,
+    longitude: noteState.longitude,
+    latitude: noteState.latitude,
+    tags: noteState.tags,
+    audio: noteState.audio,
+    id: noteState.note?.id || "",
+    creator: noteState.note?.creator || User.getInstance().getId(),
+    published: !noteState.isPublished, // Toggle the published state
+  };
+
+  try {
+    await ApiService.overwriteNote(updatedNote);
+
+    // Update state
+    noteHandlers.setIsPublished(updatedNote.published);
+    noteHandlers.setNote(updatedNote);
+
+    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+      description: updatedNote.published
+        ? "Your note has been published successfully."
+        : "Your note has been unpublished successfully.",
+      duration: 4000,
+    });
+
+    noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
+  } catch (error) {
+    console.error("Error updating publish state:", error);
+    toast("Error", {
+      description: "Failed to update publish state. Try again later.",
+      duration: 4000,
+    });
+  }
 };
+
+
 
 export const handleTagsChange = (
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>, 
