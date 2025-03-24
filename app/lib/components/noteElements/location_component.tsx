@@ -97,7 +97,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 mapContainerStyle={{
                   width: "100%",
                   height: "100%",
-                  borderRadius: "calc(var(--radius) - 2px)",
+                  borderRadius: "15px",
+                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)"
                 }}
                 center={{ lat: latitude, lng: longitude }}
                 zoom={9}
