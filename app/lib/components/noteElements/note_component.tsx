@@ -517,7 +517,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            {/* <AlertDialog>
+            <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
       id="download-note-button"
@@ -576,7 +576,7 @@ export default function NoteEditor({
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog> */}
+</AlertDialog>
 
           </div>
           <TagManager
