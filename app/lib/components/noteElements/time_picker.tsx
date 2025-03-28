@@ -4,11 +4,10 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { CaptionProps } from "react-day-picker";
 
 interface TimePickerProps {
-  initialDate: Date;
+  initialDate?: Date; // Now optional — will fall back to today if not provided
   onTimeChange?: (date: Date) => void;
 }
 
@@ -17,19 +16,22 @@ function formatDateTime(date: Date) {
   return `${date.toDateString()}`;
 }
 
-// --- Custom Caption Component for Inline Month & Year Dropdowns ---
+type CustomCaptionProps = CaptionProps & {
+  onMonthChange?: (date: Date) => void;
+  onDayClick?: (date: Date) => void;
+};
+
 function CaptionDropdowns({
   displayMonth,
   onMonthChange,
   onDayClick,
-}: CaptionProps & { onDayClick?: (date: Date) => void }) {
+}: CustomCaptionProps) {
   const fromYear = 1200;
   const toYear = new Date().getFullYear();
 
   const months = Array.from({ length: 12 }, (_, i) =>
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
-
   const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
 
   const handleChange = (newMonth: number, newYear: number) => {
@@ -38,7 +40,7 @@ function CaptionDropdowns({
     newDate.setFullYear(newYear);
     newDate.setDate(1);
     onMonthChange?.(newDate);
-    onDayClick?.(newDate); // This will update selected date
+    onDayClick?.(newDate);
   };
 
   return (
@@ -73,14 +75,15 @@ function CaptionDropdowns({
   );
 }
 
-// --- Main TimePicker Component ---
 export default function TimePicker({ initialDate, onTimeChange }: TimePickerProps) {
-  const [date, setDate] = useState(initialDate);
-  const [viewMonth, setViewMonth] = useState(initialDate);
+  const now = new Date();
+  const [date, setDate] = useState(initialDate || now);
+  const [viewMonth, setViewMonth] = useState(initialDate || now);
 
   useEffect(() => {
-    setDate(initialDate);
-    setViewMonth(initialDate);
+    const fallbackDate = initialDate || new Date();
+    setDate(fallbackDate);
+    setViewMonth(fallbackDate);
   }, [initialDate]);
 
   const formatTimeForInput = (date: Date) => {
@@ -90,17 +93,12 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
       .padStart(2, "0")}`;
   };
 
-  const CaptionWithDayClick = (
-    props: CaptionProps & { onDayClick?: (date: Date) => void }
-  ) => <CaptionDropdowns {...props} onDayClick={props.onDayClick} />;
-  
-
   const handleDayClick = (newDay: Date) => {
     const updatedDate = new Date(date);
     updatedDate.setFullYear(newDay.getFullYear(), newDay.getMonth(), newDay.getDate());
     setDate(updatedDate);
     onTimeChange?.(updatedDate);
-    setViewMonth(newDay); // Sync visible month
+    setViewMonth(newDay);
   };
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +134,11 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
           initialFocus
           components={{
             Caption: (props) => (
-              <CaptionDropdowns {...props} onDayClick={handleDayClick} />
+              <CaptionDropdowns
+                {...props}
+                onMonthChange={setViewMonth}
+                onDayClick={handleDayClick}
+              />
             ),
           }}
         />
