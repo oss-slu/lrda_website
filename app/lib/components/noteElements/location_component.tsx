@@ -18,22 +18,31 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   lat,
   onLocationChange,
 }) => {
+<<<<<<< HEAD
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState(false); 
+=======
+  const [longitude, setLongitude] = useState<number>(long ? parseFloat(long) : 0);
+const [latitude, setLatitude] = useState<number>(lat ? parseFloat(lat) : 0);
+>>>>>>> main
   const mapRef = useRef<google.maps.Map>();
   const isLoaded = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const searchBarRef = useRef<HTMLInputElement | null>(null);
 
-  // Update map center when latitude or longitude changes
   useEffect(() => {
-    if (mapRef.current && latitude && longitude) {
-      const newCenter = new google.maps.LatLng(latitude, longitude);
-      mapRef.current.panTo(newCenter);
-      mapRef.current.setZoom(10);
+    if (lat && long) {
+      const parsedLat = parseFloat(lat);
+      const parsedLong = parseFloat(long);
+  
+      if (!isNaN(parsedLat) && !isNaN(parsedLong)) {
+        setLatitude(parsedLat);
+        setLongitude(parsedLong);
+      }
     }
-  }, [latitude, longitude]);
+  }, [lat, long]);
+  
 
   // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {
