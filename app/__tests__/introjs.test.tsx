@@ -1,36 +1,38 @@
 import React from "react";
-import { render, waitFor, act, cleanup } from "@testing-library/react";
-import "@testing-library/jest-dom"; 
-import Page from "../lib/pages/map/page"; // Importing the Page component that will be tested
-import Page2 from "../lib/components/noteElements/note_component"; // Importing the note_component that will be tested
-// Mock Firebase Auth and API services
-jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
-jest.mock('../lib/utils/api_service'); // Mocks the custom API service to avoid actual API interactions
+import { render, waitFor, act, cleanup, RenderResult } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import Page from "../lib/pages/map/page";
+import Page2 from "../lib/components/noteElements/note_component";
+
+jest.mock('firebase/auth');
+jest.mock('../lib/utils/api_service');
 jest.mock("firebase/database", () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
+  getDatabase: jest.fn(),
 }));
-// Mock Intro.js to simulate tooltips being added
+
 jest.mock('intro.js', () => {
-  return jest.fn(() => ({
-    setOptions: jest.fn(), 
+  const mockIntroInstance = {
+    setOptions: jest.fn(() => mockIntroInstance),
+    oncomplete: jest.fn(() => mockIntroInstance),
+    onexit: jest.fn(() => mockIntroInstance),
     start: jest.fn(() => {
-      const tooltip = document.createElement('div'); // Create a new div element
-      tooltip.className = 'introjs-tooltip'; // Set the class name to simulate an Intro.js tooltip
-      document.body.appendChild(tooltip); // Append the tooltip div to the body to mimic the behavior of Intro.js
+      const tooltip = document.createElement('div');
+      tooltip.className = 'introjs-tooltip';
+      tooltip.textContent = 'Welcome! Lets explore the website together.';
+      document.body.appendChild(tooltip);
     }),
-  }));
+  };
+  return jest.fn(() => mockIntroInstance);
 });
 
-// Mock data_conversion to avoid the need for reverse and map function errors
 jest.mock('../lib/utils/data_conversion', () => ({
-  convertMediaTypes: jest.fn(() => []), // Mock with an empty array
+  convertMediaTypes: jest.fn(() => []),
 }));
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.useFakeTimers(); // Ensure fake timers are used globally
+  jest.useFakeTimers();
 
-  // Mock the geolocation API
   const mockGeolocation = {
     getCurrentPosition: jest.fn().mockImplementation((success) => {
       success({
@@ -49,7 +51,6 @@ beforeEach(() => {
     writable: true,
   });
 
-  // Mock window.location methods
   Object.defineProperty(window, 'location', {
     value: {
       href: "http://localhost/",
@@ -61,112 +62,68 @@ beforeEach(() => {
   });
 });
 
-// Clean up mocks, timers, DOM, and Intro.js elements after each test
 afterEach(() => {
-  // Remove Intro.js tooltips created during the tests
   document.querySelectorAll('.introjs-tooltip').forEach(tooltip => tooltip.remove());
-
-  // Clear any pending timers and reset to real timers
   jest.clearAllTimers();
   jest.useRealTimers();
-
-  // Reset window.location and other global properties
   window.location.href = 'http://localhost/';
-  navigator.geolocation.clearWatch(); // Clear any geolocation watchers
-
-  cleanup(); // Cleanup to remove any leftover DOM elements and unmount React components
+  navigator.geolocation.clearWatch();
+  cleanup();
   console.log("All mocks, timers, and global references have been cleared");
 });
 
 describe("Intro.js feature in Page component", () => {
-  
-  // Test to ensure the Page component renders without crashing
   it("renders the Page component without crashing", async () => {
-    let component;
+    let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page />);
     });
-    component.unmount(); // Explicitly unmount the component after the test
+    component?.unmount();
   });
 
-  // This test ensures that the Page2 component can render without any errors
   it("renders the Page2 component without crashing", async () => {
-    // `act` is used to wrap any actions that trigger updates, ensuring the React state is fully updated
     await act(async () => {
-      render(<Page2 isNewNote={false} />); // Renders the Page component
+      render(<Page2 isNewNote={false} />);
     });
   });
 
-  // This test ensures that the Page2 component can render without any errors
-  it("renders the Page2 component without crashing", async () => {
-    let component;
-    // `act` is used to wrap any actions that trigger updates, ensuring the React state is fully updated
+  it("renders the Page2 component without crashing again", async () => {
+    let component: RenderResult | undefined;
     await act(async () => {
-      render(<Page2 isNewNote={false} />); // Renders the Page component
+      component = render(<Page2 isNewNote={false} />);
     });
+    component?.unmount();
   });
 
-  // Test to ensure that the Intro.js tooltips appear on page load
   it("shows the popups on page load", async () => {
-    // Manually create and append DOM elements that will be targeted by Intro.js for Page
-    const searchBar = document.createElement("div"); 
-    searchBar.setAttribute("id", "search-bar"); // Adds an ID to the search bar element
-    document.body.appendChild(searchBar); // Appends the search bar to the DOM
+    const elements = [
+      { id: "search-bar" },
+      { id: "navbar-create-note", tag: "button" },
+      { id: "navbar-logout", tag: "button" },
+      { id: "notes-list" },
+      { id: "add-note" },
+      { id: "note-title" },
+      { id: "note-save" },
+      { id: "note-delete" },
+      { id: "note-date" },
+      { id: "note-location" },
+    ];
 
-    const createNoteButton = document.createElement("button");
-    createNoteButton.setAttribute("id", "navbar-create-note");
-    document.body.appendChild(createNoteButton);
+    elements.forEach(({ id, tag = "div" }) => {
+      const el = document.createElement(tag);
+      el.setAttribute("id", id);
+      document.body.appendChild(el);
+    });
 
-    const navbarLogoutButton = document.createElement("button");
-    navbarLogoutButton.setAttribute("id", "navbar-logout");
-    document.body.appendChild(navbarLogoutButton);
-
-    const notesList = document.createElement("div");
-    notesList.setAttribute("id", "notes-list");
-    document.body.appendChild(notesList);
-
-
-
-    // Manually create and append elements that will be targeted by Intro.js for Page2 
-    const addNote = document.createElement("div");
-    addNote.setAttribute("id", "add-note");
-    document.body.appendChild(addNote);
-
-    const noteTitle = document.createElement("div");
-    noteTitle.setAttribute("id", "note-title");
-    document.body.appendChild(noteTitle);
-
-    const noteSave = document.createElement("div");
-    noteSave.setAttribute("id", "note-save");
-    document.body.appendChild(noteSave);
-
-    const noteDelete = document.createElement("div");
-    noteDelete.setAttribute("id", "note-delete");
-    document.body.appendChild(noteDelete);
-
-    const noteDate = document.createElement("div"); 
-    noteDate.setAttribute("id", "note-date");
-    document.body.appendChild(noteDate);
-
-    const noteLocation = document.createElement("div");
-    noteLocation.setAttribute("id", "note-location");
-    document.body.appendChild(noteLocation);
-
-    // Render the Page component
-    let component;
+    let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page />);
     });
-    // Render the Page2 component and ensure all updates have finished processing
+
     await act(async () => {
-      render(<Page2 isNewNote={false} />); 
-    });
-    // Render the Page2 component and ensure all updates have finished processing
-    await act(async () => {
-      render(<Page2 isNewNote={false} />); 
+      render(<Page2 isNewNote={false} />);
     });
 
-    // Check for the presence of the elements
     await waitFor(() => {
       expect(document.getElementById("search-bar")).toBeInTheDocument();
       expect(document.getElementById("navbar-create-note")).toBeInTheDocument();
@@ -174,38 +131,27 @@ describe("Intro.js feature in Page component", () => {
       expect(document.getElementById("notes-list")).toBeInTheDocument();
     });
 
-    // This block waits for tooltips to be added by introJs and verifies their presence and content
     await waitFor(() => {
-      const introTooltips = document.querySelector(".introjs-tooltip"); // Query for the introJs tooltip element
-      if (introTooltips) { 
-        // check the tooltip content if the tooltip exists (handling possible null values)
-        expect(introTooltips.textContent).toContain("Welcome! Lets explore the website together."); // Verifies the content of the tooltip
-      }
+      const tooltip = document.querySelector(".introjs-tooltip");
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip?.textContent).toContain("Welcome! Lets explore the website together.");
     });
 
-    // Clean up the component after the test
-    component.unmount();
+    component?.unmount();
   });
 
-  // Test to ensure introJs does not trigger if elements are missing
-  it("does not trigger introJs if elements are missing", async () => {
-    // Ensure there are no elements present
-    document.body.innerHTML = ''; // Clear the body
-    let component;
+  it("does not trigger introJs if elements are missing (Page)", async () => {
+    document.body.innerHTML = '';
+    let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page />);
     });
-
-    // Explicitly unmount the component to clean up
-    component.unmount();
+    component?.unmount();
   });
 
-
-
-  it("does not trigger introJs if elements are missing", async () => {
-    // Render the Page2 component without adding the expected elements
+  it("does not trigger introJs if elements are missing (Page2)", async () => {
     await act(async () => {
-      render(<Page2 isNewNote={false} />); 
+      render(<Page2 isNewNote={false} />);
     });
   });
 });
