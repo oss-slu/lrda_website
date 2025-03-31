@@ -24,6 +24,7 @@ type SearchBarMapState = {
   searchText: string;
   suggestions: google.maps.places.AutocompletePrediction[];
   isDropdownVisible: boolean; // Tracks whether the dropdown is visible
+  loading: boolean; // loading indicator
 };
 
 class SearchBarMap extends React.Component<
@@ -39,6 +40,7 @@ class SearchBarMap extends React.Component<
       searchText: "",
       suggestions: [],
       isDropdownVisible: false,
+      loading: false, //loading state
     };
   }
 
@@ -62,7 +64,7 @@ class SearchBarMap extends React.Component<
 
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
-    this.setState({ searchText: query, isDropdownVisible: true });
+    this.setState({ searchText: query, isDropdownVisible: true, loading: true });
   
     if (query.length > 2 && this.autocompleteService) {
       this.autocompleteService.getPlacePredictions(
@@ -96,9 +98,9 @@ class SearchBarMap extends React.Component<
     status: google.maps.places.PlacesServiceStatus
   ) => {
     if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-      this.setState({ suggestions: predictions });
+      this.setState({ suggestions: predictions, loading: false });
     } else {
-      this.setState({ suggestions: [] });
+      this.setState({ suggestions: [], loading: false });
     }
   };
 
@@ -155,7 +157,7 @@ class SearchBarMap extends React.Component<
   };
 
   render() {
-    const { searchText, suggestions, isDropdownVisible } = this.state;
+    const { searchText, suggestions, isDropdownVisible, loading } = this.state;
     const { filteredNotes } = this.props;
 
     // Add typed location at the top of the combined list
@@ -217,14 +219,21 @@ class SearchBarMap extends React.Component<
         <SearchBarUI
           searchText={this.state.searchText}
           onInputChange={this.handleInputChange}
-
+          className="p-2 rounded-md border border-gray-300 focus:outline-none focus: ring-2 focus:ring-blue-500"
         />
-        {isDropdownVisible && combinedResults.length > 0 && (
+        {isDropdownVisible &&  (
           <ul
             id="autocomplete-suggestions"
             className="absolute z-50 w-full mt-1 rounded-md bg-white shadow-lg max-h-60 overflow-auto top-full"
           >
-            {combinedResults.map((result, index) => {
+            {loading && (
+              <li className="flex items-center px-4 py-2 text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500"></div>
+                <span className="ml-2">Loading...</span>
+              </li>
+            )}
+            {!loading && combinedResults.length > 0 && (
+            combinedResults.map((result, index) => {
               const isSuggestion = result.type === "suggestion";
               const key = isSuggestion ? result.place_id : result.id;
               const onClickHandler = () => {
@@ -269,7 +278,8 @@ class SearchBarMap extends React.Component<
                   {displayText}
                 </li>
               );
-            })}
+            })
+            )}
           </ul>
         )}
       </div>
