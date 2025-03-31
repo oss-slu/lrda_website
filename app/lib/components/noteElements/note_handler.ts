@@ -3,6 +3,8 @@ import { Note, Tag } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
 import { User } from "../../models/user_class";
+import type { NoteStateType, NoteHandlersType } from "./note_state";
+
 
 export const handleTitleChange = (
   setTitle: React.Dispatch<React.SetStateAction<string>>,
@@ -29,14 +31,15 @@ export const handleTimeChange = (
 };
 
 export const handlePublishChange = async (
-  noteState,
-  noteHandlers
+  noteState: NoteStateType,
+  noteHandlers: NoteHandlersType
 ) => {
   if (!noteState.note) {
     console.error("No note found.");
     return;
   }
 
+  const creatorId = noteState.note?.creator || await User.getInstance().getId();
   const updatedNote = {
     ...noteState.note,
     text: noteState.editorContent,
@@ -48,14 +51,12 @@ export const handlePublishChange = async (
     tags: noteState.tags,
     audio: noteState.audio,
     id: noteState.note?.id || "",
-    creator: noteState.note?.creator || User.getInstance().getId(),
-    published: !noteState.isPublished, // Toggle the published state
+    // creator: creatorId,
+    published: !noteState.isPublished,
   };
 
   try {
     await ApiService.overwriteNote(updatedNote);
-
-    // Update state
     noteHandlers.setIsPublished(updatedNote.published);
     noteHandlers.setNote(updatedNote);
 
@@ -66,7 +67,7 @@ export const handlePublishChange = async (
       duration: 4000,
     });
 
-    noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
+    noteHandlers.setCounter((prevCounter) => prevCounter + 1);
   } catch (error) {
     console.error("Error updating publish state:", error);
     toast("Error", {
@@ -75,6 +76,7 @@ export const handlePublishChange = async (
     });
   }
 };
+
 
 
 

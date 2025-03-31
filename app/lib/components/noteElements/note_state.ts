@@ -50,3 +50,6 @@ const useNoteState = (initialNote: Note | undefined) => {
 };
 
 export default useNoteState;
+export type NoteStateType = ReturnType<typeof useNoteState>["noteState"];
+export type NoteHandlersType = ReturnType<typeof useNoteState>["noteHandlers"];
+

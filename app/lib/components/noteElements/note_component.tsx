@@ -49,6 +49,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 import { initializeApp } from "firebase/app";
+import type { NoteStateType, NoteHandlersType } from "./note_state";
+
 
 const user = User.getInstance(); 
 
@@ -340,44 +342,50 @@ export default function NoteEditor({
     }
   };
   
-  const handlePublishChange = async (noteState, noteHandlers) => {
-  const updatedNote = {
-    ...noteState.note,
-    text: noteState.editorContent,
-    title: noteState.title,
-    media: [...noteState.images, ...noteState.videos],
-    time: noteState.time,
-    longitude: noteState.longitude,
-    latitude: noteState.latitude,
-    tags: noteState.tags,
-    audio: noteState.audio,
-    id: noteState.note?.id || "",
-    creator: noteState.note?.creator || User.getInstance().getId(),
-    published: !noteState.isPublished, // Toggle the published state
+  const handlePublishChange = async (
+    noteState: NoteStateType,
+    noteHandlers: NoteHandlersType
+  ) => {
+    const creatorId = noteState.note?.creator || await user.getId();
+    const updatedNote = {
+      ...noteState.note,
+      text: noteState.editorContent,
+      title: noteState.title,
+      media: [...noteState.images, ...noteState.videos],
+      time: noteState.time,
+      longitude: noteState.longitude,
+      latitude: noteState.latitude,
+      tags: noteState.tags,
+      audio: noteState.audio,
+      id: noteState.note?.id || "",
+      uid: noteState.note?.uid ?? "",
+      creator: creatorId || "",
+      published: !noteState.isPublished,
+    };
+  
+    try {
+      await ApiService.overwriteNote(updatedNote);
+  
+      noteHandlers.setIsPublished(updatedNote.published);
+      noteHandlers.setNote(updatedNote);
+  
+      toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+        description: updatedNote.published
+          ? "Your note has been published successfully."
+          : "Your note has been unpublished successfully.",
+        duration: 4000,
+      });
+  
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+    } catch (error) {
+      console.error("Error updating note state:", error);
+      toast("Error", {
+        description: "Failed to update note state. Please try again later.",
+        duration: 4000,
+      });
+    }
   };
-
-  try {
-    await ApiService.overwriteNote(updatedNote);
-
-    // Update local state
-    noteHandlers.setIsPublished(!noteState.isPublished);
-
-    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
-      description: updatedNote.published
-        ? "Your note has been published successfully."
-        : "Your note has been unpublished successfully.",
-      duration: 4000,
-    });
-
-    noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
-  } catch (error) {
-    console.error("Error updating note state:", error);
-    toast("Error", {
-      description: "Failed to update note state. Please try again later.",
-      duration: 4000,
-    });
-  }
-};
+  
 
   
   const handleDownload = async () => {
@@ -759,4 +767,3 @@ export default function NoteEditor({
     </ScrollArea>
   );
 }
-//comment to reset my branch
