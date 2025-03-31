@@ -3,6 +3,8 @@ import { Note, Tag } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
 import { User } from "../../models/user_class";
+import type { NoteStateType, NoteHandlersType } from "./note_state";
+
 
 export const handleTitleChange = (
   setTitle: React.Dispatch<React.SetStateAction<string>>,
@@ -28,12 +30,55 @@ export const handleTimeChange = (
   setTime(newDate);
 };
 
-export const handlePublishChange = (
-  setIsPublished: React.Dispatch<React.SetStateAction<boolean>>,
-  published: boolean
+export const handlePublishChange = async (
+  noteState: NoteStateType,
+  noteHandlers: NoteHandlersType
 ) => {
-  setIsPublished(published);
+  if (!noteState.note) {
+    console.error("No note found.");
+    return;
+  }
+
+  const creatorId = noteState.note?.creator || await User.getInstance().getId();
+  const updatedNote = {
+    ...noteState.note,
+    text: noteState.editorContent,
+    title: noteState.title,
+    media: [...noteState.images, ...noteState.videos],
+    time: noteState.time,
+    longitude: noteState.longitude,
+    latitude: noteState.latitude,
+    tags: noteState.tags,
+    audio: noteState.audio,
+    id: noteState.note?.id || "",
+    // creator: creatorId,
+    published: !noteState.isPublished,
+  };
+
+  try {
+    await ApiService.overwriteNote(updatedNote);
+    noteHandlers.setIsPublished(updatedNote.published);
+    noteHandlers.setNote(updatedNote);
+
+    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+      description: updatedNote.published
+        ? "Your note has been published successfully."
+        : "Your note has been unpublished successfully.",
+      duration: 4000,
+    });
+
+    noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+  } catch (error) {
+    console.error("Error updating publish state:", error);
+    toast("Error", {
+      description: "Failed to update publish state. Try again later.",
+      duration: 4000,
+    });
+  }
 };
+
+
+
 
 export const handleTagsChange = (
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>, 
