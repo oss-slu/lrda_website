@@ -4,9 +4,17 @@ import ApiService from "../utils/api_service";
 //import placeholderImage from "public/no-photo-placeholder.jpeg";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PersonIcon } from "@radix-ui/react-icons";
-import { Calendar, TagIcon, TagsIcon, User2Icon } from "lucide-react";
+import { Calendar as CalendarIcon, TagIcon, TagsIcon, User2Icon } from "lucide-react";
 import CompactCarousel from "./compact_carousel";
 import { formatDateTime } from '../utils/data_conversion';
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
   note: Note;
@@ -14,11 +22,13 @@ interface NoteCardProps {
 
 const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   const title = note.title;
-  const date = formatDateTime(note.time);
   const text = note.text;
   const tags: string[] = note.tags.map(tag => tag.label); // Ensure correct mapping to labels
   const imageMedia = note.media.filter((media) => media.type === "image")[0];
   const [creator, setCreator] = useState<string>("Loading...");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    note.time ? new Date(note.time) : undefined
+  );
 
   useEffect(() => {
     ApiService.fetchCreatorName(note.creator)
@@ -54,9 +64,29 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
             <User2Icon className="mr-2" size={15} />
             <p className="text-[15px] text-gray-500 truncate">{creator}</p>
           </div>
-          <div className="flex flex-row  items-center align-middle">
-            <Calendar className="mr-2" size={15} />
-            <p className="text-sm text-gray-400">{date.toString()}</p>
+          {/* Interactive Calendar with formatted display */}
+          <div className="flex flex-row items-center">
+            <CalendarIcon className="mr-2" size={15} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "text-sm text-left font-normal text-gray-700 bg-white border border-gray-200 rounded-md px-2 py-1 hover:bg-gray-50",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  {formatDateTime(selectedDate)}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center">

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Note, Tag } from "@/app/types";
+import { Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
@@ -42,7 +42,6 @@ import {
 } from "./note_handler";
 import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
-import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,6 +50,8 @@ import "intro.js/introjs.css"
 import { initializeApp } from "firebase/app";
 import type { NoteStateType, NoteHandlersType } from "./note_state";
 
+import { Button } from "@/components/ui/button";
+import { newNote, Note } from "@/app/types"; // make sure types are imported
 
 const user = User.getInstance(); 
 
@@ -501,6 +502,7 @@ export default function NoteEditor({
   };
 
   return (
+    <div className="relative h-full w-full">
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
       <div
         key={noteState.counter}
@@ -595,7 +597,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            {/* <AlertDialog>
+            <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
       id="download-note-button"
@@ -654,7 +656,7 @@ export default function NoteEditor({
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog> */}
+</AlertDialog>
 
           </div>
           <TagManager
@@ -765,5 +767,47 @@ export default function NoteEditor({
         </div>
       </div>
     </ScrollArea>
+    <Button
+      id="add-note-button"
+      onClick={async () => {
+        const userId = await user.getId();
+        if (userId) {
+          const blankNote: Note = {
+            id: "", // or `uuidv4()` if you want to generate one
+            uid: "", // or a placeholder unique user ID
+            title: "",
+            text: "",
+            time: new Date(),
+            media: [],
+            audio: [],
+            creator: userId,
+            latitude: "",
+            longitude: "",
+            published: undefined,
+            tags: [],
+            isArchived: false,
+          };
+          
+          noteHandlers.setNote(blankNote);
+          noteHandlers.setEditorContent("");
+          noteHandlers.setTitle("");
+          noteHandlers.setTags([]);
+          noteHandlers.setImages([]);
+          noteHandlers.setVideos([]);
+          noteHandlers.setAudio([]);
+          noteHandlers.setTime(new Date());
+          noteHandlers.setLatitude("");
+          noteHandlers.setLongitude("");
+          noteHandlers.setCounter((prev) => prev + 1);
+        } else {
+          console.error("User not authenticated");
+        }
+      }}
+      className="fixed bottom-6 right-6 z-50 bg-black hover:bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg"
+    >
+      Add Note
+    </Button>
+    </div>
+    
   );
 }
