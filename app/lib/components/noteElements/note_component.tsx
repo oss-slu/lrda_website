@@ -52,6 +52,7 @@ import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { Button } from "@/components/ui/button";
 import { newNote, Note } from "@/app/types"; // make sure types are imported
+import { convert_jpeg } from "../../utils/convert_jpeg";
 
 const user = User.getInstance(); 
 
@@ -444,8 +445,24 @@ export default function NoteEditor({
   };
 
 
-  const addImageToNote = (imageUrl: string) => {
+  const addImageToNote = async (media: { uri: string; file?: File }) => {
     console.log("Before updating images", noteState.images);
+  
+    let imageUrl = media.uri;
+  
+    // Convert to JPEG if File is provided
+    if (media.file instanceof File) {
+      try {
+        const jpegBlob = await convert_jpeg(media.file);
+        imageUrl = URL.createObjectURL(jpegBlob);
+      } catch (error) {
+        console.error("JPEG conversion failed:", error);
+        toast("Image conversion failed", { description: "The image could not be converted to JPEG." });
+        return;
+      }
+    }
+  
+    // Insert image into the editor
     const newImage = {
       type: "image",
       attrs: {
@@ -454,28 +471,23 @@ export default function NoteEditor({
         loading: "lazy",
       },
     };
-
+  
     const editor = rteRef.current?.editor;
     if (editor) {
-      editor
-        .chain()
-        .focus()
-        .setImage(newImage.attrs)
-        .run();
+      editor.chain().focus().setImage(newImage.attrs).run();
     }
-
-    noteHandlers.setImages((prevImages) => {
-      const newImages = [
-        ...prevImages,
-        new PhotoType({
-          uuid: uuidv4(),
-          uri: imageUrl,
-          type: "image",
-        }),
-      ];
-      console.log("After updating images", newImages);
-      return newImages;
-    });
+  
+    // Update state
+    noteHandlers.setImages((prevImages) => [
+      ...prevImages,
+      new PhotoType({
+        uuid: uuidv4(),
+        uri: imageUrl,
+        type: "image",
+      }),
+    ]);
+  
+    console.log("After updating images", imageUrl);
   };
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
@@ -683,6 +695,7 @@ export default function NoteEditor({
               renderControls={() => (
                 <EditorMenuControls
                   onMediaUpload={(media) => {
+                    
                     if (media.type === "image") {
                       const newImage = {
                         type: "image",
