@@ -444,39 +444,39 @@ export default function NoteEditor({
   };
 
 
-  const addImageToNote = (imageUrl: string) => {
-    console.log("Before updating images", noteState.images);
-    const newImage = {
-      type: "image",
-      attrs: {
-        src: imageUrl,
-        alt: "Image description",
-        loading: "lazy",
-      },
-    };
+  // const addImageToNote = (imageUrl: string) => {
+  //   console.log("Before updating images", noteState.images);
+  //   const newImage = {
+  //     type: "image",
+  //     attrs: {
+  //       src: imageUrl,
+  //       alt: "Image description",
+  //       loading: "lazy",
+  //     },
+  //   };
 
-    const editor = rteRef.current?.editor;
-    if (editor) {
-      editor
-        .chain()
-        .focus()
-        .setImage(newImage.attrs)
-        .run();
-    }
+  //   const editor = rteRef.current?.editor;
+  //   if (editor) {
+  //     editor
+  //       .chain()
+  //       .focus()
+  //       .setImage(newImage.attrs)
+  //       .run();
+  //   }
 
-    noteHandlers.setImages((prevImages) => {
-      const newImages = [
-        ...prevImages,
-        new PhotoType({
-          uuid: uuidv4(),
-          uri: imageUrl,
-          type: "image",
-        }),
-      ];
-      console.log("After updating images", newImages);
-      return newImages;
-    });
-  };
+  //   noteHandlers.setImages((prevImages) => {
+  //     const newImages = [
+  //       ...prevImages,
+  //       new PhotoType({
+  //         uuid: uuidv4(),
+  //         uri: imageUrl,
+  //         type: "image",
+  //       }),
+  //     ];
+  //     console.log("After updating images", newImages);
+  //     return newImages;
+  //   });
+  // };
 
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
@@ -684,20 +684,25 @@ export default function NoteEditor({
                 <EditorMenuControls
                   onMediaUpload={(media) => {
                     if (media.type === "image") {
+                      const defaultWidth = "100"; // or "100%" or any px value you want
+                      const defaultHeight = "auto"; // or set a fixed height like "480"
+                    
                       const newImage = {
                         type: "image",
                         attrs: {
                           src: media.uri,
                           alt: "Image description",
                           loading: "lazy",
+                          width: defaultWidth,
+                          height: defaultHeight,
                         },
                       };
-              
+                    
                       const editor = rteRef.current?.editor;
                       if (editor) {
                         editor.chain().focus().setImage(newImage.attrs).run();
                       }
-              
+                    
                       noteHandlers.setImages((prevImages) => [
                         ...prevImages,
                         new PhotoType({

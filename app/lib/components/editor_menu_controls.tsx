@@ -48,21 +48,73 @@ export default function EditorMenuControls({
   async function handleFileUpload(file: File) {
     const fileType = file.type;
     let mediaType = "image";
-
-    if (fileType.startsWith("video/")) mediaType = "video";
-    else if (fileType.startsWith("audio/")) mediaType = "audio";
-
+  
+    if (fileType.startsWith("video/")) {
+      mediaType = "video";
+    } else if (fileType.startsWith("audio/")) {
+      mediaType = "audio";
+    }
+  
     try {
-      setUploading(true); // Indicate uploading
-      const uri = await uploadMedia(file, mediaType);
-      setUploading(false); // Done uploading
+      setUploading(true);
+  
+      let processedFile = file;
+  
+      if (mediaType === "image" && fileType !== "image/jpeg") {
+        // Convert to JPEG
+        processedFile = await convertToJpeg(file);
+      }
+  
+      const uri = await uploadMedia(processedFile, mediaType);
+      setUploading(false);
+  
       return { type: mediaType, uri };
     } catch (error) {
       console.error("Media upload failed:", error);
-      setUploading(false); // Reset uploading status on error
+      setUploading(false);
       throw error;
     }
   }
+
+  async function convertToJpeg(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+  
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            return reject(new Error("Failed to get canvas context"));
+          }
+  
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              return reject(new Error("Failed to convert image to JPEG"));
+            }
+  
+            const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+              type: "image/jpeg",
+            });
+  
+            resolve(jpegFile);
+          }, "image/jpeg");
+        };
+        img.src = event.target?.result as string;
+      };
+  
+      reader.onerror = (err) => {
+        reject(err);
+      };
+  
+      reader.readAsDataURL(file);
+    });
+  }  
 
   return (
     <>
