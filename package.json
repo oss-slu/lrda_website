@@ -16,6 +16,7 @@
     "@babel/preset-typescript": "^7.23.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@googlemaps/js-api-loader": "^1.16.6",
     "@googlemaps/markerclusterer": "^2.5.3",
     "@jest/globals": "^29.7.0",
