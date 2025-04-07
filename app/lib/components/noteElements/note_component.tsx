@@ -16,6 +16,7 @@ import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import jsPDF from "jspdf"; // For PDF
+import { FFmpeg } from '@ffmpeg/ffmpeg'; // For Video
 import ApiService from "../../utils/api_service";
 import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
 import {
@@ -478,6 +479,14 @@ export default function NoteEditor({
     });
   };
 
+  const convertVideo = (videoUrl: string) => {
+    const editor = rteRef.current?.editor;
+    if (editor) {
+      editor
+      //Unsure where the conversion functionality should be implemented.
+    }
+  };
+
   const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
 
   const fetchSuggestedTags = async () => {
@@ -706,7 +715,7 @@ export default function NoteEditor({
                           type: "image",
                         }),
                       ]);
-                    } else if (media.type === "video") {
+                    } else if (media.type === "video") { //Where is this functionality used in the note editor?
                       const newVideo = new VideoType({
                         uuid: uuidv4(),
                         uri: media.uri,
@@ -714,6 +723,7 @@ export default function NoteEditor({
                         thumbnail: "",
                         duration: "0:00",
                       });
+                      //Still determining where the filtering for mp4 files only occurs in the upload process.
               
                       noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
               
