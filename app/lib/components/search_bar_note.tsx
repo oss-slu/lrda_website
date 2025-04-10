@@ -27,11 +27,21 @@ class SearchBarNotes extends React.Component<
     });
   };
 
+  handleFocus = () => {
+    console.log("Input focused!"); 
+  };
+
+  handleBlur = () => {
+    console.log("input blurred");
+  };
+
   render() {
     return (
       <SearchBarUI
         searchText={this.state.searchText}
         onInputChange={this.handleInputChange}
+        onFocus={this.handleFocus}
+        onBlur={this.handleBlur}
       />
     );
   }

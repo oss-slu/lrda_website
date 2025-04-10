@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Note, Tag } from "@/app/types";
+import { Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import {
   LinkBubbleMenu,
@@ -42,12 +42,16 @@ import {
 } from "./note_handler";
 import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
-import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import { initializeApp } from "firebase/app";
+import type { NoteStateType, NoteHandlersType } from "./note_state";
+
+import { Button } from "@/components/ui/button";
+import { newNote, Note } from "@/app/types"; // make sure types are imported
 
 const user = User.getInstance(); 
 
@@ -250,6 +254,35 @@ export default function NoteEditor({
     }
   }, [initialNote]);
 
+  useEffect(() => {
+    if (initialNote){
+      noteHandlers.setEditorContent(initialNote.text || "");
+      noteHandlers.setTitle(initialNote.title || "");
+      noteHandlers.setImages(
+        (initialNote.media.filter(
+          (item) => item.getType() === "image"
+        ) as PhotoType[]) || []
+      );
+      noteHandlers.setTime(initialNote.time || new Date());
+      noteHandlers.setLongitude(initialNote.longitude || "");
+      noteHandlers.setLatitude(initialNote.latitude || "");
+      noteHandlers.setTags(
+        (initialNote.tags || []).map((tag) =>
+          typeof tag === "string" ? { label: tag, origin: "user" } : tag
+        )
+      );
+      noteHandlers.setAudio(initialNote.audio || []);
+      noteHandlers.setIsPublished(initialNote.published || false);
+
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+      noteHandlers.setVideos(
+        (initialNote.media.filter(
+          (item) => item.getType() === "video"
+        ) as VideoType[]) || []
+      );
+    }
+  }, [initialNote]);
+
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -263,7 +296,7 @@ export default function NoteEditor({
       tags: noteState.tags,
       audio: noteState.audio,
       id: noteState.note?.id || "",
-      creator: noteState.note?.creator || "",
+      creator: noteState.note?.creator || user.getId(),
     };
   
     try {
@@ -310,6 +343,51 @@ export default function NoteEditor({
     }
   };
   
+  const handlePublishChange = async (
+    noteState: NoteStateType,
+    noteHandlers: NoteHandlersType
+  ) => {
+    const creatorId = noteState.note?.creator || await user.getId();
+    const updatedNote = {
+      ...noteState.note,
+      text: noteState.editorContent,
+      title: noteState.title,
+      media: [...noteState.images, ...noteState.videos],
+      time: noteState.time,
+      longitude: noteState.longitude,
+      latitude: noteState.latitude,
+      tags: noteState.tags,
+      audio: noteState.audio,
+      id: noteState.note?.id || "",
+      uid: noteState.note?.uid ?? "",
+      creator: creatorId || "",
+      published: !noteState.isPublished,
+    };
+  
+    try {
+      await ApiService.overwriteNote(updatedNote);
+  
+      noteHandlers.setIsPublished(updatedNote.published);
+      noteHandlers.setNote(updatedNote);
+  
+      toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+        description: updatedNote.published
+          ? "Your note has been published successfully."
+          : "Your note has been unpublished successfully.",
+        duration: 4000,
+      });
+  
+      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+    } catch (error) {
+      console.error("Error updating note state:", error);
+      toast("Error", {
+        description: "Failed to update note state. Please try again later.",
+        duration: 4000,
+      });
+    }
+  };
+  
+
   
   const handleDownload = async () => {
     if (!selectedFileType) {
@@ -424,6 +502,7 @@ export default function NoteEditor({
   };
 
   return (
+    <div className="relative h-full w-full">
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
       <div
         key={noteState.counter}
@@ -444,10 +523,11 @@ export default function NoteEditor({
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
-              id="publish-toggle-button"
-              isPublished={Boolean(noteState.isPublished)}
-              onPublishClick={() => handlePublishChange(noteHandlers.setIsPublished, !noteState.isPublished)}
-            />
+            id="publish-toggle-button"
+            isPublished={Boolean(noteState.isPublished)}
+            onPublishClick={() => handlePublishChange(noteState, noteHandlers)} // Fixed function call
+          />
+
 
             <div className="w-1 h-9 bg-border" />
             <button
@@ -517,7 +597,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            {/* <AlertDialog>
+            <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
       id="download-note-button"
@@ -576,7 +656,7 @@ export default function NoteEditor({
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog> */}
+</AlertDialog>
 
           </div>
           <TagManager
@@ -687,5 +767,47 @@ export default function NoteEditor({
         </div>
       </div>
     </ScrollArea>
+    <Button
+      id="add-note-button"
+      onClick={async () => {
+        const userId = await user.getId();
+        if (userId) {
+          const blankNote: Note = {
+            id: "", // or `uuidv4()` if you want to generate one
+            uid: "", // or a placeholder unique user ID
+            title: "",
+            text: "",
+            time: new Date(),
+            media: [],
+            audio: [],
+            creator: userId,
+            latitude: "",
+            longitude: "",
+            published: undefined,
+            tags: [],
+            isArchived: false,
+          };
+          
+          noteHandlers.setNote(blankNote);
+          noteHandlers.setEditorContent("");
+          noteHandlers.setTitle("");
+          noteHandlers.setTags([]);
+          noteHandlers.setImages([]);
+          noteHandlers.setVideos([]);
+          noteHandlers.setAudio([]);
+          noteHandlers.setTime(new Date());
+          noteHandlers.setLatitude("");
+          noteHandlers.setLongitude("");
+          noteHandlers.setCounter((prev) => prev + 1);
+        } else {
+          console.error("User not authenticated");
+        }
+      }}
+      className="fixed bottom-6 right-6 z-50 bg-black hover:bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg"
+    >
+      Add Note
+    </Button>
+    </div>
+    
   );
 }
