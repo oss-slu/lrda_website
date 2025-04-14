@@ -155,19 +155,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
                 <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
                 <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
               </TabsList>
-              {/*Using Tabs for this is not ideal, though it is the closest UI component to the desired appearance for this slider. The previously used Switch toggle is below.*/}
               <TabsContent value="unpublished"></TabsContent>
               <TabsContent value="published"></TabsContent>
             </Tabs>
           </div>
-
-          {/*
-          <div className="flex flex-row items-center text-center justify-between">
-            <span className="mr-2 text-sm font-semibold">Unpublished</span>
-            <Switch checked={showPublished} onCheckedChange={togglePublished} />
-            <span className="ml-2 text-sm font-semibold">Published</span>
-          </div>
-          */}
         </div>
 
       <div>
