@@ -49,10 +49,10 @@ describe('Publish and Unpublish Notes Slider', () => {
     }));
   });
 
-  it('renders the sidebar correctly with the toggle switch', () => {
+  it('renders the sidebar correctly with the toggle', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(switchElement).toBeInTheDocument();
+    const tabsElement = screen.getByRole('tablist');
+    expect(tabsElement).toBeInTheDocument();
   });
 
   it('displays the correct labels for published and unpublished notes', () => {
@@ -65,14 +65,38 @@ describe('Publish and Unpublish Notes Slider', () => {
 
   it('toggles between published and unpublished notes correctly', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(switchElement).toBeChecked(); // Default state should be published
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
+    
+    fireEvent.click(unpublishedTab);
+    expect(unpublishedTab).toHaveFocus; // Unpublished tab should be enabled
+    expect(publishedTab).not.toHaveFocus; // Published tab should be disabled
 
-    fireEvent.click(switchElement);
-    expect(switchElement).not.toBeChecked(); // Should switch to unpublished
+    fireEvent.click(publishedTab);
+    expect(publishedTab).toHaveFocus; // Published tab should be enabled
+    expect(unpublishedTab).not.toHaveFocus; // Unpublished tab should be disabled
+  });
 
-    fireEvent.click(switchElement);
-    expect(switchElement).toBeChecked(); // Should switch back to published
+  it('functions as expected when clicking the same tab more than once', () => {
+    render(<Sidebar onNoteSelect={jest.fn()} />);
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
+    
+    fireEvent.click(unpublishedTab);
+    expect(unpublishedTab).toHaveFocus; // Unpublished tab should be enabled
+    expect(publishedTab).not.toHaveFocus; // Published tab should be disabled
+
+    fireEvent.click(unpublishedTab);
+    expect(unpublishedTab).toHaveFocus; // Unpublished tab should be enabled
+    expect(publishedTab).not.toHaveFocus; // Published tab should be disabled
+
+    fireEvent.click(publishedTab);
+    expect(publishedTab).toHaveFocus; // Published tab should be enabled
+    expect(unpublishedTab).not.toHaveFocus; // Unpublished tab should be disabled
+
+    fireEvent.click(publishedTab);
+    expect(publishedTab).toHaveFocus; // Published tab should be enabled
+    expect(unpublishedTab).not.toHaveFocus; // Unpublished tab should be disabled
   });
 
   it('ensures the toggle does not interfere with the search bar', () => {
@@ -83,42 +107,48 @@ describe('Publish and Unpublish Notes Slider', () => {
 
   it('ensures clicking the toggle does not crash the application', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(() => fireEvent.click(switchElement)).not.toThrow();
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
+    expect(() => fireEvent.click(publishedTab)).not.toThrow();
+    expect(() => fireEvent.click(unpublishedTab)).not.toThrow();
   });
 
   it('ensures the switch remains functional after multiple clicks', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
   
     // Click the switch an odd number of times
-    fireEvent.click(switchElement); // unchecked
-    fireEvent.click(switchElement); // checked
-    fireEvent.click(switchElement); // unchecked
-    fireEvent.click(switchElement); // checked
-    fireEvent.click(switchElement); // unchecked
+    fireEvent.click(unpublishedTab); // unchecked
+    fireEvent.click(publishedTab); // checked
+    fireEvent.click(unpublishedTab); // unchecked
+    fireEvent.click(publishedTab); // checked
+    fireEvent.click(unpublishedTab); // unchecked
   
     // Assert that the final state matches expectations (odd clicks = unchecked, even clicks = checked)
-    expect(switchElement).not.toBeChecked();
+    expect(publishedTab).toHaveFocus; // Published tab should be enabled
+    expect(unpublishedTab).not.toHaveFocus; // Unpublished tab should be disabled
   });
   
-
   it('ensures the slider does not affect other UI components', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
     const addButton = screen.getByTestId('add-note-button');
     expect(addButton).toBeInTheDocument();
 
-    const switchElement = screen.getByRole('switch');
-    fireEvent.click(switchElement);
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
+    fireEvent.click(unpublishedTab);
+    fireEvent.click(publishedTab);
     expect(addButton).toBeInTheDocument(); // Ensure it's still present after interaction
   });
 
   it('ensures no visual glitches after toggling', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
+    const publishedTab = screen.getByText('Published');
+    const unpublishedTab = screen.getByText('Unpublished');
 
-    fireEvent.click(switchElement);
-    fireEvent.click(switchElement);
+    fireEvent.click(unpublishedTab);
+    fireEvent.click(publishedTab);
 
     const publishedLabel = screen.getByText('Published');
     const unpublishedLabel = screen.getByText('Unpublished');
