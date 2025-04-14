@@ -222,7 +222,6 @@ class SearchBarMap extends React.Component<
         <SearchBarUI
           searchText={this.state.searchText}
           onInputChange={this.handleInputChange}
-          onKeyDown={this.handleKeyDown}
           className="p-2 rounded-md border border-gray-300 focus:outline-none focus: ring-2 focus:ring-blue-500"
         />
         {isDropdownVisible &&  (
