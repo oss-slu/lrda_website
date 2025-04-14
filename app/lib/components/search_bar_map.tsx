@@ -33,6 +33,7 @@ class SearchBarMap extends React.Component<
 > {
   private autocompleteService: google.maps.places.AutocompleteService | null =
     null;
+  private dropdownRef = React.createRef<HTMLUListElement>();
 
   constructor(props: SearchBarMapProps) {
     super(props);
@@ -80,17 +81,19 @@ class SearchBarMap extends React.Component<
       }
     }
   
-    // Handle "Enter" key press
-    e.target.onkeydown = (event: KeyboardEvent) => {
-      if (event.key === "Enter") {
-        event.preventDefault(); // Prevent default form submission behavior
-        const typedLocation = query.trim();
-        if (typedLocation) {
-          this.props.onSearch(typedLocation); // Route to the typed location
-          this.setState({ isDropdownVisible: false }); // Close the dropdown
-        }
+  };
+
+  // Handle "Enter" key press
+
+  handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event?.preventDefault();
+      const typedLocation = this.state.searchText.trim();
+      if (typedLocation) {
+        this.props.onSearch(typedLocation);
+        this.setState({ isDropdownVisible: false});
       }
-    };
+    }
   };
 
   handlePredictions = (
@@ -223,6 +226,7 @@ class SearchBarMap extends React.Component<
         />
         {isDropdownVisible &&  (
           <ul
+            ref={this.dropdownRef}
             id="autocomplete-suggestions"
             className="absolute z-50 w-full mt-1 rounded-md bg-white shadow-lg max-h-60 overflow-auto top-full"
           >
@@ -288,3 +292,5 @@ class SearchBarMap extends React.Component<
 }
 
 export default SearchBarMap;
+
+
