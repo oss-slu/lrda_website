@@ -108,8 +108,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
   
   const handleToggleMap = () => {
-    setIsExpanded(!isExpanded);
-  }; // changes here
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    if (newState) {
+      handleGetCurrentLocation(); // fetch location when map is opening
+    }
+  };
+  // changes here
 
   useEffect (() => {
   /*  const handleClickOutside = (event: MouseEvent) => {
