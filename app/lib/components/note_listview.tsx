@@ -13,12 +13,15 @@ const extractTextFromHtml = (htmlString: string) => {
   return tempDivElement.textContent || tempDivElement.innerText || "";
 };
 
+const BATCH_SIZE = 15;
+
 const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
+  const [batchCount, setBatchCount] = useState(1);
 
-  const visibleNotes = notes.filter(note => !note.isArchived); //filter out archived notes
-  
+  const visibleNotes = notes.filter(note => !note.isArchived);
+  const notesToRender = visibleNotes.slice(0, BATCH_SIZE * batchCount);
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
@@ -52,9 +55,9 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
 
   return (
     <div id="notes-list" className="my-4 flex flex-col">
-      {visibleNotes.map((note) => {
+      {notesToRender.map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
-  
+
         return (
           <div
             key={note.id}
@@ -77,8 +80,17 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
           </div>
         );
       })}
+
+      {notesToRender.length < visibleNotes.length && (
+        <button
+          onClick={() => setBatchCount((prev) => prev + 1)}
+          className="mt-4 p-2 self-center rounded bg-primary text-white hover:bg-primary/90"
+        >
+          Load More
+        </button>
+      )}
     </div>
-  );  
+  );
 };
 
 export default NoteListView;
