@@ -7,6 +7,8 @@ type NoteListViewProps = {
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
 };
 
+const BATCH_SIZE = 10;
+
 const extractTextFromHtml = (htmlString: string) => {
   const tempDivElement = document.createElement("div");
   tempDivElement.innerHTML = htmlString;
@@ -14,11 +16,10 @@ const extractTextFromHtml = (htmlString: string) => {
 };
 
 const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
+  const visibleNotes = notes.filter(note => !note.isArchived);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
-
-  const visibleNotes = notes.filter(note => !note.isArchived); //filter out archived notes
-  
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
@@ -26,7 +27,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
       setSelectedNoteId(visibleNotes[0].id);
       setFresh(false);
     }
-  }, [visibleNotes, onNoteSelect, fresh]);
+  }, [visibleNotes, fresh, onNoteSelect]);
 
   const handleLoadText = (note: Note) => {
     onNoteSelect(note, false);
@@ -50,11 +51,14 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
     }
   };
 
+  const loadMoreNotes = () => {
+    setVisibleCount(prev => prev + BATCH_SIZE);
+  };
+
   return (
     <div id="notes-list" className="my-4 flex flex-col">
-      {visibleNotes.map((note) => {
+      {visibleNotes.slice(0, visibleCount).map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
-  
         return (
           <div
             key={note.id}
@@ -77,8 +81,20 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
           </div>
         );
       })}
+
+      {/* ✅ Button shows if more notes exist beyond current slice */}
+      {visibleCount < visibleNotes.length && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={loadMoreNotes}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Load More
+          </button>
+        </div>
+      )}
     </div>
-  );  
+  );
 };
 
 export default NoteListView;
