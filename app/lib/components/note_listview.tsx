@@ -82,7 +82,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
         );
       })}
 
-      {/* ✅ Button shows if more notes exist beyond current slice */}
+      {/* Button shows if more notes exist beyond current slice */}
       {visibleCount < visibleNotes.length && (
         <div className="mt-4 flex justify-center">
           <button
