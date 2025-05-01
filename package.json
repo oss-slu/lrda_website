@@ -39,7 +39,6 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "@react-google-maps/api": "^2.19.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
-    "@testing-library/jest-dom": "^6.1.6",
     "@tiptap/core": "^2.1.13",
     "@tiptap/extension-blockquote": "^2.1.13",
     "@tiptap/extension-bold": "^2.1.13",
@@ -134,13 +133,13 @@
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
     "tooltip": "link:@/components/ui/tooltip",
-    "ts-jest": "^29.1.1",
     "tss-react": "^4.9.3",
     "undici": "6.18.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
     "@types/draft-js": "^0.11.13",
     "@types/file-saver": "^2.0.7",
     "@types/google.maps": "^3.58.1",
@@ -155,6 +154,7 @@
     "postcss-import": "^16.0.0",
     "postcss-nesting": "^12.0.2",
     "react-test-renderer": "^18.2.0",
+    "ts-jest": "^29.3.1",
     "typescript": "5.2.2",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
