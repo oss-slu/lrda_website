@@ -1,8 +1,9 @@
-import { Note } from "@/app/types";
+import { Note, Comment } from "@/app/types"; // You'll add Comment type
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { addDoc, collection, doc, getDoc, getFirestore } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { request } from "node:http";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -77,6 +78,74 @@ export default class ApiService {
   }
 
   /**
+   * 🔥 Creates a new Comment object in Rerum.
+   * @param {Comment} comment - Comment object to save.
+   */
+  static async createComment(comment: Comment) {
+    try {
+      const response = await fetch(`${RERUM_PREFIX}create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",   // Special Rerum type
+          noteId: comment.noteId, // Associate comment with a Note
+          text: comment.text,
+          authorId: comment.authorId,
+          authorName: comment.authorName,
+          createdAt: comment.createdAt,
+          position: comment.position || null, // Optional field
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create comment.");
+      }
+
+      return await response.json(); // Return the Rerum object metadata
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 🔥 Fetches all comments linked to a specific note.
+   * @param {string} noteId - The ID of the note.
+   */
+  static async fetchCommentsForNote(noteId: string): Promise<Comment[]> {
+    try {
+      const queryObj = {
+        type: "comment",
+        noteId: noteId,
+      };
+
+      const response = await fetch(`${RERUM_PREFIX}query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(queryObj),
+      });
+
+      const data = await response.json();
+      return data.map((item: any) => ({
+        id: item["@id"],
+        noteId: item.noteId,
+        text: item.text,
+        authorId: item.authorId,
+        authorName: item.authorName,
+        createdAt: new Date(item.createdAt),
+        position: item.position || null,
+      }));
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      throw error;
+    }
+  }
+
+  /**
  * Fetches messages from the API, with optional pagination.
  * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
  * @param {boolean} published - Indicates whether to fetch only published messages.
@@ -101,7 +170,7 @@ static async fetchMessages(
       "Content-Type": "application/json",
     };
 
-    let body: { type: string; published?: boolean; creator?: string } = {
+    let body: { type: string; published?: boolean; creator?: string; } = {
       type: "message",
     };
 
@@ -133,18 +202,18 @@ static async fetchMessages(
   }
 }
 
-// New method to request approval
+
 static async requestApproval(noteData: any): Promise<void> {
   try {
     const { instructorId, ...noteDetails } = noteData;
 
-    // Save the approval request in the instructor's Firestore document
+
     const instructorRef = doc(db, "users", instructorId);
     const approvalsRef = collection(instructorRef, "approvalRequests");
 
     await addDoc(approvalsRef, {
       ...noteDetails,
-      status: "pending", // Track approval status
+      status: "pending",
       submittedAt: new Date(),
     });
 
@@ -166,22 +235,44 @@ static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
     const queryObj = {
       type: "message",
       published: false,
+      approvalRequested: true,
       creator: {
-        $in: studentUids, // Filter notes by the provided list of student UIDs
+        $in: studentUids,
       },
       $or: [
-        { isArchived: { $exists: false } }, // Include notes where isArchived does not exist
-        { isArchived: false }, // Include notes where isArchived is explicitly false
+        { isArchived: { $exists: false } },
+        { isArchived: false },
       ],
     };
 
-    // Fetch notes from the API using the getPagedQuery method
+    console.log("🔍 Rerum Query - fetchNotesByStudents:", JSON.stringify(queryObj));
+
     const notes = await this.getPagedQuery(150, 0, queryObj);
 
-    console.log(`Fetched ${notes.length} notes for students:`, studentUids);
+    console.log(`📥 Response (${notes.length} notes) for fetchNotesByStudents:`);
+    notes.forEach((note, idx) => {
+      console.log(`  Note ${idx + 1}:`, {
+        "@id": note.id,
+      title: note.title,
+      BodyText: note.text,
+      type: "message",
+      creator: note.creator,
+      media: note.media,
+      latitude: note.latitude,
+      longitude: note.longitude,
+      audio: note.audio,
+      published: note.published,
+      approvalRequested: note.approvalRequested,
+      tags: note.tags,
+      time: note.time,
+      isArchived: note.isArchived,
+      comments: note.comments || [], // Ensure comments are included
+      });
+    });
+
     return notes;
   } catch (error) {
-    console.error("Error fetching notes by students:", error);
+    console.error("❌ Error in fetchNotesByStudents:", error);
     throw new Error("Failed to fetch notes by students.");
   }
 }
@@ -476,29 +567,36 @@ static async fetchPublishedNotesByBounds(
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
+    const payload = {
+      "@id": note.id,
+      title: note.title,
+      BodyText: note.text,
+      type: "message",
+      creator: note.creator,
+      media: note.media,
+      latitude: note.latitude,
+      longitude: note.longitude,
+      audio: note.audio,
+      published: note.published,
+      approvalRequested: note.approvalRequested,
+      tags: note.tags,
+      time: note.time,
+      isArchived: note.isArchived,
+      comments: note.comments || [], // Ensure comments are included
+    };
+  
+    // ✅ Add this for debugging
+    console.log("Sending overwriteNote payload:", payload);
+  
     return await fetch(RERUM_PREFIX + "overwrite", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        "@id": note.id,
-        title: note.title,
-        BodyText: note.text,
-        type: "message",
-        creator: note.creator,
-        media: note.media,
-        latitude: note.latitude,
-        longitude: note.longitude,
-        audio: note.audio,
-        published: note.published,
-        approvalRequested: note.approvalRequested,
-        tags: note.tags,
-        time: note.time,
-        isArchived: note.isArchived,
-      }),
+      body: JSON.stringify(payload),
     });
   }
+  
 
   /**
    * Searches messages by query.

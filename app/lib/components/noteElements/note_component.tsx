@@ -213,41 +213,51 @@ export default function NoteEditor({
   }, [noteState.videos]);
 
   useEffect(() => {
-    if (initialNote) {
-      noteHandlers.setNote(initialNote as Note);
-      noteHandlers.setEditorContent(initialNote.text || "");
-      noteHandlers.setTitle(initialNote.title || "");
-
-      noteHandlers.setImages(
-        (initialNote.media.filter(
-          (item) => item.getType() === "image"
-        ) as PhotoType[]) || []
-      );
-      noteHandlers.setTime(initialNote.time || new Date());
-      noteHandlers.setLongitude(initialNote.longitude || "");
-      noteHandlers.setLatitude(initialNote.latitude || "");
-
-      noteHandlers.setTags(
-        (initialNote.tags || []).map((tag) =>
-          typeof tag === "string" ? { label: tag, origin: "user" } : tag
-        )
-      );
-
-      noteHandlers.setAudio(initialNote.audio || []);
-      noteHandlers.setIsPublished(initialNote.published || false);
-      noteHandlers.setApprovalRequested(
-        initialNote.approvalRequested ?? false
-      );
-      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
-      noteHandlers.setVideos(
-        (initialNote.media.filter(
-          (item) => item.getType() === "video"
-        ) as VideoType[]) || []
-      );
-    }
+    if (!initialNote) return;
+  
+    const normalizedInitialNote = {
+      ...initialNote,
+      approvalRequested: initialNote.approvalRequested ?? false,
+      isArchived: initialNote.isArchived ?? false,
+      published: initialNote.published ?? false,
+      media: initialNote.media ?? [],
+      audio: initialNote.audio ?? [],
+      tags: initialNote.tags ?? [],
+    };
+  
+    noteHandlers.setNote(normalizedInitialNote as Note);
+    noteHandlers.setEditorContent(normalizedInitialNote.text || "");
+    noteHandlers.setTitle(normalizedInitialNote.title || "");
+    noteHandlers.setTime(normalizedInitialNote.time || new Date());
+    noteHandlers.setLongitude(normalizedInitialNote.longitude || "");
+    noteHandlers.setLatitude(normalizedInitialNote.latitude || "");
+    noteHandlers.setApprovalRequested(normalizedInitialNote.approvalRequested);
+  
+    noteHandlers.setImages(
+      (normalizedInitialNote.media.filter(
+        (item) => item.getType && item.getType() === "image"
+      ) as PhotoType[])
+    );
+  
+    noteHandlers.setVideos(
+      (normalizedInitialNote.media.filter(
+        (item) => item.getType && item.getType() === "video"
+      ) as VideoType[])
+    );
+  
+    noteHandlers.setAudio(normalizedInitialNote.audio || []);
+  
+    noteHandlers.setTags(
+      (normalizedInitialNote.tags || []).map((tag) =>
+        typeof tag === "string" ? { label: tag, origin: "user" } : tag
+      )
+    );
+  
+    noteHandlers.setIsPublished(normalizedInitialNote.published);
+    noteHandlers.setCounter((prev) => prev + 1);
+  
   }, [initialNote]);
-
-  console.log("initial Note", initialNote);
+  
 
   useEffect(() => {
     if (initialNote) {
@@ -437,21 +447,48 @@ export default function NoteEditor({
 
   const handleRequestApprovalClick = async () => {
     try {
+      const updatedApprovalStatus = !noteState.approvalRequested;
+  
       const updatedNote: any = {
         ...noteState.note,
-        approvalRequested: !noteState.approvalRequested, // Toggle approval request
+        text: noteState.editorContent,
+        title: noteState.title,
+        media: [...noteState.images, ...noteState.videos],
+        time: noteState.time,
+        longitude: noteState.longitude,
+        latitude: noteState.latitude,
+        tags: noteState.tags,
+        audio: noteState.audio,
+        id: noteState.note?.id || "",
+        creator: noteState.note?.creator || user.getId(),
+        approvalRequested: updatedApprovalStatus,
         instructorId: instructorId || null,
+        published: false, // Student notes are never published directly
       };
-
-      // Update backend
+  
+      // 1. First update the main note
       const response = await ApiService.overwriteNote(updatedNote);
-
+  
       if (response.ok) {
-        const updatedApprovalStatus = !noteState.approvalRequested;
-
-        // Update the local state
+        if (updatedApprovalStatus && instructorId) {
+          // 2. Also send approval request to instructor's Firestore document
+          await ApiService.requestApproval({
+            instructorId: instructorId,
+            title: updatedNote.title || "",
+            text: updatedNote.text || "",
+            creator: updatedNote.creator || "",
+            noteId: updatedNote.id || "",
+            time: updatedNote.time || new Date(),
+            latitude: updatedNote.latitude || "",
+            longitude: updatedNote.longitude || "",
+            tags: updatedNote.tags || [],
+            approvalRequested: true,
+          });
+        }
+  
+        // 3. Update local frontend state
         noteHandlers.setApprovalRequested(updatedApprovalStatus);
-
+  
         toast(
           updatedApprovalStatus
             ? "Approval Requested"
@@ -460,6 +497,7 @@ export default function NoteEditor({
             description: updatedApprovalStatus
               ? "Your note has been submitted for instructor approval."
               : "Your approval request has been canceled.",
+            duration: 4000,
           }
         );
       } else {
@@ -472,7 +510,7 @@ export default function NoteEditor({
       });
     }
   };
-
+  
   
   
 
@@ -687,7 +725,7 @@ export default function NoteEditor({
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            {/* <AlertDialog>
+            <AlertDialog>
   <AlertDialogTrigger asChild>
     <button
       id="download-note-button"
@@ -698,7 +736,6 @@ export default function NoteEditor({
     </button>
   </AlertDialogTrigger>
   <AlertDialogContent
-    onChange={(isOpen) => {
     onChange={(isOpen) => {
       if (!isOpen) {
         // Close the popup and go back to the note
@@ -747,7 +784,7 @@ export default function NoteEditor({
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog> */}
+</AlertDialog>
 
           </div>
           <TagManager

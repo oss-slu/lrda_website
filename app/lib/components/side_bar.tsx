@@ -34,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         longitude: "",
         published: undefined,
         tags: [],
+        approvalRequested: undefined,
         isArchived: false
       };
       onNoteSelect(newBlankNote, true); // Notify that a new note is being added
@@ -84,16 +85,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   }, []); 
 
   useEffect(() => {
-    const fetchUserMessages = async () => {
+    const fetchNotes = async () => {
       try {
         const userId = await user.getId();
+        const roles = await user.getRoles();
+        const isStudent = !!roles?.contributor && !roles?.administrator;
+  
         if (userId) {
-          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
+          let userNotes;
+  
+          if (isStudent) {
+            // 🧠 If student, fetch via student-specific method
+            userNotes = (await ApiService.fetchNotesByStudents([userId])).filter((note) => !note.isArchived);
+          } else {
+            // 🧠 Otherwise, normal fetch
+            userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived);
+          }
+  
           const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
-
-          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
-
-
+          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived);
+  
           setNotes(unarchivedNotes);
           setFilteredNotes(unarchivedNotes);
         } else {
@@ -104,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       }
     };
   
-    fetchUserMessages();
+    fetchNotes();
   }, []);
   
 
