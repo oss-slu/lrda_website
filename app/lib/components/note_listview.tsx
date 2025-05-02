@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
+import { Button } from "@/components/ui/button";
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
 };
+
+const batch_size = 15; //can change batch loading here
 
 const extractTextFromHtml = (htmlString: string) => {
   const tempDivElement = document.createElement("div");
@@ -19,6 +22,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
 
   const visibleNotes = notes.filter(note => !note.isArchived); //filter out archived notes
   
+  const [visibleCount, setVisibleCount] =  useState(batch_size);
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
@@ -50,9 +54,13 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
     }
   };
 
+  const moreNotes = () => {
+    setVisibleCount(prev => prev + batch_size);
+  };
+
   return (
     <div id="notes-list" className="my-4 flex flex-col">
-      {visibleNotes.map((note) => {
+      {visibleNotes.slice(0, visibleCount).map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
   
         return (
@@ -77,8 +85,21 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
           </div>
         );
       })}
+
+      {visibleCount < visibleNotes.length && (
+        <div className = "mt-4 flex justify-center">
+          <button  
+            onClick = {moreNotes}
+            className = "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Load More Notes...
+          </button>
+        </div>
+      )}
     </div>
   );  
 };
+
+
 
 export default NoteListView;
