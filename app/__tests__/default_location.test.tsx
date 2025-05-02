@@ -1,51 +1,64 @@
-// location_component.test.tsx
+// app/__tests__/default_location.test.tsx
+import React from "react";
+import { render, fireEvent, screen, waitFor } from "@testing-library/react";
+import LocationPicker from "../lib/components/noteElements/location_component";
 
-import { render, fireEvent, screen } from "@testing-library/react";
-import LocationPicker from "../components/location_component"; // adjust this path to where your file is
+// ✅ Mock Google Maps API-related components
+jest.mock("@react-google-maps/api", () => ({
+  GoogleMap: ({ children }: any) => <div>{children}</div>,
+  MarkerF: () => <div>Marker</div>,
+  Autocomplete: ({ children, onLoad }: any) => {
+    React.useEffect(() => {
+      onLoad({ getPlace: jest.fn() }); // Mock the autocomplete API
+    }, []);
+    return <div>{children}</div>;
+  },
+}));
+
+// ✅ Mock useGoogleMaps hook
+jest.mock("../lib/utils/GoogleMapsContext", () => ({
+  useGoogleMaps: () => true,
+}));
+
+// ✅ Setup mock for navigator.geolocation
+const mockGeolocation = {
+  getCurrentPosition: jest.fn(),
+};
+
+global.navigator.geolocation = mockGeolocation as any;
 
 describe("LocationPicker Component", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
   it("renders the location button", () => {
     render(<LocationPicker onLocationChange={() => {}} />);
-    expect(screen.getByRole("button", { name: /location/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /toggle map visibility/i })).toBeInTheDocument();
   });
 
-  it("expands the map when location button is clicked", () => {
-    render(<LocationPicker onLocationChange={() => {}} />);
-    const button = screen.getByRole("button", { name: /location/i });
-    fireEvent.click(button);
+  it("calls geolocation and updates location when map is opened", async () => {
+    const onLocationChangeMock = jest.fn();
 
-    // Expect the map modal to be visible after clicking
-    expect(screen.getByPlaceholderText("Search Location")).toBeInTheDocument();
-  });
-
-  it("tries to grab current location when the map is opened", () => {
-    // Mock geolocation
-    const getCurrentPositionMock = jest.fn();
-    global.navigator.geolocation = {
-      getCurrentPosition: getCurrentPositionMock,
-    } as any;
-
-    render(<LocationPicker onLocationChange={() => {}} />);
-    const button = screen.getByRole("button", { name: /location/i });
-    fireEvent.click(button);
-
-    // Expect geolocation to have been called
-    expect(getCurrentPositionMock).toHaveBeenCalled();
-  });
-
-  it("handles geolocation failure gracefully", () => {
-    const errorMock = jest.fn();
-    global.navigator.geolocation = {
-      getCurrentPosition: (_, errorCallback) => {
-        errorCallback({ message: "User denied Geolocation" });
+    const fakePosition = {
+      coords: {
+        latitude: 37.7749,
+        longitude: -122.4194,
       },
-    } as any;
+    };
 
-    render(<LocationPicker onLocationChange={() => {}} />);
-    const button = screen.getByRole("button", { name: /location/i });
-    fireEvent.click(button);
+    mockGeolocation.getCurrentPosition.mockImplementationOnce((success) =>
+      success(fakePosition)
+    );
 
-    // (Optional) Test: could add assertion for an error message if you show one
-    // expect(screen.getByText(/unable to fetch your location/i)).toBeInTheDocument();
+    render(<LocationPicker onLocationChange={onLocationChangeMock} />);
+
+    // Click the button to open the map
+    fireEvent.click(screen.getByRole("button", { name: /toggle map visibility/i }));
+
+    // Check that onLocationChange was called with the mocked coordinates
+    await waitFor(() => {
+      expect(onLocationChangeMock).toHaveBeenCalledWith(-122.4194, 37.7749);
+    });
   });
 });
