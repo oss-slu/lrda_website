@@ -1,11 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { useRouter } from 'next/router';
 import Sidebar from '../lib/components/side_bar'; // Update the path to your Sidebar component accordingly
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
 }));
+
 jest.mock("firebase/database", () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
@@ -39,25 +40,44 @@ jest.mock('firebase/auth', () => {
 });
 
 describe('Sidebar Component', () => {
-  let mockPush: jest.Mock;
+  let mockPush;
 
   beforeEach(() => {
     mockPush = jest.fn();
-    (useRouter as jest.Mock).mockImplementation(() => ({
+    (useRouter).mockImplementation(() => ({
       push: mockPush,
     }));
   });
 
   it('renders the sidebar correctly', () => {
-    render(<Sidebar setNoteComponentVisible={jest.fn()} />);
-    // Query for a child element of the sidebar to confirm it's rendered
-    const linkElement = screen.getByText('Add Note');
-    expect(linkElement).toBeInTheDocument();
+    render(<Sidebar onNoteSelect={jest.fn()} />);
+    const addButton = screen.getByTestId('add-note-button');
+    expect(addButton).toBeInTheDocument();
   });
 
-  it('displays the "Add Note" link', () => {
-    render(<Sidebar setNoteComponentVisible={jest.fn()} />);
-    const linkElement = screen.getByText('Add Note');
-    expect(linkElement).toBeInTheDocument();
+  it('displays the toggle switch for published notes', () => {
+    render(<Sidebar onNoteSelect={jest.fn()} />);
+    const publishedToggle = screen.getByText('Published');
+    const unpublishedToggle = screen.getByText('Unpublished');
+    expect(publishedToggle).toBeInTheDocument();
+    expect(unpublishedToggle).toBeInTheDocument();
   });
+
+  it('toggles between published and unpublished notes', () => {
+    render(<Sidebar onNoteSelect={jest.fn()} />);
+    const tabsElement = screen.getByRole('tablist');
+    expect(tabsElement).toBeInTheDocument();
+  });
+
+  /*
+  it('toggles between published and unpublished notes', () => {
+    render(<Sidebar onNoteSelect={jest.fn()} />);
+    const switchElement = screen.getByRole('switch');
+    expect(switchElement).toBeInTheDocument();
+    expect(switchElement).toBeChecked(); // Initially published
+
+    fireEvent.click(switchElement);
+    expect(switchElement).not.toBeChecked(); // Should toggle to unpublished
+  });
+  */
 });

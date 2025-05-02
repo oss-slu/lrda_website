@@ -3,6 +3,8 @@ import { Note, Tag } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
 import { User } from "../../models/user_class";
+import type { NoteStateType, NoteHandlersType } from "./note_state";
+
 
 export const handleTitleChange = (
   setTitle: React.Dispatch<React.SetStateAction<string>>,
@@ -28,37 +30,55 @@ export const handleTimeChange = (
   setTime(newDate);
 };
 
-export const handlePublishChange = async ({
-  noteId,
-  userId,
-  isPublished,
-}: {
-  noteId: string;
-  userId: string;
-  isPublished: boolean;
-}) => {
+export const handlePublishChange = async (
+  noteState: NoteStateType,
+  noteHandlers: NoteHandlersType
+) => {
+  if (!noteState.note) {
+    console.error("No note found.");
+    return;
+  }
+
+  const creatorId = noteState.note?.creator || await User.getInstance().getId();
+  const updatedNote = {
+    ...noteState.note,
+    text: noteState.editorContent,
+    title: noteState.title,
+    media: [...noteState.images, ...noteState.videos],
+    time: noteState.time,
+    longitude: noteState.longitude,
+    latitude: noteState.latitude,
+    tags: noteState.tags,
+    audio: noteState.audio,
+    id: noteState.note?.id || "",
+    // creator: creatorId,
+    published: !noteState.isPublished,
+  };
+
   try {
-    const response = await fetch(`/api/notes/${noteId}/publish`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        isPublished,
-      }),
+    await ApiService.overwriteNote(updatedNote);
+    noteHandlers.setIsPublished(updatedNote.published);
+    noteHandlers.setNote(updatedNote);
+
+    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
+      description: updatedNote.published
+        ? "Your note has been published successfully."
+        : "Your note has been unpublished successfully.",
+      duration: 4000,
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to update publish state.");
-    }
-
-    return await response.json();
+    noteHandlers.setCounter((prevCounter) => prevCounter + 1);
   } catch (error) {
     console.error("Error updating publish state:", error);
-    throw error;
+    toast("Error", {
+      description: "Failed to update publish state. Try again later.",
+      duration: 4000,
+    });
   }
 };
+
+
+
 
 export const handleTagsChange = (
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>, 
