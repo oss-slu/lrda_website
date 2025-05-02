@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
+import { Button } from "@/components/ui/button";
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
 };
+
+const batch_size = 15; //can change batch loading here
 
 const extractTextFromHtml = (htmlString: string) => {
   const tempDivElement = document.createElement("div");
@@ -13,15 +16,13 @@ const extractTextFromHtml = (htmlString: string) => {
   return tempDivElement.textContent || tempDivElement.innerText || "";
 };
 
-const BATCH_SIZE = 15;
-
 const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
-  const [batchCount, setBatchCount] = useState(1);
 
-  const visibleNotes = notes.filter(note => !note.isArchived);
-  const notesToRender = visibleNotes.slice(0, BATCH_SIZE * batchCount);
+  const visibleNotes = notes.filter(note => !note.isArchived); //filter out archived notes
+  
+  const [visibleCount, setVisibleCount] =  useState(batch_size);
 
   useEffect(() => {
     if (visibleNotes.length > 0 && fresh) {
@@ -53,11 +54,15 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
     }
   };
 
+  const moreNotes = () => {
+    setVisibleCount(prev => prev + batch_size);
+  };
+
   return (
     <div id="notes-list" className="my-4 flex flex-col">
-      {notesToRender.map((note) => {
+      {visibleNotes.slice(0, visibleCount).map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
-
+  
         return (
           <div
             key={note.id}
@@ -81,16 +86,20 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
         );
       })}
 
-      {notesToRender.length < visibleNotes.length && (
-        <button
-          onClick={() => setBatchCount((prev) => prev + 1)}
-          className="mt-4 p-2 self-center rounded bg-primary text-white hover:bg-primary/90"
-        >
-          Load More
-        </button>
+      {visibleCount < visibleNotes.length && (
+        <div className = "mt-4 flex justify-center">
+          <button  
+            onClick = {moreNotes}
+            className = "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Load More Notes...
+          </button>
+        </div>
       )}
     </div>
-  );
+  );  
 };
+
+
 
 export default NoteListView;

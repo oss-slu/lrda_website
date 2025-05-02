@@ -37,6 +37,7 @@ interface Refs {
 }
 
 const Page = () => {
+  const [visibleCount, setVisibleCount] = useState(15);
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -699,11 +700,8 @@ const Page = () => {
             }}
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-              <div 
-                className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                {/* moving search bar*/}
-                <div className="min-w-[80px] mr-3"
-                ref={searchBarRef}>
+              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
+                <div className="min-w-[80px] mr-3" ref={searchBarRef}>
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}
@@ -739,8 +737,7 @@ const Page = () => {
                 className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
               />
             ))
-          : filteredNotes.length > 0
-          ? filteredNotes.map((note) => (
+          : filteredNotes.slice(0, visibleCount).map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
@@ -756,12 +753,12 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-            ))
-          : [...Array(6)].map((_, index) => (
-              <Skeleton
-                key={index}
-                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-              />
+          //   ))
+          // : [...Array(6)].map((_, index) => (
+          //     <Skeleton
+          //       key={index}
+          //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+          //     />
             ))}
         {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
@@ -778,6 +775,17 @@ const Page = () => {
             Next
           </button>
         </div> */}
+
+        {visibleCount < filteredNotes.length && (
+          <div className="col-span-full flex justify-center mt-4">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 15)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Load More Notes...
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
