@@ -37,6 +37,7 @@ interface Refs {
 }
 
 const Page = () => {
+  const [visibleCount, setVisibleCount] = useState(15);
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -739,8 +740,7 @@ const Page = () => {
                 className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
               />
             ))
-          : filteredNotes.length > 0
-          ? filteredNotes.map((note) => (
+          : filteredNotes.slice(0, visibleCount).map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
@@ -778,6 +778,17 @@ const Page = () => {
             Next
           </button>
         </div> */}
+
+        {visibleCount < filteredNotes.length && (
+          <div className="col-span-full flex justify-center mt-4">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 15)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Load More Notes...
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
