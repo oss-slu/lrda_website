@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Note, Comment } from "@/app/types";
 import ApiService from "../utils/api_service";
-import DOMPurify from "dompurify";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarDays, Clock3, UserCircle, ImageIcon, MessageSquare } from "lucide-react";
@@ -40,8 +39,9 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [isInstructor, setIsInstructor] = useState(false);
 
   // Determine real ID and body text fields
-  const noteId =(note as any).id || (note as any)._id || (note as any)["@id"] || "";
-    const bodyHtml = (note as any).BodyText || note.text || "";
+  const noteId =
+    (note as any).id || (note as any)._id || (note as any)["@id"] || "";
+  const bodyHtml = (note as any).BodyText || note.text || "";
 
   // Debug logs
   useEffect(() => {
@@ -49,16 +49,16 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     console.log("🃏 [EnhancedNoteCard] bodyHtml:", bodyHtml);
   }, [noteId, bodyHtml]);
 
+  // Fetch user roles and name
   useEffect(() => {
-    (async () => {
-      const roles = await User.getInstance().getRoles();
-      setIsStudent(!!roles?.contributor && !roles?.administrator);
-      setIsInstructor(!!roles?.administrator);
-      const name = await User.getInstance().getName();
-      setUserName(name ?? "");   // coalesce null → empty string
-    })();
+    User.getInstance().getRoles().then((roles) => {
+      const student = !!roles?.contributor && !roles?.administrator;
+      const instructor = !!roles?.administrator;
+      setIsStudent(student);
+      setIsInstructor(instructor);
+    });
+    User.getInstance().getName().then(setUserName);
   }, []);
-  
 
   // Fetch creator name and location
   useEffect(() => {
@@ -89,17 +89,13 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     setLoading(true);
     try {
       const userId = await User.getInstance().getId();
-      
       const newComment: Comment = {
         id: uuidv4(),
         text: commentText.trim(),
         author: userName,
-        authorId: userId || "",
+        authorId: userId,
         role: isStudent ? "student" : "instructor",
         createdAt: new Date().toISOString(),
-        authorName: undefined,
-        noteId: "",
-        uid: ""
       };
 
       const updatedComments = [...comments, newComment];
@@ -123,16 +119,19 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     }
   };
 
-  // Approve (publish): shown to any non‐student when approvalRequested && not yet published
+  // Approval handler (only for instructors)
   const handleApprove = async () => {
+    if (!isInstructor) return;
     setLoading(true);
     try {
-      await ApiService.overwriteNote({
+      const updatedNote: Note = {
         ...note,
         id: noteId,
         published: true,
         approvalRequested: false,
-      });
+      };
+      const response = await ApiService.overwriteNote(updatedNote);
+      if (!response.ok) throw new Error("Failed to approve note");
       toast.success("Note approved and published!");
     } catch (err) {
       console.error("Approval failed:", err);
@@ -152,15 +151,14 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition max-w-sm">
+        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition-all max-w-sm">
           <div className="p-4">
-            <div className="font-bold text-lg mb-2">{note.title}</div>
+            <div className="text-lg font-bold mb-2">{note.title}</div>
             <div className="text-sm text-gray-500 mb-2 flex items-center">
               <UserCircle size={16} className="mr-1" /> {creatorName}
             </div>
             <div className="text-sm text-gray-500 mb-2 flex items-center">
-              <CalendarDays size={16} className="mr-1" />{" "}
-              {formatDate(note.time)}
+              <CalendarDays size={16} className="mr-1" /> {formatDate(note.time)}
             </div>
             <div className="text-sm text-gray-500 mb-2 flex items-center">
               <Clock3 size={16} className="mr-1" /> {formatTime(note.time)}
@@ -170,65 +168,59 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 <ImageIcon size={16} className="mr-1" /> {location}
               </div>
             )}
-
-            {/* ← Here we render the actual HTML snippet, limited in height */}
-            <div
-              className="text-sm text-gray-700 overflow-hidden max-h-[80px]"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }}
-            />
+            <p className="text-sm text-gray-700">{previewText(bodyHtml)}</p>
           </div>
         </div>
       </DialogTrigger>
 
-      <DialogContent className="max-w-[90%] max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="text-2xl font-bold mb-4">{note.title}</DialogTitle>
+      <DialogContent className="sm:max-w-[90%] max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="text-2xl font-bold mb-2">{note.title}</DialogTitle>
 
-        {/* show Approve to any non‑student when approvalRequested && not published */}
-        {!isStudent && note.approvalRequested && !note.published && (
+        {/* Approval Button: only visible to instructors */}
+        {isInstructor && (
           <div className="flex justify-end mb-4">
-            <Button onClick={handleApprove} disabled={loading}>
-              {loading ? "Approving…" : "Approve"}
+            <Button onClick={handleApprove} disabled={loading || note.published}>
+              {loading ? "Approving..." : note.published ? "Published" : "Approve"}
             </Button>
           </div>
         )}
 
-        <ScrollArea className="border p-4 mb-4 max-h-[300px] bg-white">
-        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }} />
+        <ScrollArea className="border p-4 mb-4 max-h-[300px] rounded-md bg-white">
+          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
         </ScrollArea>
 
-        <div className="border-t pt-4">
-          <h3 className="font-semibold mb-2 flex items-center gap-2">
+        {/* Comments Section */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <MessageSquare size={20} /> Comments
           </h3>
+
           <div className="space-y-4 mb-4">
             {comments.length ? (
-              comments.map((c) => (
-                <div key={c.id} className="border p-2 rounded bg-gray-100">
-                  <div className="font-semibold">{c.author}</div>
-                  <div>{c.text}</div>
+              comments.map((comment) => (
+                <div key={comment.id} className="border p-2 rounded-md bg-gray-100">
+                  <div className="text-sm font-semibold">{comment.author}</div>
+                  <div className="text-sm text-gray-800">{comment.text}</div>
                   <div className="text-xs text-gray-500">
-                    {new Date(c.createdAt).toLocaleString()}
+                    {new Date(comment.createdAt).toLocaleString()}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">No comments yet.</p>
+              <p className="text-gray-500 text-sm">No comments yet.</p>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             <Textarea
-              placeholder="Leave feedback…"
+              placeholder="Leave feedback..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               disabled={loading}
               rows={3}
             />
-            <Button
-              onClick={handleSubmitComment}
-              disabled={loading || !commentText.trim()}
-            >
-              {loading ? "Submitting…" : "Submit Comment"}
+            <Button onClick={handleSubmitComment} disabled={loading || !commentText.trim()}>
+              {loading ? "Submitting..." : "Submit Comment"}
             </Button>
           </div>
         </div>

@@ -20,15 +20,11 @@ const InstructorDashboardPage = () => {
       try {
         const userInstance = User.getInstance();
         const userId = await userInstance.getId();
-        if (!userId) {
-          throw new Error("Not logged in");
-        }
         const userData = await ApiService.fetchUserData(userId);
 
         if (!userData || !userData.isInstructor) {
           throw new Error("Access denied. Instructor only.");
         }
-
 
         const studentIds = userData.students || [];
         if (studentIds.length === 0) {

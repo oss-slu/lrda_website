@@ -1,250 +1,88 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Key, ReactNode } from "react";
 import { Comment } from "@/app/types";
 import CommentPopover from "../CommentPopover";
+import CommentBubble from "../CommentBubble";
 import ApiService from "../../utils/api_service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { User } from "../../models/user_class";
-import { v4 as uuidv4 } from "uuid";
+import { User } from "../../models/user_class"; // assuming you have this
 
-interface CommentSidebarProps {
+type CommentSidebarProps = {
   noteId: string;
-  getCurrentSelection?: () => { from: number; to: number } | null;
-}
+};
 
-export default function CommentSidebar({ noteId, getCurrentSelection }: CommentSidebarProps) {
+export default function CommentSidebar({ noteId }: CommentSidebarProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [showPopover, setShowPopover] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
-  const [canComment, setCanComment] = useState(false);
-  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
 
-  // Load existing comments whenever noteId changes and normalize author names
   useEffect(() => {
-    const load = async () => {
-      if (!noteId) return;
-      const raw = await ApiService.fetchCommentsForNote(noteId);
-      // Resolve proper display names when needed
-      const enriched = await Promise.all(
-        raw.map(async (c) => {
-          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-          if (needsName && c.authorId) {
-            try {
-              const display = await ApiService.fetchCreatorName(c.authorId);
-              return { ...c, authorName: display } as any;
-            } catch {
-              return c as any;
-            }
-          }
-          return c as any;
-        })
-      );
-      setComments(enriched as any);
+    const fetchComments = async () => {
+      if (noteId) {
+        const fetchedComments = await ApiService.fetchCommentsForNote(noteId);
+        setComments(fetchedComments);
+      }
     };
-    load();
+    fetchComments();
   }, [noteId]);
 
-  // Determine whether current user is an instructor or a student (not generic admin)
   useEffect(() => {
-    const checkInstructor = async () => {
-      const flag = await User.getInstance().isInstructor();
-      setIsInstructor(!!flag);
-      const uid = await User.getInstance().getId();
+    const checkRole = async () => {
       const roles = await User.getInstance().getRoles();
-      const isStudentRole = !!roles?.contributor && !roles?.administrator;
-      // allow commenting only for instructors or students
-      setCanComment(!!uid && (isStudentRole || flag));
+      setIsInstructor(!!roles?.instructor && !roles?.administrator);
     };
-    checkInstructor();
+    checkRole();
   }, []);
 
-  // Handler when instructor submits a new comment
   const handleSubmitComment = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+    const currentUser = User.getInstance();
+    const authorId = await currentUser.getId();
+    const authorName = await currentUser.getName();
 
-    // Selection is optional; allow generic comments
-    const selection = getCurrentSelection ? getCurrentSelection() : null;
-
-    const userApi = User.getInstance();
-    const authorId = (await userApi.getId()) ?? "";
-    const fallbackAuthor = (await userApi.getName()) ?? "";
-    let authorDisplay = fallbackAuthor;
-    try {
-      if (authorId) {
-        const resolved = await ApiService.fetchCreatorName(authorId);
-        if (resolved && resolved !== "Unknown User") authorDisplay = resolved;
-      }
-    } catch {}
-
-    const threadId = uuidv4();
     const newComment: Comment = {
-      id: uuidv4() as Key,
+      id: "", // will be set by Rerum
       noteId,
-      uid: authorId,
-      text: trimmed,
-      author: authorDisplay,
-      authorId,
-      authorName: authorDisplay as ReactNode,
-      role: isInstructor ? "instructor" : "student",
-      createdAt: new Date().toISOString(),
-      position: selection,
-      threadId,
-      parentId: null,
-      resolved: false,
+      text,
+      authorId: authorId || "",
+      authorName: authorName || "",
+      createdAt: new Date(),
     };
 
     await ApiService.createComment(newComment);
     setComments((prev) => [...prev, newComment]);
     setShowPopover(false);
-
-    // Notify editor to refresh highlights
-    try {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("note:comment-added", {
-            detail: { noteId, position: newComment.position },
-          })
-        );
-      }
-    } catch {}
-  };
-
-  const handleReply = async (threadId: string) => {
-    const trimmed = (replyDrafts[threadId] || "").trim();
-    if (!trimmed) return;
-    const userApi = User.getInstance();
-    const authorId = (await userApi.getId()) ?? "";
-    const fallbackAuthor = (await userApi.getName()) ?? "";
-    let authorDisplay = fallbackAuthor;
-    try {
-      if (authorId) {
-        const resolved = await ApiService.fetchCreatorName(authorId);
-        if (resolved && resolved !== "Unknown User") authorDisplay = resolved;
-      }
-    } catch {}
-
-    const reply: Comment = {
-      id: uuidv4() as Key,
-      noteId,
-      uid: authorId,
-      text: trimmed,
-      author: authorDisplay,
-      authorId,
-      authorName: authorDisplay as ReactNode,
-      role: isInstructor ? "instructor" : "student",
-      createdAt: new Date().toISOString(),
-      position: null,
-      threadId,
-      parentId: String(threadId),
-      resolved: false,
-    };
-
-    await ApiService.createComment(reply);
-    setComments((prev) => [...prev, reply]);
-    setReplyDrafts((d) => ({ ...d, [threadId]: "" }));
-  };
-
-  const handleResolveThread = async (threadId: string) => {
-    try {
-      await ApiService.resolveThread(threadId);
-      setComments((prev) => prev.map((c) => (c.threadId === threadId ? { ...c, resolved: true } : c)));
-    } catch {}
-  };
-
-  const handleDeleteComment = async (commentId?: Key | null | undefined) => {
-    const id = String(commentId || "");
-    if (!id) return;
-    try {
-      await ApiService.archiveComment(id);
-      setComments((prev) => prev.filter((c) => String(c.id) !== id));
-    } catch {}
   };
 
   return (
-    <div className="bg-white w-full md:w-80 p-2.5 sm:p-3 border-t md:border-t-0 md:border-l h-full flex flex-col">
-      <h2 className="text-sm sm:text-base font-semibold mb-2.5 sm:mb-3">Comments</h2>
+    <div className="bg-white w-80 p-4 border-l h-full flex flex-col">
+      <h2 className="text-lg font-bold mb-4">Comments</h2>
 
-      <ScrollArea className="flex-1 min-h-0 space-y-2.5 sm:space-y-3 pr-1">
-        {(() => {
-          if (comments.length === 0) return <p className="text-gray-400">No comments yet.</p>;
-          // Group by threadId (top-level comments with parentId === null)
-          const threads = comments
-            .filter((c) => !c.parentId)
-            .map((root) => {
-              const tid = String(root.threadId || root.id);
-              return {
-                root: { ...root, threadId: tid },
-                replies: comments.filter((r) => String(r.parentId) === tid),
-              };
-            });
-
-          return threads.map(({ root, replies }) => (
-            <div key={String(root.id)} className="border border-gray-200 bg-gray-50 p-2 sm:p-2.5 rounded-md space-y-2">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0">
-                  <p className="font-semibold text-[13px] sm:text-sm truncate">
-                    {root.authorName}
-                    {root.resolved && <span className="ml-2 text-xs text-green-600">(Resolved)</span>}
-                  </p>
-                  <p className="text-[12px] sm:text-xs text-gray-700 whitespace-pre-wrap break-words">{root.text}</p>
-                  <p className="text-[10px] sm:text-[11px] text-gray-400">{new Date(root.createdAt).toLocaleString()}</p>
-                </div>
-                {isInstructor && (
-                  <div className="flex gap-1.5 ml-2 shrink-0">
-                    {!root.resolved && (
-                      <Button size="sm" className="h-7 px-2 text-xs" variant="secondary" onClick={() => handleResolveThread(String(root.threadId))}>Resolve</Button>
-                    )}
-                    <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(root.id)}>Delete</Button>
-                  </div>
-                )}
-              </div>
-
-              {replies.length > 0 && (
-                <div className="ml-2 sm:ml-3 border-l pl-2 sm:pl-3 space-y-1.5">
-                  {replies.map((r) => (
-                    <div key={String(r.id)} className="">
-                      <p className="font-medium text-[12px] sm:text-xs truncate">{r.authorName}</p>
-                      <p className="text-[12px] sm:text-xs text-gray-700 whitespace-pre-wrap break-words">{r.text}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] sm:text-[11px] text-gray-400">{new Date(r.createdAt).toLocaleString()}</p>
-                        {isInstructor && (
-                          <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(r.id)}>Delete</Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {canComment && !root.resolved && (
-                <div className="mt-1.5 flex gap-1.5">
-                  <input
-                    className="flex-1 border rounded px-2 py-1 text-[12px] sm:text-xs"
-                    placeholder="Reply..."
-                    value={replyDrafts[String(root.threadId || root.id)] || ""}
-                    onChange={(e) => setReplyDrafts((d) => ({ ...d, [String(root.threadId || root.id)]: e.target.value }))}
-                  />
-                  <Button size="sm" className="h-7 px-2 text-xs" onClick={() => handleReply(String(root.threadId || root.id))}>Reply</Button>
-                </div>
-              )}
-            </div>
-          ));
-        })()}
+      <ScrollArea className="flex-1 space-y-4">
+        {comments.length === 0 && (
+          <p className="text-gray-400">No comments yet.</p>
+        )}
+        {comments.map((comment) => (
+          <div key={comment.id || Math.random()} className="border p-3 rounded">
+            <p className="font-semibold">{comment.authorName}</p>
+            <p className="text-sm text-gray-700">{comment.text}</p>
+            <p className="text-xs text-gray-400">
+              {new Date(comment.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
       </ScrollArea>
 
-      {canComment && (
-        <div className="mt-2 sm:mt-3 sticky bottom-0 bg-white pt-2">
+      {isInstructor && (
+        <div className="mt-4">
           {showPopover ? (
             <CommentPopover
               onSubmit={handleSubmitComment}
               onClose={() => setShowPopover(false)}
             />
           ) : (
-            <Button onClick={() => setShowPopover(true)} className="w-full h-9 text-xs sm:text-sm">
+            <Button onClick={() => setShowPopover(true)} className="w-full">
               Add Comment
             </Button>
           )}

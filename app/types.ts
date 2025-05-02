@@ -1,4 +1,3 @@
-import { Key, ReactNode } from "react";
 import {
   Media,
   PhotoType,
@@ -19,20 +18,12 @@ export type MediaData = {
 };
 
 export type Comment = {
-  authorName: ReactNode;
-  id: Key | null | undefined;
-  noteId: string;
   uid: string;
   text: string;
   author: string;     // Display name
   authorId: string;   // UID of the commenter
   role: "instructor" | "student"; // For styling or permissions
   createdAt: string;  // ISO date
-  position?: { from: number; to: number } | null; // Anchor to selected range
-  threadId?: string | null; // Thread grouping id
-  parentId?: string | null; // Parent comment id when this is a reply
-  resolved?: boolean; // Whether the thread is resolved
-  archived?: boolean; // Soft-delete flag
 };
 
 
@@ -85,8 +76,6 @@ export type newNote = {
   approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   isArchived?: boolean;
-
- 
 };
 
 export type RootStackParamList = {
