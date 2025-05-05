@@ -11,10 +11,9 @@ import DataConversion from "../utils/data_conversion";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
 
-/*
 //Bring this import back to use switch toggle for note view.
 import { Switch } from "@/components/ui/switch";
-*/
+
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -43,7 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         longitude: "",
         published: undefined,
         tags: [],
-        isArchived: false
+        isArchived: false,
+        approvalRequested: undefined,
       };
       onNoteSelect(newBlankNote, true); // Notify that a new note is being added
     } else {
