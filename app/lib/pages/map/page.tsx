@@ -37,7 +37,8 @@ interface Refs {
 }
 
 const Page = () => {
-  const [visibleCount, setVisibleCount] = useState(15);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -81,25 +82,25 @@ const Page = () => {
       console.log("Existing note selected:", note);
     }
   };
-  
+
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
-  const notesListRef= useRef<HTMLDivElement | null>(null);
+  const notesListRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
-  
+
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
         // Check if the intro has been shown before (from cookies)
         const introShown = document.cookie
           .split("; ")
           .find((row) => row.startsWith("introShown="))
           ?.split("=")[1];
-  
+
         if (!introShown) {
           const intro = introJs();
-  
+
           intro.setOptions({
             steps: [
               {
@@ -126,18 +127,18 @@ const Page = () => {
             scrollToElement: true,
             skipLabel: "Skip", // Change the look of this button
           });
-  
+
           // When the user skips or completes the intro
           intro.oncomplete(() => {
             document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
           });
-  
+
           intro.onexit(() => {
             document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
           });
-  
+
           intro.start();
-  
+
           // Apply inline styling to the skip button after a short delay to ensure it has rendered
           setTimeout(() => {
             const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
@@ -150,20 +151,36 @@ const Page = () => {
             }
           }, 100); // 100ms delay to wait for rendering
         }
-  
+
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
-  
+
     // Start observing the body for changes
     observer.observe(document.body, { childList: true, subtree: true });
-  
+
     // Cleanup the observer when the component unmounts
     return () => {
       observer.disconnect();
     };
   }, [searchBarRef, noteRefs, notesListRef]);
-  
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 10);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (loaderRef.current) observer.observe(loaderRef.current);
+
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -405,7 +422,7 @@ const Page = () => {
   const fetchNotes = async () => {
     try {
       const userId = await user.getId();
-  
+
       let personalNotes: Note[] = [];
       let globalNotes: Note[] = [];
       if (userId) {
@@ -414,8 +431,8 @@ const Page = () => {
 
         // Convert media types and filter out archived notes for personal notes
         personalNotes = DataConversion.convertMediaTypes(personalNotes)
-        .reverse()
-        .filter(note => !note.isArchived); // Filter out archived personal notes
+          .reverse()
+          .filter(note => !note.isArchived); // Filter out archived personal notes
       }
 
       globalNotes = (await ApiService.fetchPublishedNotes()).filter(note => !note.isArchived);
@@ -433,7 +450,7 @@ const Page = () => {
       console.error("Error fetching messages:", error);
       return { personalNotes: [], globalNotes: [] };
     }
-  };  
+  };
 
   const handleMarkerClick = (note: Note) => {
     if (currentPopup) {
@@ -531,39 +548,39 @@ const Page = () => {
       const query = address.trim().toLowerCase();
       const filtered = query
         ? notes.filter((note) => {
-            const titleMatch =
-              note.title && typeof note.title === "string"
-                ? note.title.toLowerCase().includes(query)
-                : false;
-  
-            const textMatch =
-              note.text && typeof note.text === "string"
-                ? note.text.toLowerCase().includes(query)
-                : false;
-  
-            const tagsMatch =
-              Array.isArray(note.tags) &&
-              note.tags.some(
-                (tag) =>
-                  tag.label &&
-                  typeof tag.label === "string" &&
-                  tag.label.toLowerCase().includes(query)
-              );
-  
-            return titleMatch || textMatch || tagsMatch;
-          })
+          const titleMatch =
+            note.title && typeof note.title === "string"
+              ? note.title.toLowerCase().includes(query)
+              : false;
+
+          const textMatch =
+            note.text && typeof note.text === "string"
+              ? note.text.toLowerCase().includes(query)
+              : false;
+
+          const tagsMatch =
+            Array.isArray(note.tags) &&
+            note.tags.some(
+              (tag) =>
+                tag.label &&
+                typeof tag.label === "string" &&
+                tag.label.toLowerCase().includes(query)
+            );
+
+          return titleMatch || textMatch || tagsMatch;
+        })
         : [...notes];
-  
+
       setFilteredNotes(filtered);
     }
-  
+
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
     }
   };
-  
+
 
   const handleNotesSearch = (searchText: string) => {
     const query = searchText.toLowerCase();
@@ -572,7 +589,7 @@ const Page = () => {
         note.title && typeof note.title === "string"
           ? note.title.toLowerCase().includes(query)
           : false;
-  
+
       const tagsMatch =
         Array.isArray(note.tags) &&
         note.tags.some(
@@ -581,14 +598,14 @@ const Page = () => {
             typeof tag.label === "string" &&
             tag.label.toLowerCase().includes(query)
         );
-  
+
       return titleMatch || tagsMatch;
     });
-  
+
     setFilteredNotes(filtered);
     console.log("Filtered:", filtered);
   };
-  
+
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
@@ -657,31 +674,31 @@ const Page = () => {
     const newNotes = global
       ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
       : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   const handlePrevious = async () => {
     const newSkip = Math.max(0, skip - 150);
     const newNotes = global
       ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
       : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   return (
     <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
       <div className="flex-grow">
@@ -709,13 +726,13 @@ const Page = () => {
                     filteredNotes={filteredNotes}
                   />
                 </div>
-                {isLoggedIn ? (
+                {isLoggedIn && (
                   <div className="flex flex-row justify-evenly items-center">
                     <GlobeIcon className="text-primary" />
                     <Switch onClick={toggleFilter} />
                     <UserIcon className="text-primary" />
                   </div>
-                ) : null}
+                )}
               </div>
               <div
                 className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
@@ -728,67 +745,40 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2"
-      ref = {notesListRef}>
+      <div
+        className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2"
+        ref={notesListRef}
+      >
         {isLoading
           ? [...Array(6)].map((_, index) => (
-              <Skeleton
-                key={index}
-                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-              />
-            ))
+            <Skeleton
+              key={index}
+              className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+            />
+          ))
           : filteredNotes.slice(0, visibleCount).map((note) => (
-              <div
-                ref={(el) => {
-                  if (el) noteRefs.current[note.id] = el;
-                }}
-                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id
-                    ? "active-note"
-                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+            <div
+              ref={(el) => {
+                if (el) noteRefs.current[note.id] = el;
+              }}
+              className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${note.id === activeNote?.id
+                  ? "active-note"
+                  : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
                 }`}
-                onMouseEnter={() => setHoveredNoteId(note.id)}
-                onMouseLeave={() => setHoveredNoteId(null)}
-                key={note.id}
-              >
-                <ClickableNote note={note} />
-              </div>
-          //   ))
-          // : [...Array(6)].map((_, index) => (
-          //     <Skeleton
-          //       key={index}
-          //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-          //     />
-            ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handlePrevious}
-            disabled={skip === 0}
-          >
-            Previous
-          </button>
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div> */}
-
-        {visibleCount < filteredNotes.length && (
-          <div className="col-span-full flex justify-center mt-4">
-            <button
-              onClick={() => setVisibleCount((prev) => prev + 15)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              onMouseEnter={() => setHoveredNoteId(note.id)}
+              onMouseLeave={() => setHoveredNoteId(null)}
+              key={note.id}
             >
-              Load More Notes...
-            </button>
-          </div>
-        )}
+              <ClickableNote note={note} />
+            </div>
+          ))}
+
+        {/* Lazy loading trigger */}
+        <div ref={loaderRef} className="col-span-full h-8" />
       </div>
     </div>
   );
 };
 
 export default Page;
+
