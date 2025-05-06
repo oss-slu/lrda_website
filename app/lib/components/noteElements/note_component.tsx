@@ -39,6 +39,7 @@ import {
   handleTagsChange, // Imported from note_handler
   handleTimeChange,
   handlePublishChange,
+  handleApprovalRequestChange,
 } from "./note_handler";
 import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
@@ -663,15 +664,20 @@ useEffect(() => {
             ref = {titleRef} />
           <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
           <PublishToggle
-        id="publish-toggle-button"
-        isPublished={Boolean(noteState.isPublished)}
-        isApprovalRequested={Boolean(noteState.approvalRequested)}
-        noteId={noteState.note?.id || ""}
-        userId={userId || ""}
-        instructorId={instructorId || ""}
-        onPublishClick={handlePublishChange}
-        onRequestApprovalClick={handleRequestApprovalClick}
-      />
+  id="publish-toggle-button"
+  noteId={noteState.note?.id || ""}
+  userId={userId || ""}
+  instructorId={instructorId || undefined}
+  isPublished={noteState.isPublished}
+  isApprovalRequested={noteState.approvalRequested}
+  onPublishClick={() =>
+    handlePublishChange(noteState, noteHandlers)
+  }
+  onRequestApprovalClick={() =>
+    handleApprovalRequestChange(noteState, noteHandlers)
+  }
+/>
+
 
             <div className="w-1 h-9 bg-border" />
             <button

@@ -1,10 +1,69 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import PublishToggle from "../lib/components/noteElements/publish_toggle";
+
+// 1. MOCK out User.getInstance() so it never tries to hit Firebase:
+jest.mock("../lib/models/user_class", () => {
+  return {
+    User: {
+      getInstance: () => ({
+        // student=false, instructor=true
+        getRoles: jest.fn().mockResolvedValue({ contributor: false, administrator: true }),
+        getId:    jest.fn().mockResolvedValue("mock-user-id"),
+      }),
+    },
+  };
+});
+
+// 2. MOCK out your ApiService.overwriteNote to always succeed
+jest.mock("../lib/utils/api_service", () => ({
+  overwriteNote: jest.fn().mockResolvedValue({ ok: true }),
+}));
+
+afterEach(() => {
+  jest.clearAllMocks();
+  cleanup();
+});
+
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(), // Mock Realtime Database
+}));
+
+jest.mock('firebase/auth', () => {
+  const originalModule = jest.requireActual('firebase/auth');
+  return {
+    ...originalModule,
+    getAuth: jest.fn(() => ({
+      currentUser: {
+        uid: 'mockUserId',
+        email: 'mock@example.com',
+      },
+    })),
+    signInWithEmailAndPassword: jest.fn((auth, email, password) => {
+      return Promise.resolve({
+        user: {
+          uid: 'mockUserId',
+          email,
+        },
+      });
+    }),
+    signOut: jest.fn(() => Promise.resolve()),
+    onAuthStateChanged: jest.fn((auth, callback) => {
+      callback({
+        uid: 'mockUserId',
+        email: 'test@gmail.com',
+      });
+    }),
+  };
+});
+
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
+}));
 
 describe("PublishToggle Component", () => {
   it("renders the publish button with correct initial state", () => {
-    render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
+    render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} noteId={""} userId={null} />);
     const publishButton = screen.getByText(/Publish/i);
     expect(publishButton).toBeInTheDocument();
     expect(publishButton).toHaveClass("text-black");
