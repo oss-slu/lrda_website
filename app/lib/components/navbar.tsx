@@ -1,8 +1,10 @@
+// components/Navbar.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { User } from "../models/user_class";
+import ApiService from "../utils/api_service";
 import { Button } from "@/components/ui/button";
 
 const user = User.getInstance();
@@ -23,31 +25,50 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const init = async () => {
       try {
-        const userName = await user.getName();
-        setName(userName);
-        const roles = await User.getInstance().getRoles();
-        setIsInstructor(!!roles?.administrator);
-        setIsStudent(!!roles?.contributor && !roles?.administrator);
+        // 1. Get Firebase username and attempt cached login
+        const firebaseName = await user.getName();
+        setName(firebaseName);
 
-        if (userName) {
-          const token = localStorage.getItem(userName);
-          if (token) await user.login(userName, token);
+        if (firebaseName) {
+          const token = localStorage.getItem(firebaseName);
+          if (token) {
+            await user.login(firebaseName, token);
+          }
         }
-      } catch {
-        console.log("No user cached or login failed");
+
+        // 2. Now fetch your application user record
+        const userId = await user.getId();
+        if (!userId) throw new Error("No logged‐in user");
+
+        const userData = await ApiService.fetchUserData(userId);
+        // userData.isInstructor is your backend flag
+        setIsInstructor(Boolean(userData.isInstructor));
+
+        // If not an instructor, but has an instructorId or students array, treat as student
+        const hasInstructorLink =
+          Boolean((userData as any).instructorId) ||
+          (Array.isArray((userData as any).students) &&
+            (userData as any).students.length > 0);
+        setIsStudent(!userData.isInstructor && hasInstructorLink);
+      } catch (err) {
+        console.log("Navbar init failed:", err);
       }
     };
-    fetchUser();
+
+    init();
   }, []);
 
-  const showDropdown = isStudent || isInstructor;
+  const showDropdown = isInstructor || isStudent;
 
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 py-3 text-white overflow-visible">
       <div className="flex items-center space-x-6">
-        <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
+        >
           Home
         </Link>
 
@@ -61,7 +82,10 @@ export default function Navbar() {
           </Link>
         )}
 
-        <Link href="/lib/pages/map" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+        <Link
+          href="/lib/pages/map"
+          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
+        >
           Map
         </Link>
 
@@ -72,7 +96,6 @@ export default function Navbar() {
           About
         </Link>
 
-        {/* Stories: dropdown for student/instructor, link otherwise */}
         {showDropdown ? (
           <div className="relative group">
             <span className="cursor-pointer text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
