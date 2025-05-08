@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -27,48 +26,41 @@ export default function Navbar() {
   useEffect(() => {
     const init = async () => {
       try {
-        // 1. Get Firebase username and attempt cached login
+        // 1) Pre‑login from cache
         const firebaseName = await user.getName();
         setName(firebaseName);
-
         if (firebaseName) {
           const token = localStorage.getItem(firebaseName);
-          if (token) {
-            await user.login(firebaseName, token);
-          }
+          if (token) await user.login(firebaseName, token);
         }
-
-        // 2. Now fetch your application user record
+  
+        // 2) Fetch your app’s user record
         const userId = await user.getId();
-        if (!userId) throw new Error("No logged‐in user");
-
+        if (!userId) throw new Error("Not logged in");
+  
         const userData = await ApiService.fetchUserData(userId);
-        // userData.isInstructor is your backend flag
-        setIsInstructor(Boolean(userData.isInstructor));
-
-        // If not an instructor, but has an instructorId or students array, treat as student
-        const hasInstructorLink =
-          Boolean((userData as any).instructorId) ||
-          (Array.isArray((userData as any).students) &&
-            (userData as any).students.length > 0);
-        setIsStudent(!userData.isInstructor && hasInstructorLink);
+        // default to false if userData is null or undefined
+        const instructorFlag = Boolean(userData?.isInstructor);
+        setIsInstructor(instructorFlag);
+  
+        // 3) Fetch Firebase roles for student check
+        const roles = await user.getRoles();
+        const studentRole = !!roles?.contributor && !roles?.administrator;
+        // only a student if studentRole AND not an instructor
+        setIsStudent(studentRole && !instructorFlag);
       } catch (err) {
-        console.log("Navbar init failed:", err);
+        console.warn("Navbar init failed:", err);
       }
     };
-
     init();
   }, []);
-
-  const showDropdown = isInstructor || isStudent;
+  
+  const showDropdown = isStudent || isInstructor;
 
   return (
-    <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 py-3 text-white overflow-visible">
+    <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 text-white overflow-visible">
       <div className="flex items-center space-x-6">
-        <Link
-          href="/"
-          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
-        >
+        <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
           Home
         </Link>
 
@@ -82,17 +74,11 @@ export default function Navbar() {
           </Link>
         )}
 
-        <Link
-          href="/lib/pages/map"
-          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
-        >
+        <Link href="/lib/pages/map" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
           Map
         </Link>
 
-        <Link
-          href="/lib/pages/aboutPage"
-          className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
-        >
+        <Link href="/lib/pages/aboutPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
           About
         </Link>
 
@@ -102,10 +88,7 @@ export default function Navbar() {
               Stories
             </span>
             <div className="absolute left-0 mt-2 w-48 bg-white text-black rounded shadow-lg opacity-0 group-hover:opacity-100 transform scale-95 group-hover:scale-100 transition-all z-50">
-              <Link
-                href="/lib/pages/StoriesPage"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
+              <Link href="/lib/pages/StoriesPage" className="block px-4 py-2 hover:bg-gray-200">
                 Global Stories
               </Link>
               {isInstructor && (
@@ -127,10 +110,7 @@ export default function Navbar() {
             </div>
           </div>
         ) : (
-          <Link
-            href="/lib/pages/StoriesPage"
-            className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
-          >
+          <Link href="/lib/pages/StoriesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Stories
           </Link>
         )}

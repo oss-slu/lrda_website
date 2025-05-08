@@ -116,9 +116,11 @@ const SignupPage = () => {
       setInstitution("");
       setWorkingUnderInstructor("");
       setSelectedInstructor(null);
-    } catch (error) {
-      console.error("Signup failed:", error);
-      toast.error(`Signup failed: ${error.message}`);
+    } catch (err: unknown) {
+      console.error("Signup failed:", err);
+      const message =
+        err instanceof Error ? err.message : String(err);
+      toast.error(`Signup failed: ${message}`);
     }
   };
   

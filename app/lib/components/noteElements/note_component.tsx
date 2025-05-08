@@ -38,8 +38,8 @@ import {
   handleLocationChange,
   handleTagsChange, // Imported from note_handler
   handleTimeChange,
-  handlePublishChange,
-  handleApprovalRequestChange,
+  handlePublishChange   as publishHandler,
+  handleApprovalRequestChange as approvalRequestHandler,
 } from "./note_handler";
 import { PhotoType, VideoType, AudioType } from "../../models/media_class";
 import { v4 as uuidv4 } from "uuid";
@@ -231,9 +231,10 @@ useEffect(() => {
     }
   }, [noteState.videos]);
 
+  // Normalize initialNote into noteState
   useEffect(() => {
     if (!initialNote) return;
-  
+
     const normalizedInitialNote = {
       ...initialNote,
       approvalRequested: initialNote.approvalRequested ?? false,
@@ -243,42 +244,47 @@ useEffect(() => {
       audio: initialNote.audio ?? [],
       tags: initialNote.tags ?? [],
     };
-  
-    
+
+    // Set note object
     noteHandlers.setNote(normalizedInitialNote as Note);
-    noteHandlers.setEditorContent(normalizedInitialNote.text || "");
+
+    // BodyText fallback for HTML content
+    const initialHtml =
+      (normalizedInitialNote as any).text ||
+      (normalizedInitialNote as any).BodyText ||
+      "";
+    noteHandlers.setEditorContent(initialHtml);
+
+    // Other fields
     noteHandlers.setTitle(normalizedInitialNote.title || "");
-    noteHandlers.setTime(normalizedInitialNote.time || new Date());
+    noteHandlers.setTime(
+      normalizedInitialNote.time ?? new Date(normalizedInitialNote.time!)
+    );
     noteHandlers.setLongitude(normalizedInitialNote.longitude || "");
     noteHandlers.setLatitude(normalizedInitialNote.latitude || "");
-    noteHandlers.setApprovalRequested(normalizedInitialNote.approvalRequested);
-  
+    noteHandlers.setApprovalRequested(
+      normalizedInitialNote.approvalRequested
+    );
     noteHandlers.setImages(
-      (normalizedInitialNote.media.filter(
-        (item) => item.getType && item.getType() === "image"
-      ) as PhotoType[])
+      normalizedInitialNote.media.filter(
+        (m) => m.getType && m.getType() === "image"
+      ) as PhotoType[]
     );
-  
     noteHandlers.setVideos(
-      (normalizedInitialNote.media.filter(
-        (item) => item.getType && item.getType() === "video"
-      ) as VideoType[])
+      normalizedInitialNote.media.filter(
+        (m) => m.getType && m.getType() === "video"
+      ) as VideoType[]
     );
-  
-    noteHandlers.setAudio(normalizedInitialNote.audio || []);
-  
+    noteHandlers.setAudio(normalizedInitialNote.audio);
     noteHandlers.setTags(
-      (normalizedInitialNote.tags || []).map((tag) =>
-        typeof tag === "string" ? { label: tag, origin: "user" } : tag
+      normalizedInitialNote.tags.map((t) =>
+        typeof t === "string" ? { label: t, origin: "user" } : t
       )
     );
-  
     noteHandlers.setIsPublished(normalizedInitialNote.published);
-    noteHandlers.setCounter((prev) => prev + 1);
 
-  
-
-  
+    // Trigger a re-render
+    noteHandlers.setCounter((c) => c + 1);
   }, [initialNote]);
   
   
@@ -671,10 +677,10 @@ useEffect(() => {
   isPublished={noteState.isPublished}
   isApprovalRequested={noteState.approvalRequested}
   onPublishClick={() =>
-    handlePublishChange(noteState, noteHandlers)
+    publishHandler(noteState, noteHandlers)
   }
   onRequestApprovalClick={() =>
-    handleApprovalRequestChange(noteState, noteHandlers)
+    approvalRequestHandler(noteState, noteHandlers)
   }
 />
 

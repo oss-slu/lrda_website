@@ -78,7 +78,7 @@ export default class ApiService {
   }
 
   /**
-   * 🔥 Creates a new Comment object in Rerum.
+   * Creates a new Comment object in Rerum.
    * @param {Comment} comment - Comment object to save.
    */
   static async createComment(comment: Comment) {
@@ -95,7 +95,6 @@ export default class ApiService {
           authorId: comment.authorId,
           authorName: comment.authorName,
           createdAt: comment.createdAt,
-          position: comment.position || null, // Optional field
         }),
       });
 
