@@ -215,10 +215,10 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         </DialogHeader>
         <ScrollArea>
           {/* Display BodyText content */}
-          {note.BodyText ? (
+          {note.text ? (
             <div
               className="mt-4 text-base"
-              dangerouslySetInnerHTML={{ __html: note.BodyText }}
+              dangerouslySetInnerHTML={{ __html: note.text }}
             />
           ) : (
             <p className="text-gray-500">No content available.</p>
