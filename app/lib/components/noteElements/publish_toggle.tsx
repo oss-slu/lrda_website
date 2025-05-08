@@ -30,6 +30,8 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   onRequestApprovalClick,
 }) => {
   const [isStudent, setIsStudent] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
+  
 
   useEffect(() => {
     (async () => {
@@ -82,6 +84,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   }
 
   return (
+    <>
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -99,6 +102,12 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
         <TooltipContent>{tooltipText}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
+       {notification && (
+        <div role="alert" className="fixed bottom-4 right-4 bg-black text-white p-2 rounded">
+          {notification}
+        </div>
+      )}
+      </>
   );
 };
 
