@@ -11,7 +11,14 @@ jest.mock("firebase/database", () => ({
 }));
 
 jest.mock('intro.js', () => {
-  const mockIntroInstance = {
+  type MockIntroInstance = {
+    setOptions: jest.Mock<MockIntroInstance>;
+    oncomplete: jest.Mock<MockIntroInstance>;
+    onexit: jest.Mock<MockIntroInstance>;
+    start: jest.Mock<void>;
+  };
+
+  const mockIntroInstance: MockIntroInstance = {
     setOptions: jest.fn(() => mockIntroInstance),
     oncomplete: jest.fn(() => mockIntroInstance),
     onexit: jest.fn(() => mockIntroInstance),
@@ -25,6 +32,36 @@ jest.mock('intro.js', () => {
   return jest.fn(() => mockIntroInstance);
 });
 
+// Mock Google Maps API context so the map and search bar render
+jest.mock('../lib/utils/GoogleMapsContext', () => ({
+  useGoogleMaps: () => ({ isMapsApiLoaded: true }),
+}));
+
+// Stub out the GoogleMap component so it renders children immediately
+jest.mock('@react-google-maps/api', () => ({
+  GoogleMap: ({ children }: any) => <div data-testid="google-map-mock">{children}</div>,
+}));
+
+
+// -------------------------------------------------------------------
+// Mock MutationObserver so that observe() immediately invokes its callback
+// -------------------------------------------------------------------
+global.MutationObserver = class {
+  callback: MutationCallback;
+  constructor(callback: MutationCallback) {
+    this.callback = callback;
+  }
+  observe(_target: Node, _options?: MutationObserverInit) {
+    // simulate a mutation event immediately
+    this.callback([], this);
+  }
+  disconnect() {
+    // no-op
+  }
+  takeRecords(): MutationRecord[] {
+    return [];
+  }
+};
 jest.mock('../lib/utils/data_conversion', () => ({
   convertMediaTypes: jest.fn(() => []),
 }));
