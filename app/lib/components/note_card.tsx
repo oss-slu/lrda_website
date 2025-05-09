@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "@/app/types";
 import ApiService from "../utils/api_service";
-//import placeholderImage from "public/no-photo-placeholder.jpeg";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PersonIcon } from "@radix-ui/react-icons";
 import { Calendar as CalendarIcon, TagIcon, TagsIcon, User2Icon } from "lucide-react";
@@ -30,18 +29,23 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
     note.time ? new Date(note.time) : undefined
   );
 
+  // Fetch creator name and handle potential errors
   useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
-      .then((name) => setCreator(name))
-      .catch((error) => {
-        console.error("Error fetching creator name:", error);
-        setCreator("Error loading name");
-      });
+    if (note.creator) {
+      ApiService.fetchCreatorName(note.creator)
+        .then((name) => setCreator(name))
+        .catch((error) => {
+          console.error("Error fetching creator name:", error);
+          setCreator("Unknown creator");
+        });
+    } else {
+      setCreator("Unknown creator");
+    }
   }, [note.creator]);
 
   return (
     <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200">
-      {note.media.length > 0 ? (
+      {imageMedia ? (
         <CompactCarousel mediaArray={note.media}></CompactCarousel>
       ) : (
         <img
@@ -60,7 +64,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
           </h3>
         </div>
         <div className="flex flex-col h-[100px] justify-evenly">
-          <div className="flex flex-row  items-center align-middle">
+          <div className="flex flex-row items-center align-middle">
             <User2Icon className="mr-2" size={15} />
             <p className="text-[15px] text-gray-500 truncate">{creator}</p>
           </div>

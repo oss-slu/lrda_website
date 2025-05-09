@@ -27,6 +27,11 @@ jest.mock("../lib/models/user_class", () => {
   };
 });
 
+jest.mock("../lib/config/firebase", () => ({
+  auth:   {},   // a fake auth object
+  db:     {},   // a fake Firestore object
+}));
+
 const localStorageMock = (function () {
   let store: Record<string, string> = {};
   return {
