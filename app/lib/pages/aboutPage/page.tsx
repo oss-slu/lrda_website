@@ -321,6 +321,19 @@ const Page = () => {
                     </a>
                 </div>
             </div>
+
+            {/* Sam Sheppard */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Sam.jpg"
+                alt="Sam Sheppard"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Sam Sheppard</p>
+              <p className="font-semibold text-center">Developer</p>
+            </div>
           </div>
         </div>
       </main>
