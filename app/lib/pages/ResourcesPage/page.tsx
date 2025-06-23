@@ -35,7 +35,7 @@ const ResourcesPage: React.FC = () => {
     "Atkinson, Robert. The Life Story Interview (SAGE Publications, 1998).",
     "Bernard, H. Russell. Research Methods in Anthropology (Rowman & Littlefield, 2017).",
     "Certeau, Michel de. The Practice of Everyday Life (University of California Press, 1984).",
-    "Geertz, Clifford. Local Knowledge: Further Essays In Interpretive Anthropology (Basic Books, 200).",
+    "Geertz, Clifford. Local Knowledge: Further Essays In Interpretive Anthropology (Basic Books, 1983).",
     "Kimmel, Allan. Ethics and Values in Applied Social Research (SAGE Publications, 1988).",
     "Maxwell, Joseph. Qualitative Research Design: An Interactive Approach (SAGE Publications, 2012).",
     "Pelto, Pertti J. Applied Ethnography: Guidelines for Field Research (Routledge, 2013).",
