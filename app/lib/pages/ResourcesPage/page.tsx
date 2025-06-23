@@ -1,5 +1,6 @@
 "use client";
 
+import { title } from "node:process";
 import React from "react";
 
 const ResourcesPage: React.FC = () => {
@@ -28,6 +29,10 @@ const ResourcesPage: React.FC = () => {
       title: "Fieldnote Vocabulary - UW",
       url: "https://faculty.washington.edu/stevehar/Fieldnote%20Vocabulary.pdf",
     },
+    {
+      title: "Geertz, Clifford. Local Knowledge",
+      url: "https://monoskop.org/images/d/d9/Geertz_Clifford_Local_Knowledge_Further_Essays_in_Interpretive_Anthropology_1983.pdf",
+    }
   ];
 
   const analogueResources = [
