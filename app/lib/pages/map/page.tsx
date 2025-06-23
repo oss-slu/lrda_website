@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import { useCachedNotes } from '../../components/hooks/useCachedNotes';
 
 interface Location {
   lat: number;
@@ -271,16 +272,18 @@ const Page = () => {
   }, [hoveredNoteId, markers]);
 
   useEffect(() => {
-    if (locationFound) {
-      fetchNotes().then(({ personalNotes, globalNotes }) => {
-        setPersonalNotes(personalNotes);
-        setGlobalNotes(globalNotes);
+  if (locationFound) {
+    fetchNotes().then(({ personalNotes, globalNotes }) => {
+      setPersonalNotes(personalNotes);
+      setGlobalNotes(globalNotes);
 
-        const initialNotes = global ? globalNotes : personalNotes;
-        setNotes(initialNotes);
-      });
-    }
-  }, [locationFound, global]);
+      const initialNotes = global ? globalNotes : personalNotes;
+      setNotes(initialNotes);
+    });
+  }
+}, [locationFound, global]);
+
+
 
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
@@ -402,38 +405,58 @@ const Page = () => {
     setIsLoaded(false);
   };
 
-  const fetchNotes = async () => {
-    try {
-      const userId = await user.getId();
-  
-      let personalNotes: Note[] = [];
-      let globalNotes: Note[] = [];
-      if (userId) {
-        setIsLoggedIn(true);
-        personalNotes = (await ApiService.fetchUserMessages(userId)).filter(note => !note.isArchived); //filter here?
+ const fetchNotes = async () => {
+  try {
+    const userId = await user.getId();
+    const TTL = 1000 * 60 * 10; // 10 minutes
 
-        // Convert media types and filter out archived notes for personal notes
-        personalNotes = DataConversion.convertMediaTypes(personalNotes)
-        .reverse()
-        .filter(note => !note.isArchived); // Filter out archived personal notes
-      }
+    const now = Date.now();
 
-      globalNotes = (await ApiService.fetchPublishedNotes()).filter(note => !note.isArchived);
+    // Check localStorage for global notes
+    const cachedGlobal = localStorage.getItem("globalNotes");
+    const cachedGlobalTs = localStorage.getItem("globalNotes_ts");
 
-
-      // Convert media types and filter out archived notes for global notes
-      globalNotes = DataConversion.convertMediaTypes(globalNotes)
-        .reverse()
-        .filter(note => !note.isArchived); // Filter out archived global notes
-
-
-
-      return { personalNotes, globalNotes };
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return { personalNotes: [], globalNotes: [] };
+    let globalNotes: Note[] = [];
+    if (cachedGlobal && cachedGlobalTs && now - parseInt(cachedGlobalTs) < TTL) {
+      globalNotes = JSON.parse(cachedGlobal);
+    } else {
+      globalNotes = await ApiService.fetchPublishedNotes();
+      localStorage.setItem("globalNotes", JSON.stringify(globalNotes));
+      localStorage.setItem("globalNotes_ts", now.toString());
     }
-  };  
+
+    // Check localStorage for personal notes
+    let personalNotes: Note[] = [];
+    if (userId) {
+      setIsLoggedIn(true);
+
+      const cachedPersonal = localStorage.getItem("personalNotes");
+      const cachedPersonalTs = localStorage.getItem("personalNotes_ts");
+
+      if (cachedPersonal && cachedPersonalTs && now - parseInt(cachedPersonalTs) < TTL) {
+        personalNotes = JSON.parse(cachedPersonal);
+      } else {
+        personalNotes = await ApiService.fetchUserMessages(userId);
+        localStorage.setItem("personalNotes", JSON.stringify(personalNotes));
+        localStorage.setItem("personalNotes_ts", now.toString());
+      }
+    }
+
+    personalNotes = DataConversion.convertMediaTypes(personalNotes)
+      .reverse()
+      .filter(note => !note.isArchived);
+
+    globalNotes = DataConversion.convertMediaTypes(globalNotes)
+      .reverse()
+      .filter(note => !note.isArchived);
+
+    return { personalNotes, globalNotes };
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    return { personalNotes: [], globalNotes: [] };
+  }
+};
+
 
   const handleMarkerClick = (note: Note) => {
     if (currentPopup) {
