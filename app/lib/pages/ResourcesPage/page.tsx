@@ -14,24 +14,28 @@ const ResourcesPage: React.FC = () => {
       url: "https://americananthro.org/learn-teach/handbook-on-ethical-issues-in-anthropology/",
     },
     {
-      title: "Engaging Communities",
+      title: "Malley, Suzanne Blum and Ames Hawkins. Engaging Communities: Writing Ethnographic Research",
       url: "http://www.engagingcommunities.org/introduction/",
     },
     {
-      title: "Ethnographies of Work",
+      title: "Tyner-Mullings, Alia R., Mary Gatta, Thomas Martin, and Ryan Coughlan, ed. Ethnography Made Easy",
       url: "https://cuny.manifoldapp.org/projects/ethnographies-of-work",
     },
     {
-      title: "Fieldnotes - Emerson",
+      title: "Emerson, Robert M., Rachel I. Fritz, and Linda L. Shaw. Writing Ethnographic Fieldnotes (University of Chicago Press, 2011).",
       url: "https://williamwolff.org/wp-content/uploads/2016/01/emerson-fieldnotes-2011.pdf",
     },
     {
-      title: "Fieldnote Vocabulary - UW",
+      title: `Sanjek, Roger, ed. "A Vocabulary for Field Notes," Fieldnotes: The Makings of Anthropology (Cornell University Press, 1990).`,
       url: "https://faculty.washington.edu/stevehar/Fieldnote%20Vocabulary.pdf",
     },
     {
-      title: "Geertz, Clifford. Local Knowledge",
+      title: "Geertz, Clifford. Local Knowledge: Further Essays In Interpretive Anthropology (Basic Books, 1983).",
       url: "https://monoskop.org/images/d/d9/Geertz_Clifford_Local_Knowledge_Further_Essays_in_Interpretive_Anthropology_1983.pdf",
+    },
+    {
+      title: `Geertz, Clifford. "Thick Description: Toward an Interpretive Theory of Culture," The Interpretation of Cultures (Basic Books, 1973).`,
+      url: "http://wendynorris.com/wp-content/uploads/2018/12/Geertz-1973-Thick-Description_-Toward-an-interpretive-theory-of-cultures.pdf",
     }
   ];
 
@@ -46,7 +50,7 @@ const ResourcesPage: React.FC = () => {
     "Pelto, Pertti J. Applied Ethnography: Guidelines for Field Research (Routledge, 2013).",
     "Scott, John. Social Network Analysis: A Handbook (SAGE Publications, 2011).",
     "Stewart, David and Prem Shamdasani. Focus Groups: Theory and Practice (SAGE Publications, 2014).",
-    "Weller, Susan and A. Kimball. Romney. Systematic Data Collection (SAGE Publications, 1988).",
+    "Weller, Susan and A. Kimball Romney. Systematic Data Collection (SAGE Publications, 1988).",
   ];
 
   return (
