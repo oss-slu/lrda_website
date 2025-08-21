@@ -9,6 +9,11 @@ const customJestConfig = {
   setupFiles: ["<rootDir>/jest.setup.ts"],
   setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
   maxWorkers: "50%",  // Limit to 50% of available CPUs to avoid overloading
+  // Exclude Playwright E2E tests from Jest runs
+  testPathIgnorePatterns: [
+    "<rootDir>/app/__e2e__/",
+    "<rootDir>/node_modules/"
+  ],
 };
 
 module.exports = createJestConfig({
