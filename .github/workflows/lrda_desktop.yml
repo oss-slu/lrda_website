@@ -30,6 +30,32 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@8.11.0
       - name: Install dependencies
-        run: pnpm install # Replace 'npm install' with 'pnpm install'
+        run: pnpm install
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Build application
+        run: pnpm build
+        env:
+          # Mock environment variables for build
+          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
+          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
+          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
+          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
       - name: Run tests
-        run: pnpm test # or 'npm test' if you're using npm
+        run: pnpm test
+        env:
+          # Mock environment variables for CI
+          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
+          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
+          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
+          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
