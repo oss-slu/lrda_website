@@ -12,8 +12,7 @@ const StoriesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<{ uid: string; name: string }[]>([]); // To store unique user IDs
   const [selectedUser, setSelectedUser] = useState<string>(""); // For dropdown selection
-  const [skip, setSkip] = useState(0);
-  const [hasMoreNotes, setHasMoreNotes] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(15); // Limit initial display to 15 notes for better performance
 
 
    // Fetch user names by resolving UIDs to names
@@ -36,16 +35,15 @@ const StoriesPage = () => {
     }
   };
 
-  const fetchStories = async (offset = 0, limit = 10) => {
+  const fetchStories = async (limit = 150) => { // Increased limit to 150 for better performance
     try {
       setIsLoading(true);
-      const fetchedNotes = await ApiService.fetchPublishedNotes(offset, limit);
+      const fetchedNotes = await ApiService.fetchPublishedNotes(0, limit);
 
       // Debugging log to check fetched data
       console.log("Fetched Notes:", fetchedNotes);
 
       if (fetchedNotes.length === 0) {
-        setHasMoreNotes(false);
         toast("No more stories to display.");
       } else {
         const uids = fetchedNotes.map((note) => note.creator); // Collect UIDs from notes
@@ -60,8 +58,8 @@ const StoriesPage = () => {
           );
         });
 
-        setNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
-        setFilteredNotes((prevNotes) => [...prevNotes, ...fetchedNotes]);
+        setNotes(fetchedNotes);
+        setFilteredNotes(fetchedNotes);
       }
     } catch (error) {
       console.error("Error fetching notes:", error);
@@ -74,7 +72,7 @@ const StoriesPage = () => {
   const fetchFilteredNotesByUser = async (creatorId: string) => {
     try {
       setIsLoading(true);
-      const userNotes = await ApiService.getPagedQueryWithParams(10, 0, creatorId);
+      const userNotes = await ApiService.getPagedQueryWithParams(150, 0, creatorId); // Increased limit to 150
       setFilteredNotes(userNotes); // Display only notes for the selected user
     } catch (error) {
       console.error(`Error fetching notes for user ${creatorId}:`, error);
@@ -84,16 +82,22 @@ const StoriesPage = () => {
     }
   };
 
+  // Handle loading more notes (same logic as map page and sidebar)
+  const handleLoadMoreNotes = () => {
+    setVisibleCount((prev) => prev + 15); // Increase by batch size of 15
+  };
+
 
 
 
   useEffect(() => {
-    fetchStories(skip);
-  }, [skip]);
+    fetchStories();
+  }, []);
 
   const handleSearch = (query: string) => {
     if (!query.trim()) {
       setFilteredNotes(notes); // Reset to all notes
+      setVisibleCount(15); // Reset visible count when clearing search
       return;
     }
     const lowerCaseQuery = query.toLowerCase();
@@ -106,111 +110,94 @@ const StoriesPage = () => {
         )
     );
     setFilteredNotes(results);
+    setVisibleCount(15); // Reset visible count when searching
   };
 
   const handleUserFilter = (userId: string) => {
     setSelectedUser(userId);
     if (userId === "") {
       setFilteredNotes(notes); // Show all notes if no user is selected
+      setVisibleCount(15); // Reset visible count when clearing user filter
     } else {
       const results = notes.filter(
         (note) => note.creator === userId && note.approvalRequested
       );
       setFilteredNotes(results);
-    }
-  };
-
-  const handleNext = () => {
-    if (hasMoreNotes) {
-      setSkip((prevSkip) => prevSkip + 10);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (skip > 0) {
-      setSkip((prevSkip) => Math.max(0, prevSkip - 10));
-      setFilteredNotes(notes.slice(skip - 10, skip));
+      setVisibleCount(15); // Reset visible count when filtering by user
     }
   };
 
   return (
-    <div className="flex flex-col w-screen h-[90vh] min-w-[600px] bg-gray-100 p-4">
-      {/* Search Bar */}
-      <div className="flex justify-center mb-4">
+    <div className="flex flex-col w-full min-h-screen bg-gray-100 p-2 sm:p-4">
+      {/* Search Bar - Mobile Optimized */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 w-full">
         <input
           type="text"
           placeholder="Search stories..."
-          className="w-full max-w-md p-2 border rounded-lg shadow-sm"
+          className="w-full sm:max-w-md p-2 sm:p-3 border rounded-lg shadow-sm text-sm sm:text-base"
           onChange={(e) => handleSearch(e.target.value)}
         />
-       {/* Dropdown for filtering by user */}
-       <select
-  value={selectedUser}
-  onChange={async (e) => {
-    const userId = e.target.value;
-    setSelectedUser(userId); // Update the selected user in state
-    if (userId === "") {
-      setFilteredNotes(notes); // Show all notes if no user is selected
-    } else {
-      await fetchFilteredNotesByUser(userId); // Dynamically fetch and filter notes
-    }
-  }}
-  className="p-2 border rounded-lg shadow-sm"
->
-  <option value="">All Users</option>
-  {users.map((user) => (
-    <option key={user.uid} value={user.uid}>
-      {user.name} {/* Display user names */}
-    </option>
-  ))}
-</select>
-
+        {/* Dropdown for filtering by user */}
+        <select
+          value={selectedUser}
+          onChange={async (e) => {
+            const userId = e.target.value;
+            setSelectedUser(userId); // Update the selected user in state
+            if (userId === "") {
+              setFilteredNotes(notes); // Show all notes if no user is selected
+              setVisibleCount(15); // Reset visible count when clearing user filter
+            } else {
+              await fetchFilteredNotesByUser(userId); // Dynamically fetch and filter notes
+              setVisibleCount(15); // Reset visible count when filtering by user
+            }
+          }}
+          className="w-full sm:w-auto p-2 sm:p-3 border rounded-lg shadow-sm text-sm sm:text-base"
+        >
+          <option value="">All Users</option>
+          {users.map((user) => (
+            <option key={user.uid} value={user.uid}>
+              {user.name} {/* Display user names */}
+            </option>
+          ))}
+        </select>
       </div>
 
-      
-
-      {/* Stories Grid */}
-      <div className="flex justify-center">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-screen-lg">
+      {/* Stories Grid - Mobile Responsive */}
+      <div className="flex justify-center w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 w-full max-w-7xl">
           {isLoading
             ? [...Array(6)].map((_, index) => (
                 <Skeleton
-                  key={`skeleton-${index}`} // Add a unique key for each skeleton
-                  className="w-full h-[400px] rounded-sm border border-gray-200"
+                  key={`skeleton-${index}`}
+                  className="w-full h-[300px] sm:h-[350px] lg:h-[400px] rounded-lg border border-gray-200"
                 />
               ))
             : filteredNotes.length > 0
-            ? filteredNotes.map((note, index) => (
+            ? filteredNotes.slice(0, visibleCount).map((note, index) => (
                 <EnhancedClickableNote
-                  key={note.id || `note-${index}`} // Ensures unique keys even if note.id is missing
+                  key={note.id || `note-${index}`}
                   note={note}
                 />
               ))
             : (
-                <div key="no-stories" className="text-center col-span-full">
-                  No stories found.
+                <div key="no-stories" className="text-center col-span-full py-8">
+                  <p className="text-gray-600 text-lg">No stories found.</p>
                 </div>
               )}
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-6">
-        <button
-          className="mx-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
-          onClick={handlePrevious}
-          disabled={skip === 0}
-        >
-          Previous
-        </button>
-        <button
-          className="mx-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
-          onClick={handleNext}
-          disabled={!hasMoreNotes}
-        >
-          Next
-        </button>
-      </div>
+      {/* Load More Notes Button - Mobile Optimized */}
+      {visibleCount < filteredNotes.length && (
+        <div className="flex justify-center mt-6 mb-4">
+          <button
+            className="w-full sm:w-auto px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 text-sm sm:text-base font-medium transition-colors"
+            onClick={handleLoadMoreNotes}
+          >
+            Load More Stories
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -683,8 +683,8 @@ const Page = () => {
   };
   
   return (
-    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
-      <div className="flex-grow">
+    <div className="flex flex-col lg:flex-row w-full h-[90vh] min-h-[500px]">
+      <div className="flex-grow relative">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -699,9 +699,9 @@ const Page = () => {
               fullscreenControl: false,
             }}
           >
-            <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
-              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                <div className="min-w-[80px] mr-3" ref={searchBarRef}>
+            <div className="absolute flex flex-col sm:flex-row mt-2 sm:mt-3 w-full h-auto sm:h-10 justify-between z-10 px-2 sm:px-5">
+              <div className="flex flex-col sm:flex-row w-full sm:w-[30vw] left-0 z-10 m-2 sm:m-5 align-center items-center gap-2 sm:gap-0">
+                <div className="w-full sm:min-w-[80px] sm:mr-3" ref={searchBarRef}>
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}
@@ -710,7 +710,7 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <div className="flex flex-row justify-evenly items-center">
+                  <div className="flex flex-row justify-evenly items-center w-full sm:w-auto">
                     <GlobeIcon className="text-primary" />
                     <Switch onClick={toggleFilter} />
                     <UserIcon className="text-primary" />
@@ -718,7 +718,7 @@ const Page = () => {
                 ) : null}
               </div>
               <div
-                className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
+                className="flex flex-row w-full sm:w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive justify-center sm:justify-end"
                 onClick={handleSetLocation}
               >
                 <Navigation size={20} />
@@ -728,13 +728,13 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2"
-      ref = {notesListRef}>
+      <div className="h-1/2 lg:h-full overflow-y-auto bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-3 p-2 sm:p-3"
+      ref={notesListRef}>
         {isLoading
           ? [...Array(6)].map((_, index) => (
               <Skeleton
                 key={index}
-                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+                className="w-full h-[200px] sm:h-[250px] lg:h-[300px] rounded-lg flex flex-col border border-gray-200"
               />
             ))
           : filteredNotes.slice(0, visibleCount).map((note) => (
@@ -742,7 +742,7 @@ const Page = () => {
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
-                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                className={`transition-transform duration-300 ease-in-out cursor-pointer w-full h-auto max-h-[250px] sm:max-h-[300px] lg:max-h-[308px] ${
                   note.id === activeNote?.id
                     ? "active-note"
                     : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
@@ -753,12 +753,6 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-          //   ))
-          // : [...Array(6)].map((_, index) => (
-          //     <Skeleton
-          //       key={index}
-          //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-          //     />
             ))}
         {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
@@ -777,10 +771,10 @@ const Page = () => {
         </div> */}
 
         {visibleCount < filteredNotes.length && (
-          <div className="col-span-full flex justify-center mt-4">
+          <div className="col-span-full flex justify-center mt-4 mb-2">
             <button
               onClick={() => setVisibleCount((prev) => prev + 15)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm sm:text-base font-medium"
             >
               Load More Notes...
             </button>

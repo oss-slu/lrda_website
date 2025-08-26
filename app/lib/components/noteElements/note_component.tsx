@@ -668,7 +668,7 @@ useEffect(() => {
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
-          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+          <div className="flex flex-col sm:flex-row bg-popup shadow-sm my-2 sm:my-4 rounded-md border border-border bg-white justify-center sm:justify-evenly mr-0 sm:mr-8 items-center gap-2 sm:gap-0">
           <PublishToggle
   id="publish-toggle-button"
   noteId={noteState.note?.id || ""}

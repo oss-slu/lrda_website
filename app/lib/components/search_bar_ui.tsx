@@ -19,7 +19,7 @@ class SearchBarUI extends React.Component<SearchBarUIProps> {
         <Input
           type="text"
           placeholder="🔍 Search..."
-          className="border-2 border-gray-300 focus:border-blue-500 rounded-full py-2 px-4 w-full bg-white shadow-sm transition-all focus:ring-2 focus:ring-blue-300 outline-none"
+          className="border-2 border-gray-300 focus:border-blue-500 rounded-full py-1.5 sm:py-2 px-3 sm:px-4 w-full bg-white shadow-sm transition-all focus:ring-2 focus:ring-blue-300 outline-none text-sm sm:text-base"
           value={searchText}
           onChange={onInputChange}
           onFocus={onFocus}

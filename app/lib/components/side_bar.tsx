@@ -141,19 +141,31 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="h-[90vh] bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
-      <div className="w-full mb-4">
-        <div className="text-center justify-center mb-1">
-          <span className="justify-center text-xl font-semibold">My Notes</span>
+    <div className="h-[100vh] sm:h-[90vh] bg-gray-200 p-2 sm:p-4 pt-2 sm:pt-1 overflow-y-auto flex flex-col z-30 relative">
+      <div className="w-full mb-2 sm:mb-4">
+        <div className="text-center justify-center mb-2 sm:mb-1">
+          <span className="justify-center text-base sm:text-lg lg:text-xl font-semibold">My Notes</span>
         </div>
         {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
-        <SearchBarNote onSearch={handleSearch} />
+        <div className="mb-2 sm:mb-3">
+          <SearchBarNote onSearch={handleSearch} />
+        </div>
 
-          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
+          <div className="flex flex-col sm:flex-row items-center text-center justify-between pt-1 sm:pt-2 mt-1 sm:mt-2 w-full"> {/* Mobile-first layout */}
             <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
-                <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 gap-1 sm:gap-2">
+                <TabsTrigger 
+                  value="unpublished" 
+                  className="text-xs sm:text-sm font-semibold px-1 sm:px-2 py-1.5 sm:py-2 h-8 sm:h-9 rounded-md"
+                >
+                  Unpublished
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="published" 
+                  className="text-xs sm:text-sm font-semibold px-1 sm:px-2 py-1.5 sm:py-2 h-8 sm:h-9 rounded-md"
+                >
+                  Published
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="unpublished"></TabsContent>
               <TabsContent value="published"></TabsContent>
@@ -161,7 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           </div>
         </div>
 
-      <div>
+      <div className="flex-1">
         <NoteListView
           notes={filteredNotes}
           onNoteSelect={(note) => onNoteSelect(note, false)}
@@ -171,11 +183,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       {/* floating add note button */}
       <Button
         id="add-note-button"
-        data-testid="add-note-button"
         onClick={handleAddNote}
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black hover:bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg z-50 flex items-center justify-center"
       >
-        <Plus size={24} />
+        <div className="text-xl sm:text-2xl font-bold">+</div>
       </Button>
     </div>
   );

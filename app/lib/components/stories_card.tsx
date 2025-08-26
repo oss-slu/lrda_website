@@ -135,13 +135,13 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition-all max-w-sm">
-          {/* Image at the Top with Spinner */}
-          {coverImage && (
-            <div className="relative w-full h-40">
+        <div className="cursor-pointer border rounded-lg shadow-md bg-white hover:shadow-lg transition-all w-full max-w-sm">
+          {/* Image at the Top with Spinner or Placeholder */}
+          {coverImage ? (
+            <div className="relative w-full h-32 sm:h-36 md:h-40">
               {isImageLoading && (
                 <div className="absolute inset-0 flex justify-center items-center bg-gray-100">
-                  <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full" />
+                  <div className="spinner-border animate-spin inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-gray-300 border-t-gray-600 rounded-full" />
                 </div>
               )}
               <img
@@ -154,30 +154,40 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 onError={() => setIsImageLoading(false)}
               />
             </div>
+          ) : (
+            <div className="w-full h-32 sm:h-36 md:h-40 bg-gray-100 rounded-t-lg flex items-center justify-center">
+              <img
+                src="/no-photo-placeholder.jpeg"
+                alt="No Image Available"
+                className="w-full h-full object-cover rounded-t-lg"
+              />
+            </div>
           )}
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             {/* Title */}
-            <div className="text-lg font-bold mb-2">{note.title}</div>
+            <div className="text-base sm:text-lg font-bold mb-2 line-clamp-2">{note.title}</div>
             {/* Creator */}
-            <div className="text-sm text-gray-500 mb-2 flex items-center">
-              <UserCircle size={16} className="mr-1" /> {creator}
+            <div className="text-xs sm:text-sm text-gray-500 mb-2 flex items-center">
+              <UserCircle size={14} className="mr-1 sm:mr-1" /> {creator}
             </div>
             {/* Date and Time */}
-            <div className="text-sm text-gray-500 mb-2">
-              <div className="flex items-center gap-2">
-                <CalendarDays size={16} /> {formatDate(note.time)}
+            <div className="text-xs sm:text-sm text-gray-500 mb-2 space-y-1">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <CalendarDays size={14} className="flex-shrink-0" /> 
+                <span className="truncate">{formatDate(note.time)}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock3 size={16} />
-                {note.time ? formatTime(note.time) : "Unknown Time"}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Clock3 size={14} className="flex-shrink-0" />
+                <span className="truncate">{note.time ? formatTime(note.time) : "Unknown Time"}</span>
               </div>
             </div>
             {/* Location */}
-            <div className="text-sm text-gray-500 mb-2 flex items-center">
-              <ImageIcon size={16} className="mr-1" /> {location}
+            <div className="text-xs sm:text-sm text-gray-500 mb-2 flex items-center">
+              <ImageIcon size={14} className="mr-1 sm:mr-1 flex-shrink-0" /> 
+              <span className="truncate">{location}</span>
             </div>
             {/* Body Preview */}
-            <p className="text-sm text-gray-700">{bodyPreview}</p>
+            <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">{bodyPreview}</p>
           </div>
         </div>
       </DialogTrigger>

@@ -2,10 +2,40 @@
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { User } from "../../models/user_class";
+import { canApplyForInstructor } from "../../utils/adminToInstructor";
 
 const Page = () => {
+  const [showInstructorSection, setShowInstructorSection] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkInstructorEligibility = async () => {
+      try {
+        const user = User.getInstance();
+        const userId = await user.getId();
+        
+        if (userId) {
+          // User is authenticated, check eligibility
+          const eligibility = await canApplyForInstructor(userId);
+          setShowInstructorSection(eligibility.canApply);
+        } else {
+          // User is not authenticated
+          setShowInstructorSection(false);
+        }
+      } catch (error) {
+        console.error('Error checking instructor eligibility:', error);
+        setShowInstructorSection(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkInstructorEligibility();
+  }, []);
+
   // Settings for the slider
   const settings = {
     dots: true,
@@ -82,46 +112,77 @@ const Page = () => {
   </section>
 
   {/* Become an Instructor Section */}
-  <section className="mb-8 p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-    <h2 className="text-3xl font-bold text-blue-800 mb-4">Become an Instructor</h2>
-    <div className="space-y-4">
-      <p className="text-lg text-gray-700">
-        Are you passionate about religious studies, anthropology, or digital humanities? We welcome qualified individuals to join our instructor community and help expand the reach of Where's Religion? research.
-      </p>
-      
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h3 className="text-xl font-semibold text-blue-700 mb-3">What We're Looking For:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-700">
-          <li>Academic background in religious studies, anthropology, or related humanities fields</li>
-          <li>Experience with field research or digital humanities projects</li>
-          <li>Commitment to open-source collaboration and community engagement</li>
-          <li>Ability to mentor students and guide research projects</li>
-        </ul>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h3 className="text-xl font-semibold text-blue-700 mb-3">Instructor Benefits:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-700">
-          <li>Access to advanced research tools and mapping features</li>
-          <li>Collaboration with the Saint Louis University research community</li>
-          <li>Opportunity to contribute to open-source digital humanities</li>
-          <li>Student mentorship and project supervision capabilities</li>
-        </ul>
-      </div>
-
+  {isLoading ? (
+    <section className="mb-8 p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
       <div className="text-center">
-        <a 
-          href="/lib/pages/AdminToInstructorApplication"
-          className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-        >
-          Apply Now
-        </a>
-        <p className="text-sm text-gray-600 mt-2">
-          Applications are reviewed by our team and typically processed within 2-3 business days
-        </p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800 mx-auto mb-4"></div>
+        <p className="text-gray-600">Checking instructor eligibility...</p>
       </div>
-    </div>
-  </section>
+    </section>
+  ) : showInstructorSection ? (
+    <section className="mb-8 p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+      <h2 className="text-3xl font-bold text-blue-800 mb-4">Become an Instructor</h2>
+      <div className="space-y-4">
+        <p className="text-lg text-gray-700">
+          Are you passionate about religious studies, anthropology, or digital humanities? We welcome qualified individuals to join our instructor community and help expand the reach of Where's Religion? research.
+        </p>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-xl font-semibold text-blue-700 mb-3">What We're Looking For:</h3>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <li>Academic background in religious studies, anthropology, or related humanities fields</li>
+            <li>Experience with field research or digital humanities projects</li>
+            <li>Commitment to open-source collaboration and community engagement</li>
+            <li>Ability to mentor students and guide research projects</li>
+          </ul>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-xl font-semibold text-blue-700 mb-3">Instructor Benefits:</h3>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <li>Access to advanced research tools and mapping features</li>
+            <li>Collaboration with the Saint Louis University research community</li>
+            <li>Opportunity to contribute to open-source digital humanities</li>
+            <li>Student mentorship and project supervision capabilities</li>
+          </ul>
+        </div>
+
+        <div className="text-center">
+          <a 
+            href="/lib/pages/AdminToInstructorApplication"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+          >
+            Apply Now
+          </a>
+          <p className="text-sm text-gray-600 mt-2">
+            Applications are reviewed by our team and typically processed within 2-3 business days
+          </p>
+        </div>
+      </div>
+    </section>
+  ) : (
+    <section className="mb-8 p-8 bg-gray-50 rounded-lg border border-gray-200">
+      <h2 className="text-3xl font-bold text-gray-700 mb-4">Instructor Access</h2>
+      <div className="text-center">
+        <p className="text-lg text-gray-600 mb-4">
+          Instructor access is available to qualified administrators and contributors. 
+          If you believe you should have access to instructor features, please contact your system administrator.
+        </p>
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-700 mb-3">Current Status:</h3>
+          <p className="text-gray-600">
+            You are not currently eligible to apply for instructor status. This may be because:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-600 mt-3">
+            <li>You are already an instructor</li>
+            <li>You have a pending instructor application</li>
+            <li>You do not have administrator privileges</li>
+            <li>You are a student user</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  )}
 </main>
 
       {/* Team Section */}

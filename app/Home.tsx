@@ -33,32 +33,33 @@ export default function Home() {
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal">
+    <ResizablePanelGroup direction="horizontal" className="min-h-screen">
       <ResizablePanel
-        minSize={15}
-        maxSize={30}
-        defaultSize={20}
+        minSize={20}
+        maxSize={40}
+        defaultSize={25}
         collapsible={true}
         collapsedSize={1}
+        className="w-full sm:w-auto"
       >
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={80}>
+      <ResizableHandle withHandle className="hidden sm:block" />
+      <ResizablePanel defaultSize={75} className="w-full sm:w-auto">
         {isUserLoggedIn ? (
           selectedNote ? (
             <NoteEditor note={selectedNote} isNewNote={isNewNote} />
           ) : (
-            <div className="w-full h-full flex flex-col justify-center items-center text-3xl font-bold">
-              <div className="mb-10">Please select a note to start editing or add a new one!</div>
+            <div className="w-full h-full flex flex-col justify-center items-center text-xl sm:text-2xl lg:text-3xl font-bold p-4 text-center">
+              <div className="mb-6 sm:mb-10">Please select a note to start editing or add a new one!</div>
             </div>
           )
         ) : (
-          <div className="w-full h-full flex flex-col justify-center items-center text-3xl font-bold">
-            <div className="mb-10">You must be logged in to create notes!</div>
+          <div className="w-full h-full flex flex-col justify-center items-center text-xl sm:text-2xl lg:text-3xl font-bold p-4 text-center">
+            <div className="mb-6 sm:mb-10">You must be logged in to create notes!</div>
             <button
               onClick={() => (window.location.href = "/lib/pages/loginPage")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 sm:py-3 sm:px-6 border border-blue-700 rounded shadow text-sm sm:text-base"
             >
               Login Here
             </button>

@@ -15,6 +15,7 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasProfileData, setHasProfileData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -105,34 +106,49 @@ export default function Navbar() {
   // Don't render the instructor link while loading to prevent flickering
   if (isLoading) {
     return (
-      <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 text-white overflow-visible">
-        <div className="flex items-center space-x-6">
-          <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+      <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-4 sm:px-6 text-white overflow-visible">
+        <div className="flex items-center space-x-2 sm:space-x-6">
+          <Link href="/" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Home
           </Link>
-          <Link href="/lib/pages/map" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/map" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Map
           </Link>
-          <Link href="/lib/pages/aboutPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/aboutPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             About
           </Link>
-          <Link href="/lib/pages/ResourcesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/ResourcesPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Resources
           </Link>
-          <Link href="/lib/pages/StoriesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/StoriesPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Stories
           </Link>
         </div>
-        <div className="ml-auto flex items-center space-x-4">
-          <span className="text-lg font-semibold">Loading...</span>
+        <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
+          <span className="text-sm sm:text-lg font-semibold">Loading...</span>
         </div>
       </nav>
     );
   }
 
   return (
-    <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 text-white overflow-visible">
-      <div className="flex items-center space-x-6">
+    <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-4 sm:px-6 text-white overflow-visible relative">
+      {/* Mobile Menu Button */}
+      <button
+        className="lg:hidden p-2 text-blue-300 hover:text-blue-500 transition"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isMobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {/* Desktop Navigation */}
+      <div className="hidden lg:flex items-center space-x-6">
         <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
           Home
         </Link>
@@ -191,23 +207,75 @@ export default function Navbar() {
             Stories
           </Link>
         )}
-
-
-
       </div>
 
-      <div className="ml-auto flex items-center space-x-4">
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-full left-0 w-full bg-gray-800 lg:hidden z-50 border-t border-gray-700">
+          <div className="flex flex-col space-y-1 p-4">
+            <Link href="/" className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2">
+              Home
+            </Link>
+            
+            {name && (
+              <Link
+                href="/lib/pages/notes"
+                className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2"
+              >
+                Notes
+              </Link>
+            )}
+
+            <Link href="/lib/pages/map" className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2">
+              Map
+            </Link>
+
+            <Link href="/lib/pages/aboutPage" className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2">
+              About
+            </Link>
+
+            <Link href="/lib/pages/ResourcesPage" className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2">
+              Resources
+            </Link>
+
+            <Link href="/lib/pages/StoriesPage" className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2">
+              Global Stories
+            </Link>
+
+            {isInstructor && (
+              <Link
+                href="/lib/pages/InstructorDashBoard"
+                className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2 pl-4"
+              >
+                Instructor Dashboard
+              </Link>
+            )}
+
+            {isStudent && (
+              <Link
+                href="/lib/pages/StudentDashBoard"
+                className="text-lg font-semibold text-blue-300 hover:text-blue-500 transition py-2 pl-4"
+              >
+                Student Dashboard
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* User Actions */}
+      <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
         {name ? (
           <>
             <span
-              className="text-lg font-semibold truncate max-w-[150px] hover:underline cursor-pointer"
+              className="text-sm sm:text-lg font-semibold truncate max-w-[100px] sm:max-w-[150px] hover:underline cursor-pointer"
               title={name}
             >
               Hi, {name}!
             </span>
             <Button
               id="navbar-logout"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-2 sm:py-2 sm:px-4 text-sm sm:text-base border border-blue-700 rounded shadow"
               onClick={handleLogout}
             >
               Logout
@@ -216,7 +284,7 @@ export default function Navbar() {
         ) : (
           <Button
             onClick={() => (window.location.href = "/lib/pages/loginPage")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-700 rounded shadow"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-2 sm:py-2 sm:px-4 text-sm sm:text-base border border-blue-700 rounded shadow"
           >
             Login
           </Button>
