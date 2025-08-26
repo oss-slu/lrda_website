@@ -173,21 +173,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           </div>
         </div>
 
-      <div className="flex-1">
+      <div className="flex-1 relative">
+        <div className="sticky top-0 z-40 bg-gray-200 p-2 border-b border-gray-300">
+          <Button
+            id="add-note-button"
+            data-testid="add-note-button"
+            onClick={handleAddNote}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center py-2"
+          >
+            <div className="text-lg font-bold mr-2">+</div>
+            <span className="text-sm">Add Note</span>
+          </Button>
+        </div>
         <NoteListView
           notes={filteredNotes}
           onNoteSelect={(note) => onNoteSelect(note, false)}
         />
       </div>
-
-      {/* floating add note button */}
-      <Button
-        id="add-note-button"
-        onClick={handleAddNote}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg z-50 flex items-center justify-center"
-      >
-        <div className="text-xl sm:text-2xl font-bold">+</div>
-      </Button>
     </div>
   );
 };
