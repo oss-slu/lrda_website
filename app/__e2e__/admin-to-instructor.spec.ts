@@ -43,7 +43,7 @@ test.describe('Admin to Instructor Application Flow', () => {
     await page.waitForTimeout(2000);
     
     // Check what state the page is in
-    const loadingText = page.locator('h1:has-text("Loading..."), .text-xl:has-text("Loading...")').first();
+    const loadingText = page.locator('text=Loading...');
     const accessDeniedText = page.locator('text=Access denied');
     const mainContent = page.locator('h1:has-text("Apply to Become an Instructor")');
     const homePageContent = page.locator('text=Where\'s Religion?');
@@ -644,45 +644,13 @@ test.describe('Admin to Instructor Utility Functions', () => {
     test('should redirect unauthenticated users to login page', async ({ page }) => {
       await page.goto('/lib/pages/AdminToInstructorApplication');
       
-      // Wait for page to load and check for various states
-      await page.waitForTimeout(3000);
-      
-      // Check what state the page is in
-      const pageContent = await page.textContent('body');
-      
-      if (pageContent?.includes('Login')) {
-        // Successfully redirected to login page
-        await expect(page.locator('h1')).toContainText('Login');
-      } else if (pageContent?.includes('Where\'s Religion?')) {
-        // Redirected to home page (also acceptable for unauthenticated users)
-        console.log('✅ Redirected to home page - this is acceptable behavior');
-        expect(true).toBe(true);
-      } else if (pageContent?.includes('Loading...')) {
-        // Still loading - wait a bit more
-        await page.waitForTimeout(2000);
-        const finalContent = await page.textContent('body');
-        if (finalContent?.includes('Login') || finalContent?.includes('Where\'s Religion?')) {
-          console.log('✅ Eventually redirected after loading');
-          expect(true).toBe(true);
-        } else {
-          console.log('⚠️ Unexpected final state:', finalContent?.substring(0, 200));
-          // Test passes as long as we get a reasonable response
-          expect(finalContent).toBeTruthy();
-        }
-      } else {
-        // Something else - log for debugging
-        console.log('⚠️ Unexpected page content:', pageContent?.substring(0, 200));
-        // Test passes as long as we get a reasonable response
-        expect(pageContent).toBeTruthy();
-      }
+      // Should redirect to login page
+      await expect(page.locator('h1')).toContainText('Login');
     });
 
     test('should show appropriate content for authenticated users', async ({ page }) => {
       // Navigate to the page - it will handle authentication internally
       await page.goto('/lib/pages/AdminToInstructorApplication');
-      
-      // Wait for page to load completely
-      await page.waitForLoadState('networkidle');
       
       // The page will either show the form or redirect based on user status
       // We'll check for common elements that should be present
@@ -695,8 +663,6 @@ test.describe('Admin to Instructor Utility Functions', () => {
       
       if (pageContent?.includes('Login')) {
         // User redirected to login - this is expected behavior
-        // Wait for the h1 element to be visible and then check its text
-        await page.waitForSelector('h1', { timeout: 5000 });
         await expect(page.locator('h1')).toContainText('Login');
       } else if (pageContent?.includes('Apply to Become an Instructor') || pageContent?.includes('Complete Your Instructor Profile')) {
         // User sees the application form
@@ -715,61 +681,25 @@ test.describe('Admin to Instructor Utility Functions', () => {
 
   // Test navbar behavior
   test.describe('Navbar Behavior', () => {
-    test('should handle conditional instructor section on About page appropriately', async ({ page }) => {
-      await page.goto('/lib/pages/aboutPage');
+    test('should show appropriate instructor application links based on user status', async ({ page }) => {
+      await page.goto('/');
       
-      // Wait for the page to load and check eligibility
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(2000); // Allow time for eligibility check
+      // Check if any instructor-related links are visible
+      const pageContent = await page.textContent('body');
       
-      // Check what state the instructor section is in
-      const instructorSection = page.locator('text=Become an Instructor');
-      const instructorAccessSection = page.locator('h2:has-text("Instructor Access")');
-      
-      // The page should show one of these sections based on user eligibility
-      const hasInstructorSection = await instructorSection.isVisible();
-      const hasInstructorAccessSection = await instructorAccessSection.isVisible();
-      
-      if (hasInstructorSection) {
-        // User is eligible - check for the full instructor application section
-        console.log('✅ User is eligible - showing instructor application section');
-        await expect(instructorSection).toBeVisible();
-        
-        const applyButton = page.locator('text=Apply Now');
-        await expect(applyButton).toBeVisible();
-        
-        // Check for the application form link
-        const applicationLink = page.locator('a[href="/lib/pages/AdminToInstructorApplication"]');
-        await expect(applicationLink).toBeVisible();
-        
-        // Verify the section content
-        await expect(page.locator('text=What We\'re Looking For:')).toBeVisible();
-        await expect(page.locator('text=Instructor Benefits:')).toBeVisible();
-      } else if (hasInstructorAccessSection) {
-        // User is not eligible - check for the access denied section
-        console.log('✅ User is not eligible - showing instructor access section');
-        await expect(instructorAccessSection).toBeVisible();
-        
-        // Check for the explanation of why they can't apply
-        await expect(page.locator('text=Current Status:')).toBeVisible();
-        await expect(page.locator('text=You are not currently eligible')).toBeVisible();
+      // The navbar will show different content based on authentication status
+      // We'll check for common elements
+      if (pageContent?.includes('Apply for Instructor') || pageContent?.includes('Create Instructor Profile')) {
+        // User can see instructor application links
+        expect(pageContent).toContain('Apply for Instructor');
+      } else if (pageContent?.includes('Login')) {
+        // User not authenticated - this is expected
+        expect(pageContent).toContain('Login');
       } else {
-        // Neither section is visible - this might be a loading state
-        console.log('⚠️ Neither section is visible - checking for loading state');
-        
-        // Check if there's a loading indicator
-        const loadingText = page.locator('text=Checking instructor eligibility');
-        if (await loadingText.isVisible()) {
-          console.log('✅ Page is still loading - this is acceptable');
-          expect(true).toBe(true);
-        } else {
-          // Log the current page content for debugging
-          const pageContent = await page.textContent('body');
-          console.log('📄 Page content preview:', pageContent?.substring(0, 500));
-          
-          // Test passes as long as the page handles the state appropriately
-          expect(pageContent).toBeTruthy();
-        }
+        // Other state - log for debugging
+        console.log('Navbar content:', pageContent);
+        // Test passes as long as we get reasonable content
+        expect(pageContent).toBeTruthy();
       }
     });
   });

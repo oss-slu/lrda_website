@@ -11,8 +11,10 @@ import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc, collection, getDocs, query, where, arrayUnion } from "firebase/firestore";
 import Link from "next/link";
 import Select from "react-select"; // Import react-select
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -105,8 +107,24 @@ const SignupPage = () => {
         console.log(`Added student (${user.uid}) to instructor (${selectedInstructor.value})`);
       }
   
-      // Success feedback and reset form
-      toast.success("Account created successfully!");
+      // Success feedback and auto-login
+      toast.success("Account created successfully! Logging you in...");
+      
+      // Auto-login the user using the User class
+      const userInstance = User.getInstance();
+      try {
+        await userInstance.login(email, password);
+        console.log("User auto-logged in successfully");
+        
+        // Redirect to map page
+        router.push('/lib/pages/map');
+      } catch (loginError) {
+        console.error("Auto-login failed:", loginError);
+        // Still show success message and reset form even if auto-login fails
+        toast.success("Account created! Please log in manually.");
+      }
+      
+      // Reset form fields
       setEmail("");
       setPassword("");
       setConfirmPassword("");

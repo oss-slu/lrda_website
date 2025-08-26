@@ -239,9 +239,23 @@ export default class ApiService {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
-        const firestoreData = userDoc.data() as UserData;
-        console.log("User data retrieved from Firestore:", firestoreData);
-        return firestoreData; // Return data from Firestore as UserData
+        const firestoreData = userDoc.data();
+        console.log("Raw Firestore data:", firestoreData);
+        console.log("Roles object:", firestoreData.roles);
+        console.log("Administrator role:", firestoreData.roles?.administrator);
+        
+        // Ensure the data has the required structure
+        const userData: UserData = {
+          uid: firestoreData.uid || uid,
+          name: firestoreData.name || '',
+          roles: firestoreData.roles || { administrator: false, contributor: false },
+          isInstructor: firestoreData.isInstructor || false,
+          students: firestoreData.students || [],
+          parentInstructorId: firestoreData.parentInstructorId
+        };
+        
+        console.log("Processed UserData:", userData);
+        return userData;
       } else {
         console.log("No user data found in Firestore, using API fallback.");
       }
