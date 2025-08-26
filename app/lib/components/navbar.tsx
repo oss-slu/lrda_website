@@ -12,6 +12,9 @@ export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasProfileData, setHasProfileData] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -26,36 +29,131 @@ export default function Navbar() {
   useEffect(() => {
     const init = async () => {
       try {
+        setIsLoading(true);
+        
         // 1) Pre‑login from cache
         const firebaseName = await user.getName();
+        console.log('🔍 Navbar Debug - Firebase name:', firebaseName);
         setName(firebaseName);
         if (firebaseName) {
           const token = localStorage.getItem(firebaseName);
           if (token) await user.login(firebaseName, token);
         }
   
-        // 2) Fetch your app’s user record
+        // 2) Fetch your app's user record
         const userId = await user.getId();
-        if (!userId) throw new Error("Not logged in");
+        console.log('🔍 Navbar Debug - User ID:', userId);
+        if (!userId) {
+          // No user ID means not authenticated
+          console.log('🔍 Navbar Debug - No user ID, not authenticated');
+          setHasProfileData(false);
+          setIsInstructor(false);
+          setIsStudent(false);
+          setIsAdmin(false);
+          setIsLoading(false);
+          return;
+        }
   
-        const userData = await ApiService.fetchUserData(userId);
-        // default to false if userData is null or undefined
-        const instructorFlag = Boolean(userData?.isInstructor);
-        setIsInstructor(instructorFlag);
-  
-        // 3) Fetch Firebase roles for student check
-        const roles = await user.getRoles();
-        const studentRole = !!roles?.contributor && !roles?.administrator;
-        // only a student if studentRole AND not an instructor
-        setIsStudent(studentRole && !instructorFlag);
+        try {
+          const userData = await ApiService.fetchUserData(userId);
+          console.log('🔍 Navbar Debug - User data from API:', userData);
+          // User has profile data
+          setHasProfileData(true);
+          
+          // default to false if userData is null or undefined
+          const instructorFlag = Boolean(userData?.isInstructor);
+          setIsInstructor(instructorFlag);
+    
+          // 3) Fetch Firebase roles for student check
+          try {
+            const roles = await user.getRoles();
+            console.log('🔍 Navbar Debug - User roles:', roles);
+            const studentRole = !!roles?.contributor && !roles?.administrator;
+            const adminRole = !!roles?.administrator;
+            // only a student if studentRole AND not an instructor
+            setIsStudent(studentRole && !instructorFlag);
+            setIsAdmin(adminRole);
+            console.log('🔍 Navbar Debug - Set admin role to:', adminRole);
+          } catch (rolesError) {
+            console.warn('Could not fetch roles, assuming admin privileges:', rolesError);
+            // If we can't get roles, assume admin privileges for users with profile data
+            setIsAdmin(true);
+            setIsStudent(false);
+            console.log('🔍 Navbar Debug - Set admin role to true (fallback)');
+          }
+        } catch (profileError) {
+          // User exists in Firebase Auth but has no profile data
+          console.log('🔍 Navbar Debug - User has authentication but no profile data:', profileError);
+          setHasProfileData(false);
+          setIsInstructor(false);
+          setIsStudent(false);
+          // Users with only authentication can apply for instructor
+          setIsAdmin(true);
+          console.log('🔍 Navbar Debug - Set admin role to true (auth only)');
+        }
+
       } catch (err) {
         console.warn("Navbar init failed:", err);
+        // Reset all states on error
+        setHasProfileData(false);
+        setIsInstructor(false);
+        setIsStudent(false);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+        console.log('🔍 Navbar Debug - Final state:', {
+          hasProfileData,
+          isAdmin,
+          isInstructor,
+          name,
+          canApplyForInstructor: isAdmin || (!hasProfileData && name) || (hasProfileData && name && !isAdmin)
+        });
       }
     };
     init();
   }, []);
   
   const showDropdown = isStudent || isInstructor;
+
+  // Show "Apply for Instructor" link if:
+  // 1. User is admin (has profile data and admin role), OR
+  // 2. User has authentication but no profile data (can create profile), OR
+  // 3. User has external profile data but no local admin roles (can apply)
+  const canApplyForInstructor = isAdmin || (!hasProfileData && name) || (hasProfileData && name && !isAdmin);
+  
+  console.log('🔍 Navbar Debug - canApplyForInstructor calculation:', {
+    isAdmin,
+    hasProfileData,
+    name,
+    result: canApplyForInstructor,
+    isInstructor,
+    finalCondition: canApplyForInstructor && isInstructor !== true
+  });
+  
+  // Don't render the instructor link while loading to prevent flickering
+  if (isLoading) {
+    return (
+      <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 text-white overflow-visible">
+        <div className="flex items-center space-x-6">
+          <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+            Home
+          </Link>
+          <Link href="/lib/pages/map" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+            Map
+          </Link>
+          <Link href="/lib/pages/aboutPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+            About
+          </Link>
+          <Link href="/lib/pages/StoriesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+            Stories
+          </Link>
+        </div>
+        <div className="ml-auto flex items-center space-x-4">
+          <span className="text-lg font-semibold">Loading...</span>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-6 text-white overflow-visible">
@@ -114,6 +212,18 @@ export default function Navbar() {
             Stories
           </Link>
         )}
+
+        {/* Admin to Instructor Application Link */}
+        {canApplyForInstructor && isInstructor !== true && (
+          <Link 
+            href="/lib/pages/AdminToInstructorApplication" 
+            className="text-2xl font-bold text-green-300 hover:text-green-500 transition"
+          >
+            {!hasProfileData ? 'Create Instructor Profile' : 
+             (isAdmin ? 'Apply for Instructor' : 'Apply for Instructor Access')}
+          </Link>
+        )}
+
       </div>
 
       <div className="ml-auto flex items-center space-x-4">

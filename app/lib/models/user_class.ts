@@ -187,6 +187,12 @@ export class User {
   }
 
   public async getId(): Promise<string | null> {
+    // First try to get UID from Firebase Auth directly
+    if (auth.currentUser) {
+      return auth.currentUser.uid;
+    }
+    
+    // Fallback to user data if available
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
@@ -194,6 +200,12 @@ export class User {
   }
 
   public async getName(): Promise<string | null> {
+    // First try to get name from Firebase Auth directly
+    if (auth.currentUser) {
+      return auth.currentUser.displayName || auth.currentUser.email;
+    }
+    
+    // Fallback to user data if available
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
@@ -212,6 +224,17 @@ export class User {
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
+    
+    // If we still don't have userData, the user has only authentication
+    if (!this.userData) {
+      console.log('🔍 User.getRoles() - No userData, user has only auth - returning default roles');
+      // For users with only authentication, assume they can apply for instructor
+      return {
+        administrator: true,
+        contributor: true
+      };
+    }
+    
     return this.userData?.roles ?? null;
   }
 }

@@ -5,8 +5,11 @@ import { toast } from "sonner";
 import { auth, db } from "../../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { User } from "../../models/user_class";
 
 const InstructorSignupPage = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,7 +22,7 @@ const InstructorSignupPage = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [emailError, setEmailError] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [isInstructor, setIsInstructor] = useState(false); // New state to determine if user is an instructor
+
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,7 +66,7 @@ const InstructorSignupPage = () => {
   };
 
   const handleSignup = async () => {
-    if (!email || !password || !firstName || !lastName || !confirmPassword) {
+    if (!email || !password || !firstName || !lastName || !confirmPassword || !description.trim()) {
       toast.error("Please fill in all fields.");
       return;
     }
@@ -87,6 +90,11 @@ const InstructorSignupPage = () => {
       toast.error("Passwords do not match.");
       return;
     }
+
+    if (!description.trim()) {
+      toast.error("Please provide a description of why you want to become an instructor.");
+      return;
+    }
   
     try {
       console.log("Starting user registration with Firebase Authentication...");
@@ -101,9 +109,9 @@ const InstructorSignupPage = () => {
        uid: user.uid,
        email,
        name: `${firstName} ${lastName}`,
-       description: isInstructor ? description : null, // Only instructors have a description
-       isInstructor, // Boolean field to indicate if the user is an instructor
-       students: isInstructor ? [] : null, // Empty array to store students if the user is an instructor
+       description: description, // Description is now mandatory for all instructor signups
+       isInstructor: true, // This page is specifically for instructor signup
+       students: [], // Empty array to store students
        createdAt: Timestamp.now(),
      };
 
@@ -111,7 +119,21 @@ const InstructorSignupPage = () => {
      const userDocRef = doc(db, "users", user.uid);
      await setDoc(userDocRef, userData);
 
-     toast.success("Account created successfully!");
+     toast.success("Instructor account created successfully! Logging you in...");
+
+     // Auto-login the user using the User class
+     const userInstance = User.getInstance();
+     try {
+       await userInstance.login(email, password);
+       console.log("Instructor auto-logged in successfully");
+       
+       // Redirect to map page
+       router.push('/lib/pages/map');
+     } catch (loginError) {
+       console.error("Auto-login failed:", loginError);
+       // Still show success message and reset form even if auto-login fails
+       toast.success("Instructor account created! Please log in manually.");
+     }
 
      // Reset form fields
      setEmail("");
@@ -120,7 +142,6 @@ const InstructorSignupPage = () => {
      setFirstName("");
      setLastName("");
      setDescription("");
-     setIsInstructor(false);
    } catch (error) {
      if (error instanceof Error) {
        console.error("Error during signup: ", error.message);
@@ -259,14 +280,19 @@ const InstructorSignupPage = () => {
               <p className="text-red-500 text-sm mt-1">Password and Confirm Password do not match.</p>
             )}
           </div>
-          <textarea
-            placeholder="Why do you want to become an Instructor?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-3 mb-4 border border-gray-300 rounded-lg resize-none"
-            rows={4}
-            required
-          />
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium mb-2">
+              Why do you want to become an Instructor? *
+            </label>
+            <textarea
+              placeholder="Describe your teaching experience, expertise, and motivation for becoming an instructor..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none"
+              rows={4}
+              required
+            />
+          </div>
 
           <button
             onClick={handleSignup}
