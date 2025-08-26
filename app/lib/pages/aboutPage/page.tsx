@@ -73,12 +73,54 @@ const Page = () => {
     <h2 className="text-4xl font-bold">About</h2>
     <br />
     <p className="text-lg font-normal leading-7">
-      Where’s Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where’s Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
+      Where's Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where's Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
     </p>
     <br />
     <p className="text-lg font-normal leading-7">
-      Where’s Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).
+      Where's Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).
     </p>
+  </section>
+
+  {/* Become an Instructor Section */}
+  <section className="mb-8 p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+    <h2 className="text-3xl font-bold text-blue-800 mb-4">Become an Instructor</h2>
+    <div className="space-y-4">
+      <p className="text-lg text-gray-700">
+        Are you passionate about religious studies, anthropology, or digital humanities? We welcome qualified individuals to join our instructor community and help expand the reach of Where's Religion? research.
+      </p>
+      
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="text-xl font-semibold text-blue-700 mb-3">What We're Looking For:</h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <li>Academic background in religious studies, anthropology, or related humanities fields</li>
+          <li>Experience with field research or digital humanities projects</li>
+          <li>Commitment to open-source collaboration and community engagement</li>
+          <li>Ability to mentor students and guide research projects</li>
+        </ul>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="text-xl font-semibold text-blue-700 mb-3">Instructor Benefits:</h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <li>Access to advanced research tools and mapping features</li>
+          <li>Collaboration with the Saint Louis University research community</li>
+          <li>Opportunity to contribute to open-source digital humanities</li>
+          <li>Student mentorship and project supervision capabilities</li>
+        </ul>
+      </div>
+
+      <div className="text-center">
+        <a 
+          href="/lib/pages/AdminToInstructorApplication"
+          className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+        >
+          Apply Now
+        </a>
+        <p className="text-sm text-gray-600 mt-2">
+          Applications are reviewed by our team and typically processed within 2-3 business days
+        </p>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -114,65 +156,13 @@ const Page = () => {
               <p className="mt-4 font-semibold text-center">Adam Park</p>
               <p className="font-semibold text-center">Associate Director of Research (COLR)</p>
             </div>
-
-            {/* Pauline Lee */}
-            {/* <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
-              <Image
-                src="/aboutPageImages/Pauline.jpg"
-                alt="Pauline Lee"
-                width={128}
-                height={128}
-                className="rounded-full"
-              />
-              <p className="mt-4 font-semibold text-center">Pauline Lee</p>
-              <p className="font-semibold text-center">Associate Director of Public Humanities (COLR)</p>
-            </div> */}
-            {/* Yash Bhatia */}
-            {/* <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
-              <Image
-                src="/aboutPageImages/Yash.jpg"
-                alt="Yash Bhatia"
-                width={128}
-                height={128}
-                className="rounded-full"
-              />
-              <p className="mt-4 font-semibold text-center">Yash Bhatia</p>
-              <p className="font-semibold text-center">Software Engineer&Tech Lead</p>
-            </div> */}
           </div>
           <h2 className="text-4xl font-bold mb-8">The Development Team</h2>
 
           {/* Tech Team Members */}
           <div className="grid grid-cols-3 gap-10 justify-items-center">
 
-          {/* Yash Bhatia */}
-          <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
-              <Image
-                src="/aboutPageImages/Yash.jpg"
-                alt="Yash Bhatia"
-                width={128}
-                height={128}
-                className="rounded-full"
-              />
-              <p className="mt-4 font-semibold text-center">Yash Bhatia</p>
-              <p className="font-semibold text-center">Software Engineer and Tech Lead</p>
-              <div className="flex mt-2 space-x-4">
-                {/* GitHub Icon */}
-                  <a href="https://github.com/yashb196" target="_blank" rel="noopener noreferrer">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
-                          <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
-                      </svg>
-                  </a>
-                  {/* LinkedIn Icon */}
-                  <a href="https://www.linkedin.com/in/yashbhatia238/" target="_blank" rel="noopener noreferrer">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 448 512">
-                          <path d="M100.28 448H7.4V148.9h92.88zm-46.1-329.72a53.62 53.62 0 11-53.62-53.62 53.62 53.62 0 0153.61 53.61zM447.9 448h-92.68V305.69c0-33.89-12.13-57.08-42.35-57.08-23.11 0-36.86 15.55-42.91 30.59-2.2 5.39-2.74 12.9-2.74 20.48V448H174.69s1.24-269 0-297h92.68v42.06a91 91 0 0183.26-45.84c60.84 0 106.38 39.68 106.38 124.86z"/>
-                      </svg>
-                  </a>
-              </div>
-            </div>
-
-          <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
                 src="/aboutPageImages/Patrick.jpg"
                 alt="Patrick Cuba"
@@ -195,21 +185,34 @@ const Page = () => {
               <p className="mt-4 font-semibold text-center">Bryan Haberberger</p>
               <p className="font-semibold text-center">Full Stack Developer</p>
             </div>
-         
-            {/* Josh Hogan */}
-            {/* <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+
+          {/* Yash Bhatia */}
+          <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
-                src="/aboutPageImages/F-22.jpg"
-                alt="Josh Hogan"
+                src="/aboutPageImages/Yash.jpg"
+                alt="Yash Bhatia"
                 width={128}
                 height={128}
                 className="rounded-full"
               />
-              <p className="mt-4 font-semibold text-center">Josh Hogan</p>
-              <p className="font-semibold text-center">Developer</p>
-            </div> */}
-
-            {/* Izak Robles */}
+              <p className="mt-4 font-semibold text-center">Yash Bhatia</p>
+              <p className="font-semibold text-center">Software Developer(COLR)</p>
+              <div className="flex mt-2 space-x-4">
+                {/* GitHub Icon */}
+                  <a href="https://github.com/yashb196" target="_blank" rel="noopener noreferrer">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                          <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                      </svg>
+                  </a>
+                  {/* LinkedIn Icon */}
+                  <a href="https://www.linkedin.com/in/yashbhatia238/" target="_blank" rel="noopener noreferrer">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 448 512">
+                          <path d="M100.28 448H7.4V148.9h92.88zm-46.1-329.72a53.62 53.62 0 11-53.62-53.62 53.62 53.62 0 0153.61 53.61zM447.9 448h-92.68V305.69c0-33.89-12.13-57.08-42.35-57.08-23.11 0-36.86 15.55-42.91 30.59-2.2 5.39-2.74 12.9-2.74 20.48V448H174.69s1.24-269 0-297h92.68v42.06a91 91 0 0183.26-45.84c60.84 0 106.38 39.68 106.38 124.86z"/>
+                      </svg>
+                  </a>
+              </div>
+            </div>
+             {/* Izak Robles */}
             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
               <Image
                 src="/aboutPageImages/Izak.jpg"
@@ -220,6 +223,20 @@ const Page = () => {
               />
               <p className="mt-4 font-semibold text-center">Izak Robles</p>
               <p className="font-semibold text-center">Developer</p>
+               <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/izakrobles" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                    {/* LinkedIn Icon */}
+                    <a href="https://www.linkedin.com/in/izakrobles/" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 448 512">
+                            <path d="M100.28 448H7.4V148.9h92.88zm-46.1-329.72a53.62 53.62 0 11-53.62-53.62 53.62 53.62 0 0153.61 53.61zM447.9 448h-92.68V305.69c0-33.89-12.13-57.08-42.35-57.08-23.11 0-36.86 15.55-42.91 30.59-2.2 5.39-2.74 12.9-2.74 20.48V448H174.69s1.24-269 0-297h92.68v42.06a91 91 0 0183.26-45.84c60.84 0 106.38 39.68 106.38 124.86z"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
 
             {/* Stuart Ray */}
@@ -233,7 +250,44 @@ const Page = () => {
               />
               <p className="mt-4 font-semibold text-center">Stuart Ray</p>
               <p className="font-semibold text-center">Developer</p>
+               <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/Stuartwastaken" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                    {/* LinkedIn Icon */}
+                    <a href="https://www.linkedin.com/in/stuart-ray/" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 448 512">
+                            <path d="M100.28 448H7.4V148.9h92.88zm-46.1-329.72a53.62 53.62 0 11-53.62-53.62 53.62 53.62 0 0153.61 53.61zM447.9 448h-92.68V305.69c0-33.89-12.13-57.08-42.35-57.08-23.11 0-36.86 15.55-42.91 30.59-2.2 5.39-2.74 12.9-2.74 20.48V448H174.69s1.24-269 0-297h92.68v42.06a91 91 0 0183.26-45.84c60.84 0 106.38 39.68 106.38 124.86z"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
+
+            {/* Josh Hogan */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/F-22.jpg"
+                alt="Josh Hogan"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Josh Hogan</p>
+              <p className="font-semibold text-center">Developer</p>
+               <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/Josh-Hogan-87" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+           
 
             {/* Zanxiang Wang */}
             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
@@ -320,6 +374,97 @@ const Page = () => {
                         </svg>
                     </a>
                 </div>
+            </div>
+
+            {/* Sam Sheppard */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/aboutPageImages/Sam.jpg"
+                alt="Sam Sheppard"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+              <p className="mt-4 font-semibold text-center">Sam Sheppard</p>
+              <p className="font-semibold text-center">Developer</p>
+              <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/sesheppard" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+                <div className="overflow-hidden rounded-full w-32 h-32"> {/* Container for circular crop */}
+                    <Image
+                      src="/aboutPageImages/karthikMangineni.jpg"
+                      alt="Karthik Mangineni"
+                      width={128}
+                      height={128}
+                      className="object-cover" // Ensures the image fills the container
+                    />
+                </div>
+                <p className="mt-4 font-semibold text-center">Karthik Mangineni</p>
+                <p className="font-semibold text-center">Tech Lead</p>
+                <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/rcAsironman" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                     <a href="https://www.linkedin.com/in/karthikfullstackdeveloper/" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 448 512">
+                            <path d="M100.28 448H7.4V148.9h92.88zm-46.1-329.72a53.62 53.62 0 11-53.62-53.62 53.62 53.62 0 0153.61 53.61zM447.9 448h-92.68V305.69c0-33.89-12.13-57.08-42.35-57.08-23.11 0-36.86 15.55-42.91 30.59-2.2 5.39-2.74 12.9-2.74 20.48V448H174.69s1.24-269 0-297h92.68v42.06a91 91 0 0183.26-45.84c60.84 0 106.38 39.68 106.38 124.86z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+ <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+                <div className="overflow-hidden rounded-full w-32 h-32"> {/* Container for circular crop */}
+                    <Image
+                      src="/aboutPageImages/Adem.jpg"
+                      alt="Adem Durakovic"
+                      width={128}
+                      height={128}
+                      className="object-cover" // Ensures the image fills the container
+                    />
+                </div>
+                <p className="mt-4 font-semibold text-center">Adem Durakovic</p>
+                <p className="font-semibold text-center">Developer</p>
+                <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/ademDurakovic" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+                <div className="overflow-hidden rounded-full w-32 h-32"> {/* Container for circular crop */}
+                    <Image
+                      src="/aboutPageImages/Amar.png"
+                      alt="Amar Hazdic"
+                      width={128}
+                      height={128}
+                      className="object-cover" // Ensures the image fills the container
+                    />
+                </div>
+                <p className="mt-4 font-semibold text-center">Amar Hazdic</p>
+                <p className="font-semibold text-center">Developer</p>
+                <div className="flex mt-2 space-x-4">
+                    {/* GitHub Icon */}
+                    <a href="https://github.com/AmarHadzic" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 496 512">
+                            <path d="M248 8C111 8 0 119 0 256c0 110.3 71.3 203.9 170.5 237.2 12.5 2.3 17.1-5.4 17.1-12v-42.3c-69.4 15.1-83.8-33.6-83.8-33.6-11.4-28.9-27.8-36.6-27.8-36.6-22.7-15.5 1.7-15.2 1.7-15.2 25.1 1.8 38.3 25.8 38.3 25.8 22.3 38.2 58.5 27.2 72.8 20.8 2.2-16.1 8.7-27.2 15.8-33.5-55.4-6.3-113.6-27.7-113.6-123.2 0-27.2 9.7-49.4 25.6-66.8-2.6-6.3-11.1-31.8 2.5-66.2 0 0 21-6.7 68.7 25.6a237.1 237.1 0 01125.2 0c47.6-32.3 68.6-25.6 68.6-25.6 13.7 34.4 5.2 59.9 2.6 66.2 16 17.4 25.6 39.6 25.6 66.8 0 95.7-58.4 116.8-113.9 123 8.9 7.7 16.8 22.9 16.8 46.2v68.4c0 6.7 4.6 14.3 17.2 11.9C424.8 459.9 496 366.3 496 256 496 119 385 8 248 8z"/>
+                        </svg>
+                    </a>                 
+                </div>
+                
             </div>
           </div>
         </div>

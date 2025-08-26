@@ -57,7 +57,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   
 
   // Handle getting the current geolocation
-  const handleGetCurrentLocation = useCallback(() => {
+  const handleGetCurrentLocation = useCallback(() => { // this method should be used somewhere
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -108,8 +108,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
   
   const handleToggleMap = () => {
-    setIsExpanded(!isExpanded);
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    if (newState) {
+      handleGetCurrentLocation(); // fetch location when map is opening
+    }
   };
+  // changes here
 
   useEffect (() => {
   /*  const handleClickOutside = (event: MouseEvent) => {

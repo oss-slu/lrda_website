@@ -33,7 +33,6 @@ export default function Navbar() {
         
         // 1) Pre‑login from cache
         const firebaseName = await user.getName();
-        console.log('🔍 Navbar Debug - Firebase name:', firebaseName);
         setName(firebaseName);
         if (firebaseName) {
           const token = localStorage.getItem(firebaseName);
@@ -42,10 +41,8 @@ export default function Navbar() {
   
         // 2) Fetch your app's user record
         const userId = await user.getId();
-        console.log('🔍 Navbar Debug - User ID:', userId);
         if (!userId) {
           // No user ID means not authenticated
-          console.log('🔍 Navbar Debug - No user ID, not authenticated');
           setHasProfileData(false);
           setIsInstructor(false);
           setIsStudent(false);
@@ -56,7 +53,6 @@ export default function Navbar() {
   
         try {
           const userData = await ApiService.fetchUserData(userId);
-          console.log('🔍 Navbar Debug - User data from API:', userData);
           // User has profile data
           setHasProfileData(true);
           
@@ -67,19 +63,16 @@ export default function Navbar() {
           // 3) Fetch Firebase roles for student check
           try {
             const roles = await user.getRoles();
-            console.log('🔍 Navbar Debug - User roles:', roles);
             const studentRole = !!roles?.contributor && !roles?.administrator;
             const adminRole = !!roles?.administrator;
             // only a student if studentRole AND not an instructor
             setIsStudent(studentRole && !instructorFlag);
             setIsAdmin(adminRole);
-            console.log('🔍 Navbar Debug - Set admin role to:', adminRole);
           } catch (rolesError) {
             console.warn('Could not fetch roles, assuming admin privileges:', rolesError);
             // If we can't get roles, assume admin privileges for users with profile data
             setIsAdmin(true);
             setIsStudent(false);
-            console.log('🔍 Navbar Debug - Set admin role to true (fallback)');
           }
         } catch (profileError) {
           // User exists in Firebase Auth but has no profile data
@@ -89,7 +82,6 @@ export default function Navbar() {
           setIsStudent(false);
           // Users with only authentication can apply for instructor
           setIsAdmin(true);
-          console.log('🔍 Navbar Debug - Set admin role to true (auth only)');
         }
 
       } catch (err) {
@@ -101,13 +93,6 @@ export default function Navbar() {
         setIsAdmin(false);
       } finally {
         setIsLoading(false);
-        console.log('🔍 Navbar Debug - Final state:', {
-          hasProfileData,
-          isAdmin,
-          isInstructor,
-          name,
-          canApplyForInstructor: isAdmin || (!hasProfileData && name) || (hasProfileData && name && !isAdmin)
-        });
       }
     };
     init();
@@ -115,20 +100,7 @@ export default function Navbar() {
   
   const showDropdown = isStudent || isInstructor;
 
-  // Show "Apply for Instructor" link if:
-  // 1. User is admin (has profile data and admin role), OR
-  // 2. User has authentication but no profile data (can create profile), OR
-  // 3. User has external profile data but no local admin roles (can apply)
-  const canApplyForInstructor = isAdmin || (!hasProfileData && name) || (hasProfileData && name && !isAdmin);
-  
-  console.log('🔍 Navbar Debug - canApplyForInstructor calculation:', {
-    isAdmin,
-    hasProfileData,
-    name,
-    result: canApplyForInstructor,
-    isInstructor,
-    finalCondition: canApplyForInstructor && isInstructor !== true
-  });
+
   
   // Don't render the instructor link while loading to prevent flickering
   if (isLoading) {
@@ -143,6 +115,9 @@ export default function Navbar() {
           </Link>
           <Link href="/lib/pages/aboutPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             About
+          </Link>
+          <Link href="/lib/pages/ResourcesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+            Resources
           </Link>
           <Link href="/lib/pages/StoriesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
             Stories
@@ -180,6 +155,10 @@ export default function Navbar() {
           About
         </Link>
 
+        <Link href="/lib/pages/ResourcesPage" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          Resources
+        </Link>
+
         {showDropdown ? (
           <div className="relative group">
             <span className="cursor-pointer text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
@@ -213,16 +192,7 @@ export default function Navbar() {
           </Link>
         )}
 
-        {/* Admin to Instructor Application Link */}
-        {canApplyForInstructor && isInstructor !== true && (
-          <Link 
-            href="/lib/pages/AdminToInstructorApplication" 
-            className="text-2xl font-bold text-green-300 hover:text-green-500 transition"
-          >
-            {!hasProfileData ? 'Create Instructor Profile' : 
-             (isAdmin ? 'Apply for Instructor' : 'Apply for Instructor Access')}
-          </Link>
-        )}
+
 
       </div>
 
