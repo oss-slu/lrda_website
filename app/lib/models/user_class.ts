@@ -188,28 +188,40 @@ export class User {
 
   public async getId(): Promise<string | null> {
     // First try to get UID from Firebase Auth directly
-    if (auth.currentUser) {
+    if (auth && auth.currentUser) {
       return auth.currentUser.uid;
     }
     
-    // Fallback to user data if available
+    // Load user data if not already loaded
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
-    return this.userData?.["uid"] ?? null;
+    
+    // Fallback to stored user data
+    if (this.userData && this.userData.uid) {
+      return this.userData.uid;
+    }
+    
+    return null;
   }
 
   public async getName(): Promise<string | null> {
     // First try to get name from Firebase Auth directly
-    if (auth.currentUser) {
+    if (auth && auth.currentUser) {
       return auth.currentUser.displayName || auth.currentUser.email;
     }
     
-    // Fallback to user data if available
+    // Load user data if not already loaded
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
-    return this.userData?.name ?? null;
+    
+    // Fallback to stored user data
+    if (this.userData && this.userData.name) {
+      return this.userData.name;
+    }
+    
+    return null;
   }
 
   public async hasOnboarded(): Promise<boolean> {
