@@ -17,7 +17,6 @@ const mockedUser = {
   isInstructor: jest.fn<Promise<boolean>, []>(),
   getId: jest.fn<Promise<string>, []>(),
   getName: jest.fn<Promise<string>, []>(),
-  getRoles: jest.fn<Promise<{ administrator: boolean; contributor: boolean }>, []>(),
 };
 jest.mock('../lib/models/user_class', () => ({
   User: {
@@ -36,7 +35,6 @@ describe('CommentSidebar - permission gating', () => {
     mockedUser.isInstructor.mockResolvedValue(false);
     mockedUser.getId.mockResolvedValue('student-1');
     mockedUser.getName.mockResolvedValue('Student');
-    mockedUser.getRoles.mockResolvedValue({ administrator: false, contributor: true });
 
     render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => null} />);
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();
@@ -48,7 +46,6 @@ describe('CommentSidebar - permission gating', () => {
     mockedUser.isInstructor.mockResolvedValue(true);
     mockedUser.getId.mockResolvedValue('inst-1');
     mockedUser.getName.mockResolvedValue('Instructor');
-    mockedUser.getRoles.mockResolvedValue({ administrator: true, contributor: false });
 
     render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => ({ from: 1, to: 2 })} />);
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();
