@@ -47,13 +47,16 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     load();
   }, [noteId]);
 
-  // Determine whether current user is an instructor (not generic admin)
+  // Determine whether current user is an instructor or a student (not generic admin)
   useEffect(() => {
     const checkInstructor = async () => {
       const flag = await User.getInstance().isInstructor();
       setIsInstructor(!!flag);
       const uid = await User.getInstance().getId();
-      setCanComment(!!uid);
+      const roles = await User.getInstance().getRoles();
+      const isStudentRole = !!roles?.contributor && !roles?.administrator;
+      // allow commenting only for instructors or students
+      setCanComment(!!uid && (isStudentRole || flag));
     };
     checkInstructor();
   }, []);

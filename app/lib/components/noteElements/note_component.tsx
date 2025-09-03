@@ -1005,7 +1005,7 @@ useEffect(() => {
                 }}
               />
             </ResizablePanel>
-            {!!noteState.note?.id && (
+            {!!noteState.note?.id && (isInstructorUser || isStudent) && (
               <>
                 <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
                 <ResizablePanel
