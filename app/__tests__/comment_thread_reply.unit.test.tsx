@@ -8,6 +8,7 @@ jest.mock('../lib/models/user_class', () => ({
       isInstructor: async () => true,
       getId: async () => 'inst-1',
       getName: async () => 'Instructor',
+      getRoles: async () => ({ administrator: true, contributor: false }),
     }),
   },
 }));
