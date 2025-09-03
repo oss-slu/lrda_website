@@ -20,6 +20,7 @@ interface PublishToggleProps {
   instructorId?: string | null;
   onPublishClick?: () => void;
   onRequestApprovalClick?: () => void;
+  isInstructorReview?: boolean; // instructor viewing a student's note
 }
 
 const PublishToggle: React.FC<PublishToggleProps> = ({
@@ -28,6 +29,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   isApprovalRequested = false,
   onPublishClick,
   onRequestApprovalClick,
+  isInstructorReview = false,
 }) => {
   const [isStudent, setIsStudent] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
@@ -78,8 +80,8 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
       tooltipText = "Unpublish this note.";
     } else {
       iconClass = "text-black group-hover:text-green-500";
-      labelText = "Publish";
-      tooltipText = "Publish this note.";
+      labelText = isInstructorReview ? "Approve" : "Publish";
+      tooltipText = isInstructorReview ? "Approve and publish this note." : "Publish this note.";
     }
   }
 

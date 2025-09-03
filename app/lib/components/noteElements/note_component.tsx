@@ -47,8 +47,10 @@ import { newNote } from "@/app/types";
 import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import CommentSidebar from "../comments/CommentSidebar";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const user = User.getInstance(); 
 
@@ -295,18 +297,97 @@ useEffect(() => {
   const [userId, setUserId] = useState<string | null>(null);
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState<boolean>(false);
+  const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
+  const [canEdit, setCanEdit] = useState<boolean>(true);
+  const [commentRanges, setCommentRanges] = useState<Array<{ from: number; to: number }>>([]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       const roles = await User.getInstance().getRoles();
       const fetchedUserId = await User.getInstance().getId();
       const fetchedInstructorId = await User.getInstance().getInstructorId();
+      const isInstructorFlag = await User.getInstance().isInstructor();
       setIsStudent(!!roles?.contributor && !roles?.administrator);
       setUserId(fetchedUserId);
       setInstructorId(fetchedInstructorId);
+      setIsInstructorUser(!!isInstructorFlag);
     };
     fetchUserDetails();
   }, []);
+
+  // Determine editability: if instructor reviewing a student's note (not the creator), lock editing
+  useEffect(() => {
+    const ownerId = (noteState.note as any)?.creator;
+    if (isInstructorUser && userId && ownerId && userId !== ownerId) {
+      setCanEdit(false);
+    } else {
+      setCanEdit(true);
+    }
+  }, [isInstructorUser, userId, noteState.note]);
+
+  // Keep Tiptap editor's editable state in sync at runtime
+  useEffect(() => {
+    const editor = (rteRef.current as any)?.editor;
+    if (editor && typeof editor.setEditable === "function") {
+      editor.setEditable(canEdit);
+    }
+  }, [canEdit]);
+
+  // Listen for comment-added events to update decorations
+  useEffect(() => {
+    const handler = (e: any) => {
+      const pos = e?.detail?.position;
+      if (pos && typeof pos.from === "number" && typeof pos.to === "number") {
+        setCommentRanges((prev) => [...prev, pos]);
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("note:comment-added", handler);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("note:comment-added", handler);
+      }
+    };
+  }, []);
+
+  // Load existing comment ranges when note loads
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!noteState.note?.id) return;
+      try {
+        const comments = await ApiService.fetchCommentsForNote(noteState.note.id as string);
+        const ranges = comments
+          .map((c: any) => c.position)
+          .filter((p: any) => p && typeof p.from === "number" && typeof p.to === "number");
+        setCommentRanges(ranges);
+      } catch (err) {
+        // ignore
+      }
+    };
+    loadComments();
+  }, [noteState.note?.id]);
+
+  // Apply inline highlight marks to visualize comment ranges
+  useEffect(() => {
+    const editor = rteRef.current?.editor as any;
+    if (!editor) return;
+
+    try {
+      const docSize = editor.state.doc.content.size;
+      // Clear existing highlights to prevent duplicates
+      editor.chain().setTextSelection({ from: 1, to: docSize }).unsetHighlight().run();
+
+      // Re-apply highlights for each comment range
+      commentRanges.forEach(({ from, to }) => {
+        if (typeof from === "number" && typeof to === "number" && from < to && to <= docSize) {
+          try {
+            editor.chain().setTextSelection({ from, to }).setHighlight({ color: '#FFF3BF' }).run();
+          } catch {}
+        }
+      });
+    } catch {}
+  }, [commentRanges]);
 
   useEffect(() => {
     if (initialNote) {
@@ -676,6 +757,7 @@ useEffect(() => {
   instructorId={instructorId || undefined}
   isPublished={noteState.isPublished}
   isApprovalRequested={noteState.approvalRequested}
+  isInstructorReview={isInstructorUser && userId !== (noteState.note as any)?.creator}
   onPublishClick={() =>
     publishHandler(noteState, noteHandlers)
   }
@@ -826,100 +908,126 @@ useEffect(() => {
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-        <div className="flex-grow w-full p-4 flex flex-col">
-          <div className=" flex-grow flex flex-col bg-white w-full rounded">
-          <RichTextEditor
-              ref={rteRef}
-              className="min-h-[712px]"
-              extensions={extensions}
-              content={noteState.editorContent}
-              onUpdate={({ editor }) =>
-                handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())
-              }
-              renderControls={() => (
-                <EditorMenuControls
-                  onMediaUpload={(media) => {
-                    if (media.type === "image") {
-                      const newImage = {
-                        type: "image",
-                        attrs: {
-                          src: media.uri,
-                          alt: "Image description",
-                          loading: "lazy",
-                        },
-                      };
-              
-                      const editor = rteRef.current?.editor;
-                      if (editor) {
-                        editor.chain().focus().setImage(newImage.attrs).run();
-                      }
-              
-                      noteHandlers.setImages((prevImages) => [
-                        ...prevImages,
-                        new PhotoType({
+        <div className="flex-grow w-full p-2 sm:p-4 flex flex-col">
+          <ResizablePanelGroup direction="horizontal" className="w-full bg-white rounded min-h-[60vh] md:min-h-[70vh] lg:min-h-[75vh]">
+            <ResizablePanel
+              defaultSize={70}
+              minSize={45}
+              maxSize={85}
+              className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
+            >
+              <RichTextEditor
+                ref={rteRef}
+                className="flex-1 overflow-auto"
+                editable={canEdit}
+                extensions={extensions}
+                content={noteState.editorContent}
+                onUpdate={({ editor }) => {
+                  if (!canEdit) return;
+                  handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
+                }}
+                renderControls={() => (
+                  <EditorMenuControls
+                    onMediaUpload={(media) => {
+                      if (!canEdit) return;
+                      if (media.type === "image") {
+                        const newImage = {
+                          type: "image",
+                          attrs: {
+                            src: media.uri,
+                            alt: "Image description",
+                            loading: "lazy",
+                          },
+                        };
+                        const editor = rteRef.current?.editor;
+                        if (editor) {
+                          editor.chain().focus().setImage(newImage.attrs).run();
+                        }
+                        noteHandlers.setImages((prevImages) => [
+                          ...prevImages,
+                          new PhotoType({
+                            uuid: uuidv4(),
+                            uri: media.uri,
+                            type: "image",
+                          }),
+                        ]);
+                      } else if (media.type === "video") {
+                        const newVideo = new VideoType({
                           uuid: uuidv4(),
                           uri: media.uri,
-                          type: "image",
-                        }),
-                      ]);
-                    } else if (media.type === "video") {
-                      const newVideo = new VideoType({
-                        uuid: uuidv4(),
-                        uri: media.uri,
-                        type: "video",
-                        thumbnail: "",
-                        duration: "0:00",
-                      });
-              
-                      noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
-              
-                      const editor = rteRef.current?.editor;
-                      if (editor) {
-                        const videoLink = `Video ${noteState.videos.length + 1}`;
-                        editor
-                          .chain()
-                          .focus()
-                          .command(({ tr, dispatch }) => {
-                            if (dispatch) {
-                              const endPos = tr.doc.content.size;
-                              const paragraphNodeForNewLine = editor.schema.node("paragraph");
-                              const textNode = editor.schema.text(videoLink, [
-                                editor.schema.marks.link.create({ href: media.uri }),
-                              ]);
-                              const paragraphNodeForLink = editor.schema.node("paragraph", null, [
-                                textNode,
-                              ]);
-              
-                              const transaction = tr
-                                .insert(endPos, paragraphNodeForNewLine)
-                                .insert(endPos + 1, paragraphNodeForLink);
-                              dispatch(transaction);
-                            }
-                            return true;
-                          })
-                          .run();
+                          type: "video",
+                          thumbnail: "",
+                          duration: "0:00",
+                        });
+                        noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
+                        const editor = rteRef.current?.editor;
+                        if (editor) {
+                          const videoLink = `Video ${noteState.videos.length + 1}`;
+                          editor
+                            .chain()
+                            .focus()
+                            .command(({ tr, dispatch }) => {
+                              if (dispatch) {
+                                const endPos = tr.doc.content.size;
+                                const paragraphNodeForNewLine = editor.schema.node("paragraph");
+                                const textNode = editor.schema.text(videoLink, [
+                                  editor.schema.marks.link.create({ href: media.uri }),
+                                ]);
+                                const paragraphNodeForLink = editor.schema.node("paragraph", null, [
+                                  textNode,
+                                ]);
+                                const transaction = tr
+                                  .insert(endPos, paragraphNodeForNewLine)
+                                  .insert(endPos + 1, paragraphNodeForLink);
+                                dispatch(transaction);
+                              }
+                              return true;
+                            })
+                            .run();
+                        }
+                      } else if (media.type === "audio") {
+                        const newAudio = new AudioType({
+                          uuid: uuidv4(),
+                          uri: media.uri,
+                          type: "audio",
+                          duration: "0:00",
+                          name: `Audio Note ${noteState.audio.length + 1}`,
+                          isPlaying: false,
+                        });
+                        noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
                       }
-                    } else if (media.type === "audio") {
-                      const newAudio = new AudioType({
-                        uuid: uuidv4(),
-                        uri: media.uri,
-                        type: "audio", // Explicitly set the type
-                        duration: "0:00", // Default duration
-                        name: `Audio Note ${noteState.audio.length + 1}`,
-                        isPlaying: false, // Default play status
-                      });
-                    
-                      noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
-                    }                          
-                  }}
-                />
-              )}
-              children={(editor) => {
-                if (!editor) return null;
-                return <LinkBubbleMenu />;
-              }}
-            />
-          </div>
+                    }}
+                  />
+                )}
+                children={(editor) => {
+                  if (!editor) return null;
+                  return <LinkBubbleMenu />;
+                }}
+              />
+            </ResizablePanel>
+            {!!noteState.note?.id && (
+              <>
+                <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
+                <ResizablePanel
+                  defaultSize={30}
+                  minSize={20}
+                  maxSize={40}
+                  className="md:border-l min-w-[280px] md:min-w-[300px] lg:min-w-[340px] transition-[flex-basis] duration-200 ease-out"
+                >
+                  <CommentSidebar
+                    noteId={noteState.note.id as string}
+                    getCurrentSelection={() => {
+                      const editor = (rteRef.current as any)?.editor;
+                      if (!editor) return null;
+                      const { from, to } = editor.state.selection;
+                      if (from === to) return null; // require a non-empty selection
+                      return { from, to };
+                    }}
+                  />
+                </ResizablePanel>
+              </>
+            )}
+          </ResizablePanelGroup>
         </div>
       </div>
     </ScrollArea>

@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
@@ -27,6 +28,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [showPublished, setShowPublished] = useState(true);
+  const [viewMode, setViewMode] = useState<"my" | "review">("my");
+  const [isInstructor, setIsInstructor] = useState<boolean>(false);
+  const [instructorId, setInstructorId] = useState<string | null>(null);
 
   const handleAddNote = async () => {
     const userId = await user.getId();
@@ -92,27 +96,50 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   }, []);
 
   useEffect(() => {
-    const fetchUserMessages = async () => {
+    const initRoleFlags = async () => {
+      const roles = await user.getRoles();
+      const isInstr = await user.isInstructor();
+      setIsInstructor(!!isInstr);
+      setInstructorId(user.getInstructorId());
+    };
+    initRoleFlags();
+  }, []);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
       try {
         const userId = await user.getId();
-        if (userId) {
-          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
+        if (!userId) {
+          console.error("User not logged in");
+          return;
+        }
+
+        if (viewMode === "my") {
+          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived);
           const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
-
-          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
-          const publishedNotes = convertedNotes.filter((note) => note.published); //filter out unpublished notes
-
+          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived);
+          const publishedNotes = convertedNotes.filter((note) => note.published);
           setNotes(unarchivedNotes);
           setFilteredNotes(publishedNotes);
-        } else {
-          console.error("User not logged in");
+        } else if (viewMode === "review" && isInstructor) {
+          // Instructor reviewing student notes
+          const students = await ApiService.fetchUsersByInstructor(userId);
+          const studentUids = students.map((s) => s.uid);
+          const pendingNotes = await ApiService.fetchNotesByStudents(studentUids);
+          const converted = DataConversion.convertMediaTypes(pendingNotes).reverse();
+          const unarchived = converted.filter((n) => !n.isArchived);
+          // For review, default show unpublished (awaiting approval)
+          const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
+          setNotes(unarchived);
+          setFilteredNotes(awaitingApproval);
+          setShowPublished(false);
         }
       } catch (error) {
-        console.error("Error fetching user messages:", error);
+        console.error("Error fetching notes:", error);
       }
     };
-    fetchUserMessages();
-  }, []);
+    fetchNotes();
+  }, [viewMode, isInstructor]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -120,17 +147,43 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       return;
     }
     const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(
-      (note) =>
-        (note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
-        (showPublished ? note.published : !note.published)
-    );
+    const filtered = notes.filter((note) => {
+      const matchesText =
+        note.title.toLowerCase().includes(query) ||
+        note.tags.some((tag) => tag.label.toLowerCase().includes(query));
+
+      if (!matchesText) return false;
+
+      if (viewMode === "review") {
+        // Under Review vs Reviewed in review mode
+        if (showPublished) {
+          // Reviewed
+          return !!note.published;
+        } else {
+          // Under Review
+          return !!note.approvalRequested && !note.published;
+        }
+      }
+
+      // My Notes mode: Published vs Unpublished
+      return showPublished ? !!note.published : !note.published;
+    });
     setFilteredNotes(filtered);
   };
 
   const filterNotesByPublished = (showPublished: boolean) => {
-    const filtered = notes.filter(note => showPublished ? note.published : !note.published);
+    let filtered: Note[] = [];
+    if (viewMode === "review") {
+      if (showPublished) {
+        // Reviewed
+        filtered = notes.filter((n) => !!n.published);
+      } else {
+        // Under Review
+        filtered = notes.filter((n) => !!n.approvalRequested && !n.published);
+      }
+    } else {
+      filtered = notes.filter((note) => (showPublished ? !!note.published : !note.published));
+    }
     setFilteredNotes(filtered);
   };
 
@@ -144,12 +197,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     <div className="h-[100vh] sm:h-[90vh] bg-gray-200 p-2 sm:p-4 pt-2 sm:pt-1 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-2 sm:mb-4">
         <div className="text-center justify-center mb-2 sm:mb-1">
-          <span className="justify-center text-base sm:text-lg lg:text-xl font-semibold">My Notes</span>
+          <span className="justify-center text-base sm:text-lg lg:text-xl font-semibold">
+            {isInstructor ? "Instructor Workspace" : "My Notes"}
+          </span>
         </div>
         {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
         <div className="mb-2 sm:mb-3">
           <SearchBarNote onSearch={handleSearch} />
         </div>
+          {isInstructor && (
+            <div className="mb-2">
+              <Select value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select view" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="my">My Notes</SelectItem>
+                  <SelectItem value="review">Review Notes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center text-center justify-between pt-1 sm:pt-2 mt-1 sm:mt-2 w-full"> {/* Mobile-first layout */}
             <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
@@ -158,13 +226,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
                   value="unpublished" 
                   className="text-xs sm:text-sm font-semibold px-1 sm:px-2 py-1.5 sm:py-2 h-8 sm:h-9 rounded-md"
                 >
-                  Unpublished
+                  {viewMode === "review" ? "Under Review" : "Unpublished"}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="published" 
                   className="text-xs sm:text-sm font-semibold px-1 sm:px-2 py-1.5 sm:py-2 h-8 sm:h-9 rounded-md"
                 >
-                  Published
+                  {viewMode === "review" ? "Reviewed" : "Published"}
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="unpublished"></TabsContent>

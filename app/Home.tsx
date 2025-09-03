@@ -44,7 +44,7 @@ export default function Home() {
       >
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
-      <ResizableHandle withHandle className="hidden sm:block" />
+      <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize" />
       <ResizablePanel defaultSize={75} className="w-full sm:w-auto">
         {isUserLoggedIn ? (
           selectedNote ? (

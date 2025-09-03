@@ -95,6 +95,11 @@ export default class ApiService {
           authorId: comment.authorId,
           authorName: comment.authorName,
           createdAt: comment.createdAt,
+          position: comment.position || null,
+          threadId: comment.threadId || null,
+          parentId: comment.parentId || null,
+          resolved: !!comment.resolved,
+          archived: !!comment.archived,
         }),
       });
 
@@ -129,17 +134,67 @@ export default class ApiService {
       });
 
       const data = await response.json();
-      return data.map((item: any) => ({
+      return data
+        .filter((item: any) => !item.archived)
+        .map((item: any) => ({
         id: item["@id"],
         noteId: item.noteId,
         text: item.text,
         authorId: item.authorId,
         authorName: item.authorName,
         createdAt: new Date(item.createdAt),
-        position: item.position || null,
+        position: item.position ? { from: item.position.from, to: item.position.to } : null,
+        threadId: item.threadId || null,
+        parentId: item.parentId || null,
+        resolved: !!item.resolved,
+        archived: !!item.archived,
       }));
     } catch (error) {
       console.error("Error fetching comments:", error);
+      throw error;
+    }
+  }
+
+  static async resolveThread(threadId: string) {
+    try {
+      const response = await fetch(`${RERUM_PREFIX}overwrite`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment-thread",
+          "@id": threadId,
+          resolved: true,
+          resolvedAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to resolve thread");
+      return await response.json();
+    } catch (error) {
+      console.error("Error resolving thread:", error);
+      throw error;
+    }
+  }
+
+  static async archiveComment(commentId: string) {
+    try {
+      const response = await fetch(`${RERUM_PREFIX}overwrite`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",
+          "@id": commentId,
+          archived: true,
+          archivedAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to archive comment");
+      return true;
+    } catch (error) {
+      console.error("Error archiving comment:", error);
       throw error;
     }
   }
@@ -768,42 +823,55 @@ static async fetchCreatorNameFromFirestore(userId: string): Promise<string> {
  */
 static async fetchUsersByInstructor(instructorId: string): Promise<{ uid: string; name: string; email: string }[]> {
   try {
-    const firestore = await import("firebase/firestore"); // Lazy load Firestore if not already imported
-    const db = firestore.getFirestore(); // Initialize Firestore instance
+    const firestore = await import("firebase/firestore");
+    const db = firestore.getFirestore();
 
-    // Query Firestore to get all users where `parentInstructorId` matches the instructorId
     const usersQuery = firestore.query(
       firestore.collection(db, "users"),
       firestore.where("parentInstructorId", "==", instructorId),
-      firestore.where("isInstructor", "==", false) // Exclude instructors
+      firestore.where("isInstructor", "==", false)
     );
 
     const querySnapshot = await firestore.getDocs(usersQuery);
     const users: { uid: string; name: string; email: string }[] = [];
 
-    // Extract data from query snapshot
     querySnapshot.forEach((doc) => {
       const userData = doc.data();
       if (userData?.uid && userData?.name && userData?.email) {
-        users.push({
-          uid: userData.uid,
-          name: userData.name,
-          email: userData.email,
-        });
+        users.push({ uid: userData.uid, name: userData.name, email: userData.email });
       } else {
         console.warn(`User document with ID ${doc.id} is missing required fields.`);
       }
     });
 
     console.log(`Fetched students under instructor ${instructorId}:`, users);
-
     if (users.length === 0) {
       console.warn(`No students found for instructor with ID: ${instructorId}`);
     }
-
     return users;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error fetching students for instructor with ID ${instructorId}:`, error);
+    const message = typeof error?.message === "string" ? error.message : "";
+
+    // Fallback: use API user profile to get students list (avoids Firestore permission issues)
+    if (message.includes("Missing or insufficient permissions") || message.includes("permission")) {
+      console.warn("Falling back to API-based students list due to Firestore permissions.");
+      const instructorProfile = await ApiService.fetchUserData(instructorId);
+      const studentUids: string[] = instructorProfile?.students || [];
+
+      if (!studentUids.length) {
+        return [];
+      }
+
+      const resolved = await Promise.all(
+        studentUids.map(async (uid) => {
+          const name = await ApiService.fetchCreatorName(uid).catch(() => "Unknown User");
+          return { uid, name, email: "" };
+        })
+      );
+      return resolved;
+    }
+
     throw new Error(`Unable to fetch students for instructor with ID: ${instructorId}`);
   }
 }

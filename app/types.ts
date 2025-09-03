@@ -28,6 +28,11 @@ export type Comment = {
   authorId: string;   // UID of the commenter
   role: "instructor" | "student"; // For styling or permissions
   createdAt: string;  // ISO date
+  position?: { from: number; to: number } | null; // Anchor to selected range
+  threadId?: string | null; // Thread grouping id
+  parentId?: string | null; // Parent comment id when this is a reply
+  resolved?: boolean; // Whether the thread is resolved
+  archived?: boolean; // Soft-delete flag
 };
 
 
