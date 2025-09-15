@@ -1,13 +1,16 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; 
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const user = User.getInstance();
 
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     try {
@@ -42,31 +45,37 @@ export default function Navbar() {
     fetchName();
   }, []);
 
+  const linkClass = (href: string) =>
+    cn(
+      "text-2xl font-bold transition duration-300 ease-in-out mr-4",
+      pathname === href ? "text-blue-500" : "text-blue-300 hover:text-blue-500"
+    );
+
   return (
     <nav className="bg-gray-900 w-full h-[10vh] flex flex-row justify-between items-center px-6 py-3 text-white">
       <div className="flex w-full justify-start">
         <Link legacyBehavior href="/" passHref>
-          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+          <a className={linkClass("/")}>
             Home
           </a>
         </Link>
 
         {name ? (
           <Link legacyBehavior href="/lib/pages/notes" passHref>
-            <a id="navbar-create-note"className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+            <a id="navbar-create-note"className={linkClass("/lib/pages/notes")}>
               Notes
             </a>
           </Link>
         ) : null}
 
         <Link legacyBehavior href="/lib/pages/map" passHref>
-          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out mr-4">
+          <a className={linkClass("/lib/pages/map")}>
             Map
           </a>
         </Link>
 
         <Link legacyBehavior href="/lib/pages/aboutPage" passHref>
-          <a className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition duration-300 ease-in-out">
+          <a className={linkClass("/lib/pages/aboutPage")}>
             About
           </a>
         </Link>
