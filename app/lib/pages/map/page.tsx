@@ -22,6 +22,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -37,7 +38,7 @@ interface Refs {
 }
 
 const Page = () => {
-  const [visibleCount, setVisibleCount] = useState(15);
+  // Infinite notes manages visible count
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -64,6 +65,7 @@ const Page = () => {
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [skip, setSkip] = useState(0);
+  const infinite = useInfiniteNotes<Note>({ items: filteredNotes, pageSize: NOTES_PAGE_SIZE });
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
@@ -737,7 +739,7 @@ const Page = () => {
                 className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
               />
             ))
-          : filteredNotes.slice(0, visibleCount).map((note) => (
+          : infinite.visibleItems.map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
@@ -753,12 +755,6 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-          //   ))
-          // : [...Array(6)].map((_, index) => (
-          //     <Skeleton
-          //       key={index}
-          //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-          //     />
             ))}
         {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
@@ -776,16 +772,15 @@ const Page = () => {
           </button>
         </div> */}
 
-        {visibleCount < filteredNotes.length && (
-          <div className="col-span-full flex justify-center mt-4">
-            <button
-              onClick={() => setVisibleCount((prev) => prev + 15)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              Load More Notes...
-            </button>
-          </div>
-        )}
+        <div className="col-span-full flex justify-center mt-4 min-h-10">
+          {infinite.hasMore ? (
+            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+              {infinite.isLoading && (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
