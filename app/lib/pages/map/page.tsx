@@ -13,14 +13,7 @@ import introJs from "intro.js"
 import "intro.js/introjs.css"
 // import "../../../globals.css";
 
-
-import {
-  CompassIcon,
-  GlobeIcon,
-  LocateIcon,
-  Navigation,
-  UserIcon,
-} from "lucide-react";
+import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon, Plus, Minus } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
@@ -710,18 +703,48 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <div className="flex flex-row justify-evenly items-center">
-                    <GlobeIcon className="text-primary" />
-                    <Switch onClick={toggleFilter} />
-                    <UserIcon className="text-primary" />
-                  </div>
+                  <button
+                    aria-label={global ? "Show personal posts" : "Show global posts"}
+                    onClick={toggleFilter}
+                    type="button"
+                    className={`rounded-full p-2 mx-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${global ? "text-blue-600" : "text-green-600"}`}
+                  >
+                    {global ? (
+                      <GlobeIcon className="w-5 h-5" />
+                    ) : (
+                      <UserIcon className="w-5 h-5" />
+                    )}
+                  </button>
                 ) : null}
               </div>
-              <div
-                className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
-                onClick={handleSetLocation}
-              >
-                <Navigation size={20} />
+              <div className="flex flex-row items-center gap-2 mr-4">
+                {/* Zoom Out Button */}
+                <button
+                  aria-label="Zoom out"
+                  className="rounded-full p-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
+                  type="button"
+                >
+                  <Minus className="w-5 h-5 text-gray-700" />
+                </button>
+                {/* Zoom In Button */}
+                <button
+                  aria-label="Zoom in"
+                  className="rounded-full p-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
+                  type="button"
+                >
+                  <Plus className="w-5 h-5 text-gray-700" />
+                </button>
+                {/* Locate Button */}
+                <button
+                  aria-label="Find my location"
+                  className="rounded-full p-2 bg-white shadow hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2"
+                  onClick={handleSetLocation}
+                  type="button"
+                >
+                  <Navigation size={20} />
+                </button>
               </div>
             </div>
           </GoogleMap>
