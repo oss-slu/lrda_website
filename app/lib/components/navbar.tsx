@@ -44,7 +44,7 @@ export default function Navbar() {
 
     fetchName();
   }, []);
-
+  // Helper function to style links, if pathname matches link href, make it active.
   const linkClass = (href: string) =>
     cn(
       "text-2xl font-bold transition duration-300 ease-in-out mr-4",
