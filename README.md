@@ -1,5 +1,8 @@
  It is the Desktop Webapp of 'Where's Religion?' This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Information regarding keys 
+This application uses **Firebase** **Google Maps** **ChatGpt** keys to gain access to the keys for development please get in touch with yashkamal.bhatia@slu.edu. 
+
 ## Getting Started
 
 First, run the development server:
@@ -37,4 +40,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 [mui-tiptap](https://www.npmjs.com/package/mui-tiptap): A customizable Material UI styled WYSIWYG rich text editor, using Tiptap.
 
 [shadcn](https://ui.shadcn.com/) : A beautifully designed UI Component Library.
+
+
 
