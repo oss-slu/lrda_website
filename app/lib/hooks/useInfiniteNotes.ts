@@ -40,7 +40,7 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
     setTimeout(() => {
       setVisibleCount((prev) => Math.min(prev + pageSize, items.length));
       setIsLoading(false);
-    }, 150);
+    }, 75);
   }, [isLoading, hasMore, pageSize, items.length]);
 
   const loaderRef = useCallback((node: Element | null) => {
