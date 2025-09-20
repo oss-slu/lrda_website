@@ -68,26 +68,25 @@ export class User {
   private async initializeUser() {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // First, try to fetch user data from the API
         const userData = await ApiService.fetchUserData(user.uid);
-        
+  
         if (userData) {
-          // If found in the API, set user data and persist it
           this.userData = userData;
           this.persistUser(userData);
         } else {
-          // If not found in the API, try Firestore
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             this.userData = userDoc.data() as UserData;
             this.persistUser(this.userData);
-          } else {
-            console.log("User not found in API or Firestore.");
           }
         }
+  
+        // Log instructor or student relationship for debugging
+        console.log("isInstructor:", this.userData?.isInstructor);
+        console.log("parentInstructorId:", this.userData?.parentInstructorId);
+  
         this.notifyLoginState();
       } else {
-        // User is signed out
         this.userData = null;
         this.clearUser();
         this.notifyLoginState();
@@ -95,23 +94,47 @@ export class User {
     });
   }
 
+  public async isInstructor(): Promise<boolean> {
+    if (!this.userData) {
+      this.userData = await this.loadUser();
+    }
+    return this.userData?.isInstructor || false;
+  }
+
+  public getInstructorId(): string | null {
+    if (!this.userData) {
+      console.warn("User data is not loaded yet.");
+      return null;
+    }
+    return this.userData.parentInstructorId || null;
+  }
+  
+  
+  
+  public async getParentInstructorId(): Promise<string | null> {
+    if (!this.userData) {
+      this.userData = await this.loadUser();
+    }
+    return this.userData?.parentInstructorId || null;
+  }
+  
+
 
   public async login(email: string, password: string): Promise<string> {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+  
+      // Fetch the user's token
       const token = await user.getIdToken();
       console.log(`Login token: ${token}`);
       
       // Store the token in local storage
-      localStorage.setItem('authToken', token);
-      // Set the token as a cookie
+      localStorage.setItem("authToken", token);
       document.cookie = `authToken=${token}; path=/`;
-      const testingToken = localStorage.getItem('authToken');
-      console.log("testing to see local storage: ", testingToken);
   
       const userData = await ApiService.fetchUserData(user.uid);
-       
+  
       if (userData) {
         // If user data is found in the API
         this.userData = userData;
@@ -127,19 +150,23 @@ export class User {
         }
       }
   
-      // Persist user data and update login state
+      // Ensure necessary fields are properly handled
       if (this.userData) {
+        console.log("isInstructor:", this.userData.isInstructor);
+        console.log("parentInstructorId:", this.userData.parentInstructorId);
+  
+        // Persist user data and update login state
         await this.persistUser(this.userData);
-        console.log("User data persisted locally");
         this.notifyLoginState();
       }
-
+  
       return "success";
     } catch (error) {
       console.error("Login error: ", error);
       return Promise.reject(error);
     }
   }
+  
   
   public async logout() {
     try {
@@ -160,17 +187,41 @@ export class User {
   }
 
   public async getId(): Promise<string | null> {
+    // First try to get UID from Firebase Auth directly
+    if (auth && auth.currentUser) {
+      return auth.currentUser.uid;
+    }
+    
+    // Load user data if not already loaded
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
-    return this.userData?.["uid"] ?? null;
+    
+    // Fallback to stored user data
+    if (this.userData && this.userData.uid) {
+      return this.userData.uid;
+    }
+    
+    return null;
   }
 
   public async getName(): Promise<string | null> {
+    // First try to get name from Firebase Auth directly
+    if (auth && auth.currentUser) {
+      return auth.currentUser.displayName || auth.currentUser.email;
+    }
+    
+    // Load user data if not already loaded
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
-    return this.userData?.name ?? null;
+    
+    // Fallback to stored user data
+    if (this.userData && this.userData.name) {
+      return this.userData.name;
+    }
+    
+    return null;
   }
 
   public async hasOnboarded(): Promise<boolean> {
@@ -185,6 +236,17 @@ export class User {
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
+    
+    // If we still don't have userData, the user has only authentication
+    if (!this.userData) {
+      console.log('🔍 User.getRoles() - No userData, user has only auth - returning default roles');
+      // For users with only authentication, assume they can apply for instructor
+      return {
+        administrator: true,
+        contributor: true
+      };
+    }
+    
     return this.userData?.roles ?? null;
   }
 }
