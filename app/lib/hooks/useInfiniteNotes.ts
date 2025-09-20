@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export const NOTES_PAGE_SIZE = 16;
@@ -43,23 +41,29 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
     }, 75);
   }, [isLoading, hasMore, pageSize, items.length]);
 
-  const loaderRef = useCallback((node: Element | null) => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-    sentinelRef.current = node;
-
-    if (!node) return;
-
-    observerRef.current = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-      if (entry && entry.isIntersecting) {
-        loadNext();
+  const loaderRef = useCallback(
+    (node: Element | null) => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
-    }, { root: null, rootMargin: "200px 0px", threshold: 0 });
+      sentinelRef.current = node;
 
-    observerRef.current.observe(node);
-  }, [loadNext]);
+      if (!node) return;
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry && entry.isIntersecting) {
+            loadNext();
+          }
+        },
+        { root: null, rootMargin: "200px 0px", threshold: 0 }
+      );
+
+      observerRef.current.observe(node);
+    },
+    [loadNext]
+  );
 
   // Clean up observer on unmount
   useEffect(() => {
@@ -79,5 +83,3 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
 
   return { visibleItems, isLoading, hasMore, loadNext, loaderRef, reset };
 }
-
-
