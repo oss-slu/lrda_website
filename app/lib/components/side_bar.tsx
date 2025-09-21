@@ -141,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="h-[90vh] bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
+    <div className="h-full bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
         <div className="text-center justify-center mb-1">
           <span className="justify-center text-xl font-semibold">My Notes</span>

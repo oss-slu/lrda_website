@@ -27,6 +27,12 @@ jest.mock("../lib/models/user_class", () => {
   };
 });
 
+// Mock usePathname
+jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(),
+}));
+import { usePathname } from "next/navigation";            
+
 const localStorageMock = (function () {
   let store: Record<string, string> = {};
   return {
@@ -48,16 +54,19 @@ Object.defineProperty(window, "localStorage", {
 
 describe("Navbar Component", () => {
   const userMock = User.getInstance() as unknown as MockUser;
+  const mockedUsePathname = usePathname as jest.Mock;
 
   beforeEach(() => {
     userMock.getName.mockReset();
     userMock.login.mockReset();
     userMock.logout.mockReset();
     window.localStorage.clear();
+    mockedUsePathname.mockReset();
   });
 
   it("shows Login when user is not logged in", async () => {
     userMock.getName.mockResolvedValue(null); // Simulate user not logged in
+    mockedUsePathname.mockReturnValue("/"); 
 
     render(<Navbar />);
     await waitFor(() => {
@@ -66,6 +75,7 @@ describe("Navbar Component", () => {
   });
 
   it("displays user name when logged in", async () => {
+    mockedUsePathname.mockReturnValue("/");
     await act(async () => {
       render(<Navbar />);
     });
@@ -75,10 +85,45 @@ describe("Navbar Component", () => {
   });
 
   it("renders Notes link when logged in", async () => {
+    mockedUsePathname.mockReturnValue("/lib/pages/notes");
     await act(async () => {
       render(<Navbar />);
     });
     expect(screen.getByText(/Notes/i)).toBeInTheDocument(); // Updated text
     expect(screen.getByRole("navigation")).toBeInTheDocument();
+  });
+
+  // Active Link Tests
+  it("highlights Home when pathname is '/'", async () => {
+    mockedUsePathname.mockReturnValue("/");
+
+    await act(async () => {
+      render(<Navbar />);
+    });
+
+    const homeLink = screen.getByText("Home");
+    expect(homeLink).toHaveClass("text-blue-500");
+  });
+
+  it("highlights Notes when pathname starts with '/lib/pages/notes'", async () => {
+    mockedUsePathname.mockReturnValue("/lib/pages/notes");
+
+    await act(async () => {
+      render(<Navbar />);
+    });
+
+    const notesLink = screen.getByText("Notes");
+    expect(notesLink).toHaveClass("text-blue-500");
+  });
+
+  it("does not highlight Home when pathname is '/lib/pages/map'", async () => {
+    mockedUsePathname.mockReturnValue("/lib/pages/map");
+
+    await act(async () => {
+      render(<Navbar />);
+    });
+
+    const homeLink = screen.getByText("Home");
+    expect(homeLink).toHaveClass("text-blue-300"); // inactive
   });
 });

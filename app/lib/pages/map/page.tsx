@@ -674,7 +674,7 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+    <div className="flex flex-row w-screen h-full min-w-[600px]">
       <div className="flex-grow">
         {isMapsApiLoaded && (
           <GoogleMap
