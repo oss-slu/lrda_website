@@ -240,13 +240,7 @@ const Page = () => {
     if (!isNoteSelectedFromSearch) {
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
-    const timer = setTimeout(() => {
-      if (filteredNotes.length < 1) {
-        setEmptyRegion(true);
-      }
-    }, 2000);
     setIsLoaded(false);
-    return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   useEffect(() => {
@@ -268,10 +262,10 @@ const Page = () => {
   useEffect(() => {
     if (locationFound) {
       fetchNotes().then(({ personalNotes, globalNotes }) => {
-        // setPersonalNotes(personalNotes);
-        // setGlobalNotes(globalNotes);
-        // const initialNotes = global ? globalNotes : personalNotes;
-        // setNotes(initialNotes);
+        setPersonalNotes(personalNotes);
+        setGlobalNotes(globalNotes);
+        const initialNotes = global ? globalNotes : personalNotes;
+        setNotes(initialNotes);
       });
     }
   }, [locationFound, global]);
@@ -384,7 +378,7 @@ const Page = () => {
     setIsLoaded(false);
   };
 
-  const fetchNotes1 = async () => {
+  const fetchNotes = async () => {
     try {
       const userId = await user.getId();
 
@@ -414,7 +408,7 @@ const Page = () => {
     }
   };
 
-  const fetchNotes = async () => {
+  const fetchNotes1 = async () => {
     try {
       const userId = await user.getId();
 
@@ -643,36 +637,6 @@ const Page = () => {
     }
   }
 
-  const handleNext = async () => {
-    const newSkip = skip + 150;
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
-
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-
-  const handlePrevious = async () => {
-    const newSkip = Math.max(0, skip - 150);
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
-
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-
   return (
     <div className="flex flex-row w-screen h-full min-w-[600px]">
       <div className="flex-grow">
@@ -708,12 +672,12 @@ const Page = () => {
                   </div>
                 ) : null}
               </div>
-              <button
+              {/* <button
                 onClick={fetchNotes}
                 className="absolute top-10 right-20 z-10 bg-blue-500 p-4 rounded-md hover:bg-blue-700 text-white"
               >
                 Fetch Notes
-              </button>
+              </button> */}
               <div
                 className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
                 onClick={handleSetLocation}
