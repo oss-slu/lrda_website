@@ -6,10 +6,10 @@ import { GitHubLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
 
 const Page = () => {
   return (
-    <div className="font-sans leading-6">
+    <div className="font-sans leading-6 h-full overflow-auto">
       {/* Section with background image */}
       <div
-        className="relative bg-cover bg-center bg-no-repeat min-h-screen"
+        className="relative bg-cover bg-center bg-no-repeat h-full"
         style={{ backgroundImage: 'url("/aboutPageImages/background.jpg")' }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
@@ -252,16 +252,7 @@ const Page = () => {
 
             {/* Jacob Maynard */}
             <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
-              <div className="overflow-hidden rounded-full w-32 h-32">
-                {/* Container for circular crop */}
-                <Image
-                  src="https://github.com/InfinityBowman.png"
-                  alt="Jacob Maynard"
-                  width={128}
-                  height={128}
-                  className="object-cover" // Ensures the image fills the container
-                />
-              </div>
+              <Image src="https://github.com/InfinityBowman.png" alt="Jacob Maynard" width={128} height={128} className="rounded-full" />
               <p className="mt-4 font-semibold text-center">Jacob Maynard</p>
               <p className="font-semibold text-center">Tech Lead</p>
               <div className="flex mt-2 space-x-4">
@@ -285,7 +276,7 @@ const Page = () => {
                   alt="Puneet Sontha"
                   width={128}
                   height={128}
-                  className="object-cover" // Ensures the image fills the container
+                  className="rounded-full" // Ensures the image fills the container
                 />
               </div>
               <p className="mt-4 font-semibold text-center">Puneet Sontha</p>
@@ -297,6 +288,23 @@ const Page = () => {
                 </a>
                 {/* LinkedIn Icon */}
                 <a href="https://www.linkedin.com/in/puneet-sontha/" target="_blank" rel="noopener noreferrer">
+                  <LinkedInLogoIcon className="h-6 w-6" />
+                </a>
+              </div>
+            </div>
+
+            {/* Muhammad Hashir */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <Image src="/aboutPageImages/hashir.jpg" alt="Muhammad Hashir" width={128} height={128} className="rounded-full" />
+              <p className="mt-4 font-semibold text-center">Muhammad Hashir</p>
+              <p className="font-semibold text-center">Developer</p>
+              <div className="flex mt-2 space-x-4">
+                {/* GitHub Icon */}
+                <a href="https://github.com/mhashir03" target="_blank" rel="noopener noreferrer">
+                  <GitHubLogoIcon className="h-6 w-6" />
+                </a>
+                {/* LinkedIn Icon */}
+                <a href="https://www.linkedin.com/in/muhammad-hashir03" target="_blank" rel="noopener noreferrer">
                   <LinkedInLogoIcon className="h-6 w-6" />
                 </a>
               </div>

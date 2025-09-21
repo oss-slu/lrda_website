@@ -15,6 +15,7 @@ import "intro.js/introjs.css";
 
 import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -30,7 +31,7 @@ interface Refs {
 }
 
 const Page = () => {
-  const [visibleCount, setVisibleCount] = useState(15);
+  // Infinite notes manages visible count
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -55,6 +56,13 @@ const Page = () => {
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [skip, setSkip] = useState(0);
+  const infinite = useInfiniteNotes<Note>({
+    items: filteredNotes,
+    pageSize: NOTES_PAGE_SIZE,
+  });
+
+  const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
+  const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
@@ -232,13 +240,7 @@ const Page = () => {
     if (!isNoteSelectedFromSearch) {
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
-    const timer = setTimeout(() => {
-      if (filteredNotes.length < 1) {
-        setEmptyRegion(true);
-      }
-    }, 2000);
     setIsLoaded(false);
-    return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   useEffect(() => {
@@ -262,7 +264,6 @@ const Page = () => {
       fetchNotes().then(({ personalNotes, globalNotes }) => {
         setPersonalNotes(personalNotes);
         setGlobalNotes(globalNotes);
-
         const initialNotes = global ? globalNotes : personalNotes;
         setNotes(initialNotes);
       });
@@ -334,7 +335,7 @@ const Page = () => {
   };
 
   const onMapLoad = React.useCallback((map: any) => {
-    console.log("Map loaded:", map);
+    // console.log('Map loaded:', map);
     mapRef.current = map;
 
     const updateBounds = () => {
@@ -399,6 +400,55 @@ const Page = () => {
       globalNotes = DataConversion.convertMediaTypes(globalNotes)
         .reverse()
         .filter((note) => !note.isArchived); // Filter out archived global notes
+
+      return { personalNotes, globalNotes };
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return { personalNotes: [], globalNotes: [] };
+    }
+  };
+
+  const fetchNotes1 = async () => {
+    try {
+      const userId = await user.getId();
+
+      let personalNotes: Note[] = [];
+      let globalNotes: Note[] = [];
+
+      if (userId) {
+        setIsLoggedIn(true);
+        personalNotes = await ApiService.fetchNotesByDate(16, lastPersonalDate, false, userId);
+        console.log("Fetched personal notes:", personalNotes);
+        // Sort by time ascending
+        personalNotes = personalNotes
+          .filter((note) => !note.isArchived)
+          .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+        personalNotes = DataConversion.convertMediaTypes(personalNotes);
+
+        // Update cursor for next page
+        if (personalNotes.length > 0) {
+          setLastPersonalDate(personalNotes[personalNotes.length - 1].time.toISOString());
+        }
+      }
+
+      globalNotes = await ApiService.fetchNotesByDate(16, lastGlobalDate, true);
+
+      console.log("%cFetched global notes:%o", "color: green; font-weight: bold;", globalNotes); // Sort by time ascending
+      globalNotes = globalNotes.filter((note) => !note.isArchived).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+      globalNotes = DataConversion.convertMediaTypes(globalNotes);
+
+      // Update cursor for next page
+      if (globalNotes.length > 0) {
+        setLastGlobalDate(globalNotes[globalNotes.length - 1].time.toISOString());
+      }
+
+      setPersonalNotes((prev) => [...prev, ...personalNotes]);
+      setGlobalNotes((prev) => [...prev, ...globalNotes]);
+
+      const initialNotes = global ? globalNotes : personalNotes;
+      setNotes(initialNotes);
 
       return { personalNotes, globalNotes };
     } catch (error) {
@@ -587,36 +637,6 @@ const Page = () => {
     }
   }
 
-  const handleNext = async () => {
-    const newSkip = skip + 150;
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
-
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-
-  const handlePrevious = async () => {
-    const newSkip = Math.max(0, skip - 150);
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
-
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-
   return (
     <div className="flex flex-row w-screen h-full min-w-[600px]">
       <div className="flex-grow">
@@ -652,6 +672,12 @@ const Page = () => {
                   </div>
                 ) : null}
               </div>
+              {/* <button
+                onClick={fetchNotes}
+                className="absolute top-10 right-20 z-10 bg-blue-500 p-4 rounded-md hover:bg-blue-700 text-white"
+              >
+                Fetch Notes
+              </button> */}
               <div
                 className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
                 onClick={handleSetLocation}
@@ -668,7 +694,7 @@ const Page = () => {
           ? [...Array(6)].map((_, index) => (
               <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
-          : filteredNotes.slice(0, visibleCount).map((note) => (
+          : infinite.visibleItems.map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
@@ -682,12 +708,6 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-              //   ))
-              // : [...Array(6)].map((_, index) => (
-              //     <Skeleton
-              //       key={index}
-              //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-              //     />
             ))}
         {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
@@ -705,16 +725,15 @@ const Page = () => {
           </button>
         </div> */}
 
-        {visibleCount < filteredNotes.length && (
-          <div className="col-span-full flex justify-center mt-4">
-            <button
-              onClick={() => setVisibleCount((prev) => prev + 15)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              Load More Notes...
-            </button>
-          </div>
-        )}
+        <div className="col-span-full flex justify-center mt-4 min-h-10">
+          {infinite.hasMore ? (
+            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+              {infinite.isLoading && (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
