@@ -9,18 +9,11 @@ import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import introJs from "intro.js"
-import "intro.js/introjs.css"
+import introJs from "intro.js";
+import "intro.js/introjs.css";
 // import "../../../globals.css";
 
-
-import {
-  CompassIcon,
-  GlobeIcon,
-  LocateIcon,
-  Navigation,
-  UserIcon,
-} from "lucide-react";
+import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
@@ -54,9 +47,7 @@ const Page = () => {
   const [isLoading, setIsLoaded] = useState(true);
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
-  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
-    null
-  );
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map>();
   const markerClustererRef = useRef<MarkerClusterer>();
   const [emptyRegion, setEmptyRegion] = useState(false);
@@ -81,25 +72,24 @@ const Page = () => {
       console.log("Existing note selected:", note);
     }
   };
-  
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
-  const notesListRef= useRef<HTMLDivElement | null>(null);
+  const notesListRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
-  
+
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
         // Check if the intro has been shown before (from cookies)
         const introShown = document.cookie
           .split("; ")
           .find((row) => row.startsWith("introShown="))
           ?.split("=")[1];
-  
+
         if (!introShown) {
           const intro = introJs();
-  
+
           intro.setOptions({
             steps: [
               {
@@ -126,18 +116,18 @@ const Page = () => {
             scrollToElement: true,
             skipLabel: "Skip", // Change the look of this button
           });
-  
+
           // When the user skips or completes the intro
           intro.oncomplete(() => {
             document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
           });
-  
+
           intro.onexit(() => {
             document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
           });
-  
+
           intro.start();
-  
+
           // Apply inline styling to the skip button after a short delay to ensure it has rendered
           setTimeout(() => {
             const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
@@ -150,29 +140,26 @@ const Page = () => {
             }
           }, 100); // 100ms delay to wait for rendering
         }
-  
+
         observer.disconnect(); // Stop observing once the elements are found
       }
     });
-  
+
     // Start observing the body for changes
     observer.observe(document.body, { childList: true, subtree: true });
-  
+
     // Cleanup the observer when the component unmounts
     return () => {
       observer.disconnect();
     };
   }, [searchBarRef, noteRefs, notesListRef]);
-  
 
   useEffect(() => {
     let isSubscribed = true;
     const fetchLastLocation = async () => {
       try {
         const lastLocationString = await getItem("LastLocation");
-        const lastLocation = lastLocationString
-          ? JSON.parse(lastLocationString)
-          : null;
+        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
         if (isSubscribed) {
           setMapCenter(lastLocation);
           setMapZoom(10);
@@ -309,10 +296,7 @@ const Page = () => {
 
       filteredNotes.forEach((note) => {
         const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(
-            parseFloat(note.latitude),
-            parseFloat(note.longitude)
-          ),
+          position: new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
           icon: createMarkerIcon(false),
         });
 
@@ -373,10 +357,7 @@ const Page = () => {
     }, 100);
   }, []);
 
-  const filterNotesByMapBounds = (
-    bounds: google.maps.LatLngBounds | null,
-    notes: Note[]
-  ): Note[] => {
+  const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
 
     const ne = bounds.getNorthEast();
@@ -385,18 +366,12 @@ const Page = () => {
     const returnVal = notes.filter((note) => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
-      return (
-        lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng()
-      );
+      return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
     });
     return returnVal;
   };
 
-  const updateFilteredNotes = async (
-    center: Location,
-    bounds: google.maps.LatLngBounds | null,
-    allNotes: Note[]
-  ) => {
+  const updateFilteredNotes = async (center: Location, bounds: google.maps.LatLngBounds | null, allNotes: Note[]) => {
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
     setIsLoaded(false);
@@ -405,35 +380,32 @@ const Page = () => {
   const fetchNotes = async () => {
     try {
       const userId = await user.getId();
-  
+
       let personalNotes: Note[] = [];
       let globalNotes: Note[] = [];
       if (userId) {
         setIsLoggedIn(true);
-        personalNotes = (await ApiService.fetchUserMessages(userId)).filter(note => !note.isArchived); //filter here?
+        personalNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); //filter here?
 
         // Convert media types and filter out archived notes for personal notes
         personalNotes = DataConversion.convertMediaTypes(personalNotes)
-        .reverse()
-        .filter(note => !note.isArchived); // Filter out archived personal notes
+          .reverse()
+          .filter((note) => !note.isArchived); // Filter out archived personal notes
       }
 
-      globalNotes = (await ApiService.fetchPublishedNotes()).filter(note => !note.isArchived);
-
+      globalNotes = (await ApiService.fetchPublishedNotes()).filter((note) => !note.isArchived);
 
       // Convert media types and filter out archived notes for global notes
       globalNotes = DataConversion.convertMediaTypes(globalNotes)
         .reverse()
-        .filter(note => !note.isArchived); // Filter out archived global notes
-
-
+        .filter((note) => !note.isArchived); // Filter out archived global notes
 
       return { personalNotes, globalNotes };
     } catch (error) {
       console.error("Error fetching messages:", error);
       return { personalNotes: [], globalNotes: [] };
     }
-  };  
+  };
 
   const handleMarkerClick = (note: Note) => {
     if (currentPopup) {
@@ -484,14 +456,9 @@ const Page = () => {
         }
 
         draw() {
-          const divPosition = this.getProjection().fromLatLngToDivPixel(
-            this.position
-          )!;
+          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
 
-          const display =
-            Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
-              ? "block"
-              : "none";
+          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
 
           if (display === "block") {
             this.containerDiv.style.left = divPosition.x + "px";
@@ -504,13 +471,7 @@ const Page = () => {
         }
       }
 
-      let popup = new Popup(
-        new google.maps.LatLng(
-          parseFloat(note.latitude),
-          parseFloat(note.longitude)
-        ),
-        popupContent
-      );
+      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
 
       setCurrentPopup(popup);
 
@@ -518,12 +479,7 @@ const Page = () => {
     }
   };
 
-  const handleSearch = (
-    address: string,
-    lat?: number,
-    lng?: number,
-    isNoteClick?: boolean
-  ) => {
+  const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
     } else {
@@ -531,64 +487,43 @@ const Page = () => {
       const query = address.trim().toLowerCase();
       const filtered = query
         ? notes.filter((note) => {
-            const titleMatch =
-              note.title && typeof note.title === "string"
-                ? note.title.toLowerCase().includes(query)
-                : false;
-  
-            const textMatch =
-              note.text && typeof note.text === "string"
-                ? note.text.toLowerCase().includes(query)
-                : false;
-  
+            const titleMatch = note.title && typeof note.title === "string" ? note.title.toLowerCase().includes(query) : false;
+
+            const textMatch = note.text && typeof note.text === "string" ? note.text.toLowerCase().includes(query) : false;
+
             const tagsMatch =
               Array.isArray(note.tags) &&
-              note.tags.some(
-                (tag) =>
-                  tag.label &&
-                  typeof tag.label === "string" &&
-                  tag.label.toLowerCase().includes(query)
-              );
-  
+              note.tags.some((tag) => tag.label && typeof tag.label === "string" && tag.label.toLowerCase().includes(query));
+
             return titleMatch || textMatch || tagsMatch;
           })
         : [...notes];
-  
+
       setFilteredNotes(filtered);
     }
-  
+
     if (lat !== undefined && lng !== undefined) {
       const newCenter = { lat, lng };
       mapRef.current?.panTo(newCenter);
       mapRef.current?.setZoom(10);
     }
   };
-  
 
   const handleNotesSearch = (searchText: string) => {
     const query = searchText.toLowerCase();
     const filtered = notes.filter((note) => {
-      const titleMatch =
-        note.title && typeof note.title === "string"
-          ? note.title.toLowerCase().includes(query)
-          : false;
-  
+      const titleMatch = note.title && typeof note.title === "string" ? note.title.toLowerCase().includes(query) : false;
+
       const tagsMatch =
         Array.isArray(note.tags) &&
-        note.tags.some(
-          (tag) =>
-            tag.label &&
-            typeof tag.label === "string" &&
-            tag.label.toLowerCase().includes(query)
-        );
-  
+        note.tags.some((tag) => tag.label && typeof tag.label === "string" && tag.label.toLowerCase().includes(query));
+
       return titleMatch || tagsMatch;
     });
-  
+
     setFilteredNotes(filtered);
     console.log("Filtered:", filtered);
   };
-  
 
   function createMarkerIcon(isHighlighted: boolean) {
     if (isHighlighted) {
@@ -655,35 +590,35 @@ const Page = () => {
   const handleNext = async () => {
     const newSkip = skip + 150;
     const newNotes = global
-      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   const handlePrevious = async () => {
     const newSkip = Math.max(0, skip - 150);
     const newNotes = global
-      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
+      ? await ApiService.fetchMessages(true, true, "", 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || "", 150, newSkip);
+
     if (newNotes.length === 0) {
       toast("No more notes to display");
       return;
     }
-    
+
     setFilteredNotes(newNotes);
     setSkip(newSkip);
   };
-  
+
   return (
-    <div className="flex flex-row w-screen h-[90vh] min-w-[600px]">
+    <div className="flex flex-row w-screen h-full min-w-[600px]">
       <div className="flex-grow">
         {isMapsApiLoaded && (
           <GoogleMap
@@ -728,14 +663,10 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2"
-      ref = {notesListRef}>
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
         {isLoading
           ? [...Array(6)].map((_, index) => (
-              <Skeleton
-                key={index}
-                className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-              />
+              <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
           : filteredNotes.slice(0, visibleCount).map((note) => (
               <div
@@ -743,9 +674,7 @@ const Page = () => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
                 className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id
-                    ? "active-note"
-                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                  note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
@@ -753,12 +682,12 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-          //   ))
-          // : [...Array(6)].map((_, index) => (
-          //     <Skeleton
-          //       key={index}
-          //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
-          //     />
+              //   ))
+              // : [...Array(6)].map((_, index) => (
+              //     <Skeleton
+              //       key={index}
+              //       className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200"
+              //     />
             ))}
         {/* <div className="flex justify-center w-full mt-4 mb-2">
           <button

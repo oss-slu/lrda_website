@@ -61,7 +61,7 @@ export default function Navbar() {
     );
 
   return (
-    <nav className="bg-gray-900 w-full h-[7vh] flex justify-between items-center px-6 py-2 text-white">
+    <nav className="bg-gray-900 w-full flex justify-between items-center px-6 py-4 text-white">
       {/* Left side links */}
       <div className="flex items-center">
         {navItems.map(
