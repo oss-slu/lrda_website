@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" role="img" aria-label="No image available">
+	<rect width="240" height="160" rx="12" fill="#F8FAFC" />
+	<g transform="translate(24,20)">
+		<rect width="192" height="120" rx="8" fill="#F1F5F9" />
+		<g transform="translate(16,12)">
+			<rect x="0" y="0" width="160" height="96" rx="6" fill="#E2E8F0" />
+			<g transform="translate(12,10)" fill="#94A3B8">
+				<rect x="0" y="58" width="136" height="18" rx="4" />
+				<circle cx="28" cy="30" r="18" />
+				<path d="M0 86 L36 52 L76 78 L116 44" stroke="#9AA3B8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+			</g>
+		</g>
+	</g>
+	<text x="120" y="152" text-anchor="middle" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="12">No image available</text>
+</svg>

@@ -1,6 +1,8 @@
 import React from "react";
 import SearchBarUI from "./search_bar_ui";
 import { Note, CombinedResult } from "../../types";
+import PlaceIcon from '@mui/icons-material/Place';
+import ImageIcon from '@mui/icons-material/Image';
 
 declare global {
   interface Window {
@@ -270,15 +272,11 @@ class SearchBarMap extends React.Component<
                   role="option"
                   aria-selected="false"
                 >
-                  <img
-                    src={
-                      isSuggestion
-                        ? "/autocomplete_map_pin.png"
-                        : "/autocomplete_search_icon.png"
-                    }
-                    alt={isSuggestion ? "Map Pin" : "Search Icon"}
-                    className="h-4 w-4 mr-2"
-                  />
+                  {isSuggestion ? (
+                    <PlaceIcon aria-hidden className="h-4 w-4 mr-2 md:h-5 md:w-5 lg:h-6 lg:w-6 text-blue-600" />
+                  ) : (
+                    <ImageIcon aria-hidden className="h-4 w-4 mr-2 md:h-5 md:w-5 lg:h-6 lg:w-6 text-gray-500" />
+                  )}
                   {displayText}
                 </li>
               );
