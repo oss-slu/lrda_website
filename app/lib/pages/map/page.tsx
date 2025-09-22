@@ -690,6 +690,7 @@ const Page = () => {
               streetViewControl: false,
               mapTypeControl: false,
               fullscreenControl: false,
+              disableDefaultUI: true,
             }}
           >
             <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
@@ -707,12 +708,12 @@ const Page = () => {
                     aria-label={global ? "Show personal posts" : "Show global posts"}
                     onClick={toggleFilter}
                     type="button"
-                    className={`rounded-full p-2 mx-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${global ? "text-blue-600" : "text-green-600"}`}
+                    className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 sm:p-3 md:p-4 mx-2 ${global ? "text-blue-600" : "text-green-600"}`}
                   >
                     {global ? (
-                      <GlobeIcon className="w-5 h-5" />
+                      <GlobeIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                     ) : (
-                      <UserIcon className="w-5 h-5" />
+                      <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                     )}
                   </button>
                 ) : null}
@@ -721,29 +722,29 @@ const Page = () => {
                 {/* Zoom Out Button */}
                 <button
                   aria-label="Zoom out"
-                  className="rounded-full p-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 sm:p-3 md:p-4"
                   onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
                   type="button"
                 >
-                  <Minus className="w-5 h-5 text-gray-700" />
+                  <Minus className="text-gray-700 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                 </button>
                 {/* Zoom In Button */}
                 <button
                   aria-label="Zoom in"
-                  className="rounded-full p-2 bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 sm:p-3 md:p-4"
                   onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
                   type="button"
                 >
-                  <Plus className="w-5 h-5 text-gray-700" />
+                  <Plus className="text-gray-700 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                 </button>
                 {/* Locate Button */}
                 <button
                   aria-label="Find my location"
-                  className="rounded-full p-2 bg-white shadow hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2 p-2 sm:p-3 md:p-4"
                   onClick={handleSetLocation}
                   type="button"
                 >
-                  <Navigation size={20} />
+                  <LocateIcon className="text-gray-700 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                 </button>
               </div>
             </div>
