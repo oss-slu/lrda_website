@@ -13,7 +13,7 @@ import introJs from "intro.js";
 import "intro.js/introjs.css";
 // import "../../../globals.css";
 
-import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon } from "lucide-react";
+import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon, Plus, Minus } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
@@ -652,9 +652,10 @@ const Page = () => {
               streetViewControl: false,
               mapTypeControl: false,
               fullscreenControl: false,
+              disableDefaultUI: true,
             }}
           >
-            <div className="absolute flex flex-row mt-3 w-full h-10 justify-between z-10">
+            <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
                 <div className="min-w-[80px] mr-3" ref={searchBarRef}>
                   <SearchBarMap
@@ -665,24 +666,57 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <div className="flex flex-row justify-evenly items-center">
-                    <GlobeIcon className="text-primary" />
-                    <Switch onClick={toggleFilter} />
-                    <UserIcon className="text-primary" />
-                  </div>
+                  <button
+                    aria-label={global ? "Show personal posts" : "Show global posts"}
+                    onClick={toggleFilter}
+                    type="button"
+                    className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
+                      global ? "text-blue-600" : "text-green-600"
+                    }`}
+                  >
+                    {global ? (
+                      <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                    ) : (
+                      <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                    )}
+                  </button>
                 ) : null}
               </div>
-              {/* <button
-                onClick={fetchNotes}
-                className="absolute top-10 right-20 z-10 bg-blue-500 p-4 rounded-md hover:bg-blue-700 text-white"
-              >
-                Fetch Notes
-              </button> */}
-              <div
-                className="flex flex-row w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive"
-                onClick={handleSetLocation}
-              >
-                <Navigation size={20} />
+              <div className="flex flex-row items-center gap-2 mr-4">
+                {/* Zoom Out Button */}
+                <button
+                  aria-label="Zoom out"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+                  onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
+                  type="button"
+                >
+                  <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                </button>
+                {/* Zoom In Button */}
+                <button
+                  aria-label="Zoom in"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+                  onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
+                  type="button"
+                >
+                  <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                </button>
+                {/* Locate Button */}
+                <button
+                  aria-label="Find my location"
+                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4 p-2 md:p-3 xl:p-3 flex items-center justify-center"
+                  onClick={handleSetLocation}
+                  type="button"
+                >
+                  <svg
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
+                  >
+                    <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
+                  </svg>
+                </button>
               </div>
             </div>
           </GoogleMap>

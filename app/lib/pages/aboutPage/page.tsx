@@ -309,6 +309,33 @@ const Page = () => {
                 </a>
               </div>
             </div>
+
+            {/* Andres Castellanos */}
+            <div className="flex flex-col items-center hover:scale-110 transition-transform duration-300">
+              <div className="overflow-hidden rounded-full w-32 h-32">
+                {" "}
+                {/* Container for circular crop */}
+                <Image
+                  src="/aboutPageImages/Andres.jpg"
+                  alt="Andres Castellanos"
+                  width={128}
+                  height={128}
+                  className="object-cover" // Ensures the image fills the container
+                />
+              </div>
+              <p className="mt-4 font-semibold text-center">Andres Castellanos</p>
+              <p className="font-semibold text-center">Developer</p>
+              <div className="flex mt-2 space-x-4">
+                {/* GitHub Icon */}
+                <a href="https://github.com/andycaste2004" target="_blank" rel="noopener noreferrer">
+                  <GitHubLogoIcon className="h-6 w-6" />
+                </a>
+                {/* LinkedIn Icon */}
+                <a href="https://www.linkedin.com/in/andres-castellanos-carrillo-536a10331/" target="_blank" rel="noopener noreferrer">
+                  <LinkedInLogoIcon className="h-6 w-6" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </main>
