@@ -1,9 +1,4 @@
-import {
-  Media,
-  PhotoType,
-  VideoType,
-  AudioType,
-} from "./lib/models/media_class";
+import { Media, PhotoType, VideoType, AudioType } from "./lib/models/media_class";
 import { User } from "./lib/models/user_class";
 
 export interface Tag {
@@ -34,17 +29,15 @@ export type Note = {
   media: (VideoType | PhotoType)[];
   audio: AudioType[];
   creator: string;
-  latitude: string;
-  longitude: string;
+  latitude: string | number;
+  longitude: string | number;
   published: boolean | undefined;
   tags: Tag[];
   uid: string;
   isArchived?: boolean; //add property of archived, then filter for it
 };
 
-export type CombinedResult =
-  | (google.maps.places.AutocompletePrediction & { type: "suggestion" })
-  | (Note & { type: "note" });
+export type CombinedResult = (google.maps.places.AutocompletePrediction & { type: "suggestion" }) | (Note & { type: "note" });
 
 export type newNote = {
   title: string;

@@ -7,13 +7,11 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-// import "../../../globals.css";
 
-import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon, Plus, Minus } from "lucide-react";
+import { CompassIcon, GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
@@ -725,24 +723,10 @@ const Page = () => {
                 onMouseLeave={() => setHoveredNoteId(null)}
                 key={note.id}
               >
+                {/* Todo pull fetching out of this component */}
                 <ClickableNote note={note} />
               </div>
             ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handlePrevious}
-            disabled={skip === 0}
-          >
-            Previous
-          </button>
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div> */}
 
         <div className="col-span-full flex justify-center mt-4 min-h-10">
           {infinite.hasMore ? (

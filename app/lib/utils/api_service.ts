@@ -343,6 +343,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async writeNewNote(note: Note) {
+    console.log("Writing new note to API:", note);
     return fetch(RERUM_PREFIX + "create", {
       method: "POST",
       headers: {
@@ -354,8 +355,8 @@ export default class ApiService {
         media: note.media,
         BodyText: note.text,
         creator: note.creator,
-        latitude: note.latitude || "",
-        longitude: note.longitude || "",
+        latitude: parseFloat(note.latitude) || 0,
+        longitude: parseFloat(note.longitude) || 0,
         audio: note.audio,
         published: note.published,
         tags: note.tags,
@@ -370,6 +371,7 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
+    console.log("Overwriting note in API:", note);
     return await fetch(RERUM_PREFIX + "overwrite", {
       method: "PUT",
       headers: {
@@ -382,8 +384,8 @@ export default class ApiService {
         type: "message",
         creator: note.creator,
         media: note.media,
-        latitude: note.latitude,
-        longitude: note.longitude,
+        latitude: parseFloat(note.latitude) || 0,
+        longitude: parseFloat(note.longitude) || 0,
         audio: note.audio,
         published: note.published,
         tags: note.tags,
@@ -581,4 +583,97 @@ export function getVideoDuration(file: File) {
 
 export function uploadMedia(uploadMedia: any) {
   throw new Error("Function not implemented.");
+}
+
+/**
+ * Incrementally fetches notes for a specific user with published/non-published filter, time for pagination, and limit.
+ * @param {string} userId - The ID of the user.
+ * @param {boolean} published - Whether to fetch published notes.
+ * @param {string} [afterTime] - ISO string for pagination (fetch notes after this time).
+ * @param {number} [limit=20] - Number of notes to fetch.
+ * @returns {Promise<Note[]>}
+ */
+export async function fetchUserNotesIncremental(
+  userId: string,
+  published: boolean,
+  afterTime?: string,
+  limit: number = 20
+): Promise<Note[]> {
+  const queryObj: any = {
+    type: "message",
+    creator: userId,
+    published,
+  };
+  if (afterTime) {
+    queryObj.time = { $gt: afterTime };
+  }
+  const url = `${RERUM_PREFIX}query?limit=${limit}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(queryObj),
+  });
+  const notes: Note[] = await response.json();
+  return notes;
+}
+
+/**
+ * Fetches published notes (not user-specific) that are not archived.
+ * @param {string} [afterTime] - ISO string for pagination (fetch notes after this time).
+ * @param {number} [limit=20] - Number of notes to fetch.
+ * @returns {Promise<Note[]>}
+ */
+export async function fetchPublishedNotesIncremental(
+  afterTime?: string,
+  limit: number = 20,
+  latitude?: number,
+  longitude?: number,
+  radiusKm?: number
+): Promise<Note[]> {
+  const queryObj: any = {
+    type: "message",
+    published: true,
+    $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
+  };
+
+  // We can filter by bounding box if lat/lon and radius are provided
+  if (latitude && longitude && radiusKm) {
+    const { latMin, latMax, lonMin, lonMax } = getBoundingBox(latitude, longitude, radiusKm);
+    queryObj.latitude = { $gte: latMin, $lte: latMax };
+    queryObj.longitude = { $gte: lonMin, $lte: lonMax };
+  }
+
+  // Pagination by time
+  if (afterTime) {
+    queryObj.time = { $gt: afterTime };
+  }
+
+  const url = `${RERUM_PREFIX}query?limit=${limit}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(queryObj),
+  });
+  const notes: Note[] = await response.json();
+  return notes;
+}
+
+/**
+ * Calculate a bounding box around a lat/lon point for a given radius in kilometers.
+ * Returns {latMin, latMax, lonMin, lonMax}
+ */
+export function getBoundingBox(latitude: number, longitude: number, radiusKm: number) {
+  const earthRadiusKm = 6371;
+  const lat = (latitude * Math.PI) / 180;
+
+  // Latitude bounds
+  const latMin = latitude - (radiusKm / earthRadiusKm) * (180 / Math.PI);
+  const latMax = latitude + (radiusKm / earthRadiusKm) * (180 / Math.PI);
+
+  // Longitude bounds (adjusted by latitude)
+  const lonDelta = ((radiusKm / earthRadiusKm) * (180 / Math.PI)) / Math.cos(lat);
+  const lonMin = longitude - lonDelta;
+  const lonMax = longitude + lonDelta;
+
+  return { latMin, latMax, lonMin, lonMax };
 }

@@ -1,31 +1,9 @@
 import React, { useState, useEffect } from "react"; // comment test
 import ApiService from "../utils/api_service";
 import { Note, Tag } from "@/app/types";
-import {
-  CalendarDays,
-  UserCircle,
-  ThumbsUp,
-  ThumbsDown,
-  Tags,
-  Clock3,
-  FileAudio,
-  ImageIcon,
-  X,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { CalendarDays, UserCircle, ThumbsUp, ThumbsDown, Tags, Clock3, FileAudio, ImageIcon, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import NoteCard from "./note_card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AudioPicker from "./noteElements/audio_component";
@@ -63,9 +41,7 @@ function formatTime(date: string | number | Date) {
 
 // Convert old tags (strings) to new format
 const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
-  return tags.map(tag =>
-    typeof tag === "string" ? { label: tag, origin: "user" } : tag
-  );
+  return tags.map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag));
 };
 
 // ClickableNote component
@@ -73,8 +49,6 @@ const ClickableNote: React.FC<{
   note: Note;
 }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
-  const [likes, setLikes] = useState(0);
-  const [disLikes, setDisLikes] = useState(0);
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
 
   // Fetch the creator's name based on the note's creator ID
@@ -103,7 +77,7 @@ const ClickableNote: React.FC<{
             <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
-            <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
+            <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
           </DialogDescription>
           <DialogDescription className="flex flex-row align-center items-center">
             <UserCircle className="w-5 h-5" />: {creator}
@@ -116,9 +90,7 @@ const ClickableNote: React.FC<{
                   <span
                     key={index}
                     className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                      tag.origin === "user"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-purple-200 text-purple-800"
+                      tag.origin === "user" ? "bg-blue-100 text-blue-800" : "bg-purple-200 text-purple-800"
                     }`}
                   >
                     {tag.label}
@@ -131,12 +103,12 @@ const ClickableNote: React.FC<{
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
         <ScrollArea>
-  {note.text && note.text.length > 0 ? (
-    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
-  ) : (
-    "This Note has no content"
-  )}
-</ScrollArea>
+          {note.text && note.text.length > 0 ? (
+            <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+          ) : (
+            "This Note has no content"
+          )}
+        </ScrollArea>
         <DialogFooter>
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (
