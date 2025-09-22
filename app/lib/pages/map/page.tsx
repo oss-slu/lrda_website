@@ -59,7 +59,6 @@ const Page = () => {
   );
   const mapRef = useRef<google.maps.Map>();
   const markerClustererRef = useRef<MarkerClusterer>();
-  const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
@@ -67,21 +66,6 @@ const Page = () => {
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
-
-  const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
-    if (isNewNote) {
-      // Create a new Note from the newNote template, assigning default values for missing fields.
-      const newNoteWithDefaults: Note = {
-        ...note, // Spread existing newNote fields
-        id: "temporary-id", // Assign a temporary ID for new note
-        uid: "temporary-uid", // Assign a temporary UID
-      };
-      console.log("New note created:", newNoteWithDefaults);
-    } else {
-      console.log("Existing note selected:", note);
-    }
-  };
-  
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef= useRef<HTMLDivElement | null>(null);
@@ -245,13 +229,7 @@ const Page = () => {
     if (!isNoteSelectedFromSearch) {
       updateFilteredNotes(mapCenter, mapBounds, currentNotes);
     }
-    const timer = setTimeout(() => {
-      if (filteredNotes.length < 1) {
-        setEmptyRegion(true);
-      }
-    }, 2000);
     setIsLoaded(false);
-    return () => clearTimeout(timer);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
   useEffect(() => {

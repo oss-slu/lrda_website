@@ -7,6 +7,7 @@ import { db } from "../config/firebase";
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
+console.log(`%cOPENAI KEY: ${OPENAI_API_KEY}`, "color: blue; font-weight: bold;");
 
 if (!RERUM_PREFIX) {
   throw new Error("RERUM_PREFIX is not defined in the environment variables.");
