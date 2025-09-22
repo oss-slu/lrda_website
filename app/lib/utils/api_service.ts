@@ -1,6 +1,6 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from "next";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -38,7 +38,6 @@ interface OpenAIResponse {
  * Provides methods for interacting with the API to fetch, create, update, and delete notes.
  */
 export default class ApiService {
-
   /**
    * Generates one-word tags for ethnographic notes.
    * @param {string} noteContent - The content of the ethnographic note.
@@ -47,19 +46,25 @@ export default class ApiService {
    */
   static async generateTags(noteContent: string): Promise<string[]> {
     const messages = [
-      { role: "system", content: "You are a professional ethnographer suggesting the best, most specific and descriptive web ontology tags for notes." },
-      { role: "user", content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.` }
+      {
+        role: "system",
+        content: "You are a professional ethnographer suggesting the best, most specific and descriptive web ontology tags for notes.",
+      },
+      {
+        role: "user",
+        content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.`,
+      },
     ];
 
     try {
       const response = await fetch(OPENAI_API_URL!, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: "gpt-4o-mini",
           messages: messages,
           max_tokens: 1000,
           n: 1,
@@ -67,75 +72,77 @@ export default class ApiService {
       });
 
       const data = await response.json();
-      console.log('Response from OpenAI:', data);
+      console.log("Response from OpenAI:", data);
 
-      const tags = data.choices[0].message.content.trim().split(',').map((tag: string) => tag.trim());
+      const tags = data.choices[0].message.content
+        .trim()
+        .split(",")
+        .map((tag: string) => tag.trim());
       return tags;
     } catch (error) {
-      console.error('Error generating tags:', error);
-      throw new Error('Failed to generate tags');
+      console.error("Error generating tags:", error);
+      throw new Error("Failed to generate tags");
     }
   }
 
   /**
- * Fetches messages from the API, with optional pagination.
- * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
- * @param {boolean} published - Indicates whether to fetch only published messages.
- * @param {string} userId - The ID of the user for user-specific messages.
- * @param {number} [limit=150] - The limit of messages per page. Defaults to 150.
- * @param {number} [skip=0] - The iterator to skip messages for pagination.
- * @param {Array} [allResults=[]] - The accumulated results for pagination.
- * @returns {Promise<any[]>} The array of messages fetched from the API.
- */
-static async fetchMessages(
-  global: boolean,
-  published: boolean,
-  userId: string,
-  limit = 150,
-  skip = 0,
-  allResults: any[] = []
-): Promise<any[]> {
-  try {
-    const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
+   * Fetches messages from the API, with optional pagination.
+   * @param {boolean} global - Indicates whether to fetch global messages or user-specific messages.
+   * @param {boolean} published - Indicates whether to fetch only published messages.
+   * @param {string} userId - The ID of the user for user-specific messages.
+   * @param {number} [limit=150] - The limit of messages per page. Defaults to 150.
+   * @param {number} [skip=0] - The iterator to skip messages for pagination.
+   * @param {Array} [allResults=[]] - The accumulated results for pagination.
+   * @returns {Promise<any[]>} The array of messages fetched from the API.
+   */
+  static async fetchMessages(
+    global: boolean,
+    published: boolean,
+    userId: string,
+    limit = 150,
+    skip = 0,
+    allResults: any[] = []
+  ): Promise<any[]> {
+    try {
+      const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
 
-    const headers = {
-      "Content-Type": "application/json",
-    };
+      const headers = {
+        "Content-Type": "application/json",
+      };
 
-    let body: { type: string; published?: boolean; creator?: string } = {
-      type: "message",
-    };
+      let body: { type: string; published?: boolean; creator?: string } = {
+        type: "message",
+      };
 
-    if (global) {
-      body = { type: "message" };
-    } else if (published) {
-      body = { type: "message", published: true, creator: userId };
-    } else {
-      body = { type: "message", creator: userId };
+      if (global) {
+        body = { type: "message" };
+      } else if (published) {
+        body = { type: "message", published: true, creator: userId };
+      } else {
+        body = { type: "message", creator: userId };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.length > 0) {
+        allResults = allResults.concat(data);
+        return this.fetchMessages(global, published, userId, limit, skip + data.length, allResults);
+      }
+
+      return allResults;
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      throw error;
     }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    if (data.length > 0) {
-      allResults = allResults.concat(data);
-      return this.fetchMessages(global, published, userId, limit, skip + data.length, allResults);
-    }
-
-    return allResults;
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    throw error;
   }
-}
 
-
- /**
+  /**
    * Implements a paged query to fetch messages in chunks.
    * @param {number} lim - The limit of messages per page.
    * @param {number} it - The iterator to skip messages for pagination.
@@ -143,56 +150,76 @@ static async fetchMessages(
    * @param {Array} allResults - The accumulated results.
    * @returns {Promise<any[]>} The array of all messages fetched.
    */
- static async getPagedQuery(lim: number, it = 0, queryObj: object, allResults: any[] = []): Promise<any[]> {
-  try {
-    const response = await fetch(`${RERUM_PREFIX}query?limit=${lim}&skip=${it}`, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify(queryObj)
-    });
-    const results = await response.json();
-    if (results.length) {
-      allResults = allResults.concat(results);
-      return this.getPagedQuery(lim, it + results.length, queryObj, allResults);
+  static async getPagedQuery(lim: number, it = 0, queryObj: object, allResults: any[] = []): Promise<any[]> {
+    try {
+      const response = await fetch(`${RERUM_PREFIX}query?limit=${lim}&skip=${it}`, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify(queryObj),
+      });
+      const results = await response.json();
+      if (results.length) {
+        allResults = allResults.concat(results);
+        return this.getPagedQuery(lim, it + results.length, queryObj, allResults);
+      }
+      return allResults;
+    } catch (err) {
+      console.warn("Could not process a result in paged query", err);
+      throw err;
     }
-    return allResults;
-  } catch (err) {
-    console.warn("Could not process a result in paged query", err);
-    throw err;
   }
-}
 
-/**
- * Fetches all messages for a specific user.
- * @param {string} userId - The ID of the user whose messages are to be fetched.
- * @param {number} limit - The limit of messages per page.
- * @param {number} skip - The number of messages to skip for pagination.
- * @returns {Promise<any[]>} - The array of messages fetched from the API.
- */
-static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
-  const queryObj = {
-    type: "message",
-    creator: userId,
-  };
-  return await this.getPagedQuery(limit, skip, queryObj);
-}
+  static async fetchNotesByDate(limit: number, afterDate?: string, isGlobal = true, userId?: string): Promise<Note[]> {
+    const queryObj: any = {
+      type: "message",
+    };
+    if (afterDate) {
+      queryObj.time = { $gt: afterDate };
+    }
+    if (!isGlobal && userId) {
+      queryObj.creator = userId;
+    }
+    const url = `${RERUM_PREFIX}query?limit=${limit}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(queryObj),
+    });
+    console.log("Fetch Notes by Date Response:", response);
+    return await response.json();
+  }
 
-/**
- * Fetches all Published Notes.
- * @param {number} limit - The limit of messages per page.
- * @param {number} skip - The number of messages to skip for pagination.
- * @returns {Promise<any[]>} - The array of messages fetched from the API.
- */
-static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
-  const queryObj = {
-    type: "message",
-    published: true,
-  };
-  return await this.getPagedQuery(limit, skip, queryObj);
-}
+  /**
+   * Fetches all messages for a specific user.
+   * @param {string} userId - The ID of the user whose messages are to be fetched.
+   * @param {number} limit - The limit of messages per page.
+   * @param {number} skip - The number of messages to skip for pagination.
+   * @returns {Promise<any[]>} - The array of messages fetched from the API.
+   */
+  static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
+    const queryObj = {
+      type: "message",
+      creator: userId,
+    };
+    return await this.getPagedQuery(limit, skip, queryObj);
+  }
+
+  /**
+   * Fetches all Published Notes.
+   * @param {number} limit - The limit of messages per page.
+   * @param {number} skip - The number of messages to skip for pagination.
+   * @returns {Promise<any[]>} - The array of messages fetched from the API.
+   */
+  static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
+    const queryObj = {
+      type: "message",
+      published: true,
+    };
+    return await this.getPagedQuery(limit, skip, queryObj);
+  }
   /**
    * Fetches user data from the API based on UID.
    * @param {string} uid - The UID of the user.
@@ -200,10 +227,9 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
    */
   static async fetchUserData(uid: string): Promise<UserData | null> {
     try {
-
       const userDocRef = doc(db, "users", uid); // Assume users collection
       const userDoc = await getDoc(userDocRef);
-  
+
       if (userDoc.exists()) {
         const firestoreData = userDoc.data() as UserData;
         console.log("User data retrieved from Firestore:", firestoreData);
@@ -211,16 +237,16 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
       } else {
         console.log("No user data found in Firestore, using API fallback.");
       }
-      
+
       const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
       const body = {
-        "$or": [
-          { "@type": "Agent", "uid": uid },
-          { "@type": "foaf:Agent", "uid": uid }
-        ]
+        $or: [
+          { "@type": "Agent", uid: uid },
+          { "@type": "foaf:Agent", uid: uid },
+        ],
       };
 
       console.log(`Querying for user data with UID: ${uid}`);
@@ -273,33 +299,33 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
   static async deleteNoteFromAPI(id: string, userId: string): Promise<boolean> {
     try {
       const url = RERUM_PREFIX + "delete";
-  
+
       // Retrieve the token from local storage
-      const token = localStorage.getItem('authToken');
-  
+      const token = localStorage.getItem("authToken");
+
       // Include the token in the headers
       const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` 
+        Authorization: `Bearer ${token}`,
       };
-  
+
       const body = {
         type: "message",
         creator: userId,
         "@id": id,
       };
-  
+
       // Log the details before making the request
       console.log("Request URL:", url);
       console.log("Request Headers:", headers);
       console.log("Request Body:", JSON.stringify(body));
-  
+
       const response = await fetch(url, {
         method: "DELETE",
         headers,
         body: JSON.stringify(body),
       });
-  
+
       if (response.status === 204) {
         return true;
       } else {
@@ -398,20 +424,12 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
       // Filter the messages by title or tags containing the query string
       data = data.filter((message: any) => {
         // Check if title contains the query string
-        if (
-          message.title &&
-          message.title.toLowerCase().includes(lowerCaseQuery)
-        ) {
+        if (message.title && message.title.toLowerCase().includes(lowerCaseQuery)) {
           return true;
         }
 
         // Check if any tags contain the query string
-        if (
-          message.tags &&
-          message.tags.some((tag: string) =>
-            tag.toLowerCase().includes(lowerCaseQuery)
-          )
-        ) {
+        if (message.tags && message.tags.some((tag: string) => tag.toLowerCase().includes(lowerCaseQuery))) {
           return true;
         }
 
@@ -437,10 +455,10 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
         "Content-Type": "application/json",
       };
       const body = {
-        "$or": [
-          { "@type": "Agent", "uid": creatorId },
-          { "@type": "foaf:Agent", "uid": creatorId }
-        ]
+        $or: [
+          { "@type": "Agent", uid: creatorId },
+          { "@type": "foaf:Agent", uid: creatorId },
+        ],
       };
 
       console.log(`Querying with UID: ${creatorId}`);
@@ -452,7 +470,7 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
       });
 
       const data = await response.json();
-      console.log(`Data:`, data);
+      console.log(`Creator name fetched data:`, data);
       if (data.length && data[0].name) {
         return data[0].name;
       } else {
@@ -465,27 +483,27 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
   }
 
   static async handler(req: NextApiRequest, res: NextApiResponse) {
-    console.log('Received request:', req.method, req.body);
+    console.log("Received request:", req.method, req.body);
 
-    if (req.method !== 'POST') {
-      return res.status(405).json({ message: 'Method not allowed' });
+    if (req.method !== "POST") {
+      return res.status(405).json({ message: "Method not allowed" });
     }
 
     const { notes } = req.body;
 
     if (!notes || !Array.isArray(notes)) {
-      return res.status(400).json({ message: 'Invalid request body' });
+      return res.status(400).json({ message: "Invalid request body" });
     }
 
-    const noteContents = notes.map(note => note.content).join('\n');
-    console.log('Note contents for tag generation:', noteContents);
+    const noteContents = notes.map((note) => note.content).join("\n");
+    console.log("Note contents for tag generation:", noteContents);
 
     try {
       const tags = await ApiService.generateTags(noteContents);
       res.status(200).json({ tags });
     } catch (error) {
-      console.error('Error generating tags:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      console.error("Error generating tags:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 }
@@ -493,38 +511,38 @@ static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise
 export function getVideoThumbnail(file: File, seekTo = 0.0) {
   console.log("getting video cover for file: ", file);
   return new Promise((resolve, reject) => {
-      const videoPlayer = document.createElement('video');
-      videoPlayer.setAttribute('src', URL.createObjectURL(file));
-      videoPlayer.load();
-      videoPlayer.addEventListener('error', (ex) => {
-          reject(new Error(`Error when loading video file: ${ex.message || ex.toString()}`));
+    const videoPlayer = document.createElement("video");
+    videoPlayer.setAttribute("src", URL.createObjectURL(file));
+    videoPlayer.load();
+    videoPlayer.addEventListener("error", (ex) => {
+      reject(new Error(`Error when loading video file: ${ex.message || ex.toString()}`));
+    });
+    videoPlayer.addEventListener("loadedmetadata", () => {
+      if (videoPlayer.duration < seekTo) {
+        reject(new Error("Video is too short."));
+        return;
+      }
+      setTimeout(() => {
+        videoPlayer.currentTime = seekTo;
+      }, 200);
+      videoPlayer.addEventListener("seeked", () => {
+        console.log("video is now paused at %ss.", seekTo);
+        const canvas = document.createElement("canvas");
+        canvas.width = videoPlayer.videoWidth;
+        canvas.height = videoPlayer.videoHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+          ctx.canvas.toBlob(
+            (blob) => {
+              resolve(blob);
+            },
+            "image/jpeg",
+            0.75 // quality
+          );
+        }
       });
-      videoPlayer.addEventListener('loadedmetadata', () => {
-          if (videoPlayer.duration < seekTo) {
-              reject(new Error("Video is too short."));
-              return;
-          }
-          setTimeout(() => {
-            videoPlayer.currentTime = seekTo;
-          }, 200);
-          videoPlayer.addEventListener('seeked', () => {
-              console.log('video is now paused at %ss.', seekTo);
-              const canvas = document.createElement("canvas");
-              canvas.width = videoPlayer.videoWidth;
-              canvas.height = videoPlayer.videoHeight;
-              const ctx = canvas.getContext("2d");
-              if (ctx){
-                ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-                ctx.canvas.toBlob(
-                    blob => {
-                        resolve(blob);
-                    },
-                    "image/jpeg",
-                    0.75 // quality
-                );
-              }
-          });
-      });
+    });
   });
 }
 
@@ -543,24 +561,24 @@ function formatDuration(duration: number) {
 
 export function getVideoDuration(file: File) {
   return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
+    const video = document.createElement("video");
+    video.preload = "metadata";
 
-      video.onloadedmetadata = function() {
-          window.URL.revokeObjectURL(video.src);
-          const durationInSeconds = video.duration;
-          const formattedDuration = formatDuration(durationInSeconds);
-          resolve(formattedDuration);
-      };
+    video.onloadedmetadata = function () {
+      window.URL.revokeObjectURL(video.src);
+      const durationInSeconds = video.duration;
+      const formattedDuration = formatDuration(durationInSeconds);
+      resolve(formattedDuration);
+    };
 
-      video.onerror = function() {
-          reject("Failed to load video metadata");
-      };
+    video.onerror = function () {
+      reject("Failed to load video metadata");
+    };
 
-      video.src = URL.createObjectURL(file);
+    video.src = URL.createObjectURL(file);
   });
 }
 
 export function uploadMedia(uploadMedia: any) {
-    throw new Error('Function not implemented.');
+  throw new Error("Function not implemented.");
 }
