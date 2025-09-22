@@ -18,18 +18,17 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
     <html lang="en">
       <head />
-      <body>
-      <GoogleMapsProvider>
-        <Navbar /> 
-        <NextAppDirEmotionCacheProvider options={{ key: "css" }}>
-          {children}
-        </NextAppDirEmotionCacheProvider>
-        <Toaster />
+      <body className="flex flex-col h-screen">
+        <GoogleMapsProvider>
+          <Navbar />
+          <div className="flex-grow overflow-hidden">
+            <NextAppDirEmotionCacheProvider options={{ key: "css" }}>{children}</NextAppDirEmotionCacheProvider>
+          </div>
+          <Toaster />
         </GoogleMapsProvider>
       </body>
     </html>
   );
-}
-
+};
 
 export default RootLayout;
