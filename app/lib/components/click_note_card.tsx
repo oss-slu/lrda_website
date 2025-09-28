@@ -48,7 +48,9 @@ const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
 // ClickableNote component
 const ClickableNote: React.FC<{
   note: Note;
-}> = ({ note }) => {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}> = ({ note, open, onOpenChange }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
   const { creatorNames, isLoadingNotes } = useNotes();
@@ -64,12 +66,14 @@ const ClickableNote: React.FC<{
   const data = note.text;
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="z-40">
-          <NoteCard note={note} creator={creator} />
-        </div>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!open && (
+        <DialogTrigger asChild>
+          <div className="z-40">
+            <NoteCard note={note} creator={creator} />
+          </div>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[80%] h-[100vh]">
         <DialogHeader>
           <DialogTitle className="text-3xl">{note.title}</DialogTitle>
@@ -83,21 +87,21 @@ const ClickableNote: React.FC<{
             <UserCircle className="w-5 h-5" />: {creator}
           </DialogDescription>
           {/* <DialogDescription> */}
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mb-2 items-center">
-                <Tags />
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                      tag.origin === "user" ? "bg-blue-100 text-blue-800" : "bg-purple-200 text-purple-800"
-                    }`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
-              </div>
-            ) : null}
+          {tags.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mb-2 items-center">
+              <Tags />
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                    tag.origin === "user" ? "bg-blue-100 text-blue-800" : "bg-purple-200 text-purple-800"
+                  }`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          ) : null}
           {/* </DialogDescription> */}
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />

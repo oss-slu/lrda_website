@@ -34,6 +34,8 @@ export default function MapSidebar({ personalOrGlobal }: { personalOrGlobal: "pe
 
   const fetchNotes = async () => {
     try {
+      if (!userId) userId = await user.getId();
+
       if (userId && personalOrGlobal === "personal") {
         // Fetch personal notes if user is logged in
         await fetchUserNotes(userId);

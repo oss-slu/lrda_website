@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
 import { Note, newNote } from "@/app/types";
@@ -65,6 +66,7 @@ const Page = () => {
 
   const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
   const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
+  const [popupNote, setPopupNote] = useState<Note | null>(null);
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
@@ -397,75 +399,9 @@ const Page = () => {
   };
 
   const handleMarkerClick = (note: Note) => {
-    if (currentPopup) {
-      currentPopup.setMap(null);
-      setCurrentPopup(null);
-    }
-
+    setPopupNote(note);
     setActiveNote(note);
     scrollToNoteTile(note.id);
-
-    const map = mapRef.current;
-
-    if (map) {
-      const popupContent = document.createElement("div");
-      const root = ReactDOM.createRoot(popupContent);
-      root.render(<ClickableNote note={note} />);
-
-      class Popup extends google.maps.OverlayView {
-        position: google.maps.LatLng;
-        containerDiv: HTMLDivElement;
-
-        constructor(position: google.maps.LatLng, content: HTMLElement) {
-          super();
-          this.position = position;
-
-          content.classList.add("popup-bubble");
-
-          const bubbleAnchor = document.createElement("div");
-
-          bubbleAnchor.classList.add("popup-bubble-anchor");
-          bubbleAnchor.appendChild(content);
-
-          this.containerDiv = document.createElement("div");
-          this.containerDiv.classList.add("popup-container");
-          this.containerDiv.appendChild(bubbleAnchor);
-
-          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-        }
-
-        onAdd() {
-          this.getPanes()!.floatPane.appendChild(this.containerDiv);
-        }
-
-        onRemove() {
-          if (this.containerDiv.parentElement) {
-            this.containerDiv.parentElement.removeChild(this.containerDiv);
-          }
-        }
-
-        draw() {
-          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
-
-          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
-
-          if (display === "block") {
-            this.containerDiv.style.left = divPosition.x + "px";
-            this.containerDiv.style.top = divPosition.y + "px";
-          }
-
-          if (this.containerDiv.style.display !== display) {
-            this.containerDiv.style.display = display;
-          }
-        }
-      }
-
-      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
-
-      setCurrentPopup(popup);
-
-      popup.setMap(map);
-    }
   };
 
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
@@ -695,6 +631,21 @@ const Page = () => {
         </div>
       </div> */}
       <MapSidebar personalOrGlobal={personalOrGlobal} />
+      {popupNote &&
+        createPortal(
+          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-[9999]" onClick={() => setPopupNote(null)}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ClickableNote
+                note={popupNote}
+                open={true}
+                onOpenChange={(open) => {
+                  if (!open) setPopupNote(null);
+                }}
+              />
+            </div>
+          </div>,
+          document.getElementById("popup-root")!
+        )}
     </div>
   );
 };

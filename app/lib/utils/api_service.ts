@@ -371,7 +371,6 @@ export default class ApiService {
    * @returns {Promise<Response>} The response from the API.
    */
   static async overwriteNote(note: Note) {
-    console.log("Overwriting note in API:", note);
     return await fetch(RERUM_PREFIX + "overwrite", {
       method: "PUT",
       headers: {
@@ -384,8 +383,10 @@ export default class ApiService {
         type: "message",
         creator: note.creator,
         media: note.media,
-        latitude: parseFloat(note.latitude) || 0,
-        longitude: parseFloat(note.longitude) || 0,
+        latitude: note.latitude,
+        longitude: note.longitude,
+        // latitude: parseFloat(note.latitude) || 0,
+        // longitude: parseFloat(note.longitude) || 0,
         audio: note.audio,
         published: note.published,
         tags: note.tags,
@@ -645,6 +646,7 @@ export async function fetchUserNotes(userId: string, published: boolean, afterTi
     body: JSON.stringify(queryObj),
   });
   const notes: Note[] = await response.json();
+  console.log("Fetched user notes1:", notes);
   return notes;
 }
 

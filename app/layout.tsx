@@ -27,6 +27,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
               <NextAppDirEmotionCacheProvider options={{ key: "css" }}>{children}</NextAppDirEmotionCacheProvider>
             </div>
             <Toaster />
+            <div id="popup-root" />
           </NotesProvider>
         </GoogleMapsProvider>
       </body>
