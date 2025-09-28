@@ -172,7 +172,7 @@ export default class ApiService {
     }
   }
 
-  static async fetchNotesByDate(limit: number, afterDate?: string, isGlobal = true, userId?: string): Promise<Note[]> {
+  static async fetchNotesByDate(limit: number = 10, afterDate?: string, isGlobal = true, userId?: string): Promise<Note[]> {
     const queryObj: any = {
       type: "message",
     };
@@ -586,19 +586,50 @@ export function uploadMedia(uploadMedia: any) {
 }
 
 /**
+ * Fetches the name of the creator by querying the API with the given creatorId.
+ * @param {string} creatorId - The UID of the creator.
+ * @returns {Promise<string>} The name of the creator.
+ */
+export async function fetchCreatorName(creatorId: string): Promise<string> {
+  try {
+    const url = RERUM_PREFIX + "query";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = {
+      $or: [
+        { "@type": "Agent", uid: creatorId },
+        { "@type": "foaf:Agent", uid: creatorId },
+      ],
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    if (data.length && data[0].name) {
+      return data[0].name;
+    } else {
+      throw new Error("Creator not found or no name attribute.");
+    }
+  } catch (error) {
+    console.error(`Error fetching creator name:`, error, creatorId);
+    throw error;
+  }
+}
+
+/**
  * Incrementally fetches notes for a specific user with published/non-published filter, time for pagination, and limit.
  * @param {string} userId - The ID of the user.
  * @param {boolean} published - Whether to fetch published notes.
  * @param {string} [afterTime] - ISO string for pagination (fetch notes after this time).
- * @param {number} [limit=20] - Number of notes to fetch.
+ * @param {number} [limit=16] - Number of notes to fetch.
  * @returns {Promise<Note[]>}
  */
-export async function fetchUserNotesIncremental(
-  userId: string,
-  published: boolean,
-  afterTime?: string,
-  limit: number = 20
-): Promise<Note[]> {
+export async function fetchUserNotes(userId: string, published: boolean, afterTime?: string, limit: number = 16): Promise<Note[]> {
   const queryObj: any = {
     type: "message",
     creator: userId,
@@ -620,12 +651,12 @@ export async function fetchUserNotesIncremental(
 /**
  * Fetches published notes (not user-specific) that are not archived.
  * @param {string} [afterTime] - ISO string for pagination (fetch notes after this time).
- * @param {number} [limit=20] - Number of notes to fetch.
+ * @param {number} [limit=16] - Number of notes to fetch.
  * @returns {Promise<Note[]>}
  */
-export async function fetchPublishedNotesIncremental(
+export async function fetchPublishedNotes(
   afterTime?: string,
-  limit: number = 20,
+  limit: number = 16,
   latitude?: number,
   longitude?: number,
   radiusKm?: number

@@ -29,8 +29,8 @@ export type Note = {
   media: (VideoType | PhotoType)[];
   audio: AudioType[];
   creator: string;
-  latitude: string | number;
-  longitude: string | number;
+  latitude: string;
+  longitude: string;
   published: boolean | undefined;
   tags: Tag[];
   uid: string;

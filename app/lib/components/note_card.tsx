@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+"use client";
+import React, { useState } from "react";
 import { Note } from "@/app/types";
-import ApiService from "../utils/api_service";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Calendar as CalendarIcon, TagsIcon, User2Icon, ImageIcon } from "lucide-react";
 import CompactCarousel from "./compact_carousel";
@@ -11,22 +11,13 @@ import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
   note: Note;
+  creator: string;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ note, creator }) => {
   const title = note.title;
   const tags: string[] = note.tags.map((tag) => tag.label); // Ensure correct mapping to labels
-  const [creator, setCreator] = useState<string>("Loading...");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(note.time ? new Date(note.time) : undefined);
-
-  useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
-      .then((name) => setCreator(name))
-      .catch((error) => {
-        console.error("Error fetching creator name:", error);
-        setCreator("Error loading name");
-      });
-  }, [note.creator]);
 
   return (
     <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200">

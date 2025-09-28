@@ -7,10 +7,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+import Image  from "next/image";
 import { Media } from "../models/media_class";
 import ReactPlayer from "react-player";
 
 export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
+  console.log("Media Array:", mediaArray);
   return (
     <Carousel className="w-full h-auto flex items-center justify-center">
       <CarouselContent>
@@ -21,10 +23,20 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
           >
             {/* Render Image */}
             {media.type === "image" && (
-              <img
+              // <img
+              //   src={media.uri}
+              //   className="max-w-full max-h-full self-center"
+              //   alt="Media content"
+              // />
+              <Image
                 src={media.uri}
+                width={256}
+                height={180}
                 className="max-w-full max-h-full self-center"
                 alt="Media content"
+                quality={5}
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
               />
             )}
 

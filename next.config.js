@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["livedreligion.s3.amazonaws.com"],
-    unoptimized: true,
+    domains: ["livedreligion.s3.amazonaws.com", "github.com"],
+    qualities: [5, 75, 100],
   },
   webpack: (config, { isServer }) => {
     config.module.rules.push({

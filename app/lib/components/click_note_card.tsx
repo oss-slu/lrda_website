@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react"; // comment test
-import ApiService from "../utils/api_service";
+"use client";
+import React, { useState, useEffect } from "react";
 import { Note, Tag } from "@/app/types";
-import { CalendarDays, UserCircle, ThumbsUp, ThumbsDown, Tags, Clock3, FileAudio, ImageIcon, X } from "lucide-react";
+import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import NoteCard from "./note_card";
@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
+import { useNotes } from "../utils/NotesContext";
 
 // Utility function to format the date into a readable string
 function formatDate(date: string | number | Date) {
@@ -50,16 +51,15 @@ const ClickableNote: React.FC<{
 }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
+  const { creatorNames, isLoadingNotes } = useNotes();
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
-      .then((name) => setCreator(name))
-      .catch((error) => {
-        console.error("Error fetching creator name:", error, note.creator);
-        setCreator("Error loading name");
-      });
-  }, [note.creator]);
+    if (!isLoadingNotes) {
+      const name = creatorNames[note.creator];
+      setCreator(name || "Unknown");
+    }
+  }, [isLoadingNotes]);
 
   const data = note.text;
 
@@ -67,7 +67,7 @@ const ClickableNote: React.FC<{
     <Dialog>
       <DialogTrigger asChild>
         <div className="z-40">
-          <NoteCard note={note} />
+          <NoteCard note={note} creator={creator} />
         </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[80%] h-[100vh]">
@@ -82,7 +82,7 @@ const ClickableNote: React.FC<{
           <DialogDescription className="flex flex-row align-center items-center">
             <UserCircle className="w-5 h-5" />: {creator}
           </DialogDescription>
-          <DialogDescription>
+          {/* <DialogDescription> */}
             {tags.length > 0 ? (
               <div className="flex flex-wrap gap-2 mb-2 items-center">
                 <Tags />
@@ -98,7 +98,7 @@ const ClickableNote: React.FC<{
                 ))}
               </div>
             ) : null}
-          </DialogDescription>
+          {/* </DialogDescription> */}
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
