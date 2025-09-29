@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import RegisterButton from "../../components/register_button";
+import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/ui/password-input";
+import StrengthIndicator from "@/components/ui/strength-indicator";
 import { toast } from "sonner";
 import { auth, db } from "../../config/firebase"; // Ensure you import Firestore as well
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -18,13 +21,21 @@ const SignupPage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [institution, setInstitution] = useState("");
+  const [formError, setFormError] = useState("");
+  const [unmetRequirements, setUnmetRequirements] = useState<string[]>([]);
 
   const handleSignup = async () => {
+    setFormError("");
     if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
 
+    if (unmetRequirements.length > 0) {
+      setFormError(`Password does not meet requirements: ${unmetRequirements[0]}`);
+      return;
+    }
+
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      setFormError("Passwords do not match");
       return;
     }
 
@@ -65,7 +76,9 @@ const SignupPage = () => {
       // Redirect the user to the home page
       window.location.href = "/";
     } catch (error) {
-      toast.error(`Signup failed: ${error}`);
+      const msg = (error && (error as any).message) || String(error);
+      setFormError(`Signup failed: ${msg}`);
+      toast.error(`Signup failed: ${msg}`);
     }
   };
 
@@ -85,50 +98,31 @@ const SignupPage = () => {
            User Sign Up
           </h1>
           <div className="mb-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            />
+            <label htmlFor="first-name-input" className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">First name</label>
+            <Input id="first-name-input" type="text" autoComplete="given-name" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
           </div>
           <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            />
+            <label htmlFor="last-name-input" className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">Last name</label>
+            <Input id="last-name-input" type="text" autoComplete="family-name" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
           </div>
           <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            />
+            <label htmlFor="email-input" className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">Email</label>
+            <Input id="email-input" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="mb-4">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            />
+            <PasswordInput id="password-input" password={password} onPasswordChange={(v) => setPassword(v)} autoComplete="new-password" required />
+            <StrengthIndicator password={password} onUnmet={(errs) => setUnmetRequirements(errs)} />
           </div>
           <div className="mb-4">
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            />
+            <label htmlFor="confirm-password-input" className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">Confirm Password</label>
+            <Input id="confirm-password-input" type="password" autoComplete="new-password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
           </div>
+          {formError && (
+            <div role="alert" aria-live="assertive" className="text-red-600 mb-3">
+              {formError}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row items-center justify-center">
             <button
               onClick={handleSignup}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 
 type LoginButtonProps = {
   username: string;
@@ -31,9 +32,9 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
   }, [snackState]);
 
   const handleLogin = async () => {
-    if (username === "" || password === "") {
-      // Internal function to handle empty fields, likely showing an error message
-      console.log("Username or password cannot be empty.");
+    if (username.trim() === "" || password.trim() === "") {
+      // show accessible error
+      toast.error("Please enter email/username and password");
       return;
     }
 
@@ -43,43 +44,34 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       // Internal logic to update the component about login status
       console.log("Login status:", status);
       if (status == "success") {
-        localStorage.setItem(username, password);
+        // redirect on success
         window.location.href = "/lib/pages/map";
       }
       setIsLoading(false);
     } catch (error) {
       // Internal function to handle errors, likely showing an error message
       console.log("An error occurred during login:", error);
-      toggleSnack(true);
+      toast.error("Login failed. Please check your credentials.");
       setIsLoading(false);
     }
   };
 
   return (
     <div>
-      <Button
-        onClick={handleLogin}
-        className={`${
-          isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-        } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
-        disabled={isLoading}
-      >
-        {isLoading ? "Loading..." : "Login"}
-      </Button>
-      <div className="flex flex-col items-center justify-center w-full h-full">
-        {snackState && (
-          <div className="fixed bottom-10 inset-x-0 flex justify-center items-center">
-            <div className="bg-white w-80 rounded-lg text-center p-2">
-              <p className="mb-2">Invalid User Credentials</p>
-              <button
-                className="text-sm text-blue-500 hover:underline"
-                onClick={onDismissSnackBar}
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
+      <div role="group" aria-busy={isLoading} aria-live="polite">
+        <Button
+          onClick={handleLogin}
+          className={`${
+            isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm disabled:opacity-50`}
+          disabled={isLoading}
+          aria-disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Login"}
+        </Button>
+      </div>
+      <div aria-live="assertive" className="sr-only">
+        {/* errors are shown via toast; keep SR-only region for future inline messages */}
       </div>
     </div>
   );
