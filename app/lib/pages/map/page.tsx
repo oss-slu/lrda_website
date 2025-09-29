@@ -708,14 +708,7 @@ const Page = () => {
                   onClick={handleSetLocation}
                   type="button"
                 >
-                  <svg
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
-                  >
-                    <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
-                  </svg>
+                  <LocateIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6 text-gray-700" />
                 </button>
               </div>
             </div>

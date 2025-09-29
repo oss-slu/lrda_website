@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import LoginButton from "../../components/login_button";
 import RegisterButton from "../../components/register_button";
+import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/ui/password-input";
 import { toast } from "sonner";
 
 const Page = () => {
@@ -27,21 +29,23 @@ const Page = () => {
             Login
           </h1>
           <div className="mb-4">
-            <input
+            <label htmlFor="email-input" className="block text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">Email or Username</label>
+            <Input
+              id="email-input"
               type="text"
-              placeholder="Username..."
+              autoComplete="username email"
+              placeholder="you@example.com"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
           <div className="mb-4">
-            <input
-              type="password"
-              placeholder="Password..."
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
+            <PasswordInput
+              id="password-input"
+              password={password}
+              onPasswordChange={(v) => setPassword(v)}
+              autoComplete="current-password"
+              required
             />
           </div>
           <button className="mb-2 text-sm text-blue-500 hover:underline">

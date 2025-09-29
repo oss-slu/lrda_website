@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Note } from "@/app/types";
 import ApiService from "../utils/api_service";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, TagsIcon, User2Icon, ImageIcon } from "lucide-react";
+import { Calendar as CalendarIcon, TagsIcon, User2Icon } from "lucide-react";
+import BsImage from "@/components/solid-icons/bs";
 import CompactCarousel from "./compact_carousel";
 import { formatDateTime } from "../utils/data_conversion";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,7 +35,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
         <CompactCarousel mediaArray={note.media}></CompactCarousel>
       ) : (
         <div className="flex items-center justify-center w-auto h-[180px] bg-gray-100">
-          <ImageIcon aria-label="No photo present" className="text-gray-400" size={72} strokeWidth={1} />
+          <BsImage aria-label="No photo present" className="text-gray-400" size={72} />
         </div>
       )}
       <div className="flex flex-col px-2 h-[118px]">
