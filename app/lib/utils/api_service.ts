@@ -7,7 +7,6 @@ import { db } from "../config/firebase";
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
-console.log(`%cOPENAI KEY: ${OPENAI_API_KEY}`, "color: blue; font-weight: bold;");
 
 if (!RERUM_PREFIX) {
   throw new Error("RERUM_PREFIX is not defined in the environment variables.");
@@ -630,12 +629,23 @@ export async function fetchCreatorName(creatorId: string): Promise<string> {
  * @param {number} [limit=16] - Number of notes to fetch.
  * @returns {Promise<Note[]>}
  */
-export async function fetchUserNotes(userId: string, published: boolean, afterTime?: string, limit: number = 16): Promise<Note[]> {
+export async function fetchUserNotes({
+  userId,
+  published,
+  afterTime,
+  limit,
+}: {
+  userId: string;
+  published: boolean;
+  afterTime?: string;
+  limit?: number;
+}): Promise<Note[]> {
   const queryObj: any = {
     type: "message",
     creator: userId,
     published,
   };
+  console.log("Fetching notes", queryObj, afterTime, limit);
   if (afterTime) {
     queryObj.time = { $gt: afterTime };
   }
@@ -656,13 +666,19 @@ export async function fetchUserNotes(userId: string, published: boolean, afterTi
  * @param {number} [limit=16] - Number of notes to fetch.
  * @returns {Promise<Note[]>}
  */
-export async function fetchPublishedNotes(
-  afterTime?: string,
-  limit: number = 16,
-  latitude?: number,
-  longitude?: number,
-  radiusKm?: number
-): Promise<Note[]> {
+export async function fetchPublishedNotes({
+  afterTime,
+  limit = 16,
+  latitude,
+  longitude,
+  radiusKm,
+}: {
+  afterTime?: string;
+  limit?: number;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
+}): Promise<Note[]> {
   const queryObj: any = {
     type: "message",
     published: true,

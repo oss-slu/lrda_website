@@ -55,11 +55,14 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   async function fetchPublishedNotes() {
     setIsLoading(true);
     try {
-      let notes = (await fetchPublishedNotesApi()).filter((note) => !note.isArchived);
-      notes = DataConversion.convertMediaTypes(notes);
-      console.log("Fetched published notes:", notes);
-      setNotes((prevNotes) => [...prevNotes, ...notes]);
-      await cacheCreatorNames(notes);
+      const oldestNoteDate = getOldestNoteDate(notes);
+      const params: any = {};
+      params.afterTime = oldestNoteDate ?? null;
+      let newNotes = (await fetchPublishedNotesApi(params)).filter((note) => !note.isArchived);
+
+      newNotes = DataConversion.convertMediaTypes(newNotes);
+      setNotes((prevNotes) => [...prevNotes, ...newNotes]);
+      await cacheCreatorNames(newNotes);
     } catch (error) {
       console.error("Error fetching notes:", error);
     } finally {
@@ -71,10 +74,14 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   async function fetchUserNotes(userId: string) {
     setIsLoading(true);
     try {
-      let notes = (await fetchUserNotesApi(userId, true)).filter((note) => !note.isArchived);
-      notes = DataConversion.convertMediaTypes(notes);
-      setNotes((prevNotes) => [...prevNotes, ...notes]);
-      await cacheCreatorNames(notes);
+      const oldestNoteDate = getOldestPersonalNoteDate(notes, userId);
+      const params: any = { userId, published: true };
+      params.afterTime = oldestNoteDate ?? null;
+
+      let newNotes = (await fetchUserNotesApi(params)).filter((note) => !note.isArchived);
+      newNotes = DataConversion.convertMediaTypes(newNotes);
+      setNotes((prevNotes) => [...prevNotes, ...newNotes]);
+      await cacheCreatorNames(newNotes);
     } catch (error) {
       console.error("Error fetching notes:", error);
     } finally {
@@ -84,6 +91,22 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
 
   function getCreatorName(creatorId: string) {
     return creatorNames[creatorId];
+  }
+
+  function getOldestNoteDate(notes: Note[]): string | undefined {
+    if (notes.length === 0) return undefined;
+    const oldestNote = notes.reduce((oldest, note) => (new Date(note.time) < new Date(oldest.time) ? note : oldest), notes[0]);
+    return oldestNote.time.toString();
+  }
+
+  function getOldestPersonalNoteDate(notes: Note[], userId: string): string | undefined {
+    const personalNotes = notes.filter((note) => note.creator === userId);
+    if (personalNotes.length === 0) return undefined;
+    const oldestNote = personalNotes.reduce(
+      (oldest, note) => (new Date(note.time) < new Date(oldest.time) ? note : oldest),
+      personalNotes[0]
+    );
+    return oldestNote.time.toString();
   }
 
   return (

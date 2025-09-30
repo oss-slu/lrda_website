@@ -20,7 +20,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, creator }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(note.time ? new Date(note.time) : undefined);
 
   return (
-    <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200">
+    <div className="w-64 bg-white h-[300px] rounded-sm overflow-hidden shadow flex flex-col border border-gray-200">
       {note.media.length > 0 ? (
         <CompactCarousel mediaArray={note.media}></CompactCarousel>
       ) : (

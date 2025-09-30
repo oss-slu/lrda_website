@@ -16,7 +16,6 @@ export default function MapSidebar({ personalOrGlobal }: { personalOrGlobal: "pe
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const notesListRef = useRef<HTMLDivElement>(null);
-  const noteRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { fetchPublishedNotes, fetchUserNotes, notes, isLoadingNotes } = useNotes();
   const user = User.getInstance();
   let userId: string | null = null;
@@ -71,34 +70,32 @@ export default function MapSidebar({ personalOrGlobal }: { personalOrGlobal: "pe
 
   return (
     <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
-      {isLoading
+      {isLoadingNotes
         ? [...Array(6)].map((_, index) => (
             <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
           ))
         : displayedNotes.map((note, index) => (
             <div
-              ref={(el) => {
-                if (el) noteRefs.current[note.id] = el;
-              }}
-              className={`transition-transform duration-250 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] hover:scale-[1.02] hover:shadow-lg hover:bg-gray-200`}
+              className={`transition-transform duration-250 ease-in-out rounded-sm cursor-pointer max-h-[308px] max-w-[265px] hover:scale-[1.01] hover:shadow-lg hover:bg-gray-200`}
               key={index}
             >
-              {/* Todo pull fetching out of this component */}
               <ClickableNote note={note} />
             </div>
           ))}
 
-      <div className="col-span-full flex justify-center mt-4 min-h-10">
-        <div ref={null} className="h-10 flex items-center justify-center w-full">
-          {isLoading ? (
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
-          ) : (
-            <button onClick={fetchNotes} className="bg-primary text-white rounded-md px-4 py-2">
-              Load More
-            </button>
-          )}
+      {notes.length > 0 && (
+        <div className="col-span-full flex justify-center mt-4 min-h-10">
+          <div ref={null} className="h-10 flex items-center justify-center w-full">
+            {isLoading ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+            ) : (
+              <button onClick={fetchNotes} className="bg-primary text-white rounded-md px-4 py-2">
+                Load More
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

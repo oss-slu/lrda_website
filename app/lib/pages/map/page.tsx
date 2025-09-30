@@ -1,21 +1,18 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
-import { Note, newNote } from "@/app/types";
+import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
-import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 import MapSidebar from "./map_sidebar";
 
-import { CompassIcon, GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
-import * as ReactDOM from "react-dom/client";
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
+import { GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
@@ -32,14 +29,9 @@ interface Refs {
 }
 
 const Page = () => {
-  // Infinite notes manages visible count
-  // const [notes, setNotes] = useState<Note[]>([]);
   const [personalOrGlobal, setPersonalOrGlobal] = useState<"personal" | "global">("global");
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [activeNote, setActiveNote] = useState<Note | null>(null);
-  const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
   const [isNoteSelectedFromSearch, setIsNoteSelectedFromSearch] = useState(false);
-  const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
   const [global, setGlobal] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>({
     lat: 38.005984,
@@ -47,32 +39,40 @@ const Page = () => {
   });
   const [mapZoom, setMapZoom] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoaded] = useState(true);
-  const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map>();
   const markerClustererRef = useRef<MarkerClusterer>();
   const noteRefs = useRef<Refs>({});
-  const [currentPopup, setCurrentPopup] = useState<any | null>(null);
   const [markers, setMarkers] = useState(new Map());
-  const [skip, setSkip] = useState(0);
-  const infinite = useInfiniteNotes<Note>({
-    items: filteredNotes,
-    pageSize: NOTES_PAGE_SIZE,
-  });
-
-  const { fetchPublishedNotes, fetchUserNotes, notes, isLoadingNotes } = useNotes();
-
-  const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
-  const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
-  const [popupNote, setPopupNote] = useState<Note | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const user = User.getInstance();
+
+  const { fetchPublishedNotes, fetchUserNotes, notes, isLoadingNotes } = useNotes();
+  const personalNotes = useMemo(() => notes.filter((note) => note.creator === userId), [notes, userId]);
+  const globalNotes = useMemo(() => notes.filter((note) => note.published), [notes, userId]);
+
+  const [popupNote, setPopupNote] = useState<Note | null>(null);
+
   const { isMapsApiLoaded } = useGoogleMaps();
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef = useRef<HTMLDivElement | null>(null);
+
+  // Get user ID on mount
+  useEffect(() => {
+    let mounted = true;
+    user.getId().then((id) => {
+      if (mounted) setUserId(id);
+      setIsLoggedIn(!!id);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
+
+  // Intro.js for first time users
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
@@ -152,95 +152,57 @@ const Page = () => {
     };
   }, [searchBarRef, noteRefs, notesListRef]);
 
+  // Initialize map center and try to get user location
   useEffect(() => {
-    let isSubscribed = true;
-    const fetchLastLocation = async () => {
+    let isMounted = true;
+
+    async function initializeLocation() {
+      // Try to load last location from storage
+      let location = null;
+      const lastLocationString = getItem("LastLocation");
+      location = lastLocationString ? JSON.parse(lastLocationString) : null;
+
+      // fetch location in background if we already have one stored (no toast)
+      let showToast = false;
+
+      // If no last location, use default
+      if (!location) {
+        location = { lat: 38.637334, lng: -90.286021 };
+        showToast = true;
+      }
+
+      // Try to get current location from browser
       try {
-        const lastLocationString = await getItem("LastLocation");
-        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
-        if (isSubscribed) {
-          setMapCenter(lastLocation);
-          setMapZoom(10);
-          setLocationFound(true);
-        }
-      } catch (error) {
-        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-        setMapCenter(defaultLocation as Location);
+        const currentLocation = await getLocation(showToast);
+        location = currentLocation;
+        setItem("LastLocation", JSON.stringify(currentLocation));
+      } catch {
+        // If browser location fails, keep previous location
+      }
+
+      // Set state if still mounted
+      if (isMounted) {
+        setMapCenter(location);
         setMapZoom(10);
-        setLocationFound(true);
-        console.error("Failed to fetch the last location", error);
       }
-    };
-    fetchLastLocation();
-    return () => {
-      isSubscribed = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isComponentMounted = true;
-
-    const fetchCurrentLocationAndUpdate = async () => {
-      try {
-        const currentLocation = (await getLocation()) as Location;
-        if (!locationFound && isComponentMounted) {
-          setMapCenter(currentLocation);
-          setMapZoom(10);
-        }
-        await setItem("LastLocation", JSON.stringify(currentLocation));
-      } catch (error) {
-        if (isComponentMounted) {
-          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-          setMapCenter(defaultLocation);
-          setMapZoom(10);
-          setLocationFound(true);
-          console.log("Using last known location due to error:", error);
-        }
-      }
-    };
-
-    fetchCurrentLocationAndUpdate();
-
-    return () => {
-      isComponentMounted = false;
-    };
-  }, [locationFound]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-
-    if (map) {
-      const mapClickListener = map.addListener("click", () => {
-        setActiveNote(null);
-      });
-
-      const mapDragListener = map.addListener("dragstart", () => {
-        setActiveNote(null);
-      });
-
-      return () => {
-        google.maps.event.removeListener(mapClickListener);
-        google.maps.event.removeListener(mapDragListener);
-      };
     }
+
+    initializeLocation();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Update filtered notes when map center, zoom, bounds, or notes change
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
     if (!isNoteSelectedFromSearch) {
-      updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+      updateFilteredNotes(mapBounds, currentNotes);
     }
-    setIsLoaded(false);
   }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (map) {
-      const mapClickListener = map.addListener("click", handleMapClick);
-      return () => google.maps.event.removeListener(mapClickListener);
-    }
-  }, []);
-
+  // Update marker icons based on hover state
   useEffect(() => {
     markers.forEach((marker, noteId) => {
       const isHovered = hoveredNoteId === noteId;
@@ -249,17 +211,7 @@ const Page = () => {
     });
   }, [hoveredNoteId, markers]);
 
-  useEffect(() => {
-    if (locationFound) {
-      fetchNotes().then(({ personalNotes, globalNotes }) => {
-        setPersonalNotes(personalNotes);
-        setGlobalNotes(globalNotes);
-        const initialNotes = global ? globalNotes : personalNotes;
-        // setNotes(initialNotes);
-      });
-    }
-  }, [locationFound, global]);
-
+  // Update markers when filtered notes change
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
       const tempMarkers = new Map();
@@ -274,13 +226,11 @@ const Page = () => {
         marker.addListener("mouseover", () => {
           setHoveredNoteId(note.id);
           scrollToNoteTile(note.id);
-          setActiveNote(note);
           marker.setIcon(createMarkerIcon(true));
         });
 
         marker.addListener("mouseout", () => {
           setHoveredNoteId(null);
-          setActiveNote(null);
           marker.setIcon(createMarkerIcon(false));
         });
       };
@@ -306,8 +256,6 @@ const Page = () => {
         map: mapRef.current,
       });
 
-      setIsLoaded(false);
-
       return () => {
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
@@ -316,16 +264,7 @@ const Page = () => {
     }
   }, [isMapsApiLoaded, filteredNotes, mapRef.current]);
 
-  const handleMapClick = () => {
-    if (currentPopup) {
-      currentPopup.setMap(null);
-    }
-    setCurrentPopup(null);
-    setActiveNote(null);
-  };
-
-  const onMapLoad = React.useCallback((map: any) => {
-    // console.log('Map loaded:', map);
+  const onMapLoad = useCallback((map: any) => {
     mapRef.current = map;
 
     const updateBounds = () => {
@@ -362,48 +301,17 @@ const Page = () => {
     return returnVal;
   };
 
-  const updateFilteredNotes = async (center: Location, bounds: google.maps.LatLngBounds | null, allNotes: Note[]) => {
+  const updateFilteredNotes = async (bounds: google.maps.LatLngBounds | null, allNotes: Note[]) => {
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
-    setIsLoaded(false);
-  };
-
-  const fetchNotes = async () => {
-    try {
-      const userId = await user.getId();
-
-      let personalNotes: Note[] = [];
-      let globalNotes: Note[] = [];
-      if (userId) {
-        setIsLoggedIn(true);
-        personalNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); //filter here?
-
-        // Convert media types and filter out archived notes for personal notes
-        personalNotes = DataConversion.convertMediaTypes(personalNotes)
-          .reverse()
-          .filter((note) => !note.isArchived); // Filter out archived personal notes
-      }
-
-      globalNotes = (await ApiService.fetchPublishedNotes()).filter((note) => !note.isArchived);
-
-      // Convert media types and filter out archived notes for global notes
-      globalNotes = DataConversion.convertMediaTypes(globalNotes)
-        .reverse()
-        .filter((note) => !note.isArchived); // Filter out archived global notes
-
-      return { personalNotes, globalNotes };
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return { personalNotes: [], globalNotes: [] };
-    }
   };
 
   const handleMarkerClick = (note: Note) => {
     setPopupNote(note);
-    setActiveNote(note);
     scrollToNoteTile(note.id);
   };
 
+  // Handles both address searches and note title searches
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
@@ -434,6 +342,7 @@ const Page = () => {
     }
   };
 
+  // Handles searching within notes based on title or tags
   const handleNotesSearch = (searchText: string) => {
     const query = searchText.toLowerCase();
     const filtered = notes.filter((note) => {
@@ -447,7 +356,6 @@ const Page = () => {
     });
 
     setFilteredNotes(filtered);
-    console.log("Filtered:", filtered);
   };
 
   function createMarkerIcon(isHighlighted: boolean) {
@@ -467,9 +375,7 @@ const Page = () => {
   const toggleFilter = () => {
     setGlobal(!global);
     const notesToUse = !global ? globalNotes : personalNotes;
-    // setNotes(notesToUse);
     setFilteredNotes(notesToUse);
-    setIsLoaded(false);
     setPersonalOrGlobal(!global ? "global" : "personal");
   };
 
@@ -480,11 +386,13 @@ const Page = () => {
     }
   };
 
-  function getLocation() {
-    toast("Fetching Location", {
-      description: "Getting your location. This can take a second.",
-      duration: 3000,
-    });
+  function getLocation(showToast: boolean = true): Promise<Location> {
+    if (showToast) {
+      toast("Fetching Location", {
+        description: "Getting your location. This can take a second.",
+        duration: 3000,
+      });
+    }
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -522,8 +430,6 @@ const Page = () => {
             center={mapCenter}
             zoom={mapZoom}
             onLoad={onMapLoad}
-            onDragStart={handleMapClick}
-            onClick={handleMapClick}
             options={{
               streetViewControl: false,
               mapTypeControl: false,
@@ -598,38 +504,6 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
-
-      {/* <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
-        {isLoading
-          ? [...Array(6)].map((_, index) => (
-              <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
-            ))
-          : infinite.visibleItems.map((note) => (
-              <div
-                ref={(el) => {
-                  if (el) noteRefs.current[note.id] = el;
-                }}
-                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
-                }`}
-                onMouseEnter={() => setHoveredNoteId(note.id)}
-                onMouseLeave={() => setHoveredNoteId(null)}
-                key={note.id}
-              >
-                <ClickableNote note={note} />
-              </div>
-            ))}
-
-        <div className="col-span-full flex justify-center mt-4 min-h-10">
-          {infinite.hasMore ? (
-            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
-              {infinite.isLoading && (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
-              )}
-            </div>
-          ) : null}
-        </div>
-      </div> */}
       <MapSidebar personalOrGlobal={personalOrGlobal} />
       {popupNote &&
         createPortal(
