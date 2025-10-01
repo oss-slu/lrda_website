@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { GitHubLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
+import { Icons } from "@/app/lib/components/icons";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
 import { IconLink } from "@/app/lib/components/IconLink";
 
@@ -29,6 +29,8 @@ function AboutHero() {
           </a>
           <IconLink icon="instagram" href="https://www.instagram.com/livedreligion/" label="Visit Instagram" />
           <IconLink icon="twitterX" href="https://twitter.com/livedreligion" label="Visit Twitter/X" />
+          <IconLink icon="github" href="https://github.com/livedreligion" label="Visit GitHub" />
+          <IconLink icon="linkedin" href="https://www.linkedin.com/company/livedreligion" label="Visit LinkedIn" />
         </div>
       </div>
     </section>
@@ -122,12 +124,12 @@ function TeamCard({ name, role, src, socials }: TeamCardProps) {
         <div className="flex mt-2 space-x-3">
           {socials.github && (
             <a href={socials.github} target="_blank" rel="noopener noreferrer" aria-label={`${name} on GitHub`} className="inline-flex items-center justify-center rounded-md border p-1.5 hover:bg-accent">
-              <GitHubLogoIcon className="h-5 w-5" />
+              <Icons.github className="h-5 w-5" />
             </a>
           )}
           {socials.linkedin && (
             <a href={socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${name} on LinkedIn`} className="inline-flex items-center justify-center rounded-md border p-1.5 hover:bg-accent">
-              <LinkedInLogoIcon className="h-5 w-5" />
+              <Icons.linkedin className="h-5 w-5" />
             </a>
           )}
         </div>
