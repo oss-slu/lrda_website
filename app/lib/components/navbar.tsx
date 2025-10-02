@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { User } from "../models/user_class";
 import ApiService from "../utils/api_service";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const user = User.getInstance();
 

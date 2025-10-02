@@ -38,7 +38,6 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
       </body>
     </html>
   );
-}
-
+};
 
 export default RootLayout;

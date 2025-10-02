@@ -1,5 +1,6 @@
-import React from 'react';
+import React from "react";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 type SearchBarUIProps = {
   searchText: string;
@@ -7,7 +8,6 @@ type SearchBarUIProps = {
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   className?: string; //accepts className as prop
-  
 };
 
 class SearchBarUI extends React.Component<SearchBarUIProps> {

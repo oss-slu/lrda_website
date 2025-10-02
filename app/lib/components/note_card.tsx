@@ -2,17 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Note } from "@/app/types";
 import ApiService from "../utils/api_service";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { PersonIcon } from "@radix-ui/react-icons";
-import { Calendar as CalendarIcon, TagIcon, TagsIcon, User2Icon } from "lucide-react";
+import { Calendar as CalendarIcon, TagsIcon, User2Icon, ImageIcon } from "lucide-react";
 import CompactCarousel from "./compact_carousel";
-import { formatDateTime } from '../utils/data_conversion';
+import { formatDateTime } from "../utils/data_conversion";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
@@ -21,13 +15,9 @@ interface NoteCardProps {
 
 const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   const title = note.title;
-  const text = note.text;
-  const tags: string[] = note.tags.map(tag => tag.label); // Ensure correct mapping to labels
-  const imageMedia = note.media.filter((media) => media.type === "image")[0];
+  const tags: string[] = note.tags.map((tag) => tag.label); // Ensure correct mapping to labels
   const [creator, setCreator] = useState<string>("Loading...");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    note.time ? new Date(note.time) : undefined
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(note.time ? new Date(note.time) : undefined);
 
   // Fetch creator name and handle potential errors
   useEffect(() => {
@@ -83,12 +73,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                />
+                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
               </PopoverContent>
             </Popover>
           </div>

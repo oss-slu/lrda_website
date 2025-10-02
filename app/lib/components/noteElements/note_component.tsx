@@ -2,11 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Note, Tag } from "@/app/types";
 import TimePicker from "./time_picker";
-import {
-  LinkBubbleMenu,
-  RichTextEditor,
-  type RichTextEditorRef,
-} from "mui-tiptap";
+import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import AudioPicker from "./audio_component";
@@ -52,17 +48,14 @@ import introJs from "intro.js"
 import "intro.js/introjs.css"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
-const user = User.getInstance(); 
+const user = User.getInstance();
 
 type NoteEditorProps = {
   note?: Note | newNote;
   isNewNote: boolean;
 };
 
-export default function NoteEditor({
-  note: initialNote,
-  isNewNote,
-}: NoteEditorProps) {
+export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
@@ -82,8 +75,6 @@ export default function NoteEditor({
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLDivElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
-
-
 
   const getCookie = (name: string) => {
     const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
@@ -106,10 +97,10 @@ export default function NoteEditor({
       const deleteButton = deleteRef.current;
       const date = dateRef.current;
       const location = locationRef.current;
-  
-      console.log('Observer triggered');
-  
-     // Check if all elements are present
+
+      console.log("Observer triggered");
+
+      // Check if all elements are present
       if (addNote && title && save && deleteButton && date && location) {
         const intro = introJs();
         const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
@@ -157,27 +148,27 @@ export default function NoteEditor({
           });
 
           intro.start();
-  
+
           // Apply inline styling to the skip button after a short delay to ensure it has rendered
           setTimeout(() => {
-            const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+            const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
             if (skipButton) {
-              skipButton.style.position = 'absolute';
-              skipButton.style.top = '2px'; // Move it up by decreasing the top value
-              skipButton.style.right = '20px'; // Adjust positioning as needed
-              skipButton.style.fontSize = '18px'; // Adjust font size as needed
-              skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+              skipButton.style.position = "absolute";
+              skipButton.style.top = "2px"; // Move it up by decreasing the top value
+              skipButton.style.right = "20px"; // Adjust positioning as needed
+              skipButton.style.fontSize = "18px"; // Adjust font size as needed
+              skipButton.style.padding = "4px 10px"; // Adjust padding as needed
             }
           }, 100); // 100ms delay to wait for rendering
-  
+
           observer.disconnect(); // Stop observing once the elements are found and the intro is set up
         }
       }
     });
-  
+
     // Start observing the body for changes to detect when the elements appear
     observer.observe(document.body, { childList: true, subtree: true });
-  
+
     // Cleanup the observer when the component unmounts
     return () => observer.disconnect();
   }, []);  // Empty dependency array ensures this effect runs only once
@@ -215,16 +206,10 @@ useEffect(() => {
           if (dispatch) {
             const endPos = tr.doc.content.size;
             const paragraphNodeForNewLine = editor.schema.node("paragraph");
-            const textNode = editor.schema.text(videoLink, [
-              editor.schema.marks.link.create({ href: videoUri }),
-            ]);
-            const paragraphNodeForLink = editor.schema.node("paragraph", null, [
-              textNode,
-            ]);
+            const textNode = editor.schema.text(videoLink, [editor.schema.marks.link.create({ href: videoUri })]);
+            const paragraphNodeForLink = editor.schema.node("paragraph", null, [textNode]);
 
-            const transaction = tr
-              .insert(endPos, paragraphNodeForNewLine)
-              .insert(endPos + 1, paragraphNodeForLink);
+            const transaction = tr.insert(endPos, paragraphNodeForNewLine).insert(endPos + 1, paragraphNodeForLink);
             dispatch(transaction);
           }
           return true;
@@ -442,7 +427,7 @@ useEffect(() => {
       id: noteState.note?.id || "",
       creator: noteState.note?.creator || user.getId(), // Ensure the creator is set
     };
-  
+
     try {
       const roles = await user.getRoles(); // Fetch user roles
       const userId = await user.getId(); // Fetch user ID
@@ -623,12 +608,10 @@ useEffect(() => {
       alert("Please select a file type.");
       return;
     }
-  
+
     // Extract plain text from HTML content
-    const plainTextContent = new DOMParser()
-      .parseFromString(noteState.editorContent, "text/html")
-      .body.innerText;
-  
+    const plainTextContent = new DOMParser().parseFromString(noteState.editorContent, "text/html").body.innerText;
+
     const noteContent = `
       Title: ${noteState.title}
       Content: ${plainTextContent}
@@ -636,7 +619,7 @@ useEffect(() => {
       Location: ${noteState.latitude}, ${noteState.longitude}
       Time: ${noteState.time}
     `;
-  
+
     if (selectedFileType === "pdf") {
       // Generate PDF using jsPDF
       const pdf = new jsPDF();
@@ -659,7 +642,7 @@ useEffect(() => {
           },
         ],
       });
-  
+
       const blob = await Packer.toBlob(doc); // Generate DOCX file as Blob
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -668,7 +651,7 @@ useEffect(() => {
       link.click();
       URL.revokeObjectURL(url);
     }
-  
+
     toast(`Your note has been downloaded as ${selectedFileType.toUpperCase()}`);
   };
 
@@ -768,143 +751,110 @@ useEffect(() => {
 
 
             <div className="w-1 h-9 bg-border" />
-            <button
-              id="save-note-button"
-              className="hover:text-green-500 flex justify-center items-center w-full"
-              onClick={onSave}
-            >
-              <SaveIcon className="text-current"/>
-              <div className="ml-2"  ref = {saveRef}>Save</div>
+            <button id="save-note-button" className="hover:text-green-500 flex justify-center items-center w-full" onClick={onSave}>
+              <SaveIcon className="text-current" />
+              <div className="ml-2" ref={saveRef}>
+                Save
+              </div>
             </button>
             <div className="w-1  h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button className="hover:text-red-500 flex justify-center items-center w-full">
-                  <FileX2 className="text-current"/>
-                  <div className="ml-2" ref = {deleteRef}>Archive</div>
+                  <FileX2 className="text-current" />
+                  <div className="ml-2" ref={deleteRef}>
+                    Archive
+                  </div>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently archive
-                    this note.
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>This action cannot be undone. This will permanently archive this note.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() =>
-                      handleDeleteNote(
-                        noteState.note,
-                        user,
-                        noteHandlers.setNote
-                      )
-                    }
-                  >
+                  <AlertDialogAction onClick={() => handleDeleteNote(noteState.note, user, noteHandlers.setNote)}>
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
             <div className="w-1 h-7 bg-border" />
-            <div className="flex-grow"
-            ref = {dateRef} >
+            <div className="flex-grow" ref={dateRef}>
               <TimePicker
                 initialDate={noteState.time || new Date()}
-                onTimeChange={(newDate) =>
-                  handleTimeChange(noteHandlers.setTime, newDate)
-                }
+                onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
               />
             </div>
             <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded"
-            ref = {locationRef} >
+            <div className="bg-white p-2 rounded" ref={locationRef}>
               <LocationPicker
                 long={noteState.longitude}
                 lat={noteState.latitude}
                 onLocationChange={(newLong, newLat) =>
-                  handleLocationChange(
-                    noteHandlers.setLongitude,
-                    noteHandlers.setLatitude,
-                    newLong,
-                    newLat
-                  )
+                  handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
                 }
               />
             </div>
             <div className="w-2 h-9 bg-border" />
             <AlertDialog>
-  <AlertDialogTrigger asChild>
-    <button
-      id="download-note-button"
-      className="hover:text-blue-500 flex justify-center items-center w-full"
-    >
-      <SaveIcon className="text-current" />
-      <div className="ml-2">Download</div>
-    </button>
-  </AlertDialogTrigger>
-  <AlertDialogContent
-    onChange={(isOpen) => {
-      if (!isOpen) {
-        // Close the popup and go back to the note
-      }
-    }}
-  >
-    <AlertDialogHeader>
-      <AlertDialogTitle>Select File Type</AlertDialogTitle>
-      <AlertDialogDescription>
-        Choose a file format for downloading your note.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <div className="flex flex-col items-start px-6 mt-2 space-y-4">
-      <label className="flex items-center space-x-2">
-        <input
-          type="radio"
-          name="fileType"
-          value="pdf"
-          checked={selectedFileType === "pdf"}
-          onChange={() => setSelectedFileType("pdf")}
-        />
-        <span>PDF</span>
-      </label>
-      <label className="flex items-center space-x-2">
-        <input
-          type="radio"
-          name="fileType"
-          value="docx"
-          checked={selectedFileType === "docx"}
-          onChange={() => setSelectedFileType("docx")}
-        />
-        <span>DOCX</span>
-      </label>
-    </div>
-    <AlertDialogFooter>
-      <AlertDialogCancel
-        className="bg-gray-300 text-black hover:bg-gray-400 px-4 py-2 rounded"
-      >
-        Cancel
-      </AlertDialogCancel>
-      <AlertDialogAction
-        onClick={handleDownload}
-        className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded"
-      >
-        Download
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
-
+              <AlertDialogTrigger asChild>
+                <button id="download-note-button" className="hover:text-blue-500 flex justify-center items-center w-full">
+                  <SaveIcon className="text-current" />
+                  <div className="ml-2">Download</div>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent
+                onChange={(isOpen) => {
+                  if (!isOpen) {
+                    // Close the popup and go back to the note
+                  }
+                }}
+              >
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Select File Type</AlertDialogTitle>
+                  <AlertDialogDescription>Choose a file format for downloading your note.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex flex-col items-start px-6 mt-2 space-y-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="fileType"
+                      value="pdf"
+                      checked={selectedFileType === "pdf"}
+                      onChange={() => setSelectedFileType("pdf")}
+                    />
+                    <span>PDF</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="fileType"
+                      value="docx"
+                      checked={selectedFileType === "docx"}
+                      onChange={() => setSelectedFileType("docx")}
+                    />
+                    <span>DOCX</span>
+                  </label>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-gray-300 text-black hover:bg-gray-400 px-4 py-2 rounded">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDownload} className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded">
+                    Download
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
           <TagManager
-  inputTags={noteState.tags}
-  suggestedTags={suggestedTags}
-  onTagsChange={(newTags) =>
-    handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
-  }
-  fetchSuggestedTags={fetchSuggestedTags}
-/>
+            inputTags={noteState.tags}
+            suggestedTags={suggestedTags}
+            onTagsChange={
+              (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+            }
+            fetchSuggestedTags={fetchSuggestedTags}
+          />
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
