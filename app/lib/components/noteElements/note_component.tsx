@@ -76,6 +76,27 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
   const deleteRef = useRef<HTMLDivElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
 
+
+
+  // Function to process content and convert image URLs to proper img tags
+  const processContentForImages = (content: string, images: PhotoType[]): string => {
+    if (!content || !images || images.length === 0) return content;
+    
+    let processedContent = content;
+    
+    // Replace image URLs with proper img tags
+    images.forEach((image) => {
+      if (image.uri) {
+        // Look for the image URI in the content and replace with img tag
+        const imageUrlRegex = new RegExp(image.uri.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        const imgTag = `<img src="${image.uri}" alt="Image" loading="lazy" />`;
+        processedContent = processedContent.replace(imageUrlRegex, imgTag);
+      }
+    });
+    
+    return processedContent;
+  };
+
   const getCookie = (name: string) => {
     const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
     return match ? match[2] : null;
@@ -240,7 +261,13 @@ useEffect(() => {
       (normalizedInitialNote as any).text ||
       (normalizedInitialNote as any).BodyText ||
       "";
-    noteHandlers.setEditorContent(initialHtml);
+    
+    // Process content to convert image URLs to proper img tags
+    const processedHtml = processContentForImages(initialHtml, normalizedInitialNote.media.filter(
+      (m) => m.getType && m.getType() === "image"
+    ) as PhotoType[]);
+    
+    noteHandlers.setEditorContent(processedHtml);
 
     // Other fields
     noteHandlers.setTitle(normalizedInitialNote.title || "");
@@ -377,7 +404,16 @@ useEffect(() => {
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
-      noteHandlers.setEditorContent(initialNote.text || "");
+      
+      // Process content to convert image URLs to proper img tags
+      const processedContent = processContentForImages(
+        initialNote.text || "", 
+        (initialNote.media.filter(
+          (item) => item.getType() === "image"
+        ) as PhotoType[]) || []
+      );
+      
+      noteHandlers.setEditorContent(processedContent);
       noteHandlers.setTitle(initialNote.title || "");
 
       noteHandlers.setImages(

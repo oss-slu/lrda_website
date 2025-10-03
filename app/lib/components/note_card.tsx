@@ -58,6 +58,20 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
             <User2Icon className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <p className="text-xs sm:text-[15px] text-gray-500 truncate">{creator}</p>
           </div>
+          {/* Display note content */}
+          {text && (
+            <div className="flex flex-row items-start">
+              <div className="text-xs sm:text-sm text-gray-700 overflow-hidden" style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                maxHeight: '2.5em'
+              }}>
+                {/* Strip HTML tags for display in card */}
+                <div>{text.replace(/<[^>]*>/g, '')}</div>
+              </div>
+            </div>
+          )}
           {/* Interactive Calendar with formatted display */}
           <div className="flex flex-row items-center">
             <CalendarIcon className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />

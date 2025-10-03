@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import NoteCard from "./note_card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
@@ -92,13 +92,91 @@ const ClickableNote: React.FC<{
       });
   }, [note.creator]);
 
-  const data = note.text;
+  // Function to clean content by removing audio URLs
+  const cleanContent = (content: string, audioArray: any[]) => {
+    if (!content || !audioArray || audioArray.length === 0) return content;
+    
+    let cleanedContent = content;
+    
+    // Remove audio URLs from content
+    audioArray.forEach((audio) => {
+      if (audio.uri) {
+        // Create a regex to match the audio URL and any surrounding text
+        const audioUrlRegex = new RegExp(`[^>]*${audio.uri.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*`, 'g');
+        cleanedContent = cleanedContent.replace(audioUrlRegex, '');
+      }
+    });
+    
+    // Clean up any empty paragraphs or divs that might be left
+    cleanedContent = cleanedContent.replace(/<p>\s*<\/p>/g, '');
+    cleanedContent = cleanedContent.replace(/<div>\s*<\/div>/g, '');
+    
+    return cleanedContent.trim();
+  };
+
+  const data = cleanContent(note.text, note.audio);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <div className="z-40">
-          <NoteCard note={note} />
+          {/* Show only metadata in the card, not content */}
+          <div className="w-full max-w-[256px] bg-white h-[250px] sm:h-[300px] rounded-lg shadow flex flex-col border border-gray-200">
+            {note.media && note.media.length > 0 && note.media[0].type === "image" ? (
+              <img
+                src={note.media[0].uri}
+                alt="Note media"
+                className="w-full h-[140px] sm:h-[180px] object-cover rounded-t-lg"
+              />
+            ) : (
+              <img
+                src="/no-photo-placeholder.jpeg"
+                alt="Placeholder"
+                className="w-full h-[140px] sm:h-[180px] object-cover rounded-t-lg"
+              />
+            )}
+            <div className="flex flex-col px-2 sm:px-3 h-[110px] sm:h-[118px]">
+              <div className="w-full">
+                <h3 className="text-base sm:text-xl font-bold text-gray-900 truncate overflow-x-auto whitespace-nowrap">
+                  {note.title}
+                </h3>
+              </div>
+              <div className="flex flex-col h-[90px] sm:h-[100px] justify-evenly">
+                <div className="flex flex-row items-center align-middle">
+                  <UserCircle className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <p className="text-xs sm:text-[15px] text-gray-500 truncate">{creator}</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <CalendarDays className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <p className="text-xs sm:text-sm text-gray-700">{formatDate(note.time)}</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <Clock3 className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <p className="text-xs sm:text-sm text-gray-700">{formatTime(note.time)}</p>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex items-center">
+                    <div className="flex justify-center items-center mr-1 sm:mr-2 h-[12px] w-[12px] sm:h-[15px] sm:w-[15px] rounded-full">
+                      <Tags size={12} className="sm:w-4 sm:h-4" />
+                    </div>
+                    <div className="flex items-center h-4 sm:h-5 overflow-hidden">
+                      <ScrollArea className="flex flex-nowrap self-center align-middle overflow-clip mb-1">
+                        {tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-blue-100 text-blue-800 text-xs px-1 sm:px-2 mr-1 font-medium rounded-full whitespace-nowrap"
+                          >
+                            {tag.label}
+                          </span>
+                        ))}
+                        <ScrollBar orientation="horizontal" className="h-[3px] sm:h-[5px]" />
+                      </ScrollArea>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[80%] h-[100vh]">
@@ -110,38 +188,44 @@ const ClickableNote: React.FC<{
           <DialogDescription className="flex flex-row align-center items-center">
             <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
           </DialogDescription>
-          <DialogDescription className="flex flex-row align-center items-center">
+          <div className="flex flex-row align-center items-center text-sm text-muted-foreground mb-2">
             <UserCircle className="w-5 h-5" />: {creator}
-          </DialogDescription>
-          <DialogDescription>
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mb-2 items-center">
-                <Tags />
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                      tag.origin === "user"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-purple-200 text-purple-800"
-                    }`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </DialogDescription>
+          </div>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2 items-center">
+              <Tags />
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                    tag.origin === "user"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-purple-200 text-purple-800"
+                  }`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
         <ScrollArea>
-  {note.text && note.text.length > 0 ? (
-    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
-  ) : (
-    "This Note has no content"
-  )}
-</ScrollArea>
+          {note.text && note.text.length > 0 ? (
+            <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+          ) : (
+            "This Note has no content"
+          )}
+          
+          {/* Audio player in content area */}
+          {note.audio && note.audio.length > 0 && (
+            <div className="mt-4 mb-4">
+              <h3 className="text-lg font-semibold mb-3">Audio</h3>
+              <AudioPicker audioArray={note.audio} editable={false} />
+            </div>
+          )}
+        </ScrollArea>
         <DialogFooter>
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (

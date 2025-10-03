@@ -802,6 +802,24 @@ static async fetchCreatorNameFromFirestore(userId: string): Promise<string> {
   try {
     console.log("Fetching user name from Firestore for UID:", userId);
 
+    // Check if userId is a devstore.rerum.io URL and fetch name from API
+    if (userId.includes("devstore.rerum.io")) {
+      try {
+        console.log("Fetching user data from devstore API:", userId);
+        const response = await fetch(userId);
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.name) {
+            console.log("Found name from devstore API:", userData.name);
+            return userData.name;
+          }
+        }
+        console.warn("Could not fetch name from devstore API, falling back to Firestore");
+      } catch (error) {
+        console.warn("Error fetching from devstore API:", error);
+      }
+    }
+
     // Initialize Firestore
     const db = getFirestore();
 

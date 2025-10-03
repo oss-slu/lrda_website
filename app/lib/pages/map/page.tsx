@@ -235,6 +235,7 @@ const Page = () => {
     }
   }, []);
 
+
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
     if (!isNoteSelectedFromSearch) {
@@ -353,10 +354,14 @@ const Page = () => {
       updateBounds();
     });
 
+    // Set initial center and zoom programmatically instead of using props
+    map.setCenter(mapCenter);
+    map.setZoom(mapZoom);
+
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, []);
+  }, [mapCenter, mapZoom]);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
@@ -610,17 +615,53 @@ const Page = () => {
       duration: 3000,
     });
     return new Promise((resolve, reject) => {
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        const error = new Error("Geolocation is not supported by this browser");
+        console.error("Geolocation not supported");
+        reject(error);
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newCenter = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
+          console.log("Location fetched successfully:", newCenter);
           resolve(newCenter);
         },
         (error) => {
-          console.error("Error fetching location", error);
-          reject(error);
+          // Enhanced error logging with specific error types
+          let errorMessage = "Unknown geolocation error";
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location access denied by user";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Geolocation error: ${error.message || 'Unknown error'}`;
+              break;
+          }
+          
+          console.error("Error fetching location:", {
+            code: error.code,
+            message: error.message,
+            errorType: errorMessage
+          });
+          
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
         }
       );
     });
@@ -632,31 +673,94 @@ const Page = () => {
       setMapCenter(newCenter as Location);
       mapRef.current?.panTo(newCenter as Location);
       mapRef.current?.setZoom(13);
+      
+      toast("Location Updated", {
+        description: "Map centered on your current location",
+        duration: 2000,
+      });
     } catch (error) {
       console.error("Failed to set location", error);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "Failed to get your location";
+      toast("Location Error", {
+        description: errorMessage,
+        duration: 5000,
+        variant: "destructive",
+      });
     }
   }
 
+  const handleNext = async () => {
+    const newSkip = skip + 150;
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
   return (
     <div className="flex flex-col lg:flex-row w-full h-[90vh] min-h-[500px]">
       <div className="flex-grow relative">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={mapCenter}
-            zoom={mapZoom}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
             options={{
+              // Modern Google Maps styling - Clean and minimal
+              styles: [
+                {
+                  featureType: "poi",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                },
+                {
+                  featureType: "transit",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                }
+              ],
+              // Modern controls
               streetViewControl: false,
-              mapTypeControl: false,
+              mapTypeControl: true,
+              mapTypeControlOptions: {
+                style: typeof google !== 'undefined' ? google.maps.MapTypeControlStyle.HORIZONTAL_BAR : 0,
+                position: typeof google !== 'undefined' ? google.maps.ControlPosition.TOP_RIGHT : 0,
+                mapTypeIds: typeof google !== 'undefined' ? [
+                  google.maps.MapTypeId.ROADMAP,
+                  google.maps.MapTypeId.SATELLITE,
+                  google.maps.MapTypeId.HYBRID
+                ] : ['roadmap', 'satellite', 'hybrid']
+              },
               fullscreenControl: false,
-              disableDefaultUI: true,
             }}
           >
-            <div className="absolute flex flex-col sm:flex-row mt-2 sm:mt-3 w-full h-auto sm:h-10 justify-between z-10 px-2 sm:px-5">
-              <div className="flex flex-col sm:flex-row w-full sm:w-[30vw] left-0 z-10 m-2 sm:m-5 align-center items-center gap-2 sm:gap-0">
+            <div className="absolute flex flex-col sm:flex-row mt-2 sm:mt-3 w-full h-auto sm:h-10 justify-between z-1 px-2 sm:px-5">
+              <div className="flex flex-col sm:flex-row w-full sm:w-[30vw] left-0 z-1 m-2 sm:m-5 align-center items-center gap-2 sm:gap-0">
                 <div className="w-full sm:min-w-[80px] sm:mr-3" ref={searchBarRef}>
                   <SearchBarMap
                     onSearch={handleSearch}
@@ -673,11 +777,13 @@ const Page = () => {
                   </div>
                 ) : null}
               </div>
-              <div
-                className="flex flex-row w-full sm:w-[50px] z-10 align-center items-center cursor-pointer hover:text-destructive justify-center sm:justify-end"
-                onClick={handleSetLocation}
-              >
-                <Navigation size={20} />
+              <div className="map-navigation-controls">
+                <button
+                  onClick={handleSetLocation}
+                  title="Center on current location"
+                >
+                  <Navigation size={20} />
+                </button>
               </div>
             </div>
           </GoogleMap>

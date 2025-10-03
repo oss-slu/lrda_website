@@ -453,6 +453,273 @@
   height: 100%;
 }
 
+/* Modern Google Maps Styling - Minimal and non-intrusive */
+.gm-style {
+  font-family: 'Google Sans', Roboto, Arial, sans-serif !important;
+}
+
+/* Modern zoom controls - subtle styling */
+.gm-zoom-control {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+}
+
+.gm-zoom-control button {
+  background-color: white !important;
+  border: none !important;
+  color: #5f6368 !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  height: 40px !important;
+  width: 40px !important;
+  transition: background-color 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.gm-zoom-control button:hover {
+  background-color: #f8f9fa !important;
+  color: #202124 !important;
+}
+
+.gm-zoom-control button:active {
+  background-color: #e8eaed !important;
+}
+
+/* Modern map info windows */
+.gm-style-iw {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+.gm-style-iw-d {
+  overflow: hidden !important;
+  border-radius: 12px !important;
+}
+
+/* Modern map markers */
+.gm-style-iw-tc {
+  display: none !important;
+}
+
+/* Modern map attribution */
+.gm-style-cc {
+  font-size: 10px !important;
+  color: #5f6368 !important;
+  background-color: rgba(255,255,255,0.8) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+}
+
+/* Modern map controls positioning */
+.gm-fullscreen-control {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+}
+
+/* Modern map type controls - mobile friendly */
+.gm-map-type-control {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+.gm-map-type-control button {
+  background-color: white !important;
+  border: none !important;
+  color: #5f6368 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  min-width: 60px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  transition: background-color 0.2s ease !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  position: relative !important; /* Ensure proper positioning */
+  z-index: 1001 !important; /* Higher z-index for buttons */
+}
+
+.gm-map-type-control button:hover {
+  background-color: #f8f9fa !important;
+  color: #202124 !important;
+}
+
+.gm-map-type-control button:active {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+}
+
+/* Mobile responsive map type control */
+@media (max-width: 768px) {
+  .gm-map-type-control {
+    flex-direction: column !important;
+    width: 90px !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 1001 !important;
+  }
+  
+  .gm-map-type-control button {
+    font-size: 11px !important;
+    padding: 8px 6px !important;
+    min-width: 90px !important;
+    min-height: 36px !important;
+  }
+}
+
+/* Ensure map type control is above other elements */
+.gm-map-type-control {
+  z-index: 1000 !important;
+}
+
+/* Fix for mobile positioning conflicts */
+@media (max-width: 768px) {
+  .gm-map-type-control {
+    z-index: 1001 !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+  }
+  
+  /* Ensure map type control doesn't interfere with other elements */
+  .gm-map-type-control * {
+    pointer-events: auto !important;
+    user-select: none !important;
+  }
+  
+  /* Make sure the entire button area is clickable */
+  .gm-map-type-control button {
+    position: relative !important;
+    z-index: 1002 !important;
+  }
+}
+
+/* Additional fixes for button clickability */
+.gm-map-type-control button:before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: -1 !important;
+  pointer-events: auto !important;
+}
+
+
+/* Navigation controls positioning to avoid overlap with map type controls */
+.map-navigation-controls {
+  position: absolute !important;
+  top: 60px !important; /* Position below map type controls */
+  right: 10px !important;
+  z-index: 10 !important; /* Lower than map type controls and note cards */
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  height: auto !important; /* Allow natural height */
+}
+
+.map-navigation-controls button {
+  background-color: white !important;
+  border: 1px solid #dadce0 !important;
+  border-radius: 4px !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important; /* Ensure minimum height */
+  max-height: 40px !important; /* Ensure maximum height */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
+  transition: background-color 0.2s ease !important;
+  flex-shrink: 0 !important; /* Prevent shrinking */
+}
+
+.map-navigation-controls button:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Mobile responsive navigation controls */
+@media (max-width: 768px) {
+  .map-navigation-controls {
+    top: 50px !important; /* Adjust for mobile map type control height */
+    right: 5px !important;
+  }
+  
+  .map-navigation-controls button {
+    width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+  }
+}
+
+.gm-style .gm-style-cc {
+  background-color: rgba(255,255,255,0.9) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+  color: #5f6368 !important;
+}
+
+/* Modern map loading */
+.gm-style .gm-style-iw {
+  font-family: 'Google Sans', Roboto, Arial, sans-serif !important;
+}
+
+/* Modern map popup styling */
+.popup-container {
+  z-index: 1000 !important;
+}
+
+.popup-bubble {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+.popup-bubble-anchor {
+  position: relative !important;
+}
+
+/* Modern map search box */
+.gm-style .gm-style-iw-c {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Modern map street view control */
+.gm-style .gm-style-iw-tc::after {
+  display: none !important;
+}
+
+/* Modern map compass */
+.gm-style .gm-style-iw-tc {
+  display: none !important;
+}
+
 
 /* Optional: Makes the sample page fill the window.  */
 html,

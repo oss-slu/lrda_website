@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Note, Comment } from "@/app/types";
 import ApiService from "../utils/api_service";
+import DOMPurify from "dompurify";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarDays, Clock3, UserCircle, ImageIcon, MessageSquare } from "lucide-react";
@@ -173,7 +174,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             {/* ← Here we render the actual HTML snippet, limited in height */}
             <div
               className="text-sm text-gray-700 overflow-hidden max-h-[80px]"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }}
             />
           </div>
         </div>
@@ -192,7 +193,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         )}
 
         <ScrollArea className="border p-4 mb-4 max-h-[300px] bg-white">
-        <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }} />
         </ScrollArea>
 
         <div className="border-t pt-4">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
 import { Note, Tag } from "@/app/types";
+import DOMPurify from "dompurify";
 import {
   CalendarDays,
   UserCircle,
@@ -228,7 +229,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
           {note.text ? (
             <div
               className="mt-4 text-base"
-              dangerouslySetInnerHTML={{ __html: note.text }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(note.text) }}
             />
           ) : (
             <p className="text-gray-500">No content available.</p>
