@@ -49,8 +49,8 @@ const Page = () => {
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const mapRef = useRef<google.maps.Map>();
-  const markerClustererRef = useRef<MarkerClusterer>();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
@@ -235,6 +235,7 @@ const Page = () => {
     }
   }, []);
 
+
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
     if (!isNoteSelectedFromSearch) {
@@ -353,10 +354,14 @@ const Page = () => {
       updateBounds();
     });
 
+    // Set initial center and zoom programmatically instead of using props
+    map.setCenter(mapCenter);
+    map.setZoom(mapZoom);
+
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, []);
+  }, [mapCenter, mapZoom]);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
@@ -521,7 +526,7 @@ const Page = () => {
         }
       }
 
-      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
+      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
 
       setCurrentPopup(popup);
 
@@ -610,17 +615,53 @@ const Page = () => {
       duration: 3000,
     });
     return new Promise((resolve, reject) => {
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        const error = new Error("Geolocation is not supported by this browser");
+        console.error("Geolocation not supported");
+        reject(error);
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newCenter = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
+          console.log("Location fetched successfully:", newCenter);
           resolve(newCenter);
         },
         (error) => {
-          console.error("Error fetching location", error);
-          reject(error);
+          // Enhanced error logging with specific error types
+          let errorMessage = "Unknown geolocation error";
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location access denied by user";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Geolocation error: ${error.message || 'Unknown error'}`;
+              break;
+          }
+          
+          console.error("Error fetching location:", {
+            code: error.code,
+            message: error.message,
+            errorType: errorMessage
+          });
+          
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
         }
       );
     });
@@ -632,32 +673,109 @@ const Page = () => {
       setMapCenter(newCenter as Location);
       mapRef.current?.panTo(newCenter as Location);
       mapRef.current?.setZoom(13);
+      
+      toast("Location Updated", {
+        description: "Map centered on your current location",
+        duration: 2000,
+      });
     } catch (error) {
       console.error("Failed to set location", error);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "Failed to get your location";
+      toast("Location Error", {
+        description: errorMessage,
+        duration: 5000,
+      });
     }
   }
 
+
+  const handleNext = async () => {
+    const newSkip = skip + 150;
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
   return (
-    <div className="flex flex-row w-screen h-full min-w-[600px]">
-      <div className="flex-grow">
+    <div className="flex flex-col lg:flex-row w-full h-[90vh] min-h-[500px]">
+      <div className="flex-grow relative">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={mapCenter}
-            zoom={mapZoom}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
             options={{
+              // Modern Google Maps styling - Clean and minimal
+              styles: [
+                {
+                  featureType: "poi",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                },
+                {
+                  featureType: "transit",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                }
+              ],
+              // Modern controls
               streetViewControl: false,
-              mapTypeControl: false,
+              mapTypeControl: true,
+              mapTypeControlOptions: {
+                style: typeof google !== 'undefined' ? google.maps.MapTypeControlStyle.HORIZONTAL_BAR : 0,
+                position: typeof google !== 'undefined' ? google.maps.ControlPosition.TOP_RIGHT : 0,
+                mapTypeIds: typeof google !== 'undefined' ? [
+                  google.maps.MapTypeId.ROADMAP,
+                  google.maps.MapTypeId.SATELLITE,
+                  google.maps.MapTypeId.HYBRID
+                ] : ['roadmap', 'satellite', 'hybrid']
+              },
               fullscreenControl: false,
-              disableDefaultUI: true,
+              zoomControl: true,
+              zoomControlOptions: {
+                position: typeof google !== 'undefined' ? google.maps.ControlPosition.RIGHT_BOTTOM : 0
+              },
+              // Modern map appearance - let user selection persist
+              gestureHandling: "cooperative",
+              // Disable old-style controls
+              disableDefaultUI: false,
+              // Enable modern features
+              clickableIcons: true,
+              keyboardShortcuts: true,
+              // Modern zoom behavior
+              minZoom: 1,
+              maxZoom: 20
             }}
           >
-            <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
-              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                <div className="min-w-[80px] mr-3" ref={searchBarRef}>
+            <div className="absolute flex flex-col sm:flex-row mt-2 sm:mt-3 w-full h-auto sm:h-10 justify-between z-1 px-2 sm:px-5">
+              <div className="flex flex-col sm:flex-row w-full sm:w-[30vw] left-0 z-1 m-2 sm:m-5 align-center items-center gap-2 sm:gap-0">
+                <div className="w-full sm:min-w-[80px] sm:mr-3" ref={searchBarRef}>
                   <SearchBarMap
                     onSearch={handleSearch}
                     onNotesSearch={handleNotesSearch}
@@ -666,56 +784,19 @@ const Page = () => {
                   />
                 </div>
                 {isLoggedIn ? (
-                  <button
-                    aria-label={global ? "Show personal posts" : "Show global posts"}
-                    onClick={toggleFilter}
-                    type="button"
-                    className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
-                      global ? "text-blue-600" : "text-green-600"
-                    }`}
-                  >
-                    {global ? (
-                      <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                    ) : (
-                      <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                    )}
-                  </button>
+                  <div className="flex flex-row justify-evenly items-center w-full sm:w-auto">
+                    <GlobeIcon className="text-primary" />
+                    <Switch onClick={toggleFilter} />
+                    <UserIcon className="text-primary" />
+                  </div>
                 ) : null}
               </div>
-              <div className="flex flex-row items-center gap-2 mr-4">
-                {/* Zoom Out Button */}
+              <div className="map-navigation-controls">
                 <button
-                  aria-label="Zoom out"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-                  onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
-                  type="button"
-                >
-                  <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                </button>
-                {/* Zoom In Button */}
-                <button
-                  aria-label="Zoom in"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-                  onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
-                  type="button"
-                >
-                  <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                </button>
-                {/* Locate Button */}
-                <button
-                  aria-label="Find my location"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4 p-2 md:p-3 xl:p-3 flex items-center justify-center"
                   onClick={handleSetLocation}
-                  type="button"
+                  title="Center on current location"
                 >
-                  <svg
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
-                  >
-                    <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
-                  </svg>
+                  <Navigation size={20} />
                 </button>
               </div>
             </div>
@@ -743,22 +824,7 @@ const Page = () => {
                 <ClickableNote note={note} />
               </div>
             ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handlePrevious}
-            disabled={skip === 0}
-          >
-            Previous
-          </button>
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div> */}
-
+        
         <div className="col-span-full flex justify-center mt-4 min-h-10">
           {infinite.hasMore ? (
             <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
