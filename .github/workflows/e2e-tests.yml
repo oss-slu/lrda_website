@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, openai_tags, memoryleak, december-sprint ]
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   test:
     timeout-minutes: 60
