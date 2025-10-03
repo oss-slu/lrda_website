@@ -5,6 +5,7 @@ import ApiService from "../../utils/api_service";
 import EnhancedClickableNote from "../../components/stories_card"; // Updated import
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 
 const StoriesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -12,7 +13,12 @@ const StoriesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<{ uid: string; name: string }[]>([]); // To store unique user IDs
   const [selectedUser, setSelectedUser] = useState<string>(""); // For dropdown selection
-  const [visibleCount, setVisibleCount] = useState(15); // Limit initial display to 15 notes for better performance
+  
+  // Infinite scrolling hook
+  const infinite = useInfiniteNotes<Note>({
+    items: filteredNotes,
+    pageSize: NOTES_PAGE_SIZE,
+  });
 
 
    // Fetch user names by resolving UIDs to names
@@ -82,10 +88,6 @@ const StoriesPage = () => {
     }
   };
 
-  // Handle loading more notes (same logic as map page and sidebar)
-  const handleLoadMoreNotes = () => {
-    setVisibleCount((prev) => prev + 15); // Increase by batch size of 15
-  };
 
 
 
@@ -97,7 +99,6 @@ const StoriesPage = () => {
   const handleSearch = (query: string) => {
     if (!query.trim()) {
       setFilteredNotes(notes); // Reset to all notes
-      setVisibleCount(15); // Reset visible count when clearing search
       return;
     }
     const lowerCaseQuery = query.toLowerCase();
@@ -110,20 +111,17 @@ const StoriesPage = () => {
         )
     );
     setFilteredNotes(results);
-    setVisibleCount(15); // Reset visible count when searching
   };
 
   const handleUserFilter = (userId: string) => {
     setSelectedUser(userId);
     if (userId === "") {
       setFilteredNotes(notes); // Show all notes if no user is selected
-      setVisibleCount(15); // Reset visible count when clearing user filter
     } else {
       const results = notes.filter(
         (note) => note.creator === userId && note.approvalRequested
       );
       setFilteredNotes(results);
-      setVisibleCount(15); // Reset visible count when filtering by user
     }
   };
 
@@ -145,10 +143,8 @@ const StoriesPage = () => {
             setSelectedUser(userId); // Update the selected user in state
             if (userId === "") {
               setFilteredNotes(notes); // Show all notes if no user is selected
-              setVisibleCount(15); // Reset visible count when clearing user filter
             } else {
               await fetchFilteredNotesByUser(userId); // Dynamically fetch and filter notes
-              setVisibleCount(15); // Reset visible count when filtering by user
             }
           }}
           className="w-full sm:w-auto p-2 sm:p-3 border rounded-lg shadow-sm text-sm sm:text-base"
@@ -173,7 +169,7 @@ const StoriesPage = () => {
                 />
               ))
             : filteredNotes.length > 0
-            ? filteredNotes.slice(0, visibleCount).map((note, index) => (
+            ? infinite.visibleItems.map((note, index) => (
                 <EnhancedClickableNote
                   key={note.id || `note-${index}`}
                   note={note}
@@ -187,15 +183,16 @@ const StoriesPage = () => {
         </div>
       </div>
 
-      {/* Load More Notes Button - Mobile Optimized */}
-      {visibleCount < filteredNotes.length && (
+      {/* Infinite Scroll Loader */}
+      {filteredNotes.length > 0 && (
         <div className="flex justify-center mt-6 mb-4">
-          <button
-            className="w-full sm:w-auto px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 text-sm sm:text-base font-medium transition-colors"
-            onClick={handleLoadMoreNotes}
-          >
-            Load More Stories
-          </button>
+          {infinite.hasMore ? (
+            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+              {infinite.isLoading && (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more stories" />
+              )}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

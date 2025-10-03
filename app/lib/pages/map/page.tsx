@@ -49,8 +49,8 @@ const Page = () => {
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const mapRef = useRef<google.maps.Map>();
-  const markerClustererRef = useRef<MarkerClusterer>();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
@@ -526,7 +526,7 @@ const Page = () => {
         }
       }
 
-      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
+      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
 
       setCurrentPopup(popup);
 
@@ -686,10 +686,10 @@ const Page = () => {
       toast("Location Error", {
         description: errorMessage,
         duration: 5000,
-        variant: "destructive",
       });
     }
   }
+
 
   const handleNext = async () => {
     const newSkip = skip + 150;
@@ -757,6 +757,20 @@ const Page = () => {
                 ] : ['roadmap', 'satellite', 'hybrid']
               },
               fullscreenControl: false,
+              zoomControl: true,
+              zoomControlOptions: {
+                position: typeof google !== 'undefined' ? google.maps.ControlPosition.RIGHT_BOTTOM : 0
+              },
+              // Modern map appearance - let user selection persist
+              gestureHandling: "cooperative",
+              // Disable old-style controls
+              disableDefaultUI: false,
+              // Enable modern features
+              clickableIcons: true,
+              keyboardShortcuts: true,
+              // Modern zoom behavior
+              minZoom: 1,
+              maxZoom: 20
             }}
           >
             <div className="absolute flex flex-col sm:flex-row mt-2 sm:mt-3 w-full h-auto sm:h-10 justify-between z-1 px-2 sm:px-5">
@@ -790,24 +804,18 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-1/2 lg:h-full overflow-y-auto bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-3 p-2 sm:p-3"
-      ref={notesListRef}>
+      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
         {isLoading
           ? [...Array(6)].map((_, index) => (
-              <Skeleton
-                key={index}
-                className="w-full h-[200px] sm:h-[250px] lg:h-[300px] rounded-lg flex flex-col border border-gray-200"
-              />
+              <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
           : infinite.visibleItems.map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
-                className={`transition-transform duration-300 ease-in-out cursor-pointer w-full h-auto max-h-[250px] sm:max-h-[300px] lg:max-h-[308px] ${
-                  note.id === activeNote?.id
-                    ? "active-note"
-                    : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
+                  note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
@@ -816,32 +824,16 @@ const Page = () => {
                 <ClickableNote note={note} />
               </div>
             ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handlePrevious}
-            disabled={skip === 0}
-          >
-            Previous
-          </button>
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div> */}
-
-        {visibleCount < filteredNotes.length && (
-          <div className="col-span-full flex justify-center mt-4 mb-2">
-            <button
-              onClick={() => setVisibleCount((prev) => prev + 15)}
-              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm sm:text-base font-medium"
-            >
-              Load More Notes...
-            </button>
-          </div>
-        )}
+        
+        <div className="col-span-full flex justify-center mt-4 min-h-10">
+          {infinite.hasMore ? (
+            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+              {infinite.isLoading && (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

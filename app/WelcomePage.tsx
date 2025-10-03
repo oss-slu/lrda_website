@@ -10,8 +10,8 @@ const WelcomePage: React.FC = () => {
         <Image
           src="/splash.png"
           alt="Background Image"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: "cover" }}
           className="z-[-1]"
         />
       </div>
@@ -21,7 +21,7 @@ const WelcomePage: React.FC = () => {
         <h1 className="text-black text-9xl font-extrabold" style={{ 
           textShadow: "2px 2px 4px rgba(255, 255, 255, 0.8)" 
         }}>
-          Where's Religion?
+          Where&apos;s Religion?
         </h1>
       </div>
     </div>

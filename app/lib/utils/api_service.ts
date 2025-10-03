@@ -236,10 +236,6 @@ static async fetchMessages(
       type: "message",
     };
 
-      let body: { type: string; published?: boolean; creator?: string } = {
-        type: "message",
-      };
-
       if (global) {
         body = { type: "message" };
       } else if (published) {

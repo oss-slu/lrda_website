@@ -2,6 +2,12 @@ import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"; // Import act from testing-library
 import Navbar from "../lib/components/navbar";
 import { User } from "../lib/models/user_class";
+import { usePathname } from "next/navigation";
+
+// Mock usePathname
+jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(),
+}));
 
 interface MockUser extends User {
   getName: jest.Mock;
@@ -66,6 +72,7 @@ describe("Navbar Component", () => {
   });
 
   it("shows Login when user is not logged in", async () => {
+    mockedUsePathname.mockReturnValue("/");
     // For now, let's just test that the navbar renders without crashing
     // The authentication logic is complex and difficult to mock properly
     render(<Navbar />);

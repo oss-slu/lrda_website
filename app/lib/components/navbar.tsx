@@ -18,6 +18,14 @@ export default function Navbar() {
   const [hasProfileData, setHasProfileData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const pathname = usePathname();
+
+  const getActiveClass = (href: string) => {
+    if (href === "/" && pathname === "/") return "text-blue-500";
+    if (href !== "/" && pathname && pathname.startsWith(href)) return "text-blue-500";
+    return "text-blue-300 hover:text-blue-500 transition";
+  };
 
   const handleLogout = async () => {
     try {
@@ -110,19 +118,19 @@ export default function Navbar() {
     return (
       <nav className="bg-gray-900 w-full h-[10vh] flex items-center px-4 sm:px-6 text-white overflow-visible">
         <div className="flex items-center space-x-2 sm:space-x-6">
-          <Link href="/" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/" className={cn("text-lg sm:text-2xl font-bold ", getActiveClass("/"))}>
             Home
           </Link>
-          <Link href="/lib/pages/map" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/map" className={cn("text-lg sm:text-2xl font-bold ", getActiveClass("/lib/pages/map"))}>
             Map
           </Link>
-          <Link href="/lib/pages/aboutPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/aboutPage" className={cn("text-lg sm:text-2xl font-bold ", getActiveClass("/lib/pages/aboutPage"))}>
             About
           </Link>
-          <Link href="/lib/pages/ResourcesPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/ResourcesPage" className={cn("text-lg sm:text-2xl font-bold ", getActiveClass("/lib/pages/ResourcesPage"))}>
             Resources
           </Link>
-          <Link href="/lib/pages/StoriesPage" className="text-lg sm:text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+          <Link href="/lib/pages/StoriesPage" className={cn("text-lg sm:text-2xl font-bold ", getActiveClass("/lib/pages/StoriesPage"))}>
             Stories
           </Link>
         </div>
@@ -151,7 +159,7 @@ export default function Navbar() {
 
       {/* Desktop Navigation */}
       <div className="hidden lg:flex items-center space-x-6">
-        <Link href="/" className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition">
+        <Link href="/" className={cn("text-2xl font-bold", getActiveClass("/"))}>
           Home
         </Link>
 
@@ -159,7 +167,7 @@ export default function Navbar() {
           <Link
             href="/lib/pages/notes"
             id="navbar-create-note"
-            className="text-2xl font-bold text-blue-300 hover:text-blue-500 transition"
+            className={cn("text-2xl font-bold", getActiveClass("/lib/pages/notes"))}
           >
             Notes
           </Link>

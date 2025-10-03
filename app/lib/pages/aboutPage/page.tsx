@@ -1,9 +1,12 @@
+"use client";
+
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { User } from "../../models/user_class";
 import { canApplyForInstructor } from "../../utils/adminToInstructor";
+import { GitHubLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
 
 const Page = () => {
   const [showInstructorSection, setShowInstructorSection] = useState(false);
@@ -79,14 +82,14 @@ const Page = () => {
 
       {/* Main content section */}
       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
-  <section className="mb-8">
-    <h2 className="text-4xl font-bold">About</h2>
-    <br />
-    <p className="text-lg font-normal leading-7">
+        <section className="mb-8">
+          <h2 className="text-4xl font-bold">About</h2>
+          <br />
+          <p className="text-lg font-normal leading-7">
       Where's Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more robust public understanding of religion through rigorous scholarly methods. Our conviction is that the study of religion must account for the wide range of embodied experiences, improvised practices, material cultures, and shared spaces that humans inhabit. Through a research methodology that moves beyond analysis of sacred texts, creeds, and official teachings, Where's Religion? provides a platform to diversify the data we study and to advance the study of religion we all encounter in everyday life.
-    </p>
-    <br />
-    <p className="text-lg font-normal leading-7">
+          </p>
+          <br />
+          <p className="text-lg font-normal leading-7">
       Where's Religion? is a keystone outcome of the Center on Lived Religion at Saint Louis University. We have received external support from the Henry Luce Foundation ($400,000 in 2018 and $470,000 in 2022), and internal support from the College of Arts & Sciences, the Office for the Vice President for Research and the Research Computing Group, Open Source with SLU, the Walter J. Ong, S.J., Center for Digital Humanities, and the CREST Research Center (Culture, Religion, Ethics, Science, Technology).
     </p>
   </section>
@@ -161,9 +164,9 @@ const Page = () => {
           </ul>
         </div>
       </div>
-    </section>
+        </section>
   )}
-</main>
+      </main>
 
       {/* Team Section */}
       <main className="max-w-4xl mx-auto px-4 bg-white bg-opacity-80 py-16">
@@ -227,13 +230,13 @@ const Page = () => {
               <p className="font-semibold text-center">Software Developer(COLR)</p>
               <div className="flex mt-2 space-x-4">
                 {/* GitHub Icon */}
-                <a href="https://github.com/yashb196" target="_blank" rel="noopener noreferrer">
+                  <a href="https://github.com/yashb196" target="_blank" rel="noopener noreferrer">
                   <GitHubLogoIcon className="h-6 w-6" />
-                </a>
-                {/* LinkedIn Icon */}
-                <a href="https://www.linkedin.com/in/yashbhatia238/" target="_blank" rel="noopener noreferrer">
+                  </a>
+                  {/* LinkedIn Icon */}
+                  <a href="https://www.linkedin.com/in/yashbhatia238/" target="_blank" rel="noopener noreferrer">
                   <LinkedInLogoIcon className="h-6 w-6" />
-                </a>
+                  </a>
               </div>
             </div>
              {/* Izak Robles */}

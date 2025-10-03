@@ -9,6 +9,10 @@ const customJestConfig = {
   setupFiles: ["<rootDir>/jest.setup.ts"],
   setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
   maxWorkers: "50%",  // Limit to 50% of available CPUs to avoid overloading
+  // Transform ES modules for Jest compatibility
+  transformIgnorePatterns: [
+    "node_modules/(?!(react-resizable-panels|@react-resizable-panels|@radix-ui|@googlemaps|@react-googlemaps)/)"
+  ],
   // Exclude Playwright E2E tests from Jest runs
   testPathIgnorePatterns: [
     "<rootDir>/app/__e2e__/",
