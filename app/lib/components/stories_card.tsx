@@ -157,11 +157,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             </div>
           ) : (
             <div className="w-full h-32 sm:h-36 md:h-40 bg-gray-100 rounded-t-lg flex items-center justify-center">
-              <img
-                src="/no-photo-placeholder.jpeg"
-                alt="No Image Available"
-                className="w-full h-full object-cover rounded-t-lg"
-              />
+              <ImageIcon aria-label="No photo present" className="text-gray-400" size={72} strokeWidth={1} />
             </div>
           )}
           <div className="p-3 sm:p-4">
