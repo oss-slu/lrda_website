@@ -798,8 +798,8 @@ static async fetchCreatorNameFromFirestore(userId: string): Promise<string> {
   try {
     console.log("Fetching user name from Firestore for UID:", userId);
 
-    // Check if userId is a devstore.rerum.io URL and fetch name from API
-    if (userId.includes("devstore.rerum.io")) {
+    // Check if userId is a valid devstore.rerum.io URL and fetch name from API
+    if (userId.startsWith("https://devstore.rerum.io/") || userId.startsWith("http://devstore.rerum.io/")) {
       try {
         console.log("Fetching user data from devstore API:", userId);
         const response = await fetch(userId);
