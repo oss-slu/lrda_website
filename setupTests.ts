@@ -1,7 +1,12 @@
 import '@testing-library/jest-dom';
 import fetchMock from 'jest-fetch-mock';
+import { TextEncoder, TextDecoder } from 'util';
 
 fetchMock.enableMocks();
+
+// Mock TextEncoder and TextDecoder for jsPDF compatibility
+(global as any).TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
 
 // Ensure Firebase env vars exist in test environment
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'test-api-key';

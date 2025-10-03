@@ -681,6 +681,9 @@ test.describe('Admin to Instructor Utility Functions', () => {
       // Navigate to the page - it will handle authentication internally
       await page.goto('/lib/pages/AdminToInstructorApplication');
       
+      // Wait for page to load completely
+      await page.waitForLoadState('networkidle');
+      
       // The page will either show the form or redirect based on user status
       // We'll check for common elements that should be present
       const pageContent = await page.textContent('body');
@@ -692,6 +695,8 @@ test.describe('Admin to Instructor Utility Functions', () => {
       
       if (pageContent?.includes('Login')) {
         // User redirected to login - this is expected behavior
+        // Wait for the h1 element to be visible and then check its text
+        await page.waitForSelector('h1', { timeout: 5000 });
         await expect(page.locator('h1')).toContainText('Login');
       } else if (pageContent?.includes('Apply to Become an Instructor') || pageContent?.includes('Complete Your Instructor Profile')) {
         // User sees the application form

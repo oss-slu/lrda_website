@@ -120,63 +120,7 @@ const ClickableNote: React.FC<{
     <Dialog>
       <DialogTrigger asChild>
         <div className="z-40">
-          {/* Show only metadata in the card, not content */}
-          <div className="w-full max-w-[256px] bg-white h-[250px] sm:h-[300px] rounded-lg shadow flex flex-col border border-gray-200">
-            {note.media && note.media.length > 0 && note.media[0].type === "image" ? (
-              <img
-                src={note.media[0].uri}
-                alt="Note media"
-                className="w-full h-[140px] sm:h-[180px] object-cover rounded-t-lg"
-              />
-            ) : (
-              <img
-                src="/no-photo-placeholder.jpeg"
-                alt="Placeholder"
-                className="w-full h-[140px] sm:h-[180px] object-cover rounded-t-lg"
-              />
-            )}
-            <div className="flex flex-col px-2 sm:px-3 h-[110px] sm:h-[118px]">
-              <div className="w-full">
-                <h3 className="text-base sm:text-xl font-bold text-gray-900 truncate overflow-x-auto whitespace-nowrap">
-                  {note.title}
-                </h3>
-              </div>
-              <div className="flex flex-col h-[90px] sm:h-[100px] justify-evenly">
-                <div className="flex flex-row items-center align-middle">
-                  <UserCircle className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <p className="text-xs sm:text-[15px] text-gray-500 truncate">{creator}</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <CalendarDays className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <p className="text-xs sm:text-sm text-gray-700">{formatDate(note.time)}</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <Clock3 className="mr-1 sm:mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <p className="text-xs sm:text-sm text-gray-700">{formatTime(note.time)}</p>
-                </div>
-                {tags.length > 0 && (
-                  <div className="flex items-center">
-                    <div className="flex justify-center items-center mr-1 sm:mr-2 h-[12px] w-[12px] sm:h-[15px] sm:w-[15px] rounded-full">
-                      <Tags size={12} className="sm:w-4 sm:h-4" />
-                    </div>
-                    <div className="flex items-center h-4 sm:h-5 overflow-hidden">
-                      <ScrollArea className="flex flex-nowrap self-center align-middle overflow-clip mb-1">
-                        {tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="bg-blue-100 text-blue-800 text-xs px-1 sm:px-2 mr-1 font-medium rounded-full whitespace-nowrap"
-                          >
-                            {tag.label}
-                          </span>
-                        ))}
-                        <ScrollBar orientation="horizontal" className="h-[3px] sm:h-[5px]" />
-                      </ScrollArea>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <NoteCard note={note} />
         </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[80%] h-[100vh]">
