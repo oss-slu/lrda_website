@@ -50,7 +50,9 @@ export default function Navbar() {
   // Active link styling
   const linkClass = (href: string) =>
     cn(
-      "text-2xl font-bold transition duration-300 ease-in-out mr-4",
+      //"text-2xl font-bold transition duration-300 ease-in-out mr-4",
+      "text-xl font-bold transition duration-300 ease-in-out mr-6",
+
       href === "/"
         ? pathname === "/" // Home should only match exactly
           ? "text-blue-500"
@@ -100,14 +102,14 @@ export default function Navbar() {
         ) : (
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="default"
               onClick={() => (window.location.href = "/lib/pages/loginPage")}
               className="whitespace-nowrap"
             >
               Login
             </Button>
             <Button
-              variant="default"
+              variant="outline"
               onClick={() => (window.location.href = "/lib/pages/signupPage")}
               className="whitespace-nowrap"
             >
