@@ -19,13 +19,13 @@ const WelcomePage: React.FC = () => {
             Where's Religion?
           </h1>
           {/* Sub-description */}
-          <p className={`text-md md:text-xl text-gray-500 max-w-xl ${ANIMATE_CLASS}`} style={{ animationDelay: "0.4s" }}>
+          <p className={`text-md md:text-xl text-gray-400 max-w-xl ${ANIMATE_CLASS}`} style={{ animationDelay: "0.4s" }}>
             A revolutionary platform to support in-person research, remote data entry, media sharing, and mapping.
           </p>
 
           {/* Section for App Store Links */}
           <div className={`mt-8 ${ANIMATE_CLASS}`} style={{ animationDelay: "0.6s" }}>
-            <p className={"text-md md:text-md text-gray-500 max-w-xl"}>Get our mobile app here:</p>
+            <p className={"text-md md:text-md text-gray-400 max-w-xl"}>Get our mobile app here:</p>
             <div className="flex space-x-2 items-center mt-4">
               {/* Apple App Store Link */}
               <a
