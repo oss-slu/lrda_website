@@ -1,11 +1,11 @@
 "use client";
-import { editAboutPageFlag } from "@/app/lib/utils/feature_flags";
+import { setAboutPageFlag } from "./aboutPageActions";
 
 export function EnableAboutPageButton() {
   return (
     <button
       onClick={async () => {
-        await editAboutPageFlag(true);
+        await setAboutPageFlag(true);
       }}
       className="bg-green-600 text-white px-4 py-2 rounded mt-4"
     >
@@ -18,7 +18,7 @@ export function DisableAboutPageButton() {
   return (
     <button
       onClick={async () => {
-        await editAboutPageFlag(false);
+        await setAboutPageFlag(false);
       }}
       className="bg-green-600 text-white px-4 py-2 rounded mt-4"
     >
