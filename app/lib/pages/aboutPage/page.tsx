@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import NewAboutPage from "./NewAboutPage";
 import OldAboutPage from "./OldAboutPage";
 import { getAboutPageFlag } from "@/app/lib/utils/feature_flags";

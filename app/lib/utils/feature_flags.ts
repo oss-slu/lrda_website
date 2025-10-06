@@ -34,7 +34,6 @@ export async function editAboutPageFlag(enabled: boolean): Promise<Response> {
  * @returns {Promise<boolean>} Whether the new About page is enabled.
  */
 export async function getAboutPageFlag(): Promise<boolean> {
-  console.log("Fetching about page feature flag to:", RERUM_PREFIX + "query");
   const response = await fetch(RERUM_PREFIX + "query", {
     method: "POST",
     headers: {
@@ -46,7 +45,7 @@ export async function getAboutPageFlag(): Promise<boolean> {
     }),
   });
   const data = await response.json();
-  
+
   return !!(data && data[0] && data[0].enabled);
 }
 
@@ -55,7 +54,6 @@ export async function getAboutPageFlag(): Promise<boolean> {
  * @returns {Promise<string | null>} The ID of the new About page feature flag.
  */
 export async function getAboutPageFlagId(): Promise<string | null> {
-  console.log("Fetching about page feature flag to:", RERUM_PREFIX + "query");
   const response = await fetch(RERUM_PREFIX + "query", {
     method: "POST",
     headers: {
