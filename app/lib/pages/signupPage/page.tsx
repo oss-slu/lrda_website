@@ -23,9 +23,12 @@ const SignupPage = () => {
   const [institution, setInstitution] = useState("");
   const [formError, setFormError] = useState("");
   const [unmetRequirements, setUnmetRequirements] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
+    if (isLoading) return; // prevent duplicate submits
     setFormError("");
+    setIsLoading(true);
     if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
 
@@ -79,6 +82,7 @@ const SignupPage = () => {
       const msg = (error && (error as any).message) || String(error);
       setFormError(`Signup failed: ${msg}`);
       toast.error(`Signup failed: ${msg}`);
+      setIsLoading(false);
     }
   };
 
@@ -127,8 +131,11 @@ const SignupPage = () => {
             <button
               onClick={handleSignup}
               className="w-full bg-blue-500 text-white p-3 rounded-lg"
+              aria-busy={isLoading}
+              aria-disabled={isLoading}
+              disabled={isLoading}
             >
-              Sign Up
+              {isLoading ? "Signing up..." : "Sign Up"}
             </button>
           </div>
          
