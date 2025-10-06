@@ -9,6 +9,7 @@ type LoginButtonProps = {
   password: string;
 };
 
+const user = User.getInstance();
 
 const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -36,9 +37,6 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       toast.error("Please enter email/username and password");
       return;
     }
-    // Resolve the singleton at click time so tests can mock User.getInstance()
-    // before the component is imported. Avoid calling it at module scope.
-    const user = User.getInstance();
 
     setIsLoading(true);
     try {

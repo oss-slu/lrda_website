@@ -23,12 +23,9 @@ const SignupPage = () => {
   const [institution, setInstitution] = useState("");
   const [formError, setFormError] = useState("");
   const [unmetRequirements, setUnmetRequirements] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (isLoading) return; // prevent duplicate submits
     setFormError("");
-    setIsLoading(true);
     if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
 
@@ -82,9 +79,10 @@ const SignupPage = () => {
       const msg = (error && (error as any).message) || String(error);
       setFormError(`Signup failed: ${msg}`);
       toast.error(`Signup failed: ${msg}`);
-      setIsLoading(false);
     }
   };
+
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD]">
@@ -98,7 +96,7 @@ const SignupPage = () => {
       </div>
       <div className="absolute inset-10 flex flex-col items-center justify-center">
         <div className="w-3/4 bg-white p-8 rounded-lg shadow-lg">
-          <h1 className="text-black-500 font-bold mb-20 text-center text-3xl">
+          <h1 className="text-black-500 font-bold mb-8 text-center text-3xl">
            User Sign Up
           </h1>
           <div className="mb-4">
@@ -127,16 +125,21 @@ const SignupPage = () => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row items-center justify-center">
-            <button
-              onClick={handleSignup}
-              className="w-full bg-blue-500 text-white p-3 rounded-lg"
-              aria-busy={isLoading}
-              aria-disabled={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing up..." : "Sign Up"}
-            </button>
+          <form onSubmit={async (e) => { e.preventDefault(); setIsSubmitting(true); await handleSignup(); setIsSubmitting(false); }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center mt-6">
+              <button
+                type="submit"
+                className={`w-full bg-blue-500 text-white p-3 rounded-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Signing up...' : 'Sign Up'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-4 text-center text-sm">
+            <span>Already have an account? </span>
+            <Link href="/lib/pages/loginPage" className="text-blue-600 hover:underline">Log in</Link>
           </div>
          
 
