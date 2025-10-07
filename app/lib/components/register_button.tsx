@@ -27,10 +27,10 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
           onClick={handleClick}
           className={` ${
             isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
+          } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm bg-[#0f1724] text-white`}
           disabled={isLoading}
         >
-          {isLoading ? 'Registering...' : 'Register'}
+          {isLoading ? 'Signing up...' : 'Sign up'}
         </Button>
       </Link>
     </div>
