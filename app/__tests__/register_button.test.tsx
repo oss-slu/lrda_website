@@ -5,7 +5,7 @@ import { validateEmail, validateFirstName, validateLastName } from '../lib/utils
 
 test('Register button is clickable when not in a loading state', () => {
   const { getByText } = render(<RegisterButton />);
-  const button = getByText('Register');
+  const button = getByText('Sign up');
   expect(button).not.toHaveAttribute('disabled'); // Check that the button is not disabled
   fireEvent.click(button);
   // You can add assertions here to test the button's behavior when clicked
@@ -23,8 +23,8 @@ test('Validation functions for E-mail, first and last name are valid with input 
 });
 
 test('Register button is disabled when in a loading state', () => {
-    const { getByText } = render(<RegisterButton />);
-    const button = getByText('Register');
+  const { getByText } = render(<RegisterButton />);
+  const button = getByText('Sign up');
     expect(button).not.toHaveAttribute('disabled'); // Check that the button is initially not disabled
     fireEvent.click(button); // Trigger a click to simulate the loading state
     expect(button).toHaveAttribute('disabled'); // Check that the button is disabled when in a loading state
@@ -32,25 +32,25 @@ test('Register button is disabled when in a loading state', () => {
   });
 
   test('Button text changes to "Registering..." when clicked', () => {
-    const { getByText } = render(<RegisterButton />);
-    const button = getByText('Register');
-    fireEvent.click(button); // Trigger a click event
-    expect(getByText('Registering...')).toBeInTheDocument(); // Check if the button text changes to "Registering..."
+  const { getByText } = render(<RegisterButton />);
+  const button = getByText('Sign up');
+  fireEvent.click(button); // Trigger a click event
+  expect(getByText('Signing up...')).toBeInTheDocument(); // Check if the button text changes to "Signing up..."
   });
 
   test('Button click triggers handleClick function', () => {
     const handleClick = jest.fn();
-    const { getByText } = render(<RegisterButton />);
-    const button = getByText('Register');
+  const { getByText } = render(<RegisterButton />);
+  const button = getByText('Sign up');
     button.onclick = handleClick; // Attach the handleClick function to the button
     fireEvent.click(button); // Trigger a click event
     expect(handleClick).toHaveBeenCalled(); // Check if handleClick was called
   });
 
   test('RegisterButton component renders with the correct text', () => {
-    const { getByText } = render(<RegisterButton />);
-    const registerButton = getByText('Register');
-    expect(registerButton).toBeInTheDocument(); // Check if the "Register" button is rendered
+  const { getByText } = render(<RegisterButton />);
+  const registerButton = getByText('Sign up');
+  expect(registerButton).toBeInTheDocument(); // Check if the "Sign up" button is rendered
   });
 
   test('Unusual Test: RegisterButton component does not have an unusual attribute', () => {
