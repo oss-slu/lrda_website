@@ -1,9 +1,21 @@
-"use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import WelcomePage from "./WelcomePage";
+export const dynamic = "force-dynamic";
 
-const IndexPage: React.FC = () => {
-  return <WelcomePage />;
-};
+import NewAboutPage from "./lib/pages/aboutPage/NewAboutPage";
+import { getAboutPageFlag } from "@/app/lib/utils/feature_flags";
+import OldWelcomePage from "./OldWelcomePage";
 
-export default IndexPage;
+export default async function Page() {
+  const isNewAboutPage = await getAboutPageFlag();
+
+  if (isNewAboutPage) {
+    return (
+      <>
+        <WelcomePage />
+        <NewAboutPage />
+      </>
+    );
+  }
+  return <OldWelcomePage />;
+}
