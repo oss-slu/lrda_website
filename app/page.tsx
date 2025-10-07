@@ -9,7 +9,7 @@ import OldWelcomePage from "./OldWelcomePage";
 export default async function Page() {
   const isNewAboutPage = await getAboutPageFlag();
 
-  if (isNewAboutPage) {
+  if (!isNewAboutPage) {
     return (
       <>
         <WelcomePage />
