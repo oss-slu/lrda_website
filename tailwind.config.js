@@ -65,10 +65,20 @@ module.exports = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: 0 },
         },
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        zoomIn: {
+          '0': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)'},
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        fadeIn: 'fadeIn 1.0s ease-in forwards',
+        'zoom-slow': 'zoomIn 10s ease-in-out infinite alternate',
       },
     },
   },
