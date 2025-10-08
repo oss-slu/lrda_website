@@ -203,33 +203,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       noteHandlers.setNote(initialNote as Note);
       noteHandlers.setEditorContent(initialNote.text || "");
       noteHandlers.setTitle(initialNote.title || "");
-
-      noteHandlers.setImages((initialNote.media.filter((item) => item.getType() === "image") as PhotoType[]) || []);
-      noteHandlers.setTime(initialNote.time || new Date());
-      noteHandlers.setLongitude(initialNote.longitude || "");
-      noteHandlers.setLatitude(initialNote.latitude || "");
-
-      noteHandlers.setTags((initialNote.tags || []).map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag)));
-
-      noteHandlers.setAudio(initialNote.audio || []);
-      noteHandlers.setIsPublished(initialNote.published || false);
-      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
-      noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
-    }
-  }, [initialNote]);
-
-  console.log("initial Note", initialNote);
-
-  useEffect(() => {
-    if (initialNote) {
-      noteHandlers.setNote(initialNote as Note);
-    }
-  }, [initialNote]);
-
-  useEffect(() => {
-    if (initialNote) {
-      noteHandlers.setEditorContent(initialNote.text || "");
-      noteHandlers.setTitle(initialNote.title || "");
       noteHandlers.setImages((initialNote.media.filter((item) => item.getType() === "image") as PhotoType[]) || []);
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
@@ -237,11 +210,19 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       noteHandlers.setTags((initialNote.tags || []).map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag)));
       noteHandlers.setAudio(initialNote.audio || []);
       noteHandlers.setIsPublished(initialNote.published || false);
-
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
     }
   }, [initialNote]);
+
+  useEffect(() => {
+    // When noteState.editorContent changes (e.g., when switching notes), update the editor instance
+    if (rteRef.current?.editor && noteState.editorContent !== rteRef.current.editor.getHTML()) {
+      rteRef.current.editor.commands.setContent(noteState.editorContent || "", false);
+    }
+  }, [noteState.editorContent]);
+
+  console.log("initial Note", initialNote); // Keep this here until we can avoid 4 rerenders every time a note is changed
 
   const onSave = async () => {
     const updatedNote: any = {
