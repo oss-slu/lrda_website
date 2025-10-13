@@ -252,10 +252,11 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    markers.forEach((marker, noteId) => {
+    markers.forEach(({ marker, iconNode }, noteId) => {
       const isHovered = hoveredNoteId === noteId;
-      marker.setIcon(createMarkerIcon(isHovered));
-      marker.setZIndex(isHovered ? google.maps.Marker.MAX_ZINDEX + 1 : null);
+      iconNode.style.transform = isHovered ? "scale(1.2)" : "scale(1)";
+      //marker.setIcon(createMarkerIcon(isHovered));
+      marker.zIndex = isHovered ? 1000 : 0;
     });
   }, [hoveredNoteId, markers]);
 
@@ -273,35 +274,50 @@ const Page = () => {
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
       const tempMarkers = new Map();
+      const map = mapRef.current;
 
-      const attachMarkerEvents = (marker: google.maps.Marker, note: Note) => {
+      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => { // Unsure of 'any' type being used here
         google.maps.event.clearListeners(marker, "click");
         google.maps.event.clearListeners(marker, "mouseover");
         google.maps.event.clearListeners(marker, "mouseout");
 
+        // Click event
         marker.addListener("click", () => handleMarkerClick(note));
 
+        // Hover events
         marker.addListener("mouseover", () => {
           setHoveredNoteId(note.id);
           scrollToNoteTile(note.id);
           setActiveNote(note);
-          marker.setIcon(createMarkerIcon(true));
+          iconNode.style.transform = "scale(1.2)";
+          marker.zIndex = 1000;
         });
 
         marker.addListener("mouseout", () => {
           setHoveredNoteId(null);
           setActiveNote(null);
-          marker.setIcon(createMarkerIcon(false));
+          iconNode.style.transform = "scale(1)";
+          marker.zIndex = 0;
         });
       };
 
+      // Create new AdvancedMarkerElement instances
       filteredNotes.forEach((note) => {
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
-          icon: createMarkerIcon(false),
+        const position = new google.maps.LatLng(
+          parseFloat(note.latitude),
+          parseFloat(note.longitude)
+        );
+        
+        const iconNode = createMarkerIcon();
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          position,
+          map,
+          content: iconNode,
+          title: note.title || "",
         });
 
-        attachMarkerEvents(marker, note);
+        attachMarkerEvents(marker, note, iconNode);
         tempMarkers.set(note.id, marker);
       });
 
@@ -575,19 +591,19 @@ const Page = () => {
     console.log("Filtered:", filtered);
   };
 
-  function createMarkerIcon(isHighlighted: boolean) {
-    if (isHighlighted) {
-      return {
-        url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48),
-      };
-    } else {
-      return {
-        url: "/markerR.png",
-        scaledSize: new window.google.maps.Size(40, 40),
-      };
-    }
+  function createMarkerIcon(): HTMLElement {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40">
+        <path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle fill="white" cx="12" cy="9" r="2.5"/>
+      </svg>
+    `;
+    div.style.transition = "transform 0.2s ease";
+    return div;
   }
+
+
 
   const toggleFilter = () => {
     setGlobal(!global);

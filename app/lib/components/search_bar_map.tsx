@@ -20,9 +20,14 @@ type SearchBarMapProps = {
   filteredNotes: Note[];
 };
 
+type Suggestion = {
+  description: string;
+  place_id: string;
+}
+
 type SearchBarMapState = {
   searchText: string;
-  suggestions: google.maps.places.AutocompletePrediction[];
+  suggestions: Suggestion[];
   isDropdownVisible: boolean; // Tracks whether the dropdown is visible
   loading: boolean; // loading indicator
 };
@@ -31,7 +36,7 @@ class SearchBarMap extends React.Component<
   SearchBarMapProps,
   SearchBarMapState
 > {
-  private autocompleteService: google.maps.places.AutocompleteService | null =
+  private autocompleteSuggestion: google.maps.places.AutocompleteSuggestion | null =
     null;
   private dropdownRef = React.createRef<HTMLUListElement>();
 
@@ -46,9 +51,9 @@ class SearchBarMap extends React.Component<
   }
 
   componentDidMount() {
-    if (window.google?.maps?.places && !this.autocompleteService) {
-      this.autocompleteService =
-        new window.google.maps.places.AutocompleteService();
+    if (window.google?.maps?.places && !this.autocompleteSuggestion) {
+      this.autocompleteSuggestion =
+        new window.google.maps.places.AutocompleteSuggestion();
     }
   }
 
@@ -56,31 +61,42 @@ class SearchBarMap extends React.Component<
     if (
       this.props.isLoaded &&
       !prevProps.isLoaded &&
-      !this.autocompleteService
+      !this.autocompleteSuggestion
     ) {
-      this.autocompleteService =
-        new window.google.maps.places.AutocompleteService();
+      this.autocompleteSuggestion =
+        new window.google.maps.places.AutocompleteSuggestion();
     }
   }
 
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     this.setState({ searchText: query, isDropdownVisible: true, loading: true });
-  
-    if (query.length > 2 && this.autocompleteService) {
-      this.autocompleteService.getPlacePredictions(
-        { input: query },
-        this.handlePredictions
-      );
-      this.props.onNotesSearch(query); // Trigger notes search
+
+    if (query.length > 2 && window.google?.maps?.places?.AutocompleteSuggestion) {
+      const sessionToken = new window.google.maps.places.AutocompleteSessionToken();
+      window.google.maps.places.AutocompleteSuggestion
+        .fetchAutocompleteSuggestions({
+          input: query,
+          sessionToken,
+        })
+        .then((response: any) => {
+          const suggestions = response.suggestions.map((s: any) => ({
+            description: s.description,
+            place_id: s.place_id
+          }));
+          this.setState({ suggestions, loading: false });
+          this.props.onNotesSearch(query);
+        })
+        .catch(() => {
+          this.setState({ suggestions: [], loading: false });
+        });
     } else {
-      this.setState({ suggestions: [] });
+      this.setState({ suggestions: [], loading: false });
       if (query.length === 0 && this.state.searchText.length > 0) {
-        this.props.onSearch(""); // Clear search results
-        this.props.onNotesSearch(""); // Reset notes search
+        this.props.onSearch("");
+        this.props.onNotesSearch("");
       }
     }
-  
   };
 
   // Handle "Enter" key press
@@ -93,17 +109,6 @@ class SearchBarMap extends React.Component<
         this.props.onSearch(typedLocation);
         this.setState({ isDropdownVisible: false});
       }
-    }
-  };
-
-  handlePredictions = (
-    predictions: google.maps.places.AutocompletePrediction[] | null,
-    status: google.maps.places.PlacesServiceStatus
-  ) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-      this.setState({ suggestions: predictions, loading: false });
-    } else {
-      this.setState({ suggestions: [], loading: false });
     }
   };
 
@@ -174,30 +179,41 @@ class SearchBarMap extends React.Component<
         ]
       : [];
 
-      const combinedResults: CombinedResult[] = [
-        ...typedLocation.map((location) => ({
-          ...location,
-          matched_substrings: [],
-          structured_formatting: {
-            main_text: location.description,
-            main_text_matched_substrings: [], // Add this to fulfill the requirement
-            secondary_text: "",
-          },
-          terms: [],
-          types: [],
-          type: "suggestion" as const,
+    // Build combined results
+    const combinedResults: CombinedResult[] = [
+      ...typedLocation.map((loc) => ({
+        type: "suggestion" as const,
+        description: loc.description,
+        place_id: loc.place_id,
+        matched_substrings: [],
+        structured_formatting: {
+          main_text: loc.description,
+          main_text_matched_substrings: [],
+          secondary_text: "",
+        },
+        terms: [],
+        types: [],
+      })),
+      ...suggestions.map((s) => ({
+        type: "suggestion" as const,
+        description: s.description,
+        place_id: s.place_id,
+        matched_substrings: [],
+        structured_formatting: {
+          main_text: s.description,
+          main_text_matched_substrings: [],
+          secondary_text: "",
+        },
+        terms: [],
+        types: [],
+      })),
+      ...filteredNotes
+        .filter((note) => note && note.title)
+        .map((note) => ({
+          ...note,
+          type: "note" as const,
         })),
-        ...suggestions.map((s) => ({
-          ...s,
-          type: "suggestion" as const,
-        })),
-        ...filteredNotes
-          .filter((note) => note && note.title) // Ensure note is valid
-          .map((note) => ({
-            ...note,
-            type: "note" as const,
-          })),
-      ];
+    ];
       
 
     // Sort combined results alphabetically

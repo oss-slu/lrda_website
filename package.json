@@ -145,6 +145,7 @@
     "@testing-library/react": "^14.1.2",
     "@types/draft-js": "^0.11.13",
     "@types/file-saver": "^2.0.7",
+    "@types/google.maps": "^3.58.1",
     "@types/jest": "^29.5.12",
     "@types/next": "^9.0.0",
     "@types/node": "20.6.2",
