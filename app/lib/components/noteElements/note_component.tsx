@@ -54,9 +54,10 @@ const user = User.getInstance();
 type NoteEditorProps = {
   note?: Note | newNote;
   isNewNote: boolean;
+  onNoteSaved?: () => void; // Add callback for when note is saved
 };
 
-export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
+export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
@@ -66,12 +67,13 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
   const [notes, setNotes] = useState<Note[]>([]); // Add this to define state for notes
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const titleRef = useRef<HTMLInputElement | null>(null);
 
-  const saveRef = useRef<HTMLDivElement | null>(null);
   const dateRef = useRef<HTMLDivElement | null>(null);
-  const deleteRef = useRef<HTMLDivElement | null>(null);
+  const deleteRef = useRef<HTMLSpanElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
 
   const getCookie = (name: string) => {
@@ -91,15 +93,12 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     const observer = new MutationObserver(() => {
       const addNote = document.getElementById("add-note-button");
       const title = titleRef.current;
-      const save = saveRef.current;
       const deleteButton = deleteRef.current;
       const date = dateRef.current;
       const location = locationRef.current;
 
-      console.log("Observer triggered");
-
       // Check if all elements are present
-      if (addNote && title && save && deleteButton && date && location) {
+      if (addNote && title && deleteButton && date && location) {
         const intro = introJs();
         const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
 
@@ -115,12 +114,8 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
                 intro: "You can name your note here!",
               },
               {
-                element: save,
-                intro: "Make sure you save your note.",
-              },
-              {
                 element: deleteButton,
-                intro: "If you don't like your note, you can delete it here.",
+                intro: "If you don't like your note, you can archive it here.",
               },
               {
                 element: date,
@@ -218,8 +213,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     }
   }, [initialNote]);
 
-  console.log("initial Note", initialNote);
-
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
@@ -243,6 +236,60 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     }
   }, [initialNote]);
 
+  // Auto-save effect: saves note 2 seconds after user stops typing
+  useEffect(() => {
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Don't auto-save if note doesn't have an ID yet (new notes are saved immediately on creation)
+    if (!noteState.note?.id) {
+      return;
+    }
+
+    // Set a new timer to auto-save after 2 seconds of inactivity
+    autoSaveTimerRef.current = setTimeout(async () => {
+      if (noteState.note?.id && !isSaving) {
+        setIsSaving(true);
+        
+        const updatedNote: any = {
+          ...noteState.note,
+          text: noteState.editorContent,
+          title: noteState.title || "Untitled",
+          media: [...noteState.images, ...noteState.videos],
+          published: noteState.isPublished,
+          time: noteState.time,
+          longitude: noteState.longitude,
+          latitude: noteState.latitude,
+          tags: noteState.tags,
+          audio: noteState.audio,
+          id: noteState.note.id,
+          creator: noteState.note.creator,
+        };
+
+        try {
+          await ApiService.overwriteNote(updatedNote);
+          // Silent save - no toast notification for auto-save
+          if (onNoteSaved) {
+            onNoteSaved();
+          }
+        } catch (error) {
+          console.error("Auto-save error:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    // Cleanup function
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [noteState.title, noteState.editorContent, noteState.tags, noteState.isPublished]);
+
   const onSave = async () => {
     const updatedNote: any = {
       ...noteState.note,
@@ -263,7 +310,7 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       if (isNewNote) {
         await ApiService.writeNewNote(updatedNote);
         toast("Note Created", {
-          description: "Your new note has been successfully created.",
+          description: "Your note has been successfully created.",
           duration: 2000,
         });
       } else {
@@ -274,25 +321,10 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
         });
       }
 
-      // Trigger mini-refresh: Fetch updated notes and clear input fields
-      const userId = await user.getId(); // Await the user ID
-      if (userId) {
-        const updatedNotes = await ApiService.fetchUserMessages(userId); // Fetch updated notes
-        noteHandlers.setNote(undefined); // Clear current note state
-        noteHandlers.setEditorContent(""); // Clear text editor
-        noteHandlers.setTitle(""); // Clear title field
-        noteHandlers.setTags([]); // Clear tags
-        noteHandlers.setImages([]); // Clear images
-        noteHandlers.setVideos([]); // Clear videos
-        noteHandlers.setAudio([]); // Clear audio
-        noteHandlers.setTime(new Date()); // Reset time
-        noteHandlers.setLatitude("");
-        noteHandlers.setLongitude("");
-        setNotes(updatedNotes); // Update the note list
-
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
-      } else {
-        throw new Error("User ID is null or undefined.");
+      // Trigger parent component to refresh sidebar
+      // The note stays open so user can continue editing
+      if (onNoteSaved) {
+        onNoteSaved();
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -436,10 +468,8 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       const editor = rteRef.current?.editor;
       if (editor) {
         const noteContent = editor.getHTML();
-        console.log("Fetching suggested tags for content:", noteContent);
 
         const tags = await ApiService.generateTags(noteContent);
-        console.log("Suggested tags received:", tags);
         setSuggestedTags(tags);
       } else {
         console.error("Editor instance is not available");
@@ -452,47 +482,49 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
   };
 
   return (
-    <div
-      className="relative h-full w-full"
-      style={{
-        backgroundImage: `url('/splash.png')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "100%",
-      }}
-    >
-      <ScrollArea className="flex flex-col w-full h-full bg-cover bg-center">
-        <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
+    <div className="relative h-full w-full bg-white transition-all duration-300 ease-in-out">
+
+      <ScrollArea className="flex flex-col w-full h-full">
+        <div aria-label="Top Bar" className="w-full flex flex-col px-8 py-6">
           <Input
             id="note-title-input"
             value={noteState.title}
             onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-            placeholder="Title"
-            className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
+            placeholder="Untitled"
+            className="border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out"
             ref={titleRef}
           />
-          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+          <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
+            {/* Auto-save indicator */}
+            <div className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+              {isSaving ? (
+                <>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>All changes saved</span>
+                </>
+              )}
+            </div>
+            
             <PublishToggle
               id="publish-toggle-button"
               isPublished={Boolean(noteState.isPublished)}
-              onPublishClick={() => handlePublishChange(noteState, noteHandlers)} // Fixed function call
+              onPublishClick={() => handlePublishChange(noteState, noteHandlers)}
             />
 
-            <div className="w-1 h-9 bg-border" />
-            <button id="save-note-button" className="hover:text-green-500 flex justify-center items-center w-full" onClick={onSave}>
-              <SaveIcon className="text-current" />
-              <div className="ml-2" ref={saveRef}>
-                Save
-              </div>
-            </button>
-            <div className="w-1  h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-full">
-                  <FileX2 className="text-current" />
-                  <div className="ml-2" ref={deleteRef}>
-                    Archive
-                  </div>
+                <button 
+                  disabled={!noteState.note?.id || isSaving}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!noteState.note?.id ? "Please wait for note to save before archiving" : "Archive this note"}
+                >
+                  <FileX2 className="w-4 h-4" />
+                  <span ref={deleteRef}>Archive</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -502,78 +534,39 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDeleteNote(noteState.note, user, noteHandlers.setNote)}>
+                  <AlertDialogAction onClick={async () => {
+                    const success = await handleDeleteNote(noteState.note, user, noteHandlers.setNote);
+                    if (success && onNoteSaved) {
+                      // Wait a moment for the API to propagate the archive change
+                      // before refreshing the sidebar
+                      setTimeout(() => {
+                        onNoteSaved();
+                      }, 1000); // 1 second delay
+                    }
+                  }}>
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <div className="w-1 h-7 bg-border" />
-            <div className="flex-grow" ref={dateRef}>
-              <TimePicker
-                initialDate={noteState.time || new Date()}
-                onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
-              />
-            </div>
-            <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded" ref={locationRef}>
-              <LocationPicker
-                long={noteState.longitude}
-                lat={noteState.latitude}
-                onLocationChange={(newLong, newLat) =>
-                  handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
-                }
-              />
-            </div>
-            <div className="w-2 h-9 bg-border" />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button id="download-note-button" className="hover:text-blue-500 flex justify-center items-center w-full">
-                  <SaveIcon className="text-current" />
-                  <div className="ml-2">Download</div>
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent
-                onChange={(isOpen) => {
-                  if (!isOpen) {
-                    // Close the popup and go back to the note
+
+            <div className="flex items-center gap-4 ml-auto">
+              <div ref={dateRef}>
+                <TimePicker
+                  initialDate={noteState.time || new Date()}
+                  onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
+                />
+              </div>
+              <div ref={locationRef}>
+                <LocationPicker
+                  long={noteState.longitude}
+                  lat={noteState.latitude}
+                  onLocationChange={(newLong, newLat) =>
+                    handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
                   }
-                }}
-              >
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Select File Type</AlertDialogTitle>
-                  <AlertDialogDescription>Choose a file format for downloading your note.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex flex-col items-start px-6 mt-2 space-y-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="fileType"
-                      value="pdf"
-                      checked={selectedFileType === "pdf"}
-                      onChange={() => setSelectedFileType("pdf")}
-                    />
-                    <span>PDF</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="fileType"
-                      value="docx"
-                      checked={selectedFileType === "docx"}
-                      onChange={() => setSelectedFileType("docx")}
-                    />
-                    <span>DOCX</span>
-                  </label>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-300 text-black hover:bg-gray-400 px-4 py-2 rounded">Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDownload} className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded">
-                    Download
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                />
+              </div>
+            </div>
           </div>
           <TagManager
             inputTags={noteState.tags}
@@ -586,14 +579,15 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-        <div className="flex-grow w-full p-4 flex flex-col">
-          <div className=" flex-grow flex flex-col bg-white w-full rounded">
+        <div className="flex-grow w-full px-8 pb-8 flex flex-col transition-opacity duration-200 ease-in-out">
+          <div className="flex-grow flex flex-col bg-white w-full">
             <RichTextEditor
               ref={rteRef}
-              className="min-h-[712px]"
+              className="min-h-[600px] prose prose-lg max-w-none"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) => handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())}
+              immediatelyRender={false}
               renderControls={() => (
                 <EditorMenuControls
                   onMediaUpload={(media) => {
@@ -679,46 +673,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
           </div>
         </div>
       </ScrollArea>
-      <Button
-        id="add-note-button"
-        onClick={async () => {
-          const userId = await user.getId();
-          if (userId) {
-            const blankNote: Note = {
-              id: "", // or `uuidv4()` if you want to generate one
-              uid: "", // or a placeholder unique user ID
-              title: "",
-              text: "",
-              time: new Date(),
-              media: [],
-              audio: [],
-              creator: userId,
-              latitude: "",
-              longitude: "",
-              published: undefined,
-              tags: [],
-              isArchived: false,
-            };
-
-            noteHandlers.setNote(blankNote);
-            noteHandlers.setEditorContent("");
-            noteHandlers.setTitle("");
-            noteHandlers.setTags([]);
-            noteHandlers.setImages([]);
-            noteHandlers.setVideos([]);
-            noteHandlers.setAudio([]);
-            noteHandlers.setTime(new Date());
-            noteHandlers.setLatitude("");
-            noteHandlers.setLongitude("");
-            noteHandlers.setCounter((prev) => prev + 1);
-          } else {
-            console.error("User not authenticated");
-          }
-        }}
-        className="fixed bottom-6 right-6 z-50 bg-black hover:bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg"
-      >
-        Add Note
-      </Button>
     </div>
   );
 }

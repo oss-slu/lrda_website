@@ -20,20 +20,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
+  refreshKey?: number; // Add refresh trigger
 };
 
 const user = User.getInstance();
 
-const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [showPublished, setShowPublished] = useState(true);
+  const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
 
   const handleAddNote = async () => {
     const userId = await user.getId();
     if (userId) {
-      const newBlankNote: newNote = {
-        title: "",
+      // Create and immediately save a blank note
+      const newBlankNote: any = {
+        title: "Untitled",
         text: "",
         time: new Date(),
         media: [],
@@ -41,11 +43,48 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         creator: userId,
         latitude: "",
         longitude: "",
-        published: undefined,
+        published: false,
         tags: [],
         isArchived: false
       };
-      onNoteSelect(newBlankNote, true); // Notify that a new note is being added
+      
+      try {
+        // Save to database immediately
+        const response = await ApiService.writeNewNote(newBlankNote);
+        
+        if (!response.ok) {
+          throw new Error('Failed to create note');
+        }
+        
+        const data = await response.json();
+        
+        // Ensure we have a valid ID from the response
+        const noteId = data['@id'] || data.id;
+        if (!noteId) {
+          console.error('No ID returned from API:', data);
+          throw new Error('Note created but no ID returned');
+        }
+        
+        // Create the note object with the ID from the API
+        const savedNote = {
+          ...newBlankNote,
+          id: noteId,
+          uid: data.uid || noteId, // Use ID as fallback for uid
+        };
+        
+        // Refresh sidebar to show the new note
+        const updatedNotes = await ApiService.fetchUserMessages(userId);
+        const convertedNotes = DataConversion.convertMediaTypes(updatedNotes).reverse();
+        const unarchivedNotes = convertedNotes.filter((note: Note) => !note.isArchived);
+        setNotes(unarchivedNotes);
+        
+        // Open the newly created note for editing
+        onNoteSelect(savedNote, false);
+      } catch (error) {
+        console.error("Error creating note:", error);
+        // Show error to user
+        alert("Failed to create note. Please try again.");
+      }
     } else {
       console.error("User ID is null - cannot create a new note");
     }
@@ -54,7 +93,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const addNote = document.getElementById("add-note-button");
-      console.log('Observer triggered');
 
       if (addNote) {
         const intro = introJs();
@@ -96,14 +134,33 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       try {
         const userId = await user.getId();
         if (userId) {
-          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
+          // Fetch all notes first
+          const userNotes = await ApiService.fetchUserMessages(userId);
           const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
 
-          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
-          const publishedNotes = convertedNotes.filter((note) => note.published); //filter out unpublished notes
+          // Debug: Log ALL notes with their archive status
+          console.log('All notes from API:', convertedNotes.map(n => ({
+            title: n.title || 'Untitled',
+            id: n.id?.slice(-8),
+            isArchived: n.isArchived
+          })));
+
+          // Filter out archived notes AFTER conversion
+          const unarchivedNotes = convertedNotes.filter((note) => {
+            const isArchived = note.isArchived === true;
+            return !isArchived;
+          });
+          
+          // Debug: Log filtering results
+          const totalNotes = convertedNotes.length;
+          const unarchivedCount = unarchivedNotes.length;
+          const archivedCount = totalNotes - unarchivedCount;
+          
+          console.log(`Notes fetched: ${totalNotes} total, ${unarchivedCount} active, ${archivedCount} archived`);
 
           setNotes(unarchivedNotes);
-          setFilteredNotes(publishedNotes);
+          // Apply the current filter (respect the currently selected tab)
+          filterNotesByPublished(showPublished, unarchivedNotes);
         } else {
           console.error("User not logged in");
         }
@@ -112,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       }
     };
     fetchUserMessages();
-  }, []);
+  }, [refreshKey]); // Re-fetch when refreshKey changes
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -129,28 +186,29 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     setFilteredNotes(filtered);
   };
 
-  const filterNotesByPublished = (showPublished: boolean) => {
-    const filtered = notes.filter(note => showPublished ? note.published : !note.published);
+  const filterNotesByPublished = (showPublished: boolean, notesToFilter?: Note[]) => {
+    const noteList = notesToFilter || notes;
+    const filtered = noteList.filter(note => showPublished ? note.published : !note.published);
     setFilteredNotes(filtered);
   };
 
-  const togglePublished = () => {
-    const newShowPublished = !showPublished;
+  const togglePublished = (value: string) => {
+    const newShowPublished = value === "published";
     setShowPublished(newShowPublished);
     filterNotesByPublished(newShowPublished);
   };
 
   return (
-    <div className="h-full bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
+    <div className="h-full bg-gray-50 border-r border-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
-        <div className="text-center justify-center mb-1">
-          <span className="justify-center text-xl font-semibold">My Notes</span>
+        <div className="text-left mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
         </div>
         {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
         <SearchBarNote onSearch={handleSearch} />
 
           <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
-            <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
+            <Tabs defaultValue="unpublished" className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
                 <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
@@ -168,14 +226,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         />
       </div>
 
-      {/* floating add note button */}
+      {/* Add note button */}
       <Button
         id="add-note-button"
         data-testid="add-note-button"
         onClick={handleAddNote}
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black hover:bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
       >
-        <Plus size={24} />
+        <Plus size={18} className="mr-2" />
+        New Note
       </Button>
     </div>
   );

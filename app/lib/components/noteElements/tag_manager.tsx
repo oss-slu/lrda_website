@@ -129,12 +129,14 @@ const TagManager: React.FC<TagManagerProps> = ({
           ))}
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-2">
+        {/* Temporarily commenting out Generate Tags button
         <button
           className="flex-1 min-w-[90px] max-w-[280px] px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm font-medium"
           onClick={fetchSuggestedTags}
         >
           Generate My Tags
         </button>
+        */}
         {tags
           .filter((tag) => tag.origin === "ai")
           .map((tag, index) => (

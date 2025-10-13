@@ -66,21 +66,25 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
         return (
           <div
             key={note.id}
-            className={`h-16 p-2 m-1 z-10 rounded truncate cursor-pointer ${
+            className={`p-3 m-1 z-10 rounded-lg cursor-pointer transition-all duration-200 ${
               note.id === selectedNoteId
-                ? "bg-primary/90 text-popover"
-                : "bg-popover text-primary hover:bg-primary/80"
+                ? "bg-blue-50 border border-blue-200 text-blue-900"
+                : "bg-white hover:bg-gray-50 border border-gray-100 text-gray-900"
             }`}
             onClick={() => handleLoadText(note)}
           >
-            <div className="flex flex-col">
-              <div className="flex flex-row items-center text-center justify-between">
-                <h3 className="text-lg font-semibold truncate">{note.title}</h3>
-                <h3 className="text-sm font-semibold">
-                  {handleGetTime(note.time)}
+            <div className="flex flex-col space-y-1">
+              <div className="flex flex-row items-start justify-between">
+                <h3 className="text-sm font-semibold truncate flex-1 mr-2">
+                  {note.title || "Untitled"}
                 </h3>
+                <span className="text-xs text-gray-500 flex-shrink-0">
+                  {handleGetTime(note.time)}
+                </span>
               </div>
-              <p className="text-sm truncate">{noteTextContent}</p>
+              <p className="text-xs text-gray-600 truncate leading-relaxed">
+                {noteTextContent}
+              </p>
             </div>
           </div>
         );
