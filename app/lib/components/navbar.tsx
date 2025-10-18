@@ -49,7 +49,6 @@ export default function Navbar() {
   // Active link styling
   const linkClass = (href: string) =>
     cn(
-      //"text-2xl font-bold transition duration-300 ease-in-out mr-4",
       "text-xl font-bold transition duration-300 ease-in-out mr-6",
 
       href === "/"

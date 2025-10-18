@@ -1,16 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Sidebar from "./lib/components/side_bar";
-import NoteEditor from "./lib/components/noteElements/note_component";
-import { Note, newNote } from "./types";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { User } from './lib/models/user_class';
+import Sidebar from "../../components/side_bar";
+import NoteEditor from "../../components/noteElements/note_component";
+import { Note, newNote } from "../../../types";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { User } from "../../models/user_class";
 
-export default function Home() {
+export default function Notes() {
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -34,13 +30,7 @@ export default function Home() {
 
   return (
     <ResizablePanelGroup direction="horizontal">
-      <ResizablePanel
-        minSize={15}
-        maxSize={30}
-        defaultSize={20}
-        collapsible={true}
-        collapsedSize={1}
-      >
+      <ResizablePanel minSize={15} maxSize={30} defaultSize={20} collapsible={true} collapsedSize={1}>
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
