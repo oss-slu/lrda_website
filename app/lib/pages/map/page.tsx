@@ -7,13 +7,11 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-// import "../../../globals.css";
 
-import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon, Plus, Minus } from "lucide-react";
+import { GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
