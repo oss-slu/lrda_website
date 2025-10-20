@@ -660,7 +660,6 @@ const Page = () => {
             mapContainerStyle={{ width: "100%", height: "100%" }}
             center={mapCenter}
             zoom={mapZoom}
-            //mapId={process.env.NEXT_PUBLIC_MAP_ID}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
@@ -671,7 +670,7 @@ const Page = () => {
               disableDefaultUI: true,
               mapId: process.env.NEXT_PUBLIC_MAP_ID, //Chnage this
             }}
-            {...({ mapId: process.env.NEXT_PUBLIC_MAP_ID } as any)} // Change this
+            //{...({ mapId: process.env.NEXT_PUBLIC_MAP_ID } as any)} // Change this
           >
             <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
