@@ -254,9 +254,6 @@ const Page = () => {
   useEffect(() => {
     markers.forEach(({ marker, iconNode }, noteId) => {
       const isHovered = hoveredNoteId === noteId;
-      iconNode.style.transform = isHovered ? "scale(1.2)" : "scale(1)";
-      //marker.setIcon(createMarkerIcon(isHovered));
-      marker.zIndex = isHovered ? 1000 : 0;
     });
   }, [hoveredNoteId, markers]);
 
@@ -273,41 +270,43 @@ const Page = () => {
 
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
-      const tempMarkers = new Map();
+      const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
       const map = mapRef.current;
 
-      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => { // Unsure of 'any' type being used here
+      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => { 
         google.maps.event.clearListeners(marker, "click");
         google.maps.event.clearListeners(marker, "mouseover");
         google.maps.event.clearListeners(marker, "mouseout");
 
         // Click event
-        marker.addListener("click", () => handleMarkerClick(note));
+        marker.addListener("click", () => {
+          handleMarkerClick(note);
+        });
 
         // Hover events
         marker.addListener("mouseover", () => {
           setHoveredNoteId(note.id);
           scrollToNoteTile(note.id);
           setActiveNote(note);
-          iconNode.style.transform = "scale(1.2)";
-          marker.zIndex = 1000;
         });
 
         marker.addListener("mouseout", () => {
           setHoveredNoteId(null);
           setActiveNote(null);
-          iconNode.style.transform = "scale(1)";
-          marker.zIndex = 0;
         });
       };
 
       // Create new AdvancedMarkerElement instances
       filteredNotes.forEach((note) => {
-        const position = new google.maps.LatLng(
-          parseFloat(note.latitude),
-          parseFloat(note.longitude)
-        );
+        const lat = parseFloat(note.latitude);
+        const lng = parseFloat(note.longitude);
         
+        // Skip invalid coordinates
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn(`Skipping note ${note.id}: invalid coordinates`, note);
+          return;
+        }
+        const position = new google.maps.LatLng(lat, lng);
         const iconNode = createMarkerIcon();
 
         const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -318,7 +317,9 @@ const Page = () => {
         });
 
         attachMarkerEvents(marker, note, iconNode);
+
         tempMarkers.set(note.id, marker);
+        (marker as any).iconNode = iconNode; // Store reference for hover effects
       });
 
       setMarkers(tempMarkers);
@@ -593,17 +594,15 @@ const Page = () => {
 
   function createMarkerIcon(): HTMLElement {
     const div = document.createElement("div");
+    div.classList.add("custom-marker");
     div.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40">
-        <path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-        <circle fill="white" cx="12" cy="9" r="2.5"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" class="marker-svg">
+        <path class="marker-body" fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle class="marker-center" fill="white" cx="12" cy="9" r="2.5"/>
       </svg>
     `;
-    div.style.transition = "transform 0.2s ease";
     return div;
   }
-
-
 
   const toggleFilter = () => {
     setGlobal(!global);
@@ -661,6 +660,7 @@ const Page = () => {
             mapContainerStyle={{ width: "100%", height: "100%" }}
             center={mapCenter}
             zoom={mapZoom}
+            //mapId={process.env.NEXT_PUBLIC_MAP_ID}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
@@ -669,7 +669,9 @@ const Page = () => {
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
+              mapId: process.env.NEXT_PUBLIC_MAP_ID, //Chnage this
             }}
+            {...({ mapId: process.env.NEXT_PUBLIC_MAP_ID } as any)} // Change this
           >
             <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">

@@ -26,6 +26,7 @@ export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
     libraries: ['places', 'marker'] as ('places' | 'marker')[], // Cast as tuple for TypeScript
+    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ''],
     id: 'google-map-script',
   });
 
