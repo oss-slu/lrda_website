@@ -496,7 +496,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
           />
           <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
             {/* Auto-save indicator */}
-            <div className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+            <div className="inline-flex items-center gap-2 text-sm text-gray-500">
               {isSaving ? (
                 <>
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>

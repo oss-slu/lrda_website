@@ -101,16 +101,52 @@ const TagManager: React.FC<TagManagerProps> = ({
     addTag(tag, "ai");
   };
 
+  // Helper function to get validation status
+  const getValidationStatus = () => {
+    if (tagInput.length === 0) return { valid: true, message: "" };
+    if (tagInput.includes(" ")) return { valid: false, message: "No spaces allowed" };
+    if (tagInput.length <= 2) return { valid: false, message: "Too short (min 3)" };
+    if (tags.find((t) => t.label === tagInput)) return { valid: false, message: "Already exists" };
+    return { valid: true, message: "Press Enter to add" };
+  };
+
+  const validation = getValidationStatus();
+
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <Input
-          value={tagInput}
-          placeholder="Add tags..."
-          onKeyDown={handleKeyDown}
-          onChange={handleInputChange}
-          className="flex-1 min-w-[90px] max-w-[280px] bg-white"
-        />
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-[90px] max-w-[280px]">
+          <Input
+            value={tagInput}
+            placeholder="Add tags..."
+            onKeyDown={handleKeyDown}
+            onChange={handleInputChange}
+            className={`bg-white pr-16 ${
+              tagInput.length > 0 && !validation.valid 
+                ? "border-red-300 focus-visible:ring-red-500" 
+                : tagInput.length > 2 && validation.valid
+                ? "border-green-300 focus-visible:ring-green-500"
+                : ""
+            }`}
+          />
+          {tagInput.length > 0 && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <span className={`text-xs font-medium ${
+                validation.valid ? "text-green-600" : "text-red-600"
+              }`}>
+                {tagInput.length}
+                {validation.valid ? " ✓" : " ✗"}
+              </span>
+            </div>
+          )}
+        </div>
+        {tagInput.length > 0 && validation.message && (
+          <span className={`text-xs ${
+            validation.valid ? "text-green-600" : "text-red-600"
+          }`}>
+            {validation.message}
+          </span>
+        )}
         {tags
           .filter((tag) => tag.origin === "user")
           .map((tag, index) => (
@@ -128,7 +164,7 @@ const TagManager: React.FC<TagManagerProps> = ({
             </div>
           ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2 mb-2">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Temporarily commenting out Generate Tags button
         <button
           className="flex-1 min-w-[90px] max-w-[280px] px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm font-medium"

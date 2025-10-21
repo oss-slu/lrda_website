@@ -78,7 +78,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [onLocationChange]);
 
   {geoError && (
-    <div className="absolute top-16 left-1/2 tranform -translate-x-1/2 bg-white p-2 rounded shadow text-red-600 z-50">
+    <div className="absolute top-16 left-1/2 tranform -translate-x-1/2 bg-white px-4 py-2 rounded shadow text-red-600 z-50">
       {geoError}
     </div>
     )}
@@ -139,11 +139,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     <div className="relative">
       <button
         onClick={handleToggleMap}
-        className="flex items-center justify-start w-full text-sm p-2"
+        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
         aria-label="Toggle map visibility"
       >
-        <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
-        <div>Location</div>
+        <MapPin aria-label="map pin" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
+        <span>Location</span>
       </button>
       
       {isExpanded && (
@@ -153,7 +153,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           <div className="absolute top-2 left-2 z-50">
             <button
               onClick={handleToggleMap}
-              className="text-xl text-black bg-white rounded-full p-2 shadow-md hover:bg-gray-200"
+              className="text-xl text-black bg-white rounded-full p-3 shadow-md hover:bg-gray-200"
               aria-label="Close map"
             >
               <X />
@@ -170,7 +170,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 type="text"
                 placeholder="Search Location"
                 style={{ pointerEvents: "auto" }}
-                className="w-full p-2 rounded shadow-md"
+                className="w-full px-4 py-2 rounded shadow-md"
               />
             </Autocomplete>
           </div>

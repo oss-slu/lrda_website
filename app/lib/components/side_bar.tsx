@@ -199,7 +199,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
   };
 
   return (
-    <div className="h-full bg-gray-50 border-r border-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
+    <div className="h-full bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto flex flex-col z-30 relative">
       <div className="w-full mb-4">
         <div className="text-left mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
