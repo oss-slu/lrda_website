@@ -10,6 +10,7 @@ import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
+import StrengthIndicator from "@/components/ui/strength-indicator";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -18,10 +19,17 @@ const SignupPage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [institution, setInstitution] = useState("");
+  const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
 
   const handleSignup = async () => {
     if (!validateEmail(email)) return;
     if (!validatePassword(password)) return;
+
+    // Check if password meets all requirements
+    if (passwordRequirements.length > 0) {
+      toast.error(`Password must meet all requirements`);
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -118,6 +126,10 @@ const SignupPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <StrengthIndicator 
+              password={password} 
+              onUnmet={(unmetRequirements) => setPasswordRequirements(unmetRequirements)}
             />
           </div>
           <div className="mb-4">
