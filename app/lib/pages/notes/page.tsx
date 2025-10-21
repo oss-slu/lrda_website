@@ -1,10 +1,9 @@
 "use client";
-import Home from "@/app/Home";
+import Notes from "@/app/lib/pages/notes/Notes";
 import React, { useState, useEffect } from "react";
 
-
 const IndexPage: React.FC = () => {
-  return <Home/>;
+  return <Notes />;
 };
 
 export default IndexPage;

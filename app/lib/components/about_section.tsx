@@ -7,10 +7,10 @@ import { useReveal, motionVariants } from "@/app/lib/utils/motion";
 function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
   return (
-    <section ref={ref} className="w-full py-14 sm:py-20" data-reveal={isVisible}>
+    <section id="aboutSection" ref={ref} className="w-full py-14 sm:py-20" data-reveal={isVisible}>
       <div className="text-center mb-16 z-10">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6">
-          <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+          <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
             ABOUT THE PLATFORM
           </span>
         </div>
