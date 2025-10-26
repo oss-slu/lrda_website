@@ -169,9 +169,13 @@ const Page = () => {
         const lastLocationString = await getItem("LastLocation");
         const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
         if (isSubscribed) {
+          if (lastLocation && typeof lastLocation.lat === 'number' && typeof lastLocation.lng === 'number') {
           setMapCenter(lastLocation);
           setMapZoom(10);
           setLocationFound(true);
+          } else {
+          throw new Error("Invalid or missing last location in storage.");
+          }
         }
       } catch (error) {
         const defaultLocation = { lat: 38.637334, lng: -90.286021 };
@@ -193,18 +197,25 @@ const Page = () => {
     const fetchCurrentLocationAndUpdate = async () => {
       try {
         const currentLocation = (await getLocation()) as Location;
-        if (!locationFound && isComponentMounted) {
-          setMapCenter(currentLocation);
-          setMapZoom(10);
+
+        if (currentLocation && typeof currentLocation.lat === 'number' && typeof currentLocation.lng === 'number') {
+          
+          if (!locationFound && isComponentMounted) {
+            setMapCenter(currentLocation);
+            setMapZoom(10);
+          }
+          await setItem("LastLocation", JSON.stringify(currentLocation));
+
+        } else {
+          throw new Error("Failed to get valid coordinates from getLocation()");
         }
-        await setItem("LastLocation", JSON.stringify(currentLocation));
       } catch (error) {
         if (isComponentMounted) {
           const defaultLocation = { lat: 38.637334, lng: -90.286021 };
           setMapCenter(defaultLocation);
           setMapZoom(10);
           setLocationFound(true);
-          console.log("Using last known location due to error:", error);
+          console.log("Using default location due to error:", error);
         }
       }
     };
@@ -306,6 +317,7 @@ const Page = () => {
           console.warn(`Skipping note ${note.id}: invalid coordinates`, note);
           return;
         }
+        
         const position = new google.maps.LatLng(lat, lng);
         const iconNode = createMarkerIcon();
 
@@ -356,15 +368,17 @@ const Page = () => {
     mapRef.current = map;
 
     const updateBounds = () => {
-      const newCenter: Location = {
-        lat: map.getCenter()?.lat() || "",
-        lng: map.getCenter()?.lng() || "",
-      };
-      const newBounds = map.getBounds();
-      setMapCenter(newCenter);
-      setMapBounds(newBounds);
-    };
+      const lat =  map.getCenter()?.lat();
+      const lng = map.getCenter()?.lng();
 
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        setMapCenter({ lat, lng });
+        setMapBounds(map.getBounds());
+      } else {
+        // Optional: log an error if you didn't get valid numbers
+        console.warn("Map bounds update skipped: invalid center");
+      }
+    };
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
       updateBounds();
@@ -643,12 +657,19 @@ const Page = () => {
 
   async function handleSetLocation() {
     try {
-      const newCenter = await getLocation();
-      setMapCenter(newCenter as Location);
-      mapRef.current?.panTo(newCenter as Location);
-      mapRef.current?.setZoom(13);
+      const newCenter = (await getLocation()) as Location;
+
+      if (newCenter && typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
+        
+        setMapCenter(newCenter);
+        mapRef.current?.panTo(newCenter);
+        mapRef.current?.setZoom(13);
+        
+      } else {
+        throw new Error("Failed to get valid coordinates from getLocation()");
+      }
     } catch (error) {
-      console.error("Failed to set location", error);
+      console.error("Failed to set location:", error);
     }
   }
 
@@ -668,9 +689,8 @@ const Page = () => {
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
-              mapId: process.env.NEXT_PUBLIC_MAP_ID, //Chnage this
+              mapId: process.env.NEXT_PUBLIC_MAP_ID, 
             }}
-            //{...({ mapId: process.env.NEXT_PUBLIC_MAP_ID } as any)} // Change this
           >
             <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
               <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
