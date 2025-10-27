@@ -7,9 +7,9 @@ import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
-import DataConversion from "../utils/data_conversion";
 import introJs from "intro.js"
 import "intro.js/introjs.css"
+import { useNotesStore } from "../stores/notesStore";
 
 /*
 //Bring this import back to use switch toggle for note view.
@@ -26,7 +26,7 @@ type SidebarProps = {
 const user = User.getInstance();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const { notes, fetchNotes, refreshNotes } = useNotesStore();
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
 
@@ -72,11 +72,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
           uid: data.uid || noteId, // Use ID as fallback for uid
         };
         
-        // Refresh sidebar to show the new note
-        const updatedNotes = await ApiService.fetchUserMessages(userId);
-        const convertedNotes = DataConversion.convertMediaTypes(updatedNotes).reverse();
-        const unarchivedNotes = convertedNotes.filter((note: Note) => !note.isArchived);
-        setNotes(unarchivedNotes);
+        // Refresh notes from Zustand store
+        await refreshNotes(userId);
         
         // Open the newly created note for editing
         onNoteSelect(savedNote, false);
@@ -129,47 +126,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
     return () => observer.disconnect();
   }, []);
 
+  // Fetch notes on mount and when refreshKey changes
   useEffect(() => {
-    const fetchUserMessages = async () => {
-      try {
-        const userId = await user.getId();
-        if (userId) {
-          // Fetch all notes first
-          const userNotes = await ApiService.fetchUserMessages(userId);
-          const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
-
-          // Debug: Log ALL notes with their archive status
-          console.log('All notes from API:', convertedNotes.map(n => ({
-            title: n.title || 'Untitled',
-            id: n.id?.slice(-8),
-            isArchived: n.isArchived
-          })));
-
-          // Filter out archived notes AFTER conversion
-          const unarchivedNotes = convertedNotes.filter((note) => {
-            const isArchived = note.isArchived === true;
-            return !isArchived;
-          });
-          
-          // Debug: Log filtering results
-          const totalNotes = convertedNotes.length;
-          const unarchivedCount = unarchivedNotes.length;
-          const archivedCount = totalNotes - unarchivedCount;
-          
-          console.log(`Notes fetched: ${totalNotes} total, ${unarchivedCount} active, ${archivedCount} archived`);
-
-          setNotes(unarchivedNotes);
-          // Apply the current filter (respect the currently selected tab)
-          filterNotesByPublished(showPublished, unarchivedNotes);
-        } else {
-          console.error("User not logged in");
-        }
-      } catch (error) {
-        console.error("Error fetching user messages:", error);
+    const loadNotes = async () => {
+      const userId = await user.getId();
+      if (userId) {
+        await fetchNotes(userId);
       }
     };
-    fetchUserMessages();
-  }, [refreshKey]); // Re-fetch when refreshKey changes
+    loadNotes();
+  }, [refreshKey, fetchNotes]);
+
+  // Filter notes whenever notes or showPublished changes
+  useEffect(() => {
+    filterNotesByPublished(showPublished, notes);
+  }, [notes, showPublished]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -199,13 +170,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
   };
 
   return (
-    <div className="h-full bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto flex flex-col z-30 relative">
-      <div className="w-full mb-4">
-        <div className="text-left mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
-        </div>
-        {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
-        <SearchBarNote onSearch={handleSearch} />
+    <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
+      {/* Scrollable content area */}
+      <div className="overflow-y-auto flex-1 p-4 pb-20"> {/* pb-20 to prevent content from going under button */}
+        <div className="w-full mb-4">
+          <div className="text-left mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
+          </div>
+          {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
+          <SearchBarNote onSearch={handleSearch} />
 
           <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
             <Tabs defaultValue="unpublished" className="w-full" onValueChange={togglePublished}>
@@ -219,23 +192,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
           </div>
         </div>
 
-      <div>
-        <NoteListView
-          notes={filteredNotes}
-          onNoteSelect={(note) => onNoteSelect(note, false)}
-        />
+        <div>
+          <NoteListView
+            notes={filteredNotes}
+            onNoteSelect={(note) => onNoteSelect(note, false)}
+          />
+        </div>
       </div>
 
-      {/* Add note button */}
-      <Button
-        id="add-note-button"
-        data-testid="add-note-button"
-        onClick={handleAddNote}
-        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-      >
-        <Plus size={18} className="mr-2" />
-        New Note
-      </Button>
+      {/* Fixed Add Note button at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200">
+        <Button
+          id="add-note-button"
+          data-testid="add-note-button"
+          onClick={handleAddNote}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
+        >
+          <Plus size={18} className="mr-2" />
+          New Note
+        </Button>
+      </div>
     </div>
   );
 };

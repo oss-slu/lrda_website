@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { XIcon } from "lucide-react";
+import { XIcon, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -140,6 +140,13 @@ const TagManager: React.FC<TagManagerProps> = ({
             </div>
           )}
         </div>
+        <button
+          onClick={fetchSuggestedTags}
+          className="p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm"
+          title="Generate AI tags"
+        >
+          <Sparkles className="h-4 w-4" />
+        </button>
         {tagInput.length > 0 && validation.message && (
           <span className={`text-xs ${
             validation.valid ? "text-green-600" : "text-red-600"
@@ -165,14 +172,6 @@ const TagManager: React.FC<TagManagerProps> = ({
           ))}
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Temporarily commenting out Generate Tags button
-        <button
-          className="flex-1 min-w-[90px] max-w-[280px] px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm font-medium"
-          onClick={fetchSuggestedTags}
-        >
-          Generate My Tags
-        </button>
-        */}
         {tags
           .filter((tag) => tag.origin === "ai")
           .map((tag, index) => (
