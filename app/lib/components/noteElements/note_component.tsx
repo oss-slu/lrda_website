@@ -568,14 +568,16 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
               </div>
             </div>
           </div>
-          <TagManager
-            inputTags={noteState.tags}
-            suggestedTags={suggestedTags}
-            onTagsChange={
-              (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
-            }
-            fetchSuggestedTags={fetchSuggestedTags}
-          />
+          <div className="mt-6">
+            <TagManager
+              inputTags={noteState.tags}
+              suggestedTags={suggestedTags}
+              onTagsChange={
+                (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+              }
+              fetchSuggestedTags={fetchSuggestedTags}
+            />
+          </div>
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
