@@ -201,7 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
       </div>
 
       {/* Fixed Add Note button at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200 z-10">
         <Button
           id="add-note-button"
           data-testid="add-note-button"
