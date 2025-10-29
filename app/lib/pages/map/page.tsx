@@ -54,6 +54,7 @@ const Page = () => {
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [markers, setMarkers] = useState(new Map());
   const [skip, setSkip] = useState(0);
   const infinite = useInfiniteNotes<Note>({
@@ -284,6 +285,15 @@ const Page = () => {
       const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
       const map = mapRef.current;
 
+      const mapClickListener = map.addListener("click", () => {
+        if (currentPopup) {
+          console.log("Removing existing popup (map click)");
+          currentPopup.setMap(null);
+          setCurrentPopup(null);
+          setActiveNote(null);
+        }
+      });
+
       const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => { 
         google.maps.event.clearListeners(marker, "click");
         google.maps.event.clearListeners(marker, "mouseover");
@@ -296,12 +306,23 @@ const Page = () => {
 
         // Hover events
         marker.addListener("mouseover", () => {
+          console.log("MARKER mouseover for", note.id);
+          if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+          }
+          showTemporaryPopup(note);
           setHoveredNoteId(note.id);
           scrollToNoteTile(note.id);
           setActiveNote(note);
-        });
+        }); 
 
         marker.addListener("mouseout", () => {
+          if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          if (currentPopup) {
+            currentPopup.setMap(null);
+            setCurrentPopup(null);
+          }
           setHoveredNoteId(null);
           setActiveNote(null);
         });
@@ -351,9 +372,10 @@ const Page = () => {
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
         }
+        google.maps.event.removeListener(mapClickListener);
       };
     }
-  }, [isMapsApiLoaded, filteredNotes, mapRef.current]);
+  }, [isMapsApiLoaded, filteredNotes, mapRef.current, currentPopup]);
 
   const handleMapClick = () => {
     if (currentPopup) {
@@ -489,7 +511,9 @@ const Page = () => {
   };
 
   const handleMarkerClick = (note: Note) => {
+    console.log("handleMarkerClick start", note.id);
     if (currentPopup) {
+      console.log(" Removing existing popup");
       currentPopup.setMap(null);
       setCurrentPopup(null);
     }
@@ -498,6 +522,7 @@ const Page = () => {
     scrollToNoteTile(note.id);
 
     const map = mapRef.current;
+    console.log(" mapRef.current:", !!map);
 
     if (map) {
       const popupContent = document.createElement("div");
@@ -559,6 +584,80 @@ const Page = () => {
       popup.setMap(map);
     }
   };
+
+  const showTemporaryPopup = (note: Note) => {
+    // Remove existing popup first
+    if (currentPopup) {
+      currentPopup.setMap(null);
+      setCurrentPopup(null);
+    }
+
+    const map = mapRef.current;
+    if (!map) return;
+
+    const popupContent = document.createElement("div");
+    const root = ReactDOM.createRoot(popupContent);
+    root.render(<ClickableNote note={note} />);
+
+    class Popup extends google.maps.OverlayView {
+      position: google.maps.LatLng;
+      containerDiv: HTMLDivElement;
+
+      constructor(position: google.maps.LatLng, content: HTMLElement) {
+        super();
+        this.position = position;
+
+        content.classList.add("popup-bubble");
+
+        const bubbleAnchor = document.createElement("div");
+        bubbleAnchor.classList.add("popup-bubble-anchor");
+        bubbleAnchor.appendChild(content);
+
+        this.containerDiv = document.createElement("div");
+        this.containerDiv.classList.add("popup-container");
+        this.containerDiv.appendChild(bubbleAnchor);
+
+        Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
+      }
+
+      onAdd() {
+        this.getPanes()!.floatPane.appendChild(this.containerDiv);
+      }
+
+      onRemove() {
+        if (this.containerDiv.parentElement) {
+          this.containerDiv.parentElement.removeChild(this.containerDiv);
+        }
+      }
+
+      draw() {
+        const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
+        const display =
+          Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
+
+        if (display === "block") {
+          this.containerDiv.style.left = divPosition.x + "px";
+          this.containerDiv.style.top = divPosition.y + "px";
+        }
+
+        if (this.containerDiv.style.display !== display) {
+          this.containerDiv.style.display = display;
+        }
+      }
+    }
+
+    const popup = new Popup(
+      new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+      popupContent
+    );
+
+    popup.setMap(map);
+
+    hoverTimerRef.current = setTimeout(() => {
+      popup.setMap(null);
+    }, 800); // popup stays for 0.8s after hover
+  };
+
 
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
