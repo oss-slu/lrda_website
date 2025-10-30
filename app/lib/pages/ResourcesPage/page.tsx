@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-export const onlineResources = [
+const onlineResources = [
   {
     title: "AAA Statement on Ethics",
     url: "https://americananthro.org/about/policies/statement-on-ethics/",
@@ -28,7 +28,7 @@ export const onlineResources = [
   },
 ];
 
-export const analogueResources = [
+const analogueResources = [
   "Agar, Michael. Speaking of Ethnography (SAGE Publications, 1986).",
   "Atkinson, Robert. The Life Story Interview (SAGE Publications, 1998).",
   "Bernard, H. Russell. Research Methods in Anthropology (Rowman & Littlefield, 2017).",

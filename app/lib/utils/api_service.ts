@@ -1,7 +1,7 @@
 import { Note } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
@@ -171,6 +171,12 @@ export default class ApiService {
     }
   }
 
+  // Convenience wrapper used by Stories page to fetch by creator
+  static async getPagedQueryWithParams(limit: number, skip: number, creatorId: string): Promise<any[]> {
+    const queryObj = { type: "message", creator: creatorId } as any;
+    return await this.getPagedQuery(limit, skip, queryObj);
+  }
+
   static async fetchNotesByDate(limit: number, afterDate?: string, isGlobal = true, userId?: string): Promise<Note[]> {
     const queryObj: any = {
       type: "message",
@@ -189,6 +195,16 @@ export default class ApiService {
     });
     console.log("Fetch Notes by Date Response:", response);
     return await response.json();
+  }
+
+  // Fetch notes by a list of student user IDs
+  static async fetchNotesByStudents(studentIds: string[]): Promise<Note[]> {
+    if (!Array.isArray(studentIds) || studentIds.length === 0) return [];
+    const queryObj = {
+      type: "message",
+      creator: { $in: studentIds },
+    } as any;
+    return (await this.getPagedQuery(150, 0, queryObj)) as unknown as Note[];
   }
 
   /**
@@ -462,6 +478,53 @@ export default class ApiService {
     } catch (error) {
       console.error("Error searching messages:", error);
       throw error;
+    }
+  }
+
+  // Comments API – Firestore-backed
+  static async fetchCommentsForNote(noteId: string): Promise<any[]> {
+    try {
+      const colRef = collection(db, "comments");
+      const q = query(colRef, where("noteId", "==", noteId));
+      const snap = await getDocs(q);
+      const results: any[] = [];
+      snap.forEach((d) => results.push({ id: d.id, ...d.data() }));
+      // sort by createdAt
+      results.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      return results;
+    } catch (e) {
+      console.warn("fetchCommentsForNote failed", e);
+      return [];
+    }
+  }
+
+  static async createComment(comment: any): Promise<void> {
+    try {
+      const colRef = collection(db, "comments");
+      await addDoc(colRef, comment);
+    } catch (e) {
+      console.warn("createComment failed", e);
+    }
+  }
+
+  static async resolveThread(threadId: string): Promise<void> {
+    try {
+      const colRef = collection(db, "comments");
+      const q = query(colRef, where("threadId", "==", threadId));
+      const snap = await getDocs(q);
+      const ops: Promise<any>[] = [];
+      snap.forEach((d) => ops.push(updateDoc(doc(db, "comments", d.id), { resolved: true })));
+      await Promise.all(ops);
+    } catch (e) {
+      console.warn("resolveThread failed", e);
+    }
+  }
+
+  static async archiveComment(commentId: string): Promise<void> {
+    try {
+      await updateDoc(doc(db, "comments", String(commentId)), { archived: true });
+    } catch (e) {
+      console.warn("archiveComment failed", e);
     }
   }
 
