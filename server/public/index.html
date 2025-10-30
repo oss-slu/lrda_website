@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="RERUM Authorization Portal">
+    <meta name="author" content="Research Computing Group, Saint Louis University">
+    <meta name="keywords" content="RERUM, Auth0, API, RESTful, compliant, open, free, attributed, versioned">
+    <title>RERUM Authorization Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <style>
+        #msg {
+            color: green;
+            font-weight: bold;
+        }
+
+        #intro {
+            color: #979A9E;
+            font-size: 12pt;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: #979A9E;
+            background-color: #2F353E;
+            padding: 20px;
+        }
+
+        input[type="text"] {
+            background-color: #ccc;
+            color: black;
+            font-weight: bold;
+            font-family: serif;
+            font-size: 14pt;
+        }
+
+        .column {
+            float: left;
+            width: 33%;
+        }
+
+        .column2 {
+            float: right;
+            width: 9%;
+        }
+
+        h1 {
+            cursor: pointer;
+            font-weight: 300;
+            font-family: 'Raleway', sans-serif;
+            margin-bottom: 10px;
+        }
+
+        .navbar-brand {
+            float: none;
+            font-size: 2rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        #login {
+            display: none;
+        }
+
+        .panel-body {
+            color: initial;
+        }
+
+        .panel {
+            word-break: break-word;
+        }
+
+        .status_header {
+            color: gray;
+        }
+
+        #a_t {
+            height: 170px;
+            margin-bottom: 8px;
+        }
+
+        #a_t,
+        #r_t_4_a_t,
+        #new_refresh_token {
+            margin-bottom: 8px;
+        }
+
+        #code_for_refresh_token {
+            margin-bottom: -13px;
+        }
+    </style>
+</head>
+
+<body class="container">
+    <h1 onclick="window.location='https://rerum.io'" target="_blank" class="navbar-brand"><i class="fa fa-cubes"></i>
+        rerum</h1>
+    <div class='' id="intro">
+        <p>
+            We are so glad you are interested in using Saint Louis University's public object store, RERUM! Want to know
+            what RERUM is all about?
+        </p>
+        <ol type="1" id='rerumPrinciples'>
+            <li><strong>As RESTful as is reasonable—</strong>accept and respond to a broad range of requests without
+                losing the map</li>
+            <li><strong>As compliant as is practical—</strong>take advantage of standards and harmonize conflicts</li>
+            <li><strong>Save an object, retrieve an object—</strong>store metadata in private (__rerum) property, rather
+                than wrap all data transactions</li>
+            <li><strong>Trust the application, not the user—</strong>avoid multiple login and authentication
+                requirements and honor open data attributions</li>
+            <li><strong>Open and Free—</strong>expose all contributions immediately without charge to write or read</li>
+            <li><strong>Attributed and Versioned—</strong>always include asserted ownership and transaction metadata so
+                consumers can evaluate trustworthiness and relevance</li>
+        </ol>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class='panel panel-info' name="block">
+                <div class="panel-heading"> <span class="panel-title">Application Registration</span> </div>
+                <div class="panel-body">
+                    <p class="handHoldy">
+                        Interacting with RERUM requires server-to-server communication, so we suggest the registrant be the
+                        application developer.
+                        You may want to
+                        <a target="_blank" rel="noopener" href="https://rerum.io/#/future" class="linkOut">learn more about the concepts around RERUM</a>
+                        before reading the API.
+                    </p>
+                    <p class="handHoldy">
+                        If you are here for the first time and think you want to use RERUM, please
+                        <a target="_blank" rel="noopener" href="https://store.rerum.io/API.html" class="linkOut">read the API</a> first.
+                    </p>
+                    <p class="handHoldy">
+                        If you like what you read in <a target="_blank" rel="noopener" href="https://store.rerum.io/API.html" class="linkOut">our API documentation</a>
+                        and want to begin using RERUM as a back stack service please register by clicking below.
+                        Be prepared to be routed to Auth0 (don't know why?
+                        <a target="_blank" rel="noopener" href="https://store.rerum.io/API.html" class="linkOut">Read the API</a>).
+                    </p>
+                    <p class="handHoldy">
+                        After registering, you will be returned to this page with an Auth0 Authorization code.
+                    </p>
+                </div>
+                <div class="panel-footer">
+                    <input class='btn btn-primary btn-large' type="button" id="register" value="Register With RERUM At Auth0" />
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-info" id="panel-checks">
+                <div class="panel-heading"> <span class="panel-title">Already Registered Information</span> </div>
+                <div class="panel-body">
+                    <p>
+                        If you are already registered and need to manage your tokens or check your status, click the button below.
+                        When you click <strong>Checks</strong>, several panels will appear to help you manage authentication:
+                    </p>
+                    <ul>
+                        <li><strong>Auth0 Authorization Status</strong> — Shows whether you are currently recognized by Auth0.</li>
+                        <li><strong>Get A New Refresh Token</strong> — Lets you exchange an Auth0 Authorization Code for a brand new Refresh Token. ⚠️ This invalidates your old Refresh Token.</li>
+                        <li><strong>Access Token</strong> — Displays the Access Token generated alongside your Refresh Token and shows its expiration date.</li>
+                        <li><strong>Get A New Access Token</strong> — Allows you to generate a new Access Token using your Refresh Token.</li>
+                        <li><strong>Test RERUM API Access</strong> — Uses your Access Token to test if you can reach the RERUM API successfully.</li>
+                    </ul>
+                    <p>
+                        Use these tools to keep your tokens up to date and verify access to the RERUM services.
+                    </p>
+                </div>
+                <div class="panel-footer">
+                    <input class='btn btn-primary btn-large' type="button" id="show-checks" value="Checks" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="checks-container" style="display: none;">
+        <div class='panel panel-info' name="block" id="auth-status-panel">
+            <div class="panel-heading"> <span class="panel-title">Auth0 Authorization Status</span> </div>
+            <div class="panel-body">
+                <p class="handHoldy">
+                    If you believe you are already registered and want to check on your status, follow the prompts below.
+                    You will be routed to Auth0 so we can verify who you are.
+                </p>
+                <div>
+                    <span class="status_header"> Auth0 Status </span>
+                    <kbd class="rerumStatus" id="authorizationStatus">UNKNOWN</kbd>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <input class='btn btn-primary btn-large' type="button" id="check_status" value="Check my Authorization Status With Auth0" />
+            </div>
+        </div>
+        <div class='panel panel-info' name="block" id="refresh-token-panel">
+            <div class="panel-heading"> <span class="panel-title">Get A New Refresh Token</span> </div>
+            <div class="panel-body">
+                <p class="handHoldy">
+                    You can supply a valid Auth0 Authorization Code to get a new refresh token. Use "Check my Authorization
+                    Status with Auth0" to get a valid code.
+                </p>
+                Enter your code: <textarea class="form-control" placeholder="Your Auth0 Authorization Code goes here" id="code_for_refresh_token"></textarea>
+                <br>
+                <textarea readonly class="form-control" id="new_refresh_token" placeholder="Your refresh token will appear here."></textarea>
+
+                <div>
+                <div class="column">
+                    <span class="status_header"> Status </span>
+                        <kbd class="rerumStatus" id="nrtStatus">UNKNOWN</kbd>
+                </div>
+                <div class="column2">
+                    <input class='btn btn-primary btn-large' type="button" id="copy_refresh_token" value="Copy" />
+                </div>
+                <div class="column2">
+                    <input class='btn btn-primary btn-large' type="button" id="download_refresh_token" value="Download" />
+                </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <input class='btn btn-primary btn-large' type="button" id="refresh_token" value="Get A New Refresh Token" />
+            </div>
+        </div>
+        <div class='panel panel-info' name="block" id="access-token-display-panel">
+            <div class="panel-heading">
+                <span class="panel-title">Access Token</span>
+            </div>
+            <div class="panel-body">
+                <p class="handHoldy">
+                    When you generate a new refresh token, an access token is also created.
+                    It will be displayed here automatically. The access token generated from generating
+                    a new access token will also be displayed here
+                </p>
+                <textarea readonly class="form-control" id="a_t" placeholder="Your access token will appear here."></textarea>
+                <div>
+                    <div class="column">
+                        <span class="status_header"> Access Token Expiration </span>
+                        <kbd class="rerumStatus" id="refreshAccessExp">UNKNOWN</kbd>
+                    </div>
+                    <div class="column2">
+                        <input class='btn btn-primary btn-large' type="button" id="copy_access_token" value="Copy" />
+                    </div>
+                    <div class="column2">
+                        <input class='btn btn-primary btn-large' type="button" id="download_access_token" value="Download" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='panel panel-info' name="block" id="access-token-panel">
+            <div class="panel-heading"> <span class="panel-title">Get A New Access Token</span> </div>
+            <div class="panel-body">
+                <p class="handHoldy">
+                    Your access token to use RERUM expires every 30 days. Has it been that long or longer? Provide your
+                    refresh token below to get a new access token.
+                    If you lost your refresh token, you can get a new one in "Get A New Refresh Token" below.
+                    The generated access token will be displayed in the box above
+                </p>
+                <textarea class="form-control" placeholder="Your refresh token goes here." id="r_t_4_a_t"></textarea>
+                <div>
+                    <span class="status_header"> Status </span>
+                    <kbd class="rerumStatus" id="natStatus">UNKNOWN</kbd>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <input class='btn btn-primary btn-large' type="button" id="request_token" value="Get A New Access Token" />
+            </div>
+        </div>
+        <div class='panel panel-info' name="block" id="test-api-panel">
+            <div class="panel-heading"> <span class="panel-title">Test RERUM API Access</span> </div>
+            <div class="panel-body">
+                <p class="handHoldy">
+                    Provide your access token below to check if it is still valid. If so, your access to RERUM will be
+                    authorized. Otherwise, you will see an "unauthorized" message.
+                </p>
+                <p class="handHoldy">
+                    If the token you have is not working, it may be because access tokens expire every 30 days. You can use
+                    your refresh token to get a new access token.
+                </p>
+                <textarea class="form-control" id="a_t" placeholder="Your access token goes here."></textarea>
+                <div>
+                    <span class="status_header"> RERUM status </span>
+                    <kbd class="rerumStatus" id="rerumStatus" class="">UNKNOWN</kbd>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <input class='btn btn-primary btn-large' type="button" onclick="testAPI()" id="test_api" value="Check Access To RERUM API" />
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function getURLVariable(variable) {
+            const query = window.location.search.substring(1);
+            const vars = query.split("&");
+            for (let i = 0; i < vars.length; i++) {
+                const pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            return false;
+        }
+
+        function getURLHash(variable) {
+            let query = document.location.hash;
+            query = query.substr(1);
+            const vars = query.split("&");
+            for (let i = 0; i < vars.length; i++) {
+                const pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            return false;
+        }
+
+        $('#show-checks').click(function() {
+            $('#checks-container').slideToggle();
+        });
+
+        $(document).ready(function() {
+            const authCode = getURLVariable("code");
+            const errorCode = getURLVariable("error");
+            const login = getURLVariable("login");
+
+            // Successful login flow (explicit flag)
+            if (login === "true") {
+                alert("Login successful — your auth token has been generated.");
+                $('#checks-container').slideDown();
+                $('#panel-checks').hide();
+                clearQueryParams();
+                return;
+            }
+
+            // Registration or login based on history
+            if (authCode) {
+                $('#code_for_refresh_token').val(authCode);
+                $('#authorizationStatus').html("✅");
+                $('#checks-container').slideDown();
+                $('#panel-checks').hide();
+
+                if (!localStorage.getItem("hasRegistered")) {
+                    // First time seeing a code → registration
+                    alert("Registration successful — login through Auth0 authorization to receive your auth token.");
+                    localStorage.setItem("hasRegistered", "true");
+                } else {
+                    // Already registered → treat this as login
+                    alert("Login successful — your auth token has been generated.");
+                }
+                clearQueryParams();
+                return;
+            }
+
+            // Error flow
+            if (errorCode) {
+                $('#authorizationStatus').html(`Authentication Error: ${errorCode.replace(/_/g, ' ')}`);
+                $('#checks-container').slideDown();
+                $('#panel-checks').hide();
+                alert(`Authentication Error: ${errorCode.replace(/_/g, ' ')}`);
+                clearQueryParams();
+            }
+        });
+
+        // Helper to remove query params from URL after handling
+        function clearQueryParams() {
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+        }
+
+        $("#register").click(ev => {
+            fetch('/client/register')
+                .then(res => res.text())
+                .then(url => location.href = url)
+                .catch(err => alert("Error: Could not connect to the registration service."));
+        });
+
+        $("#check_status").click(ev => {
+            fetch('/client/register')
+                .then(res => res.text())
+                .then(url => location.href = url)
+                .catch(err => alert("Error: Could not connect to the authentication service."));
+        });
+
+        $("#request_token").click(function() {
+            const refreshToken = $("#r_t_4_a_t").val();
+            if (!refreshToken) {
+                alert("You must provide a refresh token.");
+                return;
+            }
+            fetch('/client/request-new-access-token', {
+                    method: 'post',
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        refresh_token: refreshToken
+                    })
+                })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw new Error("Invalid refresh token.");
+                    }
+                    return resp.json();
+                })
+                .then(token => {
+                    $("#a_t").val(token.access_token);
+
+                    const expirationDate = new Date();
+                    expirationDate.setDate(expirationDate.getDate() + 30);
+                    const expString = expirationDate.toLocaleString();
+
+                    $("#refreshAccessExp").html(expString);
+                    $("#testAccessExp").html(expString);
+
+                    $("#natStatus").html("SUCCESS");
+                    alert("The old access token has been invalidated. A new one is now active.");
+                })
+                .catch(err => {
+                    $("#natStatus").html("FAILED. " + err.message);
+                });
+        });
+
+        let firstRefreshShown = false;
+        $("#refresh_token").click(function() {
+            if (!confirm("Requesting a new refresh token invalidates the old one. Do you want to continue?")) {
+                return;
+            }
+
+            const authCode = $("#code_for_refresh_token").val();
+            if (!authCode) {
+                alert("You must provide an authorization code.");
+                return;
+            }
+            fetch('/client/request-new-refresh-token', {
+                    method: 'post',
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        authorization_code: authCode
+                    })
+                })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw new Error("Invalid authorization code.");
+                    }
+                    return resp.json();
+                })
+                .then(token => {
+                    $("#new_refresh_token").val(token.refresh_token);
+
+                    $("#a_t").val(token.access_token);
+
+                    const expirationDate = new Date();
+                    expirationDate.setDate(expirationDate.getDate() + 30);
+                    const expString = expirationDate.toLocaleString();
+
+                    $("#refreshAccessExp").html(expString);
+                    $("#testAccessExp").html(expString);
+
+                    $("#nrtStatus").html("SUCCESS");
+                    if (!firstRefreshShown) {
+                        alert("Your new Refresh Token replaces the old one. Keep it safe! A new Access Token has also been issued.");
+                        firstRefreshShown = true;
+                    }
+                })
+                .catch(err => {
+                    $("#nrtStatus").html("FAILED. " + err.message);
+                });
+        });
+
+        $("#download_access_token").click(function(){
+            const link = document.createElement("a")
+            const AccessTokenDownload = $("#a_t").val()
+            const content = [AccessTokenDownload]
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            link.href = URL.createObjectURL(blob);
+            link.download = "AccessToken.txt";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        })
+
+        $("#download_refresh_token").click(function(){
+            const link = document.createElement("a")
+            const RefreshTokenDownload = $("#new_refresh_token").val()
+            const content = [RefreshTokenDownload]
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            link.href = URL.createObjectURL(blob);
+            link.download = "RefreshToken.txt";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        })
+
+        $("#copy_access_token").click(async function(){
+            const copyText = $("#a_t").val()
+            try {
+                await navigator.clipboard.writeText(copyText);
+                alert("Copied the text: " + copyText);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy text.');
+            }
+        });
+
+        $("#copy_refresh_token").click(async function(){
+            const copyText = $("#new_refresh_token").val()
+            try {
+                await navigator.clipboard.writeText(copyText);
+                alert("Copied the text: " + copyText);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy text.');
+            }
+        });
+
+        function testAPI() {
+            const userProvidedToken = $("#a_t").val();
+            if (!userProvidedToken) {
+                alert("You must provide an access token to test.");
+                return;
+            }
+            fetch('/client/verify', {
+                    headers: {
+                        Authorization: `Bearer ${userProvidedToken}`
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error("Unauthorized");
+                    }
+                    $("#rerumStatus").html("AUTHORIZED");
+                })
+                .catch(() => {
+                    $("#rerumStatus").html("UNAUTHORIZED. Refresh your access token and try again.");
+                });
+        }
+    </script>
+</body>
+
+</html>
