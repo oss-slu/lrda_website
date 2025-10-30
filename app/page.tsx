@@ -1,9 +1,12 @@
-"use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import WelcomePage from "./WelcomePage";
+import AboutPage from "./lib/components/about_section";
 
-const IndexPage: React.FC = () => {
-  return <WelcomePage />;
-};
-
-export default IndexPage;
+export default async function Page() {
+  return (
+    <>
+      <WelcomePage />
+      <AboutPage />
+    </>
+  );
+}
