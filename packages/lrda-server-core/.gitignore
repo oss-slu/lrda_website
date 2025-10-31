@@ -108,3 +108,5 @@ dist
 *.env
 /nbproject/private/
 .hintrc
+
+*/coverage/*

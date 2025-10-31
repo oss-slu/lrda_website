@@ -450,9 +450,6 @@ importers:
 
   packages/lrda-server-core:
     dependencies:
-      '@jest/globals':
-        specifier: ^29.7.0
-        version: 29.7.0
       '@scalar/express-api-reference':
         specifier: ^0.8.22
         version: 0.8.22
@@ -469,7 +466,7 @@ importers:
         specifier: ^16.6.1
         version: 16.6.1
       express:
-        specifier: ^4.20.0
+        specifier: ^4.21.2
         version: 4.21.2
       express-oauth2-jwt-bearer:
         specifier: ^1.7.1
@@ -493,6 +490,9 @@ importers:
       '@jest-mock/express':
         specifier: ^2.1.0
         version: 2.1.0
+      '@jest/globals':
+        specifier: ^30.2.0
+        version: 30.2.0
       jest:
         specifier: ^30.2.0
         version: 30.2.0(@types/node@24.9.2)(babel-plugin-macros@3.1.0)
@@ -534,7 +534,7 @@ importers:
         version: 13.5.0
       jest:
         specifier: ^30.2.0
-        version: 30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0)
+        version: 30.2.0(@types/node@24.9.2)(babel-plugin-macros@3.1.0)
       lrda-server-core:
         specifier: workspace:*
         version: link:../packages/lrda-server-core
@@ -555,7 +555,7 @@ importers:
         version: 6.2.8(openapi-types@12.1.3)
       vite:
         specifier: ^7.1.12
-        version: 7.1.12(@types/node@20.6.2)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
+        version: 7.1.12(@types/node@24.9.2)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1)
 
 packages:
 
@@ -10377,7 +10377,7 @@ snapshots:
   '@jest/console@30.2.0':
     dependencies:
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       chalk: 4.1.2
       jest-message-util: 30.2.0
       jest-util: 30.2.0
@@ -10426,14 +10426,14 @@ snapshots:
       '@jest/test-result': 30.2.0
       '@jest/transform': 30.2.0
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       ci-info: 4.3.1
       exit-x: 0.2.2
       graceful-fs: 4.2.11
       jest-changed-files: 30.2.0
-      jest-config: 30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0)
+      jest-config: 30.2.0(@types/node@24.9.2)(babel-plugin-macros@3.1.0)
       jest-haste-map: 30.2.0
       jest-message-util: 30.2.0
       jest-regex-util: 30.0.1
@@ -10460,7 +10460,7 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       jest-mock: 29.7.0
 
   '@jest/environment@30.2.0':
@@ -10572,7 +10572,7 @@ snapshots:
       '@jest/transform': 30.2.0
       '@jest/types': 30.2.0
       '@jridgewell/trace-mapping': 0.3.31
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit-x: 0.2.2
@@ -10692,7 +10692,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       '@types/yargs': 17.0.34
       chalk: 4.1.2
 
@@ -11917,7 +11917,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
 
   '@types/caseless@0.12.5':
     optional: true
@@ -11958,7 +11958,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.7':
     dependencies:
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -12114,7 +12114,7 @@ snapshots:
   '@types/serve-static@1.15.10':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       '@types/send': 0.17.6
 
   '@types/stack-utils@2.0.3': {}
@@ -14462,25 +14462,6 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-cli@30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0):
-    dependencies:
-      '@jest/core': 30.2.0(babel-plugin-macros@3.1.0)
-      '@jest/test-result': 30.2.0
-      '@jest/types': 30.2.0
-      chalk: 4.1.2
-      exit-x: 0.2.2
-      import-local: 3.2.0
-      jest-config: 30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0)
-      jest-util: 30.2.0
-      jest-validate: 30.2.0
-      yargs: 17.7.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - babel-plugin-macros
-      - esbuild-register
-      - supports-color
-      - ts-node
-
   jest-cli@30.2.0(@types/node@24.9.2)(babel-plugin-macros@3.1.0):
     dependencies:
       '@jest/core': 30.2.0(babel-plugin-macros@3.1.0)
@@ -14522,38 +14503,6 @@ snapshots:
       micromatch: 4.0.8
       parse-json: 5.2.0
       pretty-format: 29.7.0
-      slash: 3.0.0
-      strip-json-comments: 3.1.1
-    optionalDependencies:
-      '@types/node': 20.6.2
-    transitivePeerDependencies:
-      - babel-plugin-macros
-      - supports-color
-
-  jest-config@30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0):
-    dependencies:
-      '@babel/core': 7.28.5
-      '@jest/get-type': 30.1.0
-      '@jest/pattern': 30.0.1
-      '@jest/test-sequencer': 30.2.0
-      '@jest/types': 30.2.0
-      babel-jest: 30.2.0(@babel/core@7.28.5)
-      chalk: 4.1.2
-      ci-info: 4.3.1
-      deepmerge: 4.3.1
-      glob: 10.4.5
-      graceful-fs: 4.2.11
-      jest-circus: 30.2.0(babel-plugin-macros@3.1.0)
-      jest-docblock: 30.2.0
-      jest-environment-node: 30.2.0
-      jest-regex-util: 30.0.1
-      jest-resolve: 30.2.0
-      jest-runner: 30.2.0
-      jest-util: 30.2.0
-      jest-validate: 30.2.0
-      micromatch: 4.0.8
-      parse-json: 5.2.0
-      pretty-format: 30.2.0
       slash: 3.0.0
       strip-json-comments: 3.1.1
     optionalDependencies:
@@ -14701,7 +14650,7 @@ snapshots:
   jest-haste-map@30.2.0:
     dependencies:
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -14764,7 +14713,7 @@ snapshots:
   jest-mock@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       jest-util: 29.7.0
 
   jest-mock@30.2.0:
@@ -14855,7 +14804,7 @@ snapshots:
       '@jest/test-result': 30.2.0
       '@jest/transform': 30.2.0
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       chalk: 4.1.2
       emittery: 0.13.1
       exit-x: 0.2.2
@@ -14911,7 +14860,7 @@ snapshots:
       '@jest/test-result': 30.2.0
       '@jest/transform': 30.2.0
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       chalk: 4.1.2
       cjs-module-lexer: 2.1.0
       collect-v8-coverage: 1.0.3
@@ -15031,7 +14980,7 @@ snapshots:
     dependencies:
       '@jest/test-result': 30.2.0
       '@jest/types': 30.2.0
-      '@types/node': 20.6.2
+      '@types/node': 24.9.2
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -15068,19 +15017,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
-      - supports-color
-      - ts-node
-
-  jest@30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0):
-    dependencies:
-      '@jest/core': 30.2.0(babel-plugin-macros@3.1.0)
-      '@jest/types': 30.2.0
-      import-local: 3.2.0
-      jest-cli: 30.2.0(@types/node@20.6.2)(babel-plugin-macros@3.1.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - babel-plugin-macros
-      - esbuild-register
       - supports-color
       - ts-node
 
@@ -17479,21 +17415,6 @@ snapshots:
   validator@13.15.20: {}
 
   vary@1.1.2: {}
-
-  vite@7.1.12(@types/node@20.6.2)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1):
-    dependencies:
-      esbuild: 0.25.11
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-      postcss: 8.5.6
-      rollup: 4.52.5
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 20.6.2
-      fsevents: 2.3.3
-      jiti: 1.21.7
-      terser: 5.44.0
-      yaml: 2.8.1
 
   vite@7.1.12(@types/node@24.9.2)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1):
     dependencies:

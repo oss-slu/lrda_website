@@ -8,27 +8,27 @@ import { apiReference } from "@scalar/express-api-reference";
 import { setConfig, getConfig } from "./config.js";
 import { connected as dbConnected } from "./database/index.js";
 import rest from "./rest.js";
-// import _gog_fragmentsRouter from "./routes/_gog_fragments_from_manuscript.js";
-// import _gog_glossesRouter from "./routes/_gog_glosses_from_manuscript.js";
-// import indexRouter from "./routes/index.js";
-// import clientRouter from "./routes/client.js";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function getEnv(key, fallback) {
-  return typeof process !== "undefined" && process.env && process.env[key] ? process.env[key] : fallback;
-}
-
 export async function createCoreRouter(options = {}) {
   const {
     // DB
-    mongoUri = getEnv("MONGO_CONNECTION_STRING"),
-    mongodbName = getEnv("MONGODBNAME"),
-    mongodbCollection = getEnv("MONGODBCOLLECTION"),
+    mongoUri = undefined,
+    mongodbName = undefined,
+    mongodbCollection = undefined,
     connectOnStart = true,
     // RERUM configuration
-    rerum = {},
+    rerum = {
+      RERUM_API_VERSION: undefined,
+      RERUM_BASE: undefined,
+      RERUM_PREFIX: undefined,
+      RERUM_ID_PREFIX: undefined,
+      RERUM_AGENT_CLAIM: undefined,
+      RERUM_CONTEXT: undefined,
+      RERUM_API_DOC: undefined,
+    },
 
     // HTTP concerns (placeholders for future use)
     // cors = undefined,
@@ -42,20 +42,10 @@ export async function createCoreRouter(options = {}) {
   } = options;
 
   const {
-    RERUM_API_VERSION = getEnv("RERUM_API_VERSION"),
-    RERUM_BASE = getEnv("RERUM_BASE"),
-    RERUM_PREFIX = getEnv("RERUM_PREFIX"),
-    RERUM_ID_PREFIX = getEnv("RERUM_ID_PREFIX"),
-    RERUM_AGENT_CLAIM = getEnv("RERUM_AGENT_CLAIM"),
-    RERUM_CONTEXT = getEnv("RERUM_CONTEXT"),
-    RERUM_API_DOC = getEnv("RERUM_API_DOC"),
-  } = rerum || {};
-
-  const {
     enabled: scalarEnabled = true,
     mountPath: scalarMountPath = "/reference",
     openapiMountPath: openapiMountPath = "/openapi.json",
-    baseServerUrl: baseServerUrl = getEnv("API_BASE_PATH", "/api/v1"),
+    baseServerUrl: baseServerUrl = "/api/v1",
   } = scalar || {};
 
   // Store config for internal modules
@@ -138,7 +128,7 @@ export async function createCoreRouter(options = {}) {
   router.use(morgan("dev"));
   router.use(cookieParser());
 
-  //Publicly available scripts, CSS, and HTML pages.
+  // Publicly available scripts, CSS, and HTML pages.
   router.use(express.static(path.join(__dirname, "public")));
 
   router.use("/", (await import("./routes/index.js")).default);
@@ -162,7 +152,7 @@ export async function createCoreRouter(options = {}) {
    * */
   router.use(rest.messenger);
 
-  //catch 404 because of an invalid site path
+  // catch 404 because of an invalid site path
   router.use((req, res, next) => {
     res.status(404).send(res.statusMessage || "This page does not exist");
   });
@@ -171,7 +161,7 @@ export async function createCoreRouter(options = {}) {
     try {
       await dbConnected();
     } catch (e) {
-      /* log if needed */
+      console.error("Database connection failed on server start:", e);
     }
   }
 

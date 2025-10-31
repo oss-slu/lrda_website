@@ -3,7 +3,10 @@
  * https://jestjs.io/docs/configuration
  */
 
-const config = {
+export default {
+  transform: {},
+  testEnvironment: "node",
+
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -17,12 +20,12 @@ const config = {
   // clearMocks: false,
 
   //This will tell you why jest couldn't close.  Right now, it will flag the client.connect() b/c there is no client.close()
-  //That is OK in the testing scenario.  In production, only one connection is made and it is closed when the app exits. 
-  detectOpenHandles : false,
+  //That is OK in the testing scenario.  In production, only one connection is made and it is closed when the app exits.
+  detectOpenHandles: false,
 
   displayName: {
-    name: 'RERUM v1',
-    color: 'cyan',
+    name: "RERUM v1",
+    color: "cyan",
   },
 
   // Indicates whether the coverage information should be collected while executing the test
@@ -30,20 +33,16 @@ const config = {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
-      //"**/*.js",
-      "**/db-controller.js",
-      "**/routes/*.js"
+    //"**/*.js",
+    "**/db-controller.js",
+    "**/routes/*.js",
   ],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: "v8",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    "json",
-    "text",
-    "html"
-  ],
+  coverageReporters: ["json", "text", "html"],
 
   // Indicates whether each individual test should be reported during the run
   verbose: true,
@@ -189,7 +188,7 @@ const config = {
   // Setting this value to "fake" allows the use of fake timers for functions such as "setTimeout"
   // timers: "real",
 
-  // Sometimes the MongoDB or Network are choking and the tests take longer than 5s.  
+  // Sometimes the MongoDB or Network are choking and the tests take longer than 5s.
   // testTimeout: 10000,
 
   // A map from regular expressions to paths to transformers
@@ -209,6 +208,4 @@ const config = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
-}
-
-export default config
+};

@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Utility functions for RERUM controllers
  * @author Claude Sonnet 4, cubap, thehabes
