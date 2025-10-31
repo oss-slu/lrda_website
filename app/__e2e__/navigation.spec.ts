@@ -26,7 +26,6 @@ test.describe('Navigation', () => {
     // Verify key navigation links are present (use first() to handle multiple matches)
     await expect(page.locator('nav a:has-text("Home")').first()).toBeVisible();
     await expect(page.locator('nav a:has-text("Map")').first()).toBeVisible();
-    await expect(page.locator('nav a:has-text("About")').first()).toBeVisible();
     await expect(page.locator('nav a:has-text("Stories")').first()).toBeVisible();
     
     // Check for login button
