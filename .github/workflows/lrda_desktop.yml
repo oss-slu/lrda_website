@@ -1,18 +1,21 @@
-name: lrda_desktop CI
+name: lrda_desktop CI (DEPRECATED - Use ci-cd.yml instead)
 
+# DISABLED: This workflow is deprecated. Use .github/workflows/ci-cd.yml instead.
+# This workflow is kept for reference but will not run automatically.
 on:
-  push:
-    branches:
-      - main # replace with the name of your default branch if different
-      - openai_tags
-      - memoryleak
-      - december-sprint
-  pull_request:
-    branches:
-      - main # replace with the name of your default branch if different
-      - openai_tags
-      - memoryleak
-      - december-sprint
+  workflow_dispatch:  # Only allows manual trigger, disabled from automatic runs
+  # push:
+  #   branches:
+  #     - main
+  #     - openai_tags
+  #     - memoryleak
+  #     - december-sprint
+  # pull_request:
+  #   branches:
+  #     - main
+  #     - openai_tags
+  #     - memoryleak
+  #     - december-sprint
 
 permissions:
   contents: read
