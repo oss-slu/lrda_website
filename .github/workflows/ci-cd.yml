@@ -73,7 +73,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.11.0
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -139,7 +139,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.11.0
+          version: 10.20.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -170,27 +170,27 @@ jobs:
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
-          # Set environment variables for Netlify CLI (non-interactive mode)
+          # Set environment variables for Netlify CLI
           export NETLIFY_AUTH_TOKEN="${{ secrets.NETLIFY_AUTH_TOKEN }}"
           export NETLIFY_SITE_ID="${{ secrets.NETLIFY_SITE_ID }}"
           
-          # Create netlify state directory and file to avoid interactive prompts
+          # Create netlify state directory and link file (non-interactive)
           mkdir -p .netlify
           echo "{\"siteId\":\"$NETLIFY_SITE_ID\"}" > .netlify/state.json
           
-          # Determine deployment type
+          # Determine deployment type and deploy with explicit site ID and auth
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Pull requests always get preview deployments
             echo "Deploying preview for PR #${{ github.event.pull_request.number }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" 2>&1 | tee netlify-deploy.log
+            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" --json
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Production deploy from main - ${{ github.sha }}" 2>&1 | tee netlify-deploy.log
+            netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" 2>&1 | tee netlify-deploy.log
+            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
