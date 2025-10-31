@@ -130,7 +130,12 @@ jobs:
     name: Deploy to Netlify
     runs-on: ubuntu-latest
     needs: [unit-tests, e2e-tests]
+    # Run on all PRs (including from forks) and pushes
     if: github.event_name == 'push' || github.event_name == 'pull_request'
+    # Allow workflow to run from forks (needed for PRs from external contributors)
+    permissions:
+      contents: read
+      pull-requests: write  # Needed to comment on PRs with preview URL
 
     steps:
       - name: Checkout repository
@@ -167,6 +172,47 @@ jobs:
       - name: Setup Netlify CLI
         run: npm install -g netlify-cli
 
+      - name: Setup GitHub CLI and jq (for PR comments and JSON parsing)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          # gh CLI is usually pre-installed in GitHub Actions runners
+
+      - name: Validate Netlify secrets
+        run: |
+          if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          if [ -z "${{ secrets.NETLIFY_SITE_ID }}" ]; then
+            echo "::error::NETLIFY_SITE_ID secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          echo "✓ Netlify secrets are configured"
+
+      - name: Authenticate with Netlify
+        run: |
+          # Create Netlify config directory and auth file (non-interactive)
+          mkdir -p ~/.config/netlify
+          # Create config file with token (Netlify CLI reads this automatically)
+          cat > ~/.config/netlify/config.json <<EOF
+          {
+            "auth": {
+              "token": "$NETLIFY_AUTH_TOKEN"
+            }
+          }
+          EOF
+          echo "✓ Netlify authentication configured"
+          # Verify config file exists (without printing token)
+          if [ -f ~/.config/netlify/config.json ]; then
+            echo "✓ Config file created successfully"
+          else
+            echo "::error::Failed to create Netlify config file"
+            exit 1
+          fi
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
@@ -177,9 +223,27 @@ jobs:
           # Determine deployment type and deploy with explicit site ID
           # NETLIFY_AUTH_TOKEN is automatically used by Netlify CLI when set as env var
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Pull requests always get preview deployments
-            echo "Deploying preview for PR #${{ github.event.pull_request.number }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" --json
+            # Pull requests always get preview deployments (works for all PRs, including from forks)
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
+            echo "Branch: ${PR_BRANCH}"
+            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
+            echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
+            if [ -s deploy_url.txt ]; then
+              PREVIEW_URL=$(cat deploy_url.txt)
+              echo "🚀 Preview deployment ready: ${PREVIEW_URL}"
+              # Optionally comment on PR (requires permissions: pull-requests: write)
+              # Note: May not work for PRs from forks due to token restrictions
+              if [ -n "$PREVIEW_URL" ]; then
+                echo "::notice::Preview URL: ${PREVIEW_URL}"
+                # Try to comment on PR (may fail for fork PRs, which is okay)
+                COMMENT_BODY="🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** ${PREVIEW_URL}\n📝 **Branch:** \`${PR_BRANCH}\`\n👤 **Author:** @${PR_AUTHOR}"
+                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
+              fi
+            fi
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
@@ -192,4 +256,5 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
