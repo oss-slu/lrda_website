@@ -44,7 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run unit tests
-        run: pnpm test:unit
+        run: pnpm test:unit --silent --no-coverage
         env:
           NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
@@ -56,6 +56,8 @@ jobs:
           NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
           NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
           CI: "true"
+          # Suppress console output in CI
+          SUPPRESS_CONSOLE: "true"
 
   # Job 2: E2E Tests (includes build)
   e2e-tests:
