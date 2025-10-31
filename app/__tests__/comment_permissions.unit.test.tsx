@@ -17,6 +17,7 @@ const mockedUser = {
   isInstructor: jest.fn<Promise<boolean>, []>(),
   getId: jest.fn<Promise<string>, []>(),
   getName: jest.fn<Promise<string>, []>(),
+  getRoles: jest.fn<Promise<{ administrator: boolean; contributor: boolean; } | null>, []>(),
 };
 jest.mock('../lib/models/user_class', () => ({
   User: {
@@ -29,12 +30,14 @@ describe('CommentSidebar - permission gating', () => {
     mockedUser.isInstructor.mockReset();
     mockedUser.getId.mockReset();
     mockedUser.getName.mockReset();
+    mockedUser.getRoles.mockReset();
   });
 
   test('student cannot see Resolve/Delete buttons', async () => {
     mockedUser.isInstructor.mockResolvedValue(false);
     mockedUser.getId.mockResolvedValue('student-1');
     mockedUser.getName.mockResolvedValue('Student');
+    mockedUser.getRoles.mockResolvedValue({ contributor: true, administrator: false });
 
     render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => null} />);
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();
@@ -46,6 +49,7 @@ describe('CommentSidebar - permission gating', () => {
     mockedUser.isInstructor.mockResolvedValue(true);
     mockedUser.getId.mockResolvedValue('inst-1');
     mockedUser.getName.mockResolvedValue('Instructor');
+    mockedUser.getRoles.mockResolvedValue({ contributor: false, administrator: true });
 
     render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => ({ from: 1, to: 2 })} />);
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
 import { Note, Tag } from "@/app/types";
-import DOMPurify from "dompurify";
+// DOMPurify will be loaded dynamically
 import {
   CalendarDays,
   UserCircle,
@@ -32,6 +32,7 @@ import NoteCard from "./note_card";
  * @returns {string} The extracted sentences as plain text.
  */
 const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
+  if (typeof document === 'undefined') return ''; // SSR guard
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = bodyText;
   const plainText = tempDiv.textContent || tempDiv.innerText || "";
@@ -73,7 +74,17 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const [isImageLoading, setIsImageLoading] = useState(true); // Spinner state
   const [location, setLocation] = useState<string>("Fetching location..."); // State to store the exact location
+  const [sanitizedText, setSanitizedText] = useState<string>("");
   const tags: Tag[] = convertOldTags(note.tags);
+
+  // Load DOMPurify only on client side to avoid SSR issues
+  useEffect(() => {
+    if (typeof window !== 'undefined' && note.text) {
+      import('dompurify').then((DOMPurify) => {
+        setSanitizedText(DOMPurify.default.sanitize(note.text));
+      });
+    }
+  }, [note.text]);
 
   // Debugging logs to check incoming data
   useEffect(() => {
@@ -229,7 +240,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
           {note.text ? (
             <div
               className="mt-4 text-base"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(note.text) }}
+              dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
           ) : (
             <p className="text-gray-500">No content available.</p>

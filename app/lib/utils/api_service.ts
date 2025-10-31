@@ -1,4 +1,4 @@
-import { Note } from "@/app/types";
+import { Note, Comment } from "@/app/types";
 import { UserData } from "../../types";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
@@ -198,13 +198,110 @@ export default class ApiService {
   }
 
   // Fetch notes by a list of student user IDs
-  static async fetchNotesByStudents(studentIds: string[]): Promise<Note[]> {
-    if (!Array.isArray(studentIds) || studentIds.length === 0) return [];
-    const queryObj = {
-      type: "message",
-      creator: { $in: studentIds },
-    } as any;
-    return (await this.getPagedQuery(150, 0, queryObj)) as unknown as Note[];
+  // When used for instructor review, can filter by approvalRequested
+  /**
+   * Fetches notes created by a list of students, excluding archived notes.
+   * @param {string[]} studentUids - An array of student UIDs whose notes need to be fetched.
+   * @returns {Promise<any[]>} A promise that resolves to an array of notes created by the specified students.
+   */
+  static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
+    try {
+      const queryObj = {
+        type: "message",
+        published: false,
+        approvalRequested: true,
+        creator: {
+          $in: studentUids,
+        },
+        $or: [
+          { isArchived: { $exists: false } },
+          { isArchived: false },
+        ],
+      };
+
+      console.log("🔍 Rerum Query - fetchNotesByStudents:", JSON.stringify(queryObj));
+
+      const notes = await this.getPagedQuery(150, 0, queryObj);
+
+      console.log(`📥 Response (${notes.length} notes) for fetchNotesByStudents:`);
+      notes.forEach((note, idx) => {
+        console.log(`  Note ${idx + 1}:`, {
+          "@id": note.id,
+          title: note.title,
+          BodyText: note.text,
+          type: "message",
+          creator: note.creator,
+          media: note.media,
+          latitude: note.latitude,
+          longitude: note.longitude,
+          audio: note.audio,
+          published: note.published,
+          approvalRequested: note.approvalRequested,
+          tags: note.tags,
+          time: note.time,
+          isArchived: note.isArchived,
+          comments: note.comments || [], // Ensure comments are included
+        });
+      });
+
+      return notes;
+    } catch (error) {
+      console.error("❌ Error in fetchNotesByStudents:", error);
+      throw new Error("Failed to fetch notes by students.");
+    }
+  }
+
+  // Fetch users (students) by instructor ID from Firestore
+  static async fetchUsersByInstructor(instructorId: string): Promise<{ uid: string; name: string; email: string }[]> {
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(
+        usersRef,
+        where("parentInstructorId", "==", instructorId),
+        where("isInstructor", "==", false)
+      );
+      const snap = await getDocs(q);
+      const users: { uid: string; name: string; email: string }[] = [];
+
+      snap.forEach((doc) => {
+        const userData = doc.data();
+        if (userData?.uid && userData?.name && userData?.email) {
+          users.push({ uid: userData.uid, name: userData.name, email: userData.email });
+        } else {
+          console.warn(`User document with ID ${doc.id} is missing required fields.`);
+        }
+      });
+
+      console.log(`Fetched students under instructor ${instructorId}:`, users);
+      if (users.length === 0) {
+        console.warn(`No students found for instructor with ID: ${instructorId}`);
+      }
+      return users;
+    } catch (error: any) {
+      console.error(`Error fetching students for instructor with ID ${instructorId}:`, error);
+      const message = typeof error?.message === "string" ? error.message : "";
+
+      // Fallback: use API user profile to get students list (avoids Firestore permission issues)
+      if (message.includes("Missing or insufficient permissions") || message.includes("permission")) {
+        console.warn("Falling back to API-based students list due to Firestore permissions.");
+        const instructorProfile = await ApiService.fetchUserData(instructorId);
+        const studentUids: string[] = instructorProfile?.students || [];
+
+        if (!studentUids.length) {
+          return [];
+        }
+
+        const resolved = await Promise.all(
+          studentUids.map(async (uid) => {
+            const name = await ApiService.fetchCreatorName(uid).catch(() => "Unknown User");
+            return { uid, name, email: "" };
+          })
+        );
+        return resolved;
+      }
+
+      throw new Error(`Unable to fetch students for instructor with ID: ${instructorId}`);
+    }
   }
 
   /**
@@ -256,9 +353,7 @@ export default class ApiService {
 
       if (userDoc.exists()) {
         const firestoreData = userDoc.data();
-        console.log("Raw Firestore data:", firestoreData);
-        console.log("Roles object:", firestoreData.roles);
-        console.log("Administrator role:", firestoreData.roles?.administrator);
+        // Removed sensitive data logging for security
         
         // Ensure the data has the required structure
         const userData: UserData = {
@@ -270,7 +365,7 @@ export default class ApiService {
           parentInstructorId: firestoreData.parentInstructorId
         };
         
-        console.log("Processed UserData:", userData);
+        // Removed sensitive data logging for security
         return userData;
       } else {
         console.log("No user data found in Firestore, using API fallback.");
@@ -287,7 +382,7 @@ export default class ApiService {
         ],
       };
 
-      console.log(`Querying for user data with UID: ${uid}`);
+      // Removed UID logging for security
 
       const response = await fetch(url, {
         method: "POST",
@@ -296,7 +391,7 @@ export default class ApiService {
       });
 
       const data = await response.json();
-      console.log(`User Data:`, data);
+      // Removed sensitive data logging for security
       return data.length ? data[0] : null;
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -481,88 +576,276 @@ export default class ApiService {
     }
   }
 
-  // Comments API – Firestore-backed
-  static async fetchCommentsForNote(noteId: string): Promise<any[]> {
+  // Comments API – RERUM-backed
+  static async fetchCommentsForNote(noteId: string): Promise<Comment[]> {
     try {
-      const colRef = collection(db, "comments");
-      const q = query(colRef, where("noteId", "==", noteId));
-      const snap = await getDocs(q);
-      const results: any[] = [];
-      snap.forEach((d) => results.push({ id: d.id, ...d.data() }));
-      // sort by createdAt
-      results.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-      return results;
-    } catch (e) {
-      console.warn("fetchCommentsForNote failed", e);
+      const queryObj = {
+        type: "comment",
+        noteId: noteId,
+      };
+
+      const response = await fetch(`${RERUM_PREFIX}query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(queryObj),
+      });
+
+      const data = await response.json();
+      return data
+        .filter((item: any) => !item.archived)
+        .map((item: any) => ({
+          id: item["@id"],
+          noteId: item.noteId,
+          text: item.text,
+          authorId: item.authorId,
+          authorName: item.authorName,
+          createdAt: new Date(item.createdAt).toISOString(),
+          position: item.position ? { from: item.position.from, to: item.position.to } : null,
+          threadId: item.threadId || null,
+          parentId: item.parentId || null,
+          resolved: !!item.resolved,
+          archived: !!item.archived,
+        }));
+    } catch (error) {
+      console.error("Error fetching comments:", error);
       return [];
     }
   }
 
-  static async createComment(comment: any): Promise<void> {
+  static async createComment(comment: Comment) {
     try {
-      const colRef = collection(db, "comments");
-      await addDoc(colRef, comment);
-    } catch (e) {
-      console.warn("createComment failed", e);
+      // Extract authorName as string if it's a ReactNode
+      const authorNameStr = typeof comment.authorName === 'string' 
+        ? comment.authorName 
+        : (comment.authorName as any)?.toString() || comment.author || '';
+      
+      const response = await fetch(`${RERUM_PREFIX}create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",   // Special Rerum type
+          noteId: comment.noteId, // Associate comment with a Note
+          text: comment.text,
+          authorId: comment.authorId,
+          authorName: authorNameStr,
+          createdAt: comment.createdAt,
+          position: comment.position || null,
+          threadId: comment.threadId || null,
+          parentId: comment.parentId || null,
+          resolved: !!comment.resolved,
+          archived: !!comment.archived,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create comment.");
+      }
+
+      return await response.json(); // Return the Rerum object metadata
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      throw error;
     }
   }
 
-  static async resolveThread(threadId: string): Promise<void> {
+  static async resolveThread(threadId: string) {
     try {
-      const colRef = collection(db, "comments");
-      const q = query(colRef, where("threadId", "==", threadId));
-      const snap = await getDocs(q);
-      const ops: Promise<any>[] = [];
-      snap.forEach((d) => ops.push(updateDoc(doc(db, "comments", d.id), { resolved: true })));
-      await Promise.all(ops);
-    } catch (e) {
-      console.warn("resolveThread failed", e);
+      // First, fetch all comments in this thread
+      const queryObj = {
+        type: "comment",
+        threadId: threadId,
+      };
+
+      const queryResponse = await fetch(`${RERUM_PREFIX}query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(queryObj),
+      });
+
+      const comments = await queryResponse.json();
+      
+      if (!comments || comments.length === 0) {
+        throw new Error("No comments found for this thread");
+      }
+
+      // Update each comment in the thread to mark it as resolved
+      const updatePromises = comments.map((comment: any) => {
+        return fetch(`${RERUM_PREFIX}overwrite`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...comment,
+            resolved: true,
+            resolvedAt: new Date().toISOString(),
+          }),
+        });
+      });
+
+      const responses = await Promise.all(updatePromises);
+      const failed = responses.filter(r => !r.ok);
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to resolve ${failed.length} comment(s) in thread`);
+      }
+
+      return { success: true, updatedCount: comments.length };
+    } catch (error) {
+      console.error("Error resolving thread:", error);
+      throw error;
     }
   }
 
-  static async archiveComment(commentId: string): Promise<void> {
+  static async archiveComment(commentId: string) {
     try {
-      await updateDoc(doc(db, "comments", String(commentId)), { archived: true });
-    } catch (e) {
-      console.warn("archiveComment failed", e);
+      const response = await fetch(`${RERUM_PREFIX}overwrite`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",
+          "@id": commentId,
+          archived: true,
+          archivedAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to archive comment");
+      return true;
+    } catch (error) {
+      console.error("Error archiving comment:", error);
+      throw error;
     }
   }
+
+  // Request approval for a note from an instructor
+  static async requestApproval(noteData: any): Promise<void> {
+    try {
+      const { instructorId, ...noteDetails } = noteData;
+
+      const instructorRef = doc(db, "users", instructorId);
+      const approvalsRef = collection(instructorRef, "approvalRequests");
+
+      await addDoc(approvalsRef, {
+        ...noteDetails,
+        status: "pending",
+        submittedAt: new Date(),
+      });
+
+      console.log(`Approval request sent to instructor: ${instructorId}`);
+    } catch (error) {
+      console.error("Error requesting approval:", error);
+      throw new Error("Failed to request approval.");
+    }
+  }
+
 
   /**
-   * Fetches the name of the creator by querying the API with the given creatorId.
-   * @param {string} creatorId - The UID of the creator.
+   * Fetches the name of the creator by first checking Firestore, then falling back to RERUM API.
+   * Checks multiple fields (name, displayName, email) and handles various ID formats.
+   * @param {string} creatorId - The UID of the creator (can be a direct UID or a RERUM URL).
    * @returns {Promise<string>} The name of the creator.
    */
   static async fetchCreatorName(creatorId: string): Promise<string> {
     try {
+      // Normalize creatorId - extract UID from RERUM URLs if needed
+      let normalizedId = creatorId;
+      if (creatorId && (creatorId.startsWith("https://devstore.rerum.io/") || creatorId.startsWith("http://devstore.rerum.io/"))) {
+        // Extract the UID from the URL (assuming format like https://devstore.rerum.io/v1/id/{uid})
+        const parts = creatorId.split("/");
+        normalizedId = parts[parts.length - 1];
+      }
+
+      // First, try to fetch from Firestore
+      try {
+        const userDocRef = doc(db, "users", normalizedId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const firestoreData = userDoc.data();
+          // Check multiple name fields in order of preference
+          if (firestoreData.name && firestoreData.name.trim()) {
+            return firestoreData.name.trim();
+          }
+          if (firestoreData.displayName && firestoreData.displayName.trim()) {
+            return firestoreData.displayName.trim();
+          }
+          if (firestoreData.email && firestoreData.email.trim()) {
+            // Use email as last resort fallback
+            return firestoreData.email.trim();
+          }
+        }
+      } catch (firestoreError) {
+        // If Firestore lookup fails, continue to RERUM fallback
+        console.log("Firestore lookup failed, falling back to RERUM:", firestoreError);
+      }
+
+      // Fallback to RERUM API query - try both normalized ID and original creatorId
       const url = RERUM_PREFIX + "query";
       const headers = {
         "Content-Type": "application/json",
       };
-      const body = {
+      
+      // Try with normalized ID first
+      let body = {
         $or: [
-          { "@type": "Agent", uid: creatorId },
-          { "@type": "foaf:Agent", uid: creatorId },
+          { "@type": "Agent", uid: normalizedId },
+          { "@type": "foaf:Agent", uid: normalizedId },
         ],
       };
 
-      console.log(`Querying with UID: ${creatorId}`);
-
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
-      console.log(`Creator name fetched data:`, data);
-      if (data.length && data[0].name) {
-        return data[0].name;
-      } else {
-        throw new Error("Creator not found or no name attribute.");
+      let data = await response.json();
+      
+      // If no result with normalized ID and it's different from original, try original
+      if ((!data.length || !data[0].name) && normalizedId !== creatorId) {
+        body = {
+          $or: [
+            { "@type": "Agent", uid: creatorId },
+            { "@type": "foaf:Agent", uid: creatorId },
+            // Also try matching by @id field for RERUM URLs
+            { "@id": creatorId } as any,
+          ],
+        };
+        
+        response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+        
+        data = await response.json();
       }
+
+      if (data.length && data[0]) {
+        const result = data[0];
+        // Check multiple name fields in RERUM response
+        if (result.name && result.name.trim()) {
+          return result.name.trim();
+        }
+        if (result.displayName && result.displayName.trim()) {
+          return result.displayName.trim();
+        }
+        if (result.email && result.email.trim()) {
+          return result.email.trim();
+        }
+      }
+      
+      throw new Error("Creator not found or no name attribute.");
     } catch (error) {
-      console.error(`Error fetching creator name:`, error, creatorId);
+      console.error(`Error fetching creator name for ${creatorId}:`, error);
       throw error;
     }
   }

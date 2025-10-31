@@ -127,24 +127,26 @@ export class User {
   
       // Fetch the user's token
       const token = await user.getIdToken();
-      console.log(`Login token: ${token}`);
       
       // Store the token in local storage
       localStorage.setItem("authToken", token);
-      document.cookie = `authToken=${token}; path=/`;
+      // Set cookie with security flags (httpOnly must be set server-side)
+      const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+      const secureFlag = isSecure ? "; Secure" : "";
+      document.cookie = `authToken=${token}; path=/; SameSite=Strict${secureFlag}`;
   
       const userData = await ApiService.fetchUserData(user.uid);
   
       if (userData) {
         // If user data is found in the API
         this.userData = userData;
-        console.log("User data found in API:", userData);
+        // Removed sensitive data logging for security
       } else {
         // If not found in the API, try fetching from Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           this.userData = userDoc.data() as UserData;
-          console.log("User data found in Firestore:", this.userData);
+          // Removed sensitive data logging for security
         } else {
           console.log("User data not found in Firestore or API.");
         }
@@ -152,8 +154,7 @@ export class User {
   
       // Ensure necessary fields are properly handled
       if (this.userData) {
-        console.log("isInstructor:", this.userData.isInstructor);
-        console.log("parentInstructorId:", this.userData.parentInstructorId);
+        // Removed sensitive data logging for security
   
         // Persist user data and update login state
         await this.persistUser(this.userData);
@@ -177,8 +178,10 @@ export class User {
       
       // Remove the token from local storage
       localStorage.removeItem('authToken');
-      // Clear the cookie
-      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      // Clear the cookie with same flags as setting
+      const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+      const secureFlag = isSecure ? "; Secure" : "";
+      document.cookie = `authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict${secureFlag}`;
       
       console.log("User logged out");
     } catch (error) {
@@ -206,19 +209,35 @@ export class User {
   }
 
   public async getName(): Promise<string | null> {
-    // First try to get name from Firebase Auth directly
-    if (auth && auth.currentUser) {
-      return auth.currentUser.displayName || auth.currentUser.email;
-    }
-    
     // Load user data if not already loaded
     if (!this.userData) {
       this.userData = await this.loadUser();
     }
     
-    // Fallback to stored user data
+    // First try to get name from stored user data
     if (this.userData && this.userData.name) {
       return this.userData.name;
+    }
+    
+    // If we have a UID, try fetching the name using ApiService (checks Firestore, then RERUM)
+    const userId = await this.getId();
+    if (userId) {
+      try {
+        const name = await ApiService.fetchCreatorName(userId);
+        // Update userData with the fetched name so we don't need to fetch again
+        if (this.userData && name && name !== "Unknown User") {
+          this.userData.name = name;
+          this.persistUser(this.userData);
+        }
+        return name && name !== "Unknown User" ? name : null;
+      } catch (error) {
+        console.log("Could not fetch creator name:", error);
+      }
+    }
+    
+    // Fallback to Firebase Auth displayName (but not email)
+    if (auth && auth.currentUser) {
+      return auth.currentUser.displayName || null;
     }
     
     return null;

@@ -80,17 +80,8 @@ const ClickableNote: React.FC<{
   const [creator, setCreator] = useState<string>("Loading...");
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
+  const [sanitizedContent, setSanitizedContent] = useState<string>("");
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
-
-  // Fetch the creator's name based on the note's creator ID
-  useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
-      .then((name) => setCreator(name))
-      .catch((error) => {
-        console.error("Error fetching creator name:", error, note.creator);
-        setCreator("Error loading name");
-      });
-  }, [note.creator]);
 
   // Function to clean content by removing audio URLs
   const cleanContent = (content: string, audioArray: any[]) => {
@@ -114,7 +105,25 @@ const ClickableNote: React.FC<{
     return cleanedContent.trim();
   };
 
-  const data = cleanContent(note.text, note.audio);
+  // Load DOMPurify only on client side to avoid SSR issues
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('dompurify').then((DOMPurify) => {
+        const data = cleanContent(note.text, note.audio);
+        setSanitizedContent(DOMPurify.default.sanitize(data));
+      });
+    }
+  }, [note.text, note.audio]);
+
+  // Fetch the creator's name based on the note's creator ID
+  useEffect(() => {
+    ApiService.fetchCreatorName(note.creator)
+      .then((name) => setCreator(name))
+      .catch((error) => {
+        console.error("Error fetching creator name:", error, note.creator);
+        setCreator("Error loading name");
+      });
+  }, [note.creator]);
 
   return (
     <Dialog>
@@ -157,7 +166,7 @@ const ClickableNote: React.FC<{
         </DialogHeader>
         <ScrollArea>
           {note.text && note.text.length > 0 ? (
-            <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+            <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} className="mb-5" />
           ) : (
             "This Note has no content"
           )}

@@ -8,8 +8,7 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
-import introJs from "intro.js"
-import "intro.js/introjs.css"
+// intro.js will be loaded dynamically to avoid SSR issues
 
 //Bring this import back to use switch toggle for note view.
 import { Switch } from "@/components/ui/switch";
@@ -60,29 +59,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       const addNote = document.getElementById("add-note-button");
       console.log('Observer triggered');
 
-      if (addNote) {
-        const intro = introJs();
-        intro.setOptions({
-          scrollToElement: false,
-          skipLabel: "Skip",
-        });
-        intro.start();
+      if (addNote && typeof window !== 'undefined') {
+        import('intro.js').then((introJsModule) => {
+          const introJs = introJsModule.default;
+          const intro = introJs();
+          intro.setOptions({
+            scrollToElement: false,
+            skipLabel: "Skip",
+          });
+          intro.start();
 
-        if (addNote) {
-          addNote.click();
-        }
-
-        // Apply inline styling to the skip button after a short delay to ensure it has rendered
-        setTimeout(() => {
-          const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
-          if (skipButton) {
-            skipButton.style.position = 'absolute';
-            skipButton.style.top = '2px'; // Move it up by decreasing the top value
-            skipButton.style.right = '20px'; // Adjust positioning as needed
-            skipButton.style.fontSize = '18px'; // Adjust font size as needed
-            skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+          if (addNote) {
+            addNote.click();
           }
-        }, 100); // 100ms delay to wait for rendering
+
+          // Apply inline styling to the skip button after a short delay to ensure it has rendered
+          setTimeout(() => {
+            const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
+            if (skipButton) {
+              skipButton.style.position = 'absolute';
+              skipButton.style.top = '2px'; // Move it up by decreasing the top value
+              skipButton.style.right = '20px'; // Adjust positioning as needed
+              skipButton.style.fontSize = '18px'; // Adjust font size as needed
+              skipButton.style.padding = '4px 10px'; // Adjust padding as needed
+            }
+          }, 100); // 100ms delay to wait for rendering
+        });
 
         observer.disconnect(); // Stop observing once the elements are found
       }
@@ -123,14 +125,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           setFilteredNotes(publishedNotes);
         } else if (viewMode === "review" && isInstructor) {
           // Instructor reviewing student notes
-          const students = await ApiService.fetchUsersByInstructor(userId);
-          const studentUids = students.map((s) => s.uid);
-          const pendingNotes = await ApiService.fetchNotesByStudents(studentUids);
-          const converted = DataConversion.convertMediaTypes(pendingNotes).reverse();
+          // Get instructor's userData which contains the students array
+          const instructorData = await ApiService.fetchUserData(userId);
+          if (!instructorData || !instructorData.isInstructor) {
+            console.warn("User is not an instructor");
+            setNotes([]);
+            setFilteredNotes([]);
+            return;
+          }
+          
+          const studentUids = instructorData.students || [];
+          console.log("📝 Student UIDs from instructor data:", studentUids);
+          
+          if (studentUids.length === 0) {
+            console.warn("No students found for instructor");
+            setNotes([]);
+            setFilteredNotes([]);
+            return;
+          }
+          
+          // Fetch approval-requested notes from students (matches commit behavior)
+          // Note: This will only fetch notes with approvalRequested=true and published=false
+          const allNotes = await ApiService.fetchNotesByStudents(studentUids);
+          console.log("📋 All student notes fetched:", allNotes.length);
+          const converted = DataConversion.convertMediaTypes(allNotes).reverse();
           const unarchived = converted.filter((n) => !n.isArchived);
-          // For review, default show unpublished (awaiting approval)
-          const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
+          console.log("📋 Total unarchived notes:", unarchived.length);
+          
+          // Set all notes, then filter by tab selection
           setNotes(unarchived);
+          // Default to showing "Under Review" (awaiting approval)
+          const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
+          console.log("⏳ Awaiting approval count:", awaitingApproval.length);
           setFilteredNotes(awaitingApproval);
           setShowPublished(false);
         }
@@ -187,10 +213,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     setFilteredNotes(filtered);
   };
 
-  const togglePublished = () => {
-    const newShowPublished = !showPublished;
-    setShowPublished(newShowPublished);
-    filterNotesByPublished(newShowPublished);
+  const togglePublished = (newShowPublished?: boolean) => {
+    const updated = newShowPublished !== undefined ? newShowPublished : !showPublished;
+    setShowPublished(updated);
+    filterNotesByPublished(updated);
   };
 
   return (
@@ -220,7 +246,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           )}
 
           <div className="flex flex-col sm:flex-row items-center text-center justify-between pt-1 sm:pt-2 mt-1 sm:mt-2 w-full"> {/* Mobile-first layout */}
-            <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
+            <Tabs defaultValue={viewMode === "review" ? "unpublished" : "published"} className="w-full" onValueChange={(value) => {
+              const isPublishedTab = value === "published";
+              togglePublished(isPublishedTab);
+            }}>
               <TabsList className="grid w-full grid-cols-2 gap-1 sm:gap-2">
                 <TabsTrigger 
                   value="unpublished" 

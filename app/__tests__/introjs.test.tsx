@@ -88,15 +88,14 @@ beforeEach(() => {
     writable: true,
   });
 
-  Object.defineProperty(window, 'location', {
-    value: {
-      href: "http://localhost/",
-      assign: jest.fn(),
-      reload: jest.fn(),
-      replace: jest.fn(),
-    },
-    writable: true,
-  });
+  // Mock window.location methods
+  delete (window as any).location;
+  window.location = {
+    href: "http://localhost/",
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+  } as any;
 });
 
 afterEach(() => {

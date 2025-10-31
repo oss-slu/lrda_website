@@ -13,6 +13,13 @@ const customJestConfig = {
   transformIgnorePatterns: [
     "node_modules/(?!(react-resizable-panels|@react-resizable-panels|@radix-ui|@googlemaps|@react-googlemaps)/)"
   ],
+  // Map ES module packages to their mocks
+  moduleNameMapper: {
+    "^uuid$": "<rootDir>/app/__mocks__/uuid.js",
+    "^react-player$": "<rootDir>/app/__mocks__/react-player.js",
+    "^intro\\.js$": "<rootDir>/app/__mocks__/intro.js",
+    "^intro\\.js/introjs\\.css$": "<rootDir>/app/__mocks__/styleMock.js",
+  },
   // Exclude Playwright E2E tests from Jest runs
   testPathIgnorePatterns: [
     "<rootDir>/app/__e2e__/",

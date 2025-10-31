@@ -21,6 +21,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const [isInstructor, setIsInstructor] = useState(false);
   const [canComment, setCanComment] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [commentDraft, setCommentDraft] = useState<string>(""); // Preserve draft comment text
 
   // Load existing comments whenever noteId changes and normalize author names
   useEffect(() => {
@@ -47,16 +48,34 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     load();
   }, [noteId]);
 
-  // Determine whether current user is an instructor or a student (not generic admin)
+  // Determine whether current user is an instructor or a student (part of teacher-student relationship only)
   useEffect(() => {
     const checkInstructor = async () => {
       const flag = await User.getInstance().isInstructor();
       setIsInstructor(!!flag);
       const uid = await User.getInstance().getId();
       const roles = await User.getInstance().getRoles();
+      
+      // Check if user is a student (has contributor role but not administrator)
       const isStudentRole = !!roles?.contributor && !roles?.administrator;
-      // allow commenting only for instructors or students
-      setCanComment(!!uid && (isStudentRole || flag));
+      
+      // For students, verify they have a parentInstructorId (part of teacher-student relationship)
+      let isStudentInTeacherStudentModel = false;
+      if (isStudentRole && uid) {
+        try {
+          const userData = await ApiService.fetchUserData(uid);
+          // Student must have parentInstructorId to be part of teacher-student model
+          isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
+        } catch (error) {
+          console.error("Error checking student relationship:", error);
+        }
+      }
+      
+      // Allow commenting only for:
+      // 1. Instructors (isInstructor = true)
+      // 2. Students who are part of teacher-student relationship (have parentInstructorId)
+      // Exclude independent contributors (administrator=true) even if they have contributor=true
+      setCanComment(!!uid && (flag || isStudentInTeacherStudentModel));
     };
     checkInstructor();
   }, []);
@@ -99,6 +118,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
 
     await ApiService.createComment(newComment);
     setComments((prev) => [...prev, newComment]);
+    setCommentDraft(""); // Clear draft on successful submit
     setShowPopover(false);
 
     // Notify editor to refresh highlights
@@ -165,10 +185,10 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   };
 
   return (
-    <div className="bg-white w-full md:w-80 p-2.5 sm:p-3 border-t md:border-t-0 md:border-l h-full flex flex-col">
-      <h2 className="text-sm sm:text-base font-semibold mb-2.5 sm:mb-3">Comments</h2>
+    <div className="bg-white w-full md:w-80 p-2.5 sm:p-3 border-t md:border-t-0 md:border-l h-full flex flex-col overflow-hidden">
+      <h2 className="text-sm sm:text-base font-semibold mb-2.5 sm:mb-3 flex-shrink-0">Comments</h2>
 
-      <ScrollArea className="flex-1 min-h-0 space-y-2.5 sm:space-y-3 pr-1">
+      <ScrollArea className="flex-1 min-h-0 space-y-2.5 sm:space-y-3 pr-1 overflow-y-auto">
         {(() => {
           if (comments.length === 0) return <p className="text-gray-400">No comments yet.</p>;
           // Group by threadId (top-level comments with parentId === null)
@@ -237,11 +257,13 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       </ScrollArea>
 
       {canComment && (
-        <div className="mt-2 sm:mt-3 sticky bottom-0 bg-white pt-2">
+        <div className="mt-auto pt-2 pb-2 bg-white border-t">
           {showPopover ? (
             <CommentPopover
+              initialValue={commentDraft}
               onSubmit={handleSubmitComment}
               onClose={() => setShowPopover(false)}
+              onTextChange={setCommentDraft}
             />
           ) : (
             <Button onClick={() => setShowPopover(true)} className="w-full h-9 text-xs sm:text-sm">

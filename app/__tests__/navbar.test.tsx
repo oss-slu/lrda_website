@@ -81,6 +81,7 @@ describe("Navbar Component", () => {
     expect(screen.getByText(/Home/i)).toBeTruthy();
     expect(screen.getByText(/About/i)).toBeTruthy();
     expect(screen.getByText(/Resources/i)).toBeTruthy();
+    expect(screen.getByText(/Stories/i)).toBeTruthy();
     
     // The navbar should render without crashing, regardless of auth state
     expect(screen.getByRole("navigation")).toBeTruthy();

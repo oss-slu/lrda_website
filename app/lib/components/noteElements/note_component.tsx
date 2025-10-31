@@ -13,7 +13,7 @@ import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import jsPDF from "jspdf"; // For PDF
 import ApiService from "../../utils/api_service";
-import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
+import { FileX2, SaveIcon, Calendar, MapPin, Music, MessageSquare, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,8 +44,7 @@ import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CommentSidebar from "../comments/CommentSidebar";
-import introJs from "intro.js"
-import "intro.js/introjs.css"
+// intro.js will be loaded dynamically to avoid SSR issues
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const user = User.getInstance();
@@ -122,12 +121,14 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
       console.log("Observer triggered");
 
       // Check if all elements are present
-      if (addNote && title && save && deleteButton && date && location) {
-        const intro = introJs();
-        const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
+      if (addNote && title && save && deleteButton && date && location && typeof window !== 'undefined') {
+        import('intro.js').then((introJsModule) => {
+          const introJs = introJsModule.default;
+          const intro = introJs();
+          const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
 
-        if (!hasAddNoteIntroBeenShown) {
-          intro.setOptions({
+          if (!hasAddNoteIntroBeenShown) {
+            intro.setOptions({
             steps: [
               {
                 element: addNote,
@@ -180,10 +181,10 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
               skipButton.style.fontSize = "18px"; // Adjust font size as needed
               skipButton.style.padding = "4px 10px"; // Adjust padding as needed
             }
-          }, 100); // 100ms delay to wait for rendering
-
+            }, 100); // 100ms delay to wait for rendering
+          }
           observer.disconnect(); // Stop observing once the elements are found and the intro is set up
-        }
+        });
       }
     });
 
@@ -310,6 +311,7 @@ useEffect(() => {
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState<boolean>(false);
   const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
+  const [canComment, setCanComment] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(true);
   const [commentRanges, setCommentRanges] = useState<Array<{ from: number; to: number }>>([]);
 
@@ -319,10 +321,27 @@ useEffect(() => {
       const fetchedUserId = await User.getInstance().getId();
       const fetchedInstructorId = await User.getInstance().getInstructorId();
       const isInstructorFlag = await User.getInstance().isInstructor();
-      setIsStudent(!!roles?.contributor && !roles?.administrator);
+      const isStudentRole = !!roles?.contributor && !roles?.administrator;
+      
+      // Check if student is part of teacher-student relationship
+      let isStudentInTeacherStudentModel = false;
+      if (isStudentRole && fetchedUserId) {
+        try {
+          const userData = await ApiService.fetchUserData(fetchedUserId);
+          // Student must have parentInstructorId to be part of teacher-student model
+          isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
+        } catch (error) {
+          console.error("Error checking student relationship:", error);
+        }
+      }
+      
+      setIsStudent(isStudentInTeacherStudentModel);
       setUserId(fetchedUserId);
       setInstructorId(fetchedInstructorId);
       setIsInstructorUser(!!isInstructorFlag);
+      
+      // Allow commenting only for instructors or students in teacher-student model
+      setCanComment(!!fetchedUserId && (isInstructorFlag || isStudentInTeacherStudentModel));
     };
     fetchUserDetails();
   }, []);
@@ -749,6 +768,8 @@ useEffect(() => {
     }
   };
 
+  const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState(false);
+
   return (
     <ScrollArea className="flex flex-col w-full h-[90vh] bg-cover bg-center flex-grow">
       <div
@@ -768,22 +789,24 @@ useEffect(() => {
             placeholder="Title"
             className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
             ref = {titleRef} />
-          <div className="flex flex-col sm:flex-row bg-popup shadow-sm my-2 sm:my-4 rounded-md border border-border bg-white justify-center sm:justify-evenly mr-0 sm:mr-8 items-center gap-2 sm:gap-0">
-          <PublishToggle
-  id="publish-toggle-button"
-  noteId={noteState.note?.id || ""}
-  userId={userId || ""}
-  instructorId={instructorId || undefined}
-  isPublished={noteState.isPublished}
-  isApprovalRequested={noteState.approvalRequested}
-  isInstructorReview={isInstructorUser && userId !== (noteState.note as any)?.creator}
-  onPublishClick={() =>
-    publishHandler(noteState, noteHandlers)
-  }
-  onRequestApprovalClick={() =>
-    approvalRequestHandler(noteState, noteHandlers)
-  }
-/>
+          <div className="flex flex-col sm:flex-row bg-popup shadow-sm my-2 sm:my-4 rounded-md border border-border bg-white justify-center sm:justify-evenly mr-0 sm:mr-8 items-center gap-2 sm:gap-0 py-2 sm:py-0">
+          <div className="w-full sm:w-auto flex-shrink-0">
+            <PublishToggle
+              id="publish-toggle-button"
+              noteId={noteState.note?.id || ""}
+              userId={userId || ""}
+              instructorId={instructorId || undefined}
+              isPublished={noteState.isPublished}
+              isApprovalRequested={noteState.approvalRequested}
+              isInstructorReview={isInstructorUser && userId !== (noteState.note as any)?.creator}
+              onPublishClick={() =>
+                publishHandler(noteState, noteHandlers)
+              }
+              onRequestApprovalClick={() =>
+                approvalRequestHandler(noteState, noteHandlers)
+              }
+            />
+          </div>
 
 
             <div className="w-1 h-9 bg-border" />
@@ -908,6 +931,7 @@ useEffect(() => {
                 editable={canEdit}
                 extensions={extensions}
                 content={noteState.editorContent}
+                immediatelyRender={false}
                 onUpdate={({ editor }) => {
                   if (!canEdit) return;
                   handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
@@ -991,7 +1015,7 @@ useEffect(() => {
                 }}
               />
             </ResizablePanel>
-            {!!noteState.note?.id && (isInstructorUser || isStudent) && (
+            {!!noteState.note?.id && canComment && isCommentSidebarOpen && (
               <>
                 <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
                 <ResizablePanel
@@ -1016,6 +1040,26 @@ useEffect(() => {
           </ResizablePanelGroup>
         </div>
       </div>
+      {/* Sticky Comment Button - Moved to top right to avoid blocking Add Comment button */}
+      {!!noteState.note?.id && canComment && (
+        <button
+          onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
+          className="fixed top-20 right-4 z-50 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+          aria-label={isCommentSidebarOpen ? "Close comments" : "Open comments"}
+        >
+          {isCommentSidebarOpen ? (
+            <>
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Close</span>
+            </>
+          ) : (
+            <>
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Comments</span>
+            </>
+          )}
+        </button>
+      )}
     </ScrollArea>
   );
 }

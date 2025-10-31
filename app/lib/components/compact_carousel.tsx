@@ -70,7 +70,7 @@ export default function CompactCarousel({
             )}
             {media.type === "video" && (
               <ReactPlayer
-                url={media.uri}
+                src={media.uri}
                 controls={true}
                 width="100%"
                 height="140px"

@@ -38,10 +38,20 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [userName, setUserName] = useState<string>("");
   const [isStudent, setIsStudent] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
+  const [sanitizedBodyHtml, setSanitizedBodyHtml] = useState<string>("");
 
   // Determine real ID and body text fields
   const noteId =(note as any).id || (note as any)._id || (note as any)["@id"] || "";
     const bodyHtml = (note as any).BodyText || note.text || "";
+
+  // Load DOMPurify only on client side to avoid SSR issues
+  useEffect(() => {
+    if (typeof window !== 'undefined' && bodyHtml) {
+      import('dompurify').then((DOMPurify) => {
+        setSanitizedBodyHtml(DOMPurify.default.sanitize(bodyHtml));
+      });
+    }
+  }, [bodyHtml]);
 
   // Debug logs
   useEffect(() => {
@@ -174,7 +184,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             {/* ← Here we render the actual HTML snippet, limited in height */}
             <div
               className="text-sm text-gray-700 overflow-hidden max-h-[80px]"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }}
+              dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }}
             />
           </div>
         </div>
@@ -193,7 +203,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         )}
 
         <ScrollArea className="border p-4 mb-4 max-h-[300px] bg-white">
-        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyHtml) }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }} />
         </ScrollArea>
 
         <div className="border-t pt-4">
