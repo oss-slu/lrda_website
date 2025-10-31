@@ -9,6 +9,7 @@ const customJestConfig = {
   setupFiles: ["<rootDir>/jest.setup.ts"],
   setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
   maxWorkers: "50%",  // Limit to 50% of available CPUs to avoid overloading
+  silent: false, // Set to true to suppress all console output, but we handle suppression in setupTests.ts instead
   // Transform ES modules for Jest compatibility
   transformIgnorePatterns: [
     "node_modules/(?!(react-resizable-panels|@react-resizable-panels|@radix-ui|@googlemaps|@react-googlemaps)/)"
