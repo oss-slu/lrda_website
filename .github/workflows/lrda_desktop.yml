@@ -6,20 +6,24 @@ on:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
-      -december-sprint
+      - december-sprint
   pull_request:
     branches:
       - main # replace with the name of your default branch if different
       - openai_tags
       - memoryleak
-      -december-sprint
+      - december-sprint
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x] # Adjust according to your project's Node.js version
+        node-version: [20.x] # Next.js 16 requires Node.js >=20.9.0
 
     steps:
       - uses: actions/checkout@v2
