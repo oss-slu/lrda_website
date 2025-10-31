@@ -170,27 +170,24 @@ jobs:
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
-          # Set environment variables for Netlify CLI
-          export NETLIFY_AUTH_TOKEN="${{ secrets.NETLIFY_AUTH_TOKEN }}"
-          export NETLIFY_SITE_ID="${{ secrets.NETLIFY_SITE_ID }}"
-          
           # Create netlify state directory and link file (non-interactive)
           mkdir -p .netlify
           echo "{\"siteId\":\"$NETLIFY_SITE_ID\"}" > .netlify/state.json
           
-          # Determine deployment type and deploy with explicit site ID and auth
+          # Determine deployment type and deploy with explicit site ID
+          # NETLIFY_AUTH_TOKEN is automatically used by Netlify CLI when set as env var
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Pull requests always get preview deployments
             echo "Deploying preview for PR #${{ github.event.pull_request.number }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" --json
+            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" --json
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Production deploy from main - ${{ github.sha }}" --json
+            netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
