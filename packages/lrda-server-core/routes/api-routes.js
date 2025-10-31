@@ -53,17 +53,17 @@ export default function apiRoutes({ authMiddleware, enableClientRoutes = true } 
   router.use(staticRouter);
   router.use("/id", idRouter);
   router.use("/api", compatabilityRouter);
-  router.use("/api/query", queryRouter);
-  router.use("/api/create", createRouter(middleware));
-  router.use("/api/bulkCreate", bulkCreateRouter);
-  router.use("/api/bulkUpdate", bulkUpdateRouter);
-  router.use("/api/delete", deleteRouter);
-  router.use("/api/overwrite", overwriteRouter);
-  router.use("/api/update", updateRouter);
-  router.use("/api/patch", patchRouter);
-  router.use("/api/set", setRouter);
-  router.use("/api/unset", unsetRouter);
-  router.use("/api/release", releaseRouter);
+  router.use("/query", queryRouter);
+  router.use("/create", createRouter(middleware));
+  router.use("/bulkCreate", bulkCreateRouter);
+  router.use("/bulkUpdate", bulkUpdateRouter);
+  router.use("/delete", deleteRouter);
+  router.use("/overwrite", overwriteRouter);
+  router.use("/update", updateRouter);
+  router.use("/patch", patchRouter);
+  router.use("/set", setRouter);
+  router.use("/unset", unsetRouter);
+  router.use("/release", releaseRouter);
 
   // Users can elect to implement their own authentication routes
   if (enableClientRoutes) {

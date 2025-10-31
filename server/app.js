@@ -1,7 +1,7 @@
 import express from "express";
 import { createCoreRouter } from "lrda-server-core";
-import dotenv from "dotenv";
 import { firebaseAuthMiddleware } from "./auth.js";
+import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
@@ -26,8 +26,8 @@ const coreApiRouter = await createCoreRouter({
 
   // MongoDB configuration
   mongoUri: process.env.MONGO_CONNECTION_STRING,
-  mongodbName: process.env.MONGODBNAME,
-  mongodbCollection: process.env.MONGODBCOLLECTION,
+  mongodbName: process.env.MONGO_DB,
+  mongodbCollection: process.env.MONGO_COLLECTION,
   connectOnStart: process.env.DOWN === "false",
   trustProxy: process.env.TRUST_PROXY === "true",
 });

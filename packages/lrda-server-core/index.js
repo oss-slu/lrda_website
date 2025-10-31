@@ -127,6 +127,8 @@ export async function createCoreRouter(options = {}) {
   );
   router.use(morgan("dev"));
   router.use(cookieParser());
+  router.use(express.json());
+  router.use(express.urlencoded({ extended: true }));
 
   // Publicly available scripts, CSS, and HTML pages.
   router.use(express.static(path.join(__dirname, "public")));

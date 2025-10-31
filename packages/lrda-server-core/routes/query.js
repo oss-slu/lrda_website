@@ -4,7 +4,7 @@ import controller from "../db-controller.js";
 
 /**
  * @swagger
- * /v1/api/query:
+ * /v1/query:
  *   post:
  *     summary: Query for objects matching given properties.
  *     description: |

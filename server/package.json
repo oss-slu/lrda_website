@@ -17,9 +17,11 @@
     "lrda-server-core": "workspace:*",
     "mongodb": "^6.20.0",
     "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.2.8"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.10",
-    "supertest": "^6.3.4",
-    "swagger-jsdoc": "^6.2.8",
+    "node-fetch": "^3.3.2",
     "vite": "^7.1.12"
   },
   "scripts": {
