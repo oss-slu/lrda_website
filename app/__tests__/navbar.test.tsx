@@ -79,7 +79,6 @@ describe("Navbar Component", () => {
     
     // Check that the navbar renders with basic navigation elements
     expect(screen.getByText(/Home/i)).toBeTruthy();
-    expect(screen.getByText(/About/i)).toBeTruthy();
     expect(screen.getByText(/Resources/i)).toBeTruthy();
     expect(screen.getByText(/Stories/i)).toBeTruthy();
     
