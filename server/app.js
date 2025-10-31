@@ -1,148 +1,46 @@
-#!/usr/bin/env node
-
 import express from "express";
-import path from "path";
-import cookieParser from "cookie-parser";
+import { createCoreRouter } from "lrda-server-core";
 import dotenv from "dotenv";
+import { firebaseAuthMiddleware } from "./auth.js";
 dotenv.config();
-import logger from "morgan";
-import cors from "cors";
-import indexRouter from "./routes/index.js";
-import apiRouter from "./routes/api-routes.js";
-import clientRouter from "./routes/client.js";
-import _gog_fragmentsRouter from "./routes/_gog_fragments_from_manuscript.js";
-import _gog_glossesRouter from "./routes/_gog_glosses_from_manuscript.js";
-import rest from "./rest.js";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-import swaggerSpec from "./swagger.js";
-import { apiReference } from "@scalar/express-api-reference";
 
 const app = express();
 
-//Middleware to use
+const coreApiRouter = await createCoreRouter({
+  auth: { disableAuth: process.env.DISABLE_AUTH === "true", authMiddleware: firebaseAuthMiddleware, enableClientRoutes: false },
+  scalar: {
+    baseServerUrl: "/",
+    mountPath: "/reference",
+    openapiMountPath: "/openapi.json",
+  },
+  // RERUM configuration
+  rerum: {
+    RERUM_API_VERSION: process.env.RERUM_API_VERSION,
+    RERUM_BASE: process.env.RERUM_BASE,
+    RERUM_PREFIX: process.env.RERUM_PREFIX,
+    RERUM_ID_PREFIX: process.env.RERUM_ID_PREFIX,
+    RERUM_AGENT_CLAIM: process.env.RERUM_AGENT_CLAIM,
+    RERUM_CONTEXT: process.env.RERUM_CONTEXT,
+    RERUM_API_DOC: process.env.RERUM_API_DOC,
+  },
 
-/**
- * Get the various CORS headers right
- * "methods" : Allow
- * "allowedMethods" : Access-Control-Allow-Methods  (Allow ALL the methods)
- * "allowedHeaders" : Access-Control-Allow-Headers  (Allow custom headers)
- * "exposedHeaders" : Access-Control-Expose-Headers (Expose the custom headers)
- * "origin" : "*"   : Access-Control-Allow-Origin   (Allow ALL the origins)
- * "maxAge" : "600" : Access-Control-Max-Age        (how long to cache preflight requests, 10 mins)
- */
-app.use(
-  cors({
-    methods: "GET,OPTIONS,HEAD,PUT,PATCH,DELETE,POST",
-    allowedHeaders: [
-      "Content-Type",
-      "Content-Length",
-      "Allow",
-      "Authorization",
-      "Location",
-      "ETag",
-      "Connection",
-      "Keep-Alive",
-      "Date",
-      "Cache-Control",
-      "Last-Modified",
-      "Link",
-      "X-HTTP-Method-Override",
-      "Origin",
-      "Referrer",
-      "User-Agent",
-    ],
-    exposedHeaders: "*",
-    origin: "*",
-    maxAge: "600",
-  })
-);
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-//Publicly available scripts, CSS, and HTML pages.
-app.use(express.static(path.join(__dirname, "public")));
-
-/**
- * For any request that comes through to the app, check whether or not we are in maintenance mode.
- * If we are, then show the sad puppy.  Otherwise, continue on.
- * This is without middleware
- */
-app.all("*", (req, res, next) => {
-  if (process.env.DOWN === "true") {
-    res.status(503).json({
-      message: "RERUM v1 is down for updates or maintenance at this time.  We apologize for the inconvenience.  Try again later.",
-    });
-  } else {
-    next(); //pass on to the next app.use
-  }
+  // MongoDB configuration
+  mongoUri: process.env.MONGO_CONNECTION_STRING,
+  mongodbName: process.env.MONGODBNAME,
+  mongodbCollection: process.env.MONGODBCOLLECTION,
+  connectOnStart: process.env.DOWN === "false",
+  trustProxy: process.env.TRUST_PROXY === "true",
 });
 
-app.use("/", indexRouter);
+// Mount core RERUM API
+app.use("/", coreApiRouter);
 
-app.use("/v1", apiRouter);
+// Add your custom LRDA/project-specific endpoints BELOW this line
+// Example:
+// import myPrivateRouter from './my-private-routes.js';
+// app.use('/custom', myPrivateRouter);
 
-app.use("/client", clientRouter);
-
-app.use("/gog/fragmentsInManuscript", _gog_fragmentsRouter);
-app.use("/gog/glossesInManuscript", _gog_glossesRouter);
-
-/**
- * Handle API errors and warnings RESTfully.  All routes that don't end in res.send() will end up here.
- * Important to note that res.json() will fail to here
- * Important to note api-routes.js handles all the 405s without failing to here - they res.send()
- * Important to note that failures in the controller from the mongo client will fail to here
- *
- * */
-app.use(rest.messenger);
-
-// Serve OpenAPI JSON to public for Scalar documentation UI
-app.get("/openapi.json", (req, res) => {
-  res.json(swaggerSpec);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`LRDA-ready app server running on port ${PORT}`);
 });
-
-// Visit /reference for the API documentation UI
-app.use(
-  "/reference",
-  apiReference({
-    "theme": "elysiajs",
-    "title": "API #1",
-    "slug": "api-1",
-    "hideClientButton": true,
-    "showSidebar": true,
-    "showToolbar": "localhost",
-    "operationTitleSource": "summary",
-    "_integration": "express",
-    "persistAuth": false,
-    "telemetry": true,
-    "layout": "modern",
-    "isEditable": false,
-    "isLoading": false,
-    "hideModels": false,
-    "documentDownloadType": "both",
-    "hideTestRequestButton": false,
-    "hideSearch": false,
-    "showOperationId": false,
-    "hideDarkModeToggle": false,
-    "withDefaultFonts": true,
-    "defaultOpenAllTags": false,
-    "expandAllModelSections": false,
-    "expandAllResponses": false,
-    "orderSchemaPropertiesBy": "alpha",
-    "orderRequiredPropertiesFirst": true,
-    "url": "/openapi.json"
-  })
-);
-
-//catch 404 because of an invalid site path
-app.use((req, res, next) => {
-  let msg = res.statusMessage ?? "This page does not exist";
-  res.status(404).send(msg);
-  res.end();
-});
-
-export default app;
