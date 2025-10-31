@@ -13,7 +13,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -206,7 +205,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
       <DialogContent className="sm:max-w-[90%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold">{note.title}</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 space-y-1">
             <div className="flex items-center gap-2">
               <CalendarDays size={16} /> {formatDate(note.time)}
             </div>
@@ -220,7 +219,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             <div className="flex items-center gap-2">
               <ImageIcon size={16} /> {location}
             </div>
-          </DialogDescription>
+          </div>
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               <Tags size={16} />
