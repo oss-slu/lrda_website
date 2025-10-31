@@ -8,6 +8,16 @@ fetchMock.enableMocks();
 (global as any).TextEncoder = TextEncoder;
 (global as any).TextDecoder = TextDecoder;
 
+// Polyfill setImmediate for Node.js environments
+if (typeof global.setImmediate === 'undefined') {
+  (global as any).setImmediate = (fn: (...args: any[]) => void, ...args: any[]) => {
+    return setTimeout(() => fn(...args), 0);
+  };
+  (global as any).clearImmediate = (id: ReturnType<typeof setTimeout>) => {
+    return clearTimeout(id);
+  };
+}
+
 // Ensure Firebase env vars exist in test environment
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'test-api-key';
 process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'test-auth.example.com';

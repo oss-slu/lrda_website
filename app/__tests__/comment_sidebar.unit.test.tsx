@@ -19,6 +19,18 @@ jest.mock('../lib/utils/api_service', () => ({
     fetchCommentsForNote: async () => [],
     createComment: async () => ({}),
     fetchCreatorName: async () => 'Student User',
+    fetchUserData: async (uid: string) => {
+      // Mock student with parentInstructorId (part of teacher-student relationship)
+      if (uid === 'student-1') {
+        return {
+          uid: 'student-1',
+          name: 'Student User',
+          parentInstructorId: 'instructor-1',
+          roles: { contributor: true, administrator: false },
+        };
+      }
+      return null;
+    },
   },
 }));
 
