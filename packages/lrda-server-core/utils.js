@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * This module is general utilities.  It should not respond to clients or manipulate the 
  * http request/response.  

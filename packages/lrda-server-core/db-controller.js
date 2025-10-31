@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Main controller aggregating all RERUM operations
  * This file now imports from organized controller modules

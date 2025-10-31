@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import express from "express";
 const router = express.Router();
 //This controller will handle all MongoDB interactions.

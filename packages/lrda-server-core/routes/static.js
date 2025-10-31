@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * This module is used to define the routes of static resources available in `/public`
  * but also under `/v1` paths.

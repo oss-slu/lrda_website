@@ -154,7 +154,7 @@ export async function createCoreRouter(options = {}) {
 
   // catch 404 because of an invalid site path
   router.use((req, res, next) => {
-    res.status(404).send(res.statusMessage || "This page does not exist");
+    res.status(404).json({ error: res.statusMessage || "This page does not exist" });
   });
 
   if (connectOnStart && mongoUri) {
