@@ -51,15 +51,13 @@ beforeEach(() => {
   });
 
   // Mock window.location methods
-  Object.defineProperty(window, 'location', {
-    value: {
-      href: "http://localhost/",
-      assign: jest.fn(),
-      reload: jest.fn(),
-      replace: jest.fn(),
-    },
-    writable: true,
-  });
+  delete (window as any).location;
+  window.location = {
+    href: "http://localhost/",
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+  } as any;
 });
 
 // Cleanup after each test to ensure a clean state

@@ -8,8 +8,9 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Skeleton } from "@/components/ui/skeleton";
-import introJs from "intro.js";
-import "intro.js/introjs.css";
+// intro.js will be loaded dynamically to avoid SSR issues
+// import introJs from "intro.js";
+// import "intro.js/introjs.css";
 
 import { GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
@@ -47,8 +48,8 @@ const Page = () => {
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const mapRef = useRef<google.maps.Map>();
-  const markerClustererRef = useRef<MarkerClusterer>();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
@@ -93,10 +94,13 @@ const Page = () => {
           .find((row) => row.startsWith("introShown="))
           ?.split("=")[1];
 
-        if (!introShown) {
-          const intro = introJs();
+        if (!introShown && typeof window !== 'undefined') {
+          // Dynamically import intro.js only on client side
+          import('intro.js').then((introJsModule) => {
+            const introJs = introJsModule.default;
+            const intro = introJs();
 
-          intro.setOptions({
+            intro.setOptions({
             steps: [
               {
                 element: noteRefs.current?.current,
@@ -144,7 +148,8 @@ const Page = () => {
               skipButton.style.fontSize = "18px"; // Adjust font size as needed
               skipButton.style.padding = "4px 10px"; // Adjust padding as needed
             }
-          }, 100); // 100ms delay to wait for rendering
+            }, 100); // 100ms delay to wait for rendering
+          });
         }
 
         observer.disconnect(); // Stop observing once the elements are found
@@ -232,6 +237,7 @@ const Page = () => {
       };
     }
   }, []);
+
 
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
@@ -351,10 +357,14 @@ const Page = () => {
       updateBounds();
     });
 
+    // Set initial center and zoom programmatically instead of using props
+    map.setCenter(mapCenter);
+    map.setZoom(mapZoom);
+
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, []);
+  }, [mapCenter, mapZoom]);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
@@ -519,7 +529,7 @@ const Page = () => {
         }
       }
 
-      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
+      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
 
       setCurrentPopup(popup);
 
@@ -608,17 +618,53 @@ const Page = () => {
       duration: 3000,
     });
     return new Promise((resolve, reject) => {
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        const error = new Error("Geolocation is not supported by this browser");
+        console.error("Geolocation not supported");
+        reject(error);
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newCenter = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
+          console.log("Location fetched successfully:", newCenter);
           resolve(newCenter);
         },
         (error) => {
-          console.error("Error fetching location", error);
-          reject(error);
+          // Enhanced error logging with specific error types
+          let errorMessage = "Unknown geolocation error";
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location access denied by user";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Geolocation error: ${error.message || 'Unknown error'}`;
+              break;
+          }
+          
+          console.error("Error fetching location:", {
+            code: error.code,
+            message: error.message,
+            errorType: errorMessage
+          });
+          
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
         }
       );
     });
@@ -630,23 +676,77 @@ const Page = () => {
       setMapCenter(newCenter as Location);
       mapRef.current?.panTo(newCenter as Location);
       mapRef.current?.setZoom(13);
+      
+      toast("Location Updated", {
+        description: "Map centered on your current location",
+        duration: 2000,
+      });
     } catch (error) {
       console.error("Failed to set location", error);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "Failed to get your location";
+      toast("Location Error", {
+        description: errorMessage,
+        duration: 5000,
+      });
     }
   }
 
+
+  const handleNext = async () => {
+    const newSkip = skip + 150;
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
+  const handlePrevious = async () => {
+    const newSkip = Math.max(0, skip - 150);
+    const newNotes = global
+      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
+      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
+  
+    if (newNotes.length === 0) {
+      toast("No more notes to display");
+      return;
+    }
+    
+    setFilteredNotes(newNotes);
+    setSkip(newSkip);
+  };
+  
   return (
-    <div className="flex flex-row w-screen h-full min-w-[600px]">
-      <div className="flex-grow">
+    <div className="flex flex-col lg:flex-row w-full h-[90vh] min-h-[500px]">
+      <div className="flex-grow relative">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={mapCenter}
-            zoom={mapZoom}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
             options={{
+              // Modern Google Maps styling - Clean and minimal
+              styles: [
+                {
+                  featureType: "poi",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                },
+                {
+                  featureType: "transit",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                }
+              ],
               streetViewControl: false,
               mapTypeControl: false,
               fullscreenControl: false,
@@ -741,22 +841,7 @@ const Page = () => {
                 <ClickableNote note={note} />
               </div>
             ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handlePrevious}
-            disabled={skip === 0}
-          >
-            Previous
-          </button>
-          <button
-            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div> */}
-
+        
         <div className="col-span-full flex justify-center mt-4 min-h-10">
           {infinite.hasMore ? (
             <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">

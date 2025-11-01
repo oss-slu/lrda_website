@@ -59,14 +59,14 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   };
 
   return (
-    <div id="notes-list" className="my-4 flex flex-col">
+    <div id="notes-list" className="my-2 sm:my-4 flex flex-col">
       {visibleNotes.slice(0, visibleCount).map((note) => {
         const noteTextContent = extractTextFromHtml(note.text);
   
         return (
           <div
             key={note.id}
-            className={`h-16 p-2 m-1 z-10 rounded truncate cursor-pointer ${
+            className={`h-14 sm:h-16 p-2 m-1 z-10 rounded truncate cursor-pointer ${
               note.id === selectedNoteId
                 ? "bg-primary/90 text-popover"
                 : "bg-popover text-primary hover:bg-primary/80"
@@ -75,29 +75,29 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
           >
             <div className="flex flex-col">
               <div className="flex flex-row items-center text-center justify-between">
-                <h3 className="text-lg font-semibold truncate">{note.title}</h3>
-                <h3 className="text-sm font-semibold">
+                <h3 className="text-base sm:text-lg font-semibold truncate">{note.title}</h3>
+                <h3 className="text-xs sm:text-sm font-semibold">
                   {handleGetTime(note.time)}
                 </h3>
               </div>
-              <p className="text-sm truncate">{noteTextContent}</p>
+              <p className="text-xs sm:text-sm truncate">{noteTextContent}</p>
             </div>
           </div>
         );
       })}
 
       {visibleCount < visibleNotes.length && (
-        <div className = "mt-4 flex justify-center">
+        <div className="mt-2 sm:mt-4 flex justify-center">
           <button  
-            onClick = {moreNotes}
-            className = "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onClick={moreNotes}
+            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm sm:text-base"
           >
             Load More Notes...
           </button>
         </div>
       )}
     </div>
-  );  
+  );
 };
 
 

@@ -43,7 +43,8 @@ export default function Navbar() {
     { href: "/", label: "Home" },
     { href: "/lib/pages/notes", label: "Notes", authRequired: true },
     { href: "/lib/pages/map", label: "Map" },
-    { href: "/#aboutSection", label: "About" },
+    { href: "/lib/pages/StoriesPage", label: "Stories" },
+    { href: "/lib/pages/ResourcesPage", label: "Resources" },
   ];
 
   // Active link styling

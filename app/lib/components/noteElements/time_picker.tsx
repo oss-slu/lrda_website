@@ -4,7 +4,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { CaptionProps } from "react-day-picker";
+import { MonthCaptionProps, useDayPicker } from "react-day-picker";
 
 interface TimePickerProps {
   initialDate?: Date; // Now optional — will fall back to today if not provided
@@ -16,16 +16,17 @@ function formatDateTime(date: Date) {
   return `${date.toDateString()}`;
 }
 
-type CustomCaptionProps = CaptionProps & {
+type CustomCaptionProps = MonthCaptionProps & {
   onMonthChange?: (date: Date) => void;
   onDayClick?: (date: Date) => void;
 };
 
-function CaptionDropdowns({
-  displayMonth,
+function CustomCaption({
+  calendarMonth,
   onMonthChange,
   onDayClick,
 }: CustomCaptionProps) {
+  const { goToMonth, nextMonth, previousMonth } = useDayPicker();
   const fromYear = 1200;
   const toYear = new Date().getFullYear();
 
@@ -34,46 +35,66 @@ function CaptionDropdowns({
   );
   const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
 
-  const handleChange = (newMonth: number, newYear: number) => {
-    const newDate = new Date(displayMonth);
+  const handleMonthChange = (newMonth: number) => {
+    const newDate = new Date(calendarMonth.date);
     newDate.setMonth(newMonth);
-    newDate.setFullYear(newYear);
-    newDate.setDate(1);
+    goToMonth(newDate);
     onMonthChange?.(newDate);
-    onDayClick?.(newDate);
+  };
+
+  const handleYearChange = (newYear: number) => {
+    const newDate = new Date(calendarMonth.date);
+    newDate.setFullYear(newYear);
+    goToMonth(newDate);
+    onMonthChange?.(newDate);
   };
 
   return (
-    <div className="flex space-x-2 px-3 py-2">
-      <select
-        className="text-sm px-2 py-1 border rounded-md"
-        value={displayMonth.getMonth()}
-        onChange={(e) =>
-          handleChange(parseInt(e.target.value), displayMonth.getFullYear())
-        }
-      >
-        {months.map((month, idx) => (
-          <option key={idx} value={idx}>
-            {month}
-          </option>
-        ))}
-      </select>
-      <select
-        className="text-sm px-2 py-1 border rounded-md"
-        value={displayMonth.getFullYear()}
-        onChange={(e) =>
-          handleChange(displayMonth.getMonth(), parseInt(e.target.value))
-        }
-      >
-        {years.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
+    <div className="flex items-center justify-between px-3 py-2">
+      <div className="flex space-x-2">
+        <select
+          className="text-sm px-2 py-1 border rounded-md bg-white"
+          value={calendarMonth.date.getMonth()}
+          onChange={(e) => handleMonthChange(parseInt(e.target.value))}
+        >
+          {months.map((month, idx) => (
+            <option key={idx} value={idx}>
+              {month}
+            </option>
+          ))}
+        </select>
+        <select
+          className="text-sm px-2 py-1 border rounded-md bg-white"
+          value={calendarMonth.date.getFullYear()}
+          onChange={(e) => handleYearChange(parseInt(e.target.value))}
+        >
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex space-x-1">
+        <button
+          className="p-1 hover:bg-gray-100 rounded"
+          disabled={!previousMonth}
+          onClick={() => previousMonth && goToMonth(previousMonth)}
+        >
+          ←
+        </button>
+        <button
+          className="p-1 hover:bg-gray-100 rounded"
+          disabled={!nextMonth}
+          onClick={() => nextMonth && goToMonth(nextMonth)}
+        >
+          →
+        </button>
+      </div>
     </div>
   );
 }
+
 
 export default function TimePicker({ initialDate, onTimeChange }: TimePickerProps) {
   const now = new Date();
@@ -133,10 +154,13 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
           onMonthChange={setViewMonth}
           initialFocus
           components={{
-            Caption: (props) => (
-              <CaptionDropdowns
+            MonthCaption: (props) => (
+              <CustomCaption
                 {...props}
-                onMonthChange={setViewMonth}
+                onMonthChange={(newDate) => {
+                  setViewMonth(newDate);
+                  onTimeChange?.(newDate);
+                }}
                 onDayClick={handleDayClick}
               />
             ),

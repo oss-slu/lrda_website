@@ -41,9 +41,10 @@ import {
   TableImproved,
 } from "mui-tiptap";
 
-import { Node } from '@tiptap/core'
+import { Image } from '@tiptap/extension-image'
 
-const LazyImage = Node.create({
+// TipTap v3: Use Image.extend() to create a custom image node
+const LazyImage = Image.extend({
   name: 'image',
 
   addAttributes() {
@@ -69,13 +70,13 @@ const LazyImage = Node.create({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['img', HTMLAttributes];
   },
 
   addCommands() {
     return {
-      setImage: options => ({ commands }) => {
+      setImage: (options: Record<string, any>) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
