@@ -96,78 +96,86 @@ const ClickableNote: React.FC<{
           <NoteCard note={note} />
         </div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[80%] h-[100vh]">
-        <DialogHeader>
-          <DialogTitle className="text-3xl">{note.title}</DialogTitle>
-          <DialogDescription className="flex flex-row align-center items-center">
-            <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
-          </DialogDescription>
-          <DialogDescription className="flex flex-row align-center items-center">
-            <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
-          </DialogDescription>
-          <DialogDescription className="flex flex-row align-center items-center">
-            <UserCircle className="w-5 h-5" />: {creator}
-          </DialogDescription>
-          <DialogDescription>
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mb-2 items-center">
-                <Tags />
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                      tag.origin === "user"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-purple-200 text-purple-800"
-                    }`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </DialogDescription>
+      
+      <DialogContent className="sm:max-w-[80%] h-[100vh] p-0">
+        
+        <ScrollArea className="h-full">
+          
+          <DialogHeader className="p-6">
+            <DialogTitle className="text-3xl">{note.title}</DialogTitle>
+            <DialogDescription className="flex flex-row align-center items-center">
+              <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
+            </DialogDescription>
+            <DialogDescription className="flex flex-row align-center items-center">
+              <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
+            </DialogDescription>
+            <DialogDescription className="flex flex-row align-center items-center">
+              <UserCircle className="w-5 h-5" />: {creator}
+            </DialogDescription>
+            <DialogDescription>
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-2 items-center">
+                  <Tags />
+                  {tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                        tag.origin === "user"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-purple-200 text-purple-800"
+                      }`}
+                    >
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </DialogDescription>
 
-          <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
-        </DialogHeader>
-        <ScrollArea>
-  {note.text && note.text.length > 0 ? (
-    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
-  ) : (
-    "This Note has no content"
-  )}
-</ScrollArea>
-        <DialogFooter>
-          <div className="flex flex-row w-28 absolute left-4 bottom-4">
-            {note.audio.length > 0 ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
-                    <FileAudio />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <AudioPicker audioArray={note.audio} editable={false} />
-                </PopoverContent>
-              </Popover>
-            ) : null}
-            {note.media.length > 0 ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
-                    <ImageIcon />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="bg-white overflow-auto rounded-lg shadow-lg w-[450px] max-w-full px-16 align-middle justify-center items-center">
-                  <PopoverClose className="absolute right-4">
-                    <X />
-                  </PopoverClose>
-                  <MediaViewer mediaArray={note.media} />
-                </PopoverContent>
-              </Popover>
-            ) : null}
-          </div>
-        </DialogFooter>
+            <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
+          </DialogHeader>
+
+          {note.text && note.text.length > 0 ? (
+            <div
+              dangerouslySetInnerHTML={{ __html: data }}
+              className="mb-5 note-content px-6" // Added px-6
+            />
+          ) : (
+            <div className="px-6 pb-6">This Note has no content</div> // Added padding
+          )}
+
+          <DialogFooter className="p-6 pt-0">
+            <div className="flex flex-row w-28"> 
+              {note.audio.length > 0 ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                      <FileAudio />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <AudioPicker audioArray={note.audio} editable={false} />
+                  </PopoverContent>
+                </Popover>
+              ) : null}
+              {note.media.length > 0 ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="flex flex-row shadow-sm rounded-full h-10 w-10 bg-white border-border border justify-center items-center align-center">
+                      <ImageIcon />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="bg-white overflow-auto rounded-lg shadow-lg w-[450px] max-w-full px-16 align-middle justify-center items-center">
+                    <PopoverClose className="absolute right-4">
+                      <X />
+                    </PopoverClose>
+                    <MediaViewer mediaArray={note.media} />
+                  </PopoverContent>
+                </Popover>
+              ) : null}
+            </div>
+          </DialogFooter>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

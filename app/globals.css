@@ -547,4 +547,12 @@ body {
   fill: #2563EB; /* Change to blue when hovering */
 }
 
+/* Adds spacing to all img tags for note content */
+.note-content img {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem; 
+  max-width: 100%;
+  height: auto;
+}
 

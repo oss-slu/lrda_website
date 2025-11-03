@@ -62,6 +62,8 @@ const Page = () => {
     pageSize: NOTES_PAGE_SIZE,
   });
 
+  const [isPanelOpen, setIsPanelOpen] = useState(true); // Default to open
+
   const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
   const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
 
@@ -773,8 +775,8 @@ const Page = () => {
   }
 
   return (
-    <div className="flex flex-row w-screen h-full min-w-[600px]">
-      <div className="flex-grow">
+    <div className="w-screen h-full min-w-[600px] relative overflow-hidden">
+      <div className="w-full h-full">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -818,7 +820,9 @@ const Page = () => {
                   </button>
                 ) : null}
               </div>
-              <div className="flex flex-row items-center gap-2 mr-4">
+              <div className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4
+                              ${isPanelOpen ? 'mr-[35rem]' : 'mr-4'}`}
+              >
                 {/* Zoom Out Button */}
                 <button
                   aria-label="Zoom out"
@@ -858,19 +862,48 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
+      
+      {/* NEW: Toggle Button */}
+      <button
+        onClick={() => setIsPanelOpen(!isPanelOpen)}
+        className={`absolute top-1/2 z-20 -translate-y-1/2 bg-white rounded-full
+                    shadow-md w-8 h-8 flex items-center justify-center 
+                    transition-all duration-300 ease-in-out hover:bg-gray-100`}
+        style={{
+          // This '34rem' MUST match the 'w-[34rem]' of your panel below
+          right: isPanelOpen ? '34rem' : '1rem' 
+        }}
+      >
+        {isPanelOpen ? '>' : '<'}
+      </button>
+      {/* END NEW */}
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
-        {isLoading
-          ? [...Array(6)].map((_, index) => (
+      {/* NOTES PANEL */}
+      <div 
+        className={`absolute top-0 right-0 h-full overflow-y-auto bg-neutral-100
+                    w-[34rem] transition-transform duration-300 ease-in-out z-10
+                    ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} 
+        ref={notesListRef}
+      >
+        {/* This is the main content area for the panel.
+          We add 'grid' and 'content-start' to ensure the empty state
+          message doesn't stretch to fill the whole panel.
+        */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 content-start">
+          {isLoading ? (
+            // --- 1. LOADING STATE ---
+            [...Array(6)].map((_, index) => (
               <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
-          : infinite.visibleItems.map((note) => (
+          ) : infinite.visibleItems.length > 0 ? (
+            // --- 2. NOTES FOUND STATE ---
+            infinite.visibleItems.map((note) => (
               <div
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
                 className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                  note.id === activeNote?.id ? "active-note" : "hover:bg-gray-100"
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
@@ -878,8 +911,36 @@ const Page = () => {
               >
                 <ClickableNote note={note} />
               </div>
-            ))}
-        {/* <div className="flex justify-center w-full mt-4 mb-2">
+            ))
+          ) : (
+            // --- 3. EMPTY STATE (NEW) ---
+            <div className="col-span-full flex flex-col items-center justify-center text-center p-4 py-20">
+              
+              <h3 className="text-xl font-semibold text-gray-700 mt-4">No Results Found</h3>
+              <p className="text-gray-500 mt-2">Sorry, there are no notes in this area. Try zooming out or moving the map.</p>
+            </div>
+          )}
+
+          {/* --- INFINITE SCROLL LOADER --- */}
+          <div className="col-span-full flex justify-center mt-4 min-h-10">
+            {infinite.hasMore ? (
+              <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+                {infinite.isLoading && (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Page;
+
+
+{/* <div className="flex justify-center w-full mt-4 mb-2">
           <button
             className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
             onClick={handlePrevious}
@@ -894,19 +955,3 @@ const Page = () => {
             Next
           </button>
         </div> */}
-
-        <div className="col-span-full flex justify-center mt-4 min-h-10">
-          {infinite.hasMore ? (
-            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
-              {infinite.isLoading && (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
-              )}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Page;
