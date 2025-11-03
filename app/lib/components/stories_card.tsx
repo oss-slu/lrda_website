@@ -90,51 +90,52 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     console.log("EnhancedNoteCard received note:", note);
   }, [note]);
 
-  // Fetch the creator's name
+  // Fetch the creator's name based on the note's creator ID (same logic as map page)
   useEffect(() => {
     ApiService.fetchCreatorName(note.creator)
       .then((name) => setCreator(name))
-      .catch(() => setCreator("Unknown Creator"));
+      .catch((error) => {
+        console.error("Error fetching creator name:", error, note.creator);
+        setCreator("Unknown creator");
+      });
   }, [note.creator]);
 
   // Get the body text preview
   const bodyPreview = getBodyPreview(note.text || "", 2);
 
-  // Fetch the exact location (state) using reverse geocoding
+  // Fetch the exact location using reverse geocoding (matching InstructorStoriesCard logic)
   useEffect(() => {
     const fetchLocation = async () => {
       const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
-
-      if (!MAPS_API_KEY) {
-        console.error("Google Maps API Key is missing in the environment variables.");
-        setLocation("API Key Missing");
-        return;
+      
+      // Check if we have valid coordinates before fetching
+      if (note.latitude && note.longitude && MAPS_API_KEY) {
+        const lat = parseFloat(note.latitude.toString());
+        const lng = parseFloat(note.longitude.toString());
+        
+        // Validate coordinates are numbers
+        if (!isNaN(lat) && !isNaN(lng)) {
+          try {
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`
+            );
+            
+            const data = await response.json();
+            
+            // Use the first result's formatted_address (simpler and more reliable)
+            const loc = data.results?.[0]?.formatted_address;
+            if (loc) {
+              setLocation(loc);
+              return;
+            }
+          } catch (error) {
+            // Silently handle errors - location not found is expected for some coordinates
+          }
+        }
       }
-
-      try {
-        console.log("Fetching location for Lat/Lng:", note.latitude, note.longitude);
-
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${note.latitude},${note.longitude}&key=${MAPS_API_KEY}`
-        );
-
-        const data = await response.json();
-        console.log("Geocoding API response:", data); // Log the full API response
-
-        const state =
-          data.results.find((result: any) =>
-            result.types.includes("administrative_area_level_1")
-          )?.formatted_address ||
-          data.results.find((result: any) =>
-            result.types.includes("locality")
-          )?.formatted_address ||
-          "Location not found";
-
-        setLocation(state);
-      } catch (error) {
-        console.error("Error fetching location:", error);
-        setLocation("Location not found");
-      }
+      
+      // Set fallback based on whether coordinates exist
+      setLocation(note.latitude && note.longitude ? "Location not found" : "");
     };
 
     fetchLocation();

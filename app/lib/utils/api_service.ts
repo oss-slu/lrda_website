@@ -757,13 +757,15 @@ export default class ApiService {
     try {
       // Normalize creatorId - extract UID from RERUM URLs if needed
       let normalizedId = creatorId;
-      if (creatorId && (creatorId.startsWith("https://devstore.rerum.io/") || creatorId.startsWith("http://devstore.rerum.io/"))) {
+      const isRerumUrl = creatorId && (creatorId.startsWith("https://devstore.rerum.io/") || creatorId.startsWith("http://devstore.rerum.io/"));
+      
+      if (isRerumUrl) {
         // Extract the UID from the URL (assuming format like https://devstore.rerum.io/v1/id/{uid})
         const parts = creatorId.split("/");
         normalizedId = parts[parts.length - 1];
       }
 
-      // First, try to fetch from Firestore
+      // First, try to fetch from Firestore using normalized ID
       try {
         const userDocRef = doc(db, "users", normalizedId);
         const userDoc = await getDoc(userDocRef);
@@ -784,7 +786,29 @@ export default class ApiService {
         }
       } catch (firestoreError) {
         // If Firestore lookup fails, continue to RERUM fallback
-        console.log("Firestore lookup failed, falling back to RERUM:", firestoreError);
+        // Don't log this as it's expected for users not in Firestore
+      }
+
+      // If it's a RERUM URL, try fetching directly from the URL first
+      if (isRerumUrl) {
+        try {
+          const response = await fetch(creatorId);
+          if (response.ok) {
+            const rerumData = await response.json();
+            // Check multiple name fields in RERUM response
+            if (rerumData.name && rerumData.name.trim()) {
+              return rerumData.name.trim();
+            }
+            if (rerumData.displayName && rerumData.displayName.trim()) {
+              return rerumData.displayName.trim();
+            }
+            if (rerumData.email && rerumData.email.trim()) {
+              return rerumData.email.trim();
+            }
+          }
+        } catch (rerumDirectError) {
+          // If direct fetch fails, continue to query fallback
+        }
       }
 
       // Fallback to RERUM API query - try both normalized ID and original creatorId
@@ -793,11 +817,13 @@ export default class ApiService {
         "Content-Type": "application/json",
       };
       
-      // Try with normalized ID first
+      // Try with normalized ID first - check both uid and wr:uid fields
       let body = {
         $or: [
           { "@type": "Agent", uid: normalizedId },
           { "@type": "foaf:Agent", uid: normalizedId },
+          { "@type": "Agent", "wr:uid": normalizedId } as any,
+          { "@type": "foaf:Agent", "wr:uid": normalizedId } as any,
         ],
       };
 
@@ -810,11 +836,13 @@ export default class ApiService {
       let data = await response.json();
       
       // If no result with normalized ID and it's different from original, try original
-      if ((!data.length || !data[0].name) && normalizedId !== creatorId) {
+      if ((!data.length || !data[0]) && normalizedId !== creatorId) {
         body = {
           $or: [
             { "@type": "Agent", uid: creatorId },
             { "@type": "foaf:Agent", uid: creatorId },
+            { "@type": "Agent", "wr:uid": creatorId } as any,
+            { "@type": "foaf:Agent", "wr:uid": creatorId } as any,
             // Also try matching by @id field for RERUM URLs
             { "@id": creatorId } as any,
           ],
@@ -843,10 +871,14 @@ export default class ApiService {
         }
       }
       
-      throw new Error("Creator not found or no name attribute.");
+      // Return a fallback instead of throwing - let the caller decide how to handle
+      return "Unknown creator";
     } catch (error) {
-      console.error(`Error fetching creator name for ${creatorId}:`, error);
-      throw error;
+      // Only log actual errors (network issues, etc), not "not found" cases
+      if (error instanceof Error && !error.message.includes("Creator not found")) {
+        console.error(`Error fetching creator name for ${creatorId}:`, error);
+      }
+      return "Unknown creator";
     }
   }
 

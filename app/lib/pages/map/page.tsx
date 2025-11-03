@@ -50,6 +50,7 @@ const Page = () => {
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
+  const isZoomingProgrammatically = useRef(false);
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
   const [currentPopup, setCurrentPopup] = useState<any | null>(null);
@@ -354,6 +355,11 @@ const Page = () => {
 
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
+      // Only sync state if zoom changed from user interaction (not programmatic)
+      if (!isZoomingProgrammatically.current) {
+        const currentZoom = map.getZoom();
+        setMapZoom(currentZoom || 2);
+      }
       updateBounds();
     });
 
@@ -371,7 +377,12 @@ const Page = () => {
     if (mapRef.current) {
       const currentZoom = mapRef.current.getZoom();
       if (currentZoom !== mapZoom) {
+        isZoomingProgrammatically.current = true;
         mapRef.current.setZoom(mapZoom);
+        // Reset flag after a short delay to allow zoom_changed event to complete
+        setTimeout(() => {
+          isZoomingProgrammatically.current = false;
+        }, 100);
       }
     }
   }, [mapZoom]);
