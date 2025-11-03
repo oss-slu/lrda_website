@@ -32,10 +32,8 @@ export default function Home() {
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
     setIsNewNote(isNew);
-    // Optional: Keep a subtle success message
-    setDebugInfo(isNew ? 'New note created!' : 'Note loaded!');
-    // Clear the message after 3 seconds
-    setTimeout(() => setDebugInfo(''), 3000);
+    // Remove success banner/message per request
+    setDebugInfo("");
   };
 
   const handleNoteSaved = () => {
@@ -57,18 +55,11 @@ export default function Home() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={80}>
-        {/* Success indicator - much cleaner */}
-        {debugInfo && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 m-2 rounded text-sm">
-            ✅ {isNewNote ? 'New note created' : 'Note loaded'} - Ready to edit!
-          </div>
-        )}
-        
-        {/* Main content area with debugging indicators */}
-        <div className="flex-1 relative">
+        {/* Main content area */}
+        <div className="h-full flex flex-col relative min-h-0">
           {isUserLoggedIn ? (
             selectedNote ? (
-              <div className="h-full w-full">
+              <div className="h-full w-full min-h-0 flex flex-col">
 
                 <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteSaved={handleNoteSaved} />
               </div>

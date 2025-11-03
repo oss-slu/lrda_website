@@ -114,7 +114,7 @@ const TagManager: React.FC<TagManagerProps> = ({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+  <div className="flex flex-wrap items-center gap-1.5 mb-3">
         <div className="relative flex-1 min-w-[90px] max-w-[280px]">
           <Input
             value={tagInput}
@@ -142,7 +142,7 @@ const TagManager: React.FC<TagManagerProps> = ({
         </div>
         <button
           onClick={fetchSuggestedTags}
-          className="p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm"
+          className="p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm ml-1"
           title="Generate AI tags"
         >
           <Sparkles className="h-4 w-4" />

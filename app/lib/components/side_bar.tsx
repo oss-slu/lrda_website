@@ -170,13 +170,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect, refreshKey }) => {
   };
 
   return (
-    <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
+    <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
       {/* Scrollable content area */}
       <div className="overflow-y-auto flex-1 p-4 pb-20"> {/* pb-20 to prevent content from going under button */}
         <div className="w-full mb-4">
-          <div className="text-left mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
-          </div>
           {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
           <SearchBarNote onSearch={handleSearch} />
 

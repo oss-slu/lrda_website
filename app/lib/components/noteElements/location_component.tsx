@@ -117,22 +117,20 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   // changes here
 
   useEffect (() => {
-  /*  const handleClickOutside = (event: MouseEvent) => {
-      if (
-        mapContainerRef.current && 
-        !mapContainerRef.current.contains(event.target as Node) &&
-        searchBarRef.current &&
-        !searchBarRef.current.contains(event.target as Node)
-      ) {
-        setIsExpanded(false); //closes map
+    // Close on Escape when expanded
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isExpanded) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }; */
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isExpanded]);
 
   return (
@@ -148,7 +146,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       
       {isExpanded && (
         <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-75 pointer-events-none"/>
+          {/* Backdrop closes on click */}
+          <div
+            className="absolute inset-0 bg-black/75"
+            onClick={() => setIsExpanded(false)}
+            aria-hidden="true"
+          />
           
           <div className="absolute top-2 left-2 z-50">
             <button
@@ -176,30 +179,37 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           </div>
 
           {isLoaded && (
-            <div 
-              ref={mapContainerRef}
-              className="flex justify-center items-center w-full h-full absolute inset-0 z-40"
+            <div
+              className="absolute inset-0 z-40 flex justify-center items-center"
+              onClick={() => setIsExpanded(false)}
             >
-              <GoogleMap
-                mapContainerStyle={{
-                  width: "80%",
-                  height: "80%",
-                  borderRadius: "8px",
-                }}
-                center={{ lat: latitude, lng: longitude }}
-                zoom={9}
-                options={{
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                }}
+              {/* Map container: stop click propagation so inside clicks don't close */}
+              <div
+                ref={mapContainerRef}
+                className="w-[80%] h-[80%]"
+                onClick={(e) => e.stopPropagation()}
               >
-                <MarkerF
-                  position={{ lat: latitude, lng: longitude }}
-                  draggable={true}
-                  onDragEnd={onMarkerDragEnd} // Handle marker drag event
-                />
-              </GoogleMap>
+                <GoogleMap
+                  mapContainerStyle={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "8px",
+                  }}
+                  center={{ lat: latitude, lng: longitude }}
+                  zoom={9}
+                  options={{
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  <MarkerF
+                    position={{ lat: latitude, lng: longitude }}
+                    draggable={true}
+                    onDragEnd={onMarkerDragEnd} // Handle marker drag event
+                  />
+                </GoogleMap>
+              </div>
             </div>
           )}
         </div>

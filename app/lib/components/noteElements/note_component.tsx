@@ -48,6 +48,7 @@ import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { Button } from "@/components/ui/button";
 import { newNote, Note } from "@/app/types"; // make sure types are imported
+import { useNotesStore } from "../../stores/notesStore";
 
 const user = User.getInstance();
 
@@ -59,6 +60,7 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
+  const updateNote = useNotesStore((state) => state.updateNote); // Get updateNote from store
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
@@ -66,7 +68,6 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
-  const [notes, setNotes] = useState<Note[]>([]); // Add this to define state for notes
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -213,6 +214,17 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
     }
   }, [initialNote]);
 
+  // After a note loads, place caret at the start ONCE so typing begins at top,
+  // but don't override click-based placement afterward.
+  useEffect(() => {
+    const editor = rteRef.current?.editor;
+    if (editor) {
+      // Small timeout to ensure editor has mounted with new content
+      const t = setTimeout(() => editor.chain().focus('start').run(), 0);
+      return () => clearTimeout(t);
+    }
+  }, [noteState.note?.id]);
+
   useEffect(() => {
     if (initialNote) {
       noteHandlers.setNote(initialNote as Note);
@@ -270,6 +282,20 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
 
         try {
           await ApiService.overwriteNote(updatedNote);
+          
+          // Update the global store so sidebar shows changes immediately
+          if (noteState.note?.id) {
+            updateNote(noteState.note.id, {
+              title: updatedNote.title,
+              text: updatedNote.text,
+              tags: updatedNote.tags,
+              published: updatedNote.published,
+              time: updatedNote.time,
+              latitude: updatedNote.latitude,
+              longitude: updatedNote.longitude,
+            });
+          }
+          
           // Silent save - no toast notification for auto-save
           if (onNoteSaved) {
             onNoteSaved();
@@ -482,9 +508,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
   };
 
   return (
-    <div className="relative h-full w-full bg-white transition-all duration-300 ease-in-out">
+    <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
 
-      <ScrollArea className="flex flex-col w-full h-full">
+      <ScrollArea className="flex flex-col w-full h-full min-h-0">
         <div aria-label="Top Bar" className="w-full flex flex-col px-8 py-6">
           <Input
             id="note-title-input"
@@ -581,11 +607,33 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-        <div className="flex-grow w-full px-8 pb-8 flex flex-col transition-opacity duration-200 ease-in-out">
-          <div className="flex-grow flex flex-col bg-white w-full">
+        <div
+          className="w-full px-8 pb-8 transition-opacity duration-200 ease-in-out"
+          onMouseDown={(e) => {
+            const editor = rteRef.current?.editor;
+            if (!editor) return;
+            const target = e.target as HTMLElement;
+            // If the click is NOT inside the ProseMirror content, focus the editor at the start
+            if (!target.closest('.ProseMirror')) {
+              e.preventDefault();
+              editor.chain().focus('start').run();
+            }
+          }}
+          onKeyDown={(e) => {
+            const editor = rteRef.current?.editor;
+            if (!editor) return;
+            // When the editor is empty, allow ArrowDown to create a new paragraph so users can "go down"
+            if (e.key === 'ArrowDown' && editor.isEmpty) {
+              e.preventDefault();
+              editor.chain().focus().insertContent('<p><br/></p>').run();
+            }
+          }}
+        >
+          <div className="bg-white w-full">
             <RichTextEditor
+              key={`${noteState.note?.id ?? 'new'}-${noteState.title}`}
               ref={rteRef}
-              className="min-h-[600px] prose prose-lg max-w-none"
+              className="min-h-[400px] prose prose-lg max-w-none"
               extensions={extensions}
               content={noteState.editorContent}
               onUpdate={({ editor }) => handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())}
