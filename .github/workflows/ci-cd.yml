@@ -136,6 +136,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write  # Needed to comment on PRs with preview URL
+    # Use environment context only for main branch (production deployments)
+    # For PRs, we need repository-level secrets since environment is restricted to main branch
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
 
     steps:
       - name: Checkout repository
@@ -180,15 +183,30 @@ jobs:
 
       - name: Validate Netlify secrets
         run: |
-          if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then
-            echo "::error::NETLIFY_AUTH_TOKEN secret is not set. Please configure it in repository settings."
+          # Check if secrets are set (they may be empty strings if not configured)
+          # For main branch: uses environment secrets
+          # For PRs: uses repository secrets
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ "$NETLIFY_AUTH_TOKEN" == "" ]; then
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "::error::NETLIFY_AUTH_TOKEN not accessible. For main branch, ensure secret is set in: Settings > Environments > production > Environment secrets"
+            else
+              echo "::error::NETLIFY_AUTH_TOKEN not accessible. For PRs/previews, ensure secret is set in: Settings > Secrets and variables > Actions > Repository secrets"
+            fi
             exit 1
           fi
-          if [ -z "${{ secrets.NETLIFY_SITE_ID }}" ]; then
-            echo "::error::NETLIFY_SITE_ID secret is not set. Please configure it in repository settings."
+          if [ -z "$NETLIFY_SITE_ID" ] || [ "$NETLIFY_SITE_ID" == "" ]; then
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "::error::NETLIFY_SITE_ID not accessible. For main branch, ensure secret is set in: Settings > Environments > production > Environment secrets"
+            else
+              echo "::error::NETLIFY_SITE_ID not accessible. For PRs/previews, ensure secret is set in: Settings > Secrets and variables > Actions > Repository secrets"
+            fi
             exit 1
           fi
           echo "✓ Netlify secrets are configured"
+        env:
+          # Try environment secrets first (for main branch), fall back to repository secrets (for PRs)
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
       - name: Authenticate with Netlify
         run: |
@@ -254,6 +272,8 @@ jobs:
             netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
+          # For main branch: uses environment secrets from 'production' environment
+          # For PRs: uses repository secrets (create these in Settings > Secrets and variables > Actions)
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
