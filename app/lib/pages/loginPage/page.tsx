@@ -30,7 +30,7 @@ const Page = () => {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Username..."
+              placeholder="Email..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
