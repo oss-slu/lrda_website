@@ -173,7 +173,7 @@ export default class ApiService {
 
   // Convenience wrapper used by Stories page to fetch by creator
   static async getPagedQueryWithParams(limit: number, skip: number, creatorId: string): Promise<any[]> {
-    const queryObj = { type: "message", creator: creatorId } as any;
+    const queryObj = { type: "message", creator: creatorId, published: true } as any;
     return await this.getPagedQuery(limit, skip, queryObj);
   }
 

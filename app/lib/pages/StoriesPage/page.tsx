@@ -44,15 +44,18 @@ const StoriesPage = () => {
   const fetchStories = async (limit = 150) => { // Increased limit to 150 for better performance
     try {
       setIsLoading(true);
-      const fetchedNotes = await ApiService.fetchPublishedNotes(0, limit);
+      const fetchedNotes = await ApiService.fetchPublishedNotes(limit, 0);
+      
+      // Filter to ensure only published notes are shown (client-side safety check)
+      const publishedNotes = fetchedNotes.filter((note) => note.published === true);
 
       // Debugging log to check fetched data
-      console.log("Fetched Notes:", fetchedNotes);
+      console.log("Fetched Notes:", publishedNotes);
 
-      if (fetchedNotes.length === 0) {
+      if (publishedNotes.length === 0) {
         toast("No more stories to display.");
       } else {
-        const uids = fetchedNotes.map((note) => note.creator); // Collect UIDs from notes
+        const uids = publishedNotes.map((note) => note.creator); // Collect UIDs from notes
         const userList = await fetchUserNames(uids); // Resolve UIDs to names
 
         setUsers((prevUsers) => {
@@ -64,8 +67,8 @@ const StoriesPage = () => {
           );
         });
 
-        setNotes(fetchedNotes);
-        setFilteredNotes(fetchedNotes);
+        setNotes(publishedNotes);
+        setFilteredNotes(publishedNotes);
       }
     } catch (error) {
       console.error("Error fetching notes:", error);
@@ -79,7 +82,9 @@ const StoriesPage = () => {
     try {
       setIsLoading(true);
       const userNotes = await ApiService.getPagedQueryWithParams(150, 0, creatorId); // Increased limit to 150
-      setFilteredNotes(userNotes); // Display only notes for the selected user
+      // Filter to ensure only published notes are shown (client-side safety check)
+      const publishedUserNotes = userNotes.filter((note) => note.published === true);
+      setFilteredNotes(publishedUserNotes); // Display only published notes for the selected user
     } catch (error) {
       console.error(`Error fetching notes for user ${creatorId}:`, error);
       toast.error("Failed to fetch user notes. Please try again.");
@@ -119,7 +124,7 @@ const StoriesPage = () => {
       setFilteredNotes(notes); // Show all notes if no user is selected
     } else {
       const results = notes.filter(
-        (note) => note.creator === userId && note.approvalRequested
+        (note) => note.creator === userId && note.published
       );
       setFilteredNotes(results);
     }

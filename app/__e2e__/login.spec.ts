@@ -23,7 +23,7 @@ test.describe('Login Page', () => {
     await expect(page.locator('h1:has-text("Login")')).toBeVisible();
     
     // Verify username input field is present
-    const usernameInput = page.locator('input[placeholder="Username..."]');
+    const usernameInput = page.locator('input[placeholder="Email..."]');
     await expect(usernameInput).toBeVisible();
     
     // Verify password input field is present

@@ -364,7 +364,17 @@ const Page = () => {
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, [mapCenter, mapZoom]);
+  }, []);
+
+  // Update map zoom when mapZoom state changes (from plus/minus buttons)
+  useEffect(() => {
+    if (mapRef.current) {
+      const currentZoom = mapRef.current.getZoom();
+      if (currentZoom !== mapZoom) {
+        mapRef.current.setZoom(mapZoom);
+      }
+    }
+  }, [mapZoom]);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
