@@ -85,13 +85,14 @@ describe("EnhancedNoteCard Component", () => {
   });
 
 
-  it("displays 'API Key Missing' when API key is not provided", async () => {
+  it("displays 'Location not found' when API key is not provided but coordinates exist", async () => {
     delete process.env.NEXT_PUBLIC_MAP_KEY;
+    (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue("Test Creator");
 
     render(<EnhancedNoteCard note={mockNote} />);
 
     await waitFor(() => {
-      expect(screen.getByText("API Key Missing")).toBeInTheDocument();
+      expect(screen.getByText("Location not found")).toBeInTheDocument();
     });
   });
 
