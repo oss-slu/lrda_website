@@ -26,7 +26,6 @@ import {
   handleUpdateCreatorUid,
 } from "../../utils/admin_utils";
 import { Progress } from "@/components/ui/progress";
-import { EnableAboutPageButton, DisableAboutPageButton } from "../aboutPage/AboutPageFlagButton";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
 const paskey = process.env.NEXT_PUBLIC_ADMIN_PASKEY;
@@ -416,8 +415,6 @@ export default function AdminPanel() {
                     </TabsContent>
                   </Tabs>
                 </Card>
-                <EnableAboutPageButton />
-                <DisableAboutPageButton />  
               </TabsContent>
 
               <TabsContent value="uid" className="w-full p-3">
