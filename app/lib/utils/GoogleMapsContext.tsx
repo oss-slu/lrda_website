@@ -1,6 +1,6 @@
-"use client"
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useJsApiLoader } from '@react-google-maps/api';
+"use client";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useJsApiLoader } from "@react-google-maps/api";
 
 // Define the context shape
 interface GoogleMapsContextType {
@@ -19,24 +19,21 @@ interface GoogleMapsProviderProps {
   children: ReactNode;
 }
 
-// Create the provider component
+const GOOGLE_MAP_LIBRARIES = ["places", "marker"] as const;
+
 export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
   const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
-  
+
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
-    libraries: ['places', 'marker'] as ('places' | 'marker')[], // Cast as tuple for TypeScript
-    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ''],
-    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || "",
+    libraries: GOOGLE_MAP_LIBRARIES,
+    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ""],
+    id: "google-map-script",
   });
 
   useEffect(() => {
     setIsMapsApiLoaded(isLoaded);
   }, [isLoaded]);
 
-  return (
-    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>
-      {children}
-    </GoogleMapsContext.Provider>
-  );
+  return <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>{children}</GoogleMapsContext.Provider>;
 };
