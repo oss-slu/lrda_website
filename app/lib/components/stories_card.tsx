@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../utils/api_service";
+import { getCachedLocation } from "../utils/location_cache";
 import { Note, Tag } from "@/app/types";
 // DOMPurify will be loaded dynamically
 import {
@@ -69,6 +70,7 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   );
 };
 
+
 const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
   const [isImageLoading, setIsImageLoading] = useState(true); // Spinner state
@@ -103,7 +105,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   // Get the body text preview
   const bodyPreview = getBodyPreview(note.text || "", 2);
 
-  // Fetch the exact location using reverse geocoding (matching InstructorStoriesCard logic)
+  // Fetch the exact location using reverse geocoding with caching
   useEffect(() => {
     const fetchLocation = async () => {
       const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
@@ -113,29 +115,13 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         const lat = parseFloat(note.latitude.toString());
         const lng = parseFloat(note.longitude.toString());
         
-        // Validate coordinates are numbers
-        if (!isNaN(lat) && !isNaN(lng)) {
-          try {
-            const response = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`
-            );
-            
-            const data = await response.json();
-            
-            // Use the first result's formatted_address (simpler and more reliable)
-            const loc = data.results?.[0]?.formatted_address;
-            if (loc) {
-              setLocation(loc);
-              return;
-            }
-          } catch (error) {
-            // Silently handle errors - location not found is expected for some coordinates
-          }
-        }
+        // Use the shared location cache utility
+        const location = await getCachedLocation(lat, lng, MAPS_API_KEY);
+        setLocation(location);
+      } else {
+        // Set fallback based on whether coordinates exist
+        setLocation(note.latitude && note.longitude ? "Location not found" : "");
       }
-      
-      // Set fallback based on whether coordinates exist
-      setLocation(note.latitude && note.longitude ? "Location not found" : "");
     };
 
     fetchLocation();

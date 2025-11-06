@@ -1,6 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent } from "@testing-library/react";
 import Page from "../lib/pages/loginPage/page";
+
+/**
+ * Since `moxios` does not provide TypeScript types, we declare it as any to suppress type errors.
+ * Alternatively, you can add a .d.ts file with 'declare module "moxios";' in your project.
+ */
+// @ts-ignore
 import moxios from 'moxios';
 
 jest.mock("firebase/database", () => ({

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Note, Comment } from "@/app/types";
 import ApiService from "../utils/api_service";
+import { getCachedLocation } from "../utils/location_cache";
 import DOMPurify from "dompurify";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,20 +77,21 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
       .then(setCreatorName)
       .catch(() => setCreatorName("Unknown"));
 
-    const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
-    if (note.latitude && note.longitude && MAPS_API_KEY) {
-      fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${note.latitude},${note.longitude}&key=${MAPS_API_KEY}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          const loc = data.results?.[0]?.formatted_address;
-          setLocation(loc || "Unknown Location");
-        })
-        .catch(() => setLocation("Unknown Location"));
-    } else {
-      setLocation(note.latitude && note.longitude ? "Unknown Location" : "");
-    }
+    const fetchLocation = async () => {
+      const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
+      if (note.latitude && note.longitude && MAPS_API_KEY) {
+        const lat = parseFloat(note.latitude.toString());
+        const lng = parseFloat(note.longitude.toString());
+        
+        // Use the shared location cache utility
+        const location = await getCachedLocation(lat, lng, MAPS_API_KEY);
+        setLocation(location || "Unknown Location");
+      } else {
+        setLocation(note.latitude && note.longitude ? "Unknown Location" : "");
+      }
+    };
+
+    fetchLocation();
   }, [note.creator, note.latitude, note.longitude]);
 
   // Comment submission
