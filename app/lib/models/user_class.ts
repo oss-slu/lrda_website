@@ -66,6 +66,10 @@ export class User {
   }
 
   private async initializeUser() {
+    if (!auth) {
+      console.warn("Firebase auth is not initialized");
+      return;
+    }
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userData = await ApiService.fetchUserData(user.uid);
@@ -74,6 +78,10 @@ export class User {
           this.userData = userData;
           this.persistUser(userData);
         } else {
+          if (!db) {
+            console.warn("Firebase db is not initialized");
+            return;
+          }
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             this.userData = userDoc.data() as UserData;
@@ -121,6 +129,9 @@ export class User {
 
 
   public async login(email: string, password: string): Promise<string> {
+    if (!auth) {
+      return Promise.reject(new Error("Firebase auth is not initialized"));
+    }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -143,12 +154,16 @@ export class User {
         // Removed sensitive data logging for security
       } else {
         // If not found in the API, try fetching from Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          this.userData = userDoc.data() as UserData;
-          // Removed sensitive data logging for security
+        if (!db) {
+          console.warn("Firebase db is not initialized");
         } else {
-          console.log("User data not found in Firestore or API.");
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            this.userData = userDoc.data() as UserData;
+            // Removed sensitive data logging for security
+          } else {
+            console.log("User data not found in Firestore or API.");
+          }
         }
       }
   
@@ -170,6 +185,10 @@ export class User {
   
   
   public async logout() {
+    if (!auth) {
+      console.warn("Firebase auth is not initialized");
+      return;
+    }
     try {
       await signOut(auth);
       this.userData = null;

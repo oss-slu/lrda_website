@@ -253,6 +253,9 @@ export default class ApiService {
 
   // Fetch users (students) by instructor ID from Firestore
   static async fetchUsersByInstructor(instructorId: string): Promise<{ uid: string; name: string; email: string }[]> {
+    if (!db) {
+      throw new Error("Firebase db is not initialized");
+    }
     try {
       const usersRef = collection(db, "users");
       const q = query(
@@ -348,6 +351,9 @@ export default class ApiService {
    */
   static async fetchUserData(uid: string): Promise<UserData | null> {
     try {
+      if (!db) {
+        throw new Error("Firebase db is not initialized");
+      }
       const userDocRef = doc(db, "users", uid); // Assume users collection
       const userDoc = await getDoc(userDocRef);
 
@@ -730,6 +736,9 @@ export default class ApiService {
     try {
       const { instructorId, ...noteDetails } = noteData;
 
+      if (!db) {
+        throw new Error("Firebase db is not initialized");
+      }
       const instructorRef = doc(db, "users", instructorId);
       const approvalsRef = collection(instructorRef, "approvalRequests");
 
@@ -767,6 +776,9 @@ export default class ApiService {
 
       // First, try to fetch from Firestore using normalized ID
       try {
+        if (!db) {
+          throw new Error("Firebase db is not initialized");
+        }
         const userDocRef = doc(db, "users", normalizedId);
         const userDoc = await getDoc(userDocRef);
 

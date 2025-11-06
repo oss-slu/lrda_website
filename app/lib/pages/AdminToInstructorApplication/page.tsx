@@ -26,6 +26,10 @@ export default function AdminToInstructorApplication() {
   });
 
   useEffect(() => {
+    if (!auth) {
+      console.warn("Firebase auth is not initialized");
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);

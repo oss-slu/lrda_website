@@ -53,6 +53,9 @@ export async function submitInstructorApplication(
   description: string,
   userData?: AuthOnlyUser
 ): Promise<boolean> {
+  if (!db) {
+    throw new Error("Firebase db is not initialized");
+  }
   try {
     // Get current user data
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -115,6 +118,9 @@ export async function canApplyForInstructor(uid: string): Promise<{
   currentData?: AdminUser | null;
   isNewUser?: boolean;
 }> {
+  if (!db) {
+    throw new Error("Firebase db is not initialized");
+  }
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
     
@@ -193,6 +199,9 @@ export async function approveInstructorApplication(
   adminUid: string,
   adminName: string
 ): Promise<boolean> {
+  if (!db) {
+    throw new Error("Firebase db is not initialized");
+  }
   try {
     // Get the user data
     const userDoc = await getDoc(doc(db, 'users', userUid));
@@ -242,6 +251,9 @@ export async function rejectInstructorApplication(
   adminUid: string,
   reason: string
 ): Promise<boolean> {
+  if (!db) {
+    throw new Error("Firebase db is not initialized");
+  }
   try {
     // Get the user data
     const userDoc = await getDoc(doc(db, 'users', userUid));

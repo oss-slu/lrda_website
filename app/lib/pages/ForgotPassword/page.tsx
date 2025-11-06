@@ -16,6 +16,10 @@ const ForgotPasswordPage = () => {
       return;
     }
 
+    if (!auth) {
+      toast.error("Firebase auth is not initialized");
+      return;
+    }
     try {
       await sendPasswordResetEmail(auth, email);
       toast.success("Password reset email sent!");

@@ -32,6 +32,10 @@ const SignupPage = () => {
         console.log("Fetching instructors...");
   
         // Query the 'users' collection to get instructors
+        if (!db) {
+          console.warn("Firebase db is not initialized");
+          return;
+        }
         const instructorsRef = collection(db, "users");
         const instructorsQuery = query(instructorsRef, where("isInstructor", "==", true));
         const querySnapshot = await getDocs(instructorsQuery);
@@ -66,6 +70,10 @@ const SignupPage = () => {
     if (!validateFirstName(firstName)) return;
     if (!validateLastName(lastName)) return;
 
+    if (!auth) {
+      console.error("Firebase auth is not initialized");
+      return;
+    }
     try {
       // Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -91,6 +99,9 @@ const SignupPage = () => {
       };
   
       // Store the user data in Firestore under the "users" collection
+      if (!db) {
+        throw new Error("Firebase db is not initialized");
+      }
       await setDoc(doc(db, "users", user.uid), userData);
   
       // If working under an instructor, add the student ID to the instructor's record

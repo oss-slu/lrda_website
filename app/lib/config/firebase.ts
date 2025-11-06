@@ -1,8 +1,13 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
-import { getFirestore, Timestamp } from "firebase/firestore";
+import type { FirebaseApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import type { Auth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import type { Firestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import type { Database } from "firebase/database";
 import { getStorage } from "firebase/storage";
+import type { FirebaseStorage } from "firebase/storage";
 
 // Firebase configuration details
 const firebaseConfig = {
@@ -16,9 +21,9 @@ const firebaseConfig = {
 
 // Only initialize Firebase if we have valid config (non-empty values)
 // This prevents Firebase from initializing during build when env vars are missing
-const shouldInitializeFirebase = () => {
+const shouldInitializeFirebase = (): boolean => {
   // Check if we have all required environment variables with actual values (not empty strings)
-  const hasValidConfig = 
+  const hasValidConfig: boolean = !!(
     firebaseConfig.apiKey && 
     firebaseConfig.apiKey.trim() !== '' &&
     firebaseConfig.authDomain && 
@@ -30,13 +35,18 @@ const shouldInitializeFirebase = () => {
     firebaseConfig.messagingSenderId &&
     firebaseConfig.messagingSenderId.trim() !== '' &&
     firebaseConfig.appId &&
-    firebaseConfig.appId.trim() !== '';
+    firebaseConfig.appId.trim() !== ''
+  );
   
   return hasValidConfig;
 };
 
 // Initialize Firebase only if conditions are met
-let app, auth, db, realtimeDb, storage;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let realtimeDb: Database | null = null;
+let storage: FirebaseStorage | null = null;
 
 if (shouldInitializeFirebase()) {
   try {

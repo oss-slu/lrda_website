@@ -96,6 +96,10 @@ const InstructorSignupPage = () => {
       return;
     }
   
+    if (!auth) {
+      console.error("Firebase auth is not initialized");
+      return;
+    }
     try {
       console.log("Starting user registration with Firebase Authentication...");
   
@@ -115,8 +119,11 @@ const InstructorSignupPage = () => {
        createdAt: Timestamp.now(),
      };
 
-     // Save user data in Firestore `users` collection
-     const userDocRef = doc(db, "users", user.uid);
+      // Save user data in Firestore `users` collection
+      if (!db) {
+        throw new Error("Firebase db is not initialized");
+      }
+      const userDocRef = doc(db, "users", user.uid);
      await setDoc(userDocRef, userData);
 
      toast.success("Instructor account created successfully! Logging you in...");
