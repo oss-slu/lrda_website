@@ -2,7 +2,10 @@ import { test, expect, Page } from '@playwright/test';
 
 test.describe('Notes Review UI', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000/lib/pages/notes');
+    await page.goto('/lib/pages/notes', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    // Wait for page to be interactive instead of networkidle (which may never complete)
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000); // Allow time for dynamic content
   });
 
   async function ensureNoteSelected(page: Page) {

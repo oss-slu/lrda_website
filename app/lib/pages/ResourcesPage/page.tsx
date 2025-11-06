@@ -3,7 +3,7 @@ import React from "react";
 
 const onlineResources = [
   {
-    title: "American Anthropolicial Association Ressources on Ethics",
+    title: "American Anthropolicial Association Resources on Ethics",
     url: "https://americananthro.org/about/anthropological-ethics/",
   },
   {
@@ -35,33 +35,57 @@ const FurtherReading = [
 ];
 
 // Helper function to format citation with italicized book title
-const formatCitation = (citation: string): React.ReactNode => {
-  // Find the last period (end of citation)
-  const lastPeriodIndex = citation.lastIndexOf('.');
-  
-  if (lastPeriodIndex === -1) {
-    return citation;
-  }
-  
+export const formatCitation = (citation: string): React.ReactNode => {
   // Find the comma (separates last name from first name in author)
   const commaIndex = citation.indexOf(',');
   
+  // Case 1: No comma - italicize the entire citation
   if (commaIndex === -1) {
-    // No comma found, return as-is
-    return citation;
+    return <span className="italic" style={{ fontStyle: 'italic' }}>{citation}</span>;
   }
   
-  // Find the period that marks the end of the author name
-  // The title starts after a period that is followed by a space and a capital letter
-  // We search from the end backwards to find the last such period before the final period
+  // Case 2 & 3: Has comma - find where the title starts
+  // The title starts after a period (or comma) that is followed by a space and a capital letter
+  
+  // First, try to find "et. al." (Case 3)
+  const etAlIndex = citation.toLowerCase().indexOf('et. al.');
+  if (etAlIndex !== -1) {
+    // "et. al." ends with a period, so find the space after it
+    const spaceAfterEtAl = citation.indexOf(' ', etAlIndex + 7);
+    if (spaceAfterEtAl !== -1 && spaceAfterEtAl + 1 < citation.length && /[A-Z]/.test(citation[spaceAfterEtAl + 1])) {
+      const title = citation.substring(spaceAfterEtAl + 1).trim();
+      const author = citation.substring(0, spaceAfterEtAl);
+      return (
+        <>
+          {author} <span className="italic" style={{ fontStyle: 'italic' }}>{title}</span>
+        </>
+      );
+    }
+  }
+  
+  // Otherwise, find the last period before the end that is followed by space and capital letter (Case 2)
+  const lastPeriodIndex = citation.lastIndexOf('.');
   let authorEndIndex = -1;
   
-  for (let i = lastPeriodIndex - 1; i > commaIndex; i--) {
-    if (citation[i] === '.' && i + 1 < citation.length && citation[i + 1] === ' ') {
-      // Check if the next character after the space is a capital letter (start of title)
-      if (i + 2 < citation.length && /[A-Z]/.test(citation[i + 2])) {
-        authorEndIndex = i;
-        break;
+  // Search backwards from the end to find the period that starts the title
+  // Start from lastPeriodIndex (not lastPeriodIndex - 1) to check the period itself
+  const searchStart = lastPeriodIndex !== -1 ? lastPeriodIndex : citation.length - 1;
+  for (let i = searchStart; i > commaIndex; i--) {
+    if (citation[i] === '.' && i + 1 < citation.length && citation[i + 1] === ' ' && /[A-Z]/.test(citation[i + 2])) {
+      authorEndIndex = i;
+      break;
+    }
+  }
+  
+  // If no period found, try to find a comma followed by space and capital letter
+  if (authorEndIndex === -1) {
+    for (let i = citation.length - 1; i > commaIndex; i--) {
+      if (citation[i] === ',' && i + 1 < citation.length && citation[i + 1] === ' ' && /[A-Z]/.test(citation[i + 2])) {
+        const remainingText = citation.substring(i + 2);
+        if (remainingText.length > 10) {
+          authorEndIndex = i;
+          break;
+        }
       }
     }
   }
@@ -72,12 +96,18 @@ const formatCitation = (citation: string): React.ReactNode => {
   }
   
   // Split into author and title
+  // Title starts after the period and space (authorEndIndex + 2) and goes to the end
   const author = citation.substring(0, authorEndIndex + 1);
-  const title = citation.substring(authorEndIndex + 2, lastPeriodIndex).trim();
+  let title = citation.substring(authorEndIndex + 2).trim();
+  
+  // Remove ending period if present (it's part of the citation format, not the title)
+  if (title.endsWith('.')) {
+    title = title.slice(0, -1);
+  }
   
   return (
     <>
-      {author} <span className="italic">{title}</span>.
+      {author} <span className="italic" style={{ fontStyle: 'italic' }}>{title}</span>
     </>
   );
 };
@@ -97,9 +127,9 @@ const ResourcesPage: React.FC = () => {
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:underline [&_span]:text-blue-600 [&_span]:italic"
               >
-                {resource.title}
+                {formatCitation(resource.title)}
               </a>
             </li>
           ))}

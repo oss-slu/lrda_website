@@ -14,13 +14,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Stories Page', () => {
   test('should display stories page with basic content', async ({ page }) => {
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage');
+    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
     
     // Wait a bit more for any dynamic content to load
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
     
     // Check that page loaded (not a 404 or error)
     const hasContent = await page.locator('div').count() > 0;
