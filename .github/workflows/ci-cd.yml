@@ -14,6 +14,14 @@ on:
       - memoryleak
       - december-sprint
 
+# Prevent duplicate workflow runs
+# Group by workflow and branch name to prevent duplicate runs when PR is synchronized
+# When a PR is synchronized, both 'push' and 'pull_request' events fire
+# This groups them together so only one runs at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   actions: read
