@@ -146,8 +146,8 @@ describe("formatCitation function", () => {
   // Import formatCitation for testing
   let formatCitation: (citation: string) => React.ReactNode;
   beforeAll(() => {
-    // Dynamically import the function
-    const module = require("../lib/pages/ResourcesPage/page");
+    // Dynamically import the function from the utility file
+    const module = require("../lib/utils/citation_formatter");
     formatCitation = module.formatCitation;
   });
 

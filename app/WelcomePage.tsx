@@ -47,6 +47,14 @@ function WelcomeHero() {
           >
             Explore the Map
           </a>
+          <a
+            href="https://www.slu.edu/arts-and-sciences/center-on-lived-religion/index.php"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-3 rounded-full bg-white/90 hover:bg-white text-blue-700 font-semibold text-lg shadow-lg transition border border-blue-100"
+          >
+            Visit us
+          </a>
         </div>
       </div>
     </section>
