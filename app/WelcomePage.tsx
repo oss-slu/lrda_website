@@ -26,17 +26,13 @@ function WelcomeHero() {
         />
       </div>
 
-      <div className="relative text-center text-white p-8 sm:p-12 max-w-4xl z-10">
-        <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight md:leading-[1.1] mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 pb-2">
-          Where's Religion?
+      <div className="relative text-center text-white p-8 sm:p-12 w-full z-10">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight leading-none mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 pb-2 whitespace-nowrap">
+          Where&apos;s Religion?
         </h1>
         <p className="mt-6 text-xl sm:text-2xl md:text-3xl font-light text-white/95 leading-relaxed max-w-2xl mx-auto">
-          The platform advancing the study of <span className="font-semibold text-blue-300">lived religion</span>
+          advancing the study of <span className="font-semibold text-blue-300">religion and public life</span>
         </p>
-        <div className="inline-block mt-8 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm font-medium">
-          Open Source · Collaborative · Ethnography
-        </div>
-        {/* CTA Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="/lib/pages/signupPage"

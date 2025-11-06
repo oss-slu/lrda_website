@@ -3,43 +3,35 @@ import React from "react";
 
 const onlineResources = [
   {
-    title: "AAA Statement on Ethics",
-    url: "https://americananthro.org/about/policies/statement-on-ethics/",
+    title: "American Anthropolicial Association Ressources on Ethics",
+    url: "https://americananthro.org/about/anthropological-ethics/",
   },
   {
-    title: "AAA Handbook on Ethical Issues",
-    url: "https://americananthro.org/learn-teach/handbook-on-ethical-issues-in-anthropology/",
-  },
-  {
-    title: "Engaging Communities",
+    title: "Malley, Suzanne Blum and Ames Hawkins. Engaging Communities: Writing Ethnographic Research",
     url: "http://www.engagingcommunities.org/introduction/",
   },
   {
-    title: "Ethnographies of Work",
+    title: "Tyner- Millings, Alia R. et. al. Ethnography Made Easy",
     url: "https://cuny.manifoldapp.org/projects/ethnographies-of-work",
   },
   {
-    title: "Fieldnotes - Emerson",
+    title: "Emerson, Robert, Rachel Fretz, and Linda Shaw, Writing Ethnographic Fieldnotes",
     url: "https://williamwolff.org/wp-content/uploads/2016/01/emerson-fieldnotes-2011.pdf",
-  },
-  {
-    title: "Fieldnote Vocabulary - UW",
-    url: "https://faculty.washington.edu/stevehar/Fieldnote%20Vocabulary.pdf",
   },
 ];
 
-const analogueResources = [
-  "Agar, Michael. Speaking of Ethnography (SAGE Publications, 1986).",
-  "Atkinson, Robert. The Life Story Interview (SAGE Publications, 1998).",
-  "Bernard, H. Russell. Research Methods in Anthropology (Rowman & Littlefield, 2017).",
-  "Certeau, Michel de. The Practice of Everyday Life (University of California Press, 1984).",
-  "Geertz, Clifford. Local Knowledge: Further Essays In Interpretive Anthropology (Basic Books, 200).",
-  "Kimmel, Allan. Ethics and Values in Applied Social Research (SAGE Publications, 1988).",
-  "Maxwell, Joseph. Qualitative Research Design: An Interactive Approach (SAGE Publications, 2012).",
-  "Pelto, Pertti J. Applied Ethnography: Guidelines for Field Research (Routledge, 2013).",
-  "Scott, John. Social Network Analysis: A Handbook (SAGE Publications, 2011).",
-  "Stewart, David and Prem Shamdasani. Focus Groups: Theory and Practice (SAGE Publications, 2014).",
-  "Weller, Susan and A. Kimball. Romney. Systematic Data Collection (SAGE Publications, 1988).",
+const furtherReading = [
+  'Agar, Michael. <i>Speaking of Ethnography</i>',
+  "Atkinson, Robert. The Life Story Interview",
+  "Bernard, H. Russell. Research Methods in Anthropology",
+  "Certeau, Michel de. The Practice of Everyday Life",
+  "Geertz, Clifford. Local Knowledge: Further Essays In Interpretive Anthropology",
+  "Kimmel, Allan. Ethics and Values in Applied Social Research",
+  "Maxwell, Joseph. Qualitative Research Design: An Interactive Approach",
+  "Pelto, Pertti J. Applied Ethnography: Guidelines for Field Research",
+  "Scott, John. Social Network Analysis: A Handbook",
+  "Stewart, David and Prem Shamdasani. Focus Groups: Theory and Practice",
+  "Weller, Susan and A. Kimball. Romney. Systematic Data Collection",
 ];
 
 const ResourcesPage: React.FC = () => {
@@ -68,9 +60,9 @@ const ResourcesPage: React.FC = () => {
 
       {/* Analogue Resources */}
       <section>
-        <h2 className="text-2xl font-semibold mb-6">Analogue Resources</h2>
+        <h2 className="text-2xl font-semibold mb-6">Further Reading</h2>
         <ul className="space-y-4">
-          {analogueResources.map((citation, index) => (
+          {furtherReading.map((citation, index) => (
             <li key={index} className="bg-white shadow-md p-4 rounded-md text-gray-800">
               {citation}
             </li>
