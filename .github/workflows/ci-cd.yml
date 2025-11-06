@@ -15,11 +15,20 @@ on:
       - december-sprint
 
 # Prevent duplicate workflow runs
-# Group by workflow and branch name to prevent duplicate runs when PR is synchronized
 # When a PR is synchronized, both 'push' and 'pull_request' events fire
-# This groups them together so only one runs at a time
+# Strategy:
+# - If it's a push event (not part of a PR), let it run
+# - If it's a pull_request event, let it run
+# - If both fire (PR synchronized), prefer pull_request event:
+#   * Use a concurrency group that groups by branch/PR
+#   * Set cancel-in-progress: true so the later event cancels the earlier one
+#   * Since pull_request events typically fire after push events, the pull_request will run
+#   * For push events, we'll check if there's an open PR and skip if so
 concurrency:
+  # Group by PR head ref if it's a PR event, otherwise by branch name
+  # This ensures push and pull_request events for the same branch/PR are grouped together
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  # Cancel in-progress runs when a new run starts (ensures only one runs at a time)
   cancel-in-progress: true
 
 permissions:
@@ -28,10 +37,52 @@ permissions:
   deployments: write      # Required for Netlify deployment status
 
 jobs:
+  # Check if push event is from a PR branch (to skip it in favor of pull_request event)
+  check-pr:
+    name: Check for open PR
+    runs-on: ubuntu-latest
+    # Always run, but only check for push events
+    outputs:
+      has-pr: ${{ steps.check.outputs.has-pr || steps.default.outputs.has-pr || 'false' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check if branch has open PR
+        id: check
+        if: github.event_name == 'push'
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          # Check if there's an open PR for this branch
+          PR_COUNT=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "has-pr=true" >> $GITHUB_OUTPUT
+            echo "Found open PR for branch $BRANCH_NAME, will skip push event"
+          else
+            echo "has-pr=false" >> $GITHUB_OUTPUT
+            echo "No open PR for branch $BRANCH_NAME, will run push event"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set default for pull_request events
+        id: default
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "has-pr=false" >> $GITHUB_OUTPUT
+          echo "Pull request event - will run workflow"
+
   # Job 1: Unit Tests
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    # For push events: only run if there's no open PR (let pull_request event handle PRs)
+    # For pull_request events: always run
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
 
     steps:
       - name: Checkout repository
@@ -71,7 +122,12 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [check-pr, unit-tests]
+    # For push events: only run if there's no open PR (let pull_request event handle PRs)
+    # For pull_request events: always run
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
     timeout-minutes: 60
 
     steps:
@@ -137,9 +193,13 @@ jobs:
   deploy-netlify:
     name: Deploy to Netlify
     runs-on: ubuntu-latest
-    needs: [unit-tests, e2e-tests]
-    # Run on all PRs (including from forks) and pushes
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    needs: [check-pr, unit-tests, e2e-tests]
+    # For push events: only run if there's no open PR (let pull_request event handle PRs)
+    # For pull_request events: always run
+    # Also allow direct pushes to main (production deployments)
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || (needs.check-pr.result == 'success' && needs.check-pr.outputs.has-pr != 'true')))
     # Allow workflow to run from forks (needed for PRs from external contributors)
     permissions:
       contents: read

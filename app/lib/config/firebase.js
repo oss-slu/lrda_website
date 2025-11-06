@@ -1,9 +1,8 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore, Timestamp } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 import { getStorage } from "firebase/storage";
-
 
 // Firebase configuration details
 const firebaseConfig = {
@@ -15,13 +14,64 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   };
 
-// Initialize Firebase Auth
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Only initialize Firebase if we have valid config (non-empty values)
+// This prevents Firebase from initializing during build when env vars are missing
+const shouldInitializeFirebase = () => {
+  // Check if we have all required environment variables with actual values (not empty strings)
+  const hasValidConfig = 
+    firebaseConfig.apiKey && 
+    firebaseConfig.apiKey.trim() !== '' &&
+    firebaseConfig.authDomain && 
+    firebaseConfig.authDomain.trim() !== '' &&
+    firebaseConfig.projectId &&
+    firebaseConfig.projectId.trim() !== '' &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.storageBucket.trim() !== '' &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.messagingSenderId.trim() !== '' &&
+    firebaseConfig.appId &&
+    firebaseConfig.appId.trim() !== '';
+  
+  return hasValidConfig;
+};
 
-// Initialize Firestore and other services
-const db = getFirestore(app);
-const realtimeDb = getDatabase(app); // Realtime Database
-const storage = getStorage(app);
+// Initialize Firebase only if conditions are met
+let app, auth, db, realtimeDb, storage;
+
+if (shouldInitializeFirebase()) {
+  try {
+    // Check if Firebase is already initialized
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = existingApps[0];
+    }
+    
+    auth = getAuth(app);
+    db = getFirestore(app);
+    realtimeDb = getDatabase(app);
+    storage = getStorage(app);
+  } catch (error) {
+    // If initialization fails, log error but don't crash during build
+    if (typeof window !== 'undefined') {
+      console.error('Firebase initialization error:', error);
+    }
+    // Set to null so imports don't fail, but usage will need to check
+    app = null;
+    auth = null;
+    db = null;
+    realtimeDb = null;
+    storage = null;
+  }
+} else {
+  // During build or if config is missing, set to null
+  // Components should handle null gracefully
+  app = null;
+  auth = null;
+  db = null;
+  realtimeDb = null;
+  storage = null;
+}
 
 export { auth, db, realtimeDb, storage };  // Export db to use Firestore in other files

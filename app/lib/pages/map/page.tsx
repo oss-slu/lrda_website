@@ -168,57 +168,68 @@ const Page = () => {
 
   useEffect(() => {
     let isSubscribed = true;
-    const fetchLastLocation = async () => {
+    
+    const initializeLocation = async () => {
       try {
-        const lastLocationString = await getItem("LastLocation");
-        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
+        // First, try to get the current location
+        const currentLocation = (await getLocation()) as Location;
         if (isSubscribed) {
-          setMapCenter(lastLocation);
+          setMapCenter(currentLocation);
           setMapZoom(10);
           setLocationFound(true);
+          // Update the map if it's already loaded
+          if (mapRef.current) {
+            mapRef.current.setCenter(currentLocation);
+            mapRef.current.setZoom(10);
+          }
+          await setItem("LastLocation", JSON.stringify(currentLocation));
         }
       } catch (error) {
-        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-        setMapCenter(defaultLocation as Location);
-        setMapZoom(10);
-        setLocationFound(true);
-        console.error("Failed to fetch the last location", error);
+        // If current location fails, try to use last known location
+        try {
+          const lastLocationString = await getItem("LastLocation");
+          const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
+          if (isSubscribed && lastLocation) {
+            setMapCenter(lastLocation);
+            setMapZoom(10);
+            setLocationFound(true);
+            // Update the map if it's already loaded
+            if (mapRef.current) {
+              mapRef.current.setCenter(lastLocation);
+              mapRef.current.setZoom(10);
+            }
+          } else {
+            // Fallback to default location
+            const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+            setMapCenter(defaultLocation as Location);
+            setMapZoom(10);
+            setLocationFound(true);
+            if (mapRef.current) {
+              mapRef.current.setCenter(defaultLocation);
+              mapRef.current.setZoom(10);
+            }
+          }
+        } catch (storageError) {
+          // Final fallback to default location
+          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+          setMapCenter(defaultLocation as Location);
+          setMapZoom(10);
+          setLocationFound(true);
+          if (mapRef.current) {
+            mapRef.current.setCenter(defaultLocation);
+            mapRef.current.setZoom(10);
+          }
+          console.error("Failed to fetch location:", error, storageError);
+        }
       }
     };
-    fetchLastLocation();
+
+    initializeLocation();
+
     return () => {
       isSubscribed = false;
     };
   }, []);
-
-  useEffect(() => {
-    let isComponentMounted = true;
-
-    const fetchCurrentLocationAndUpdate = async () => {
-      try {
-        const currentLocation = (await getLocation()) as Location;
-        if (!locationFound && isComponentMounted) {
-          setMapCenter(currentLocation);
-          setMapZoom(10);
-        }
-        await setItem("LastLocation", JSON.stringify(currentLocation));
-      } catch (error) {
-        if (isComponentMounted) {
-          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-          setMapCenter(defaultLocation);
-          setMapZoom(10);
-          setLocationFound(true);
-          console.log("Using last known location due to error:", error);
-        }
-      }
-    };
-
-    fetchCurrentLocationAndUpdate();
-
-    return () => {
-      isComponentMounted = false;
-    };
-  }, [locationFound]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -363,19 +374,34 @@ const Page = () => {
       updateBounds();
     });
 
-    // Set initial center and zoom programmatically instead of using props
-    map.setCenter(mapCenter);
-    map.setZoom(mapZoom);
+    // Set initial center and zoom from state (will be updated when location is found)
+    if (mapCenter.lat && mapCenter.lng) {
+      map.setCenter(mapCenter);
+      map.setZoom(mapZoom);
+    } else {
+      // Default to a reasonable location while waiting for user location
+      const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+      map.setCenter(defaultLocation);
+      map.setZoom(10);
+    }
 
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, []);
+  }, [mapCenter, mapZoom]);
 
-  // Update map zoom when mapZoom state changes (from plus/minus buttons)
+  // Update map center and zoom when state changes (from location fetch or plus/minus buttons)
   useEffect(() => {
-    if (mapRef.current) {
+    if (mapRef.current && locationFound) {
+      const currentCenter = mapRef.current.getCenter();
       const currentZoom = mapRef.current.getZoom();
+      
+      // Update center if it changed
+      if (currentCenter && (Math.abs(currentCenter.lat() - mapCenter.lat) > 0.001 || Math.abs(currentCenter.lng() - mapCenter.lng) > 0.001)) {
+        mapRef.current.setCenter(mapCenter);
+      }
+      
+      // Update zoom if it changed
       if (currentZoom !== mapZoom) {
         isZoomingProgrammatically.current = true;
         mapRef.current.setZoom(mapZoom);
@@ -385,7 +411,7 @@ const Page = () => {
         }, 100);
       }
     }
-  }, [mapZoom]);
+  }, [mapZoom, mapCenter, locationFound]);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
@@ -751,6 +777,8 @@ const Page = () => {
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={mapCenter}
+            zoom={mapZoom}
             onLoad={onMapLoad}
             onDragStart={handleMapClick}
             onClick={handleMapClick}
