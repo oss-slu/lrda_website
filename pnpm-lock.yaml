@@ -329,6 +329,9 @@ devDependencies:
   '@jest/globals':
     specifier: ^30.2.0
     version: 30.2.0
+  '@netlify/plugin-nextjs':
+    specifier: ^5.14.5
+    version: 5.14.5
   '@playwright/test':
     specifier: ^1.56.1
     version: 1.56.1
@@ -2727,6 +2730,11 @@ packages:
       '@tybys/wasm-util': 0.10.1
     dev: true
     optional: true
+
+  /@netlify/plugin-nextjs@5.14.5:
+    resolution: {integrity: sha512-AEt6p33YoZGnS4oV1oJnQZiMhzVptZJF7MyxygXrIuR0H0o72GBVIyn3/k1pyNtmWYyWL7WjZLLmR0aYt/OYqg==}
+    engines: {node: '>=18.0.0'}
+    dev: true
 
   /@next/env@16.0.1:
     resolution: {integrity: sha512-LFvlK0TG2L3fEOX77OC35KowL8D7DlFF45C0OvKMC4hy8c/md1RC4UMNDlUGJqfCoCS2VWrZ4dSE6OjaX5+8mw==}
