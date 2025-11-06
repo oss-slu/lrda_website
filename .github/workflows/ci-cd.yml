@@ -264,7 +264,8 @@ jobs:
               if [ -n "$PREVIEW_URL" ]; then
                 echo "::notice::Preview URL: ${PREVIEW_URL}"
                 # Try to comment on PR (may fail for fork PRs, which is okay)
-                COMMENT_BODY="🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** ${PREVIEW_URL}\n📝 **Branch:** \`${PR_BRANCH}\`\n👤 **Author:** @${PR_AUTHOR}"
+                # Use $'...' syntax to properly interpret escape sequences
+                COMMENT_BODY=$'🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** '"${PREVIEW_URL}"$'\n📝 **Branch:** `'"${PR_BRANCH}"$'`\n👤 **Author:** @'"${PR_AUTHOR}"
                 gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
               fi
             fi
