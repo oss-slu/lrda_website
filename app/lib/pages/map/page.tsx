@@ -315,7 +315,9 @@ const Page = () => {
           }
           showTemporaryPopup(note);
           setHoveredNoteId(note.id);
-          scrollToNoteTile(note.id);
+          if (isPanelOpen) {
+            scrollToNoteTile(note.id);
+          }
           setActiveNote(note);
         }); 
 
@@ -521,7 +523,9 @@ const Page = () => {
     }
 
     setActiveNote(note);
-    scrollToNoteTile(note.id);
+    if (isPanelOpen) {
+      scrollToNoteTile(note.id);
+    }
 
     const map = mapRef.current;
     console.log(" mapRef.current:", !!map);
