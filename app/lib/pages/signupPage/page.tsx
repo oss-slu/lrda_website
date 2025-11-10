@@ -256,6 +256,8 @@ const SignupPage = () => {
             >
               Sign Up
             </button>
+
+            <Link href="/lib/pages/InstructorSignupPage" className="w-full bg-blue-200 text-white p-3 rounded-md"></Link>
           </div>
         </div>
       </div>

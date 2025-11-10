@@ -105,7 +105,7 @@ function AboutIntro() {
             <p className="text-lg sm:text-xl text-slate-700">
               A keystone outcome of the{" "}
               <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
-                Center on Lived Religion
+                <a href="https://www.slu.edu/arts-and-sciences/center-on-lived-religion/index.php" target="_blank" rel="noopener noreferrer">Center on Lived Religion</a>
               </span>{" "}
               at Saint Louis University
             </p>

@@ -46,6 +46,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import CommentSidebar from "../comments/CommentSidebar";
 // intro.js will be loaded dynamically to avoid SSR issues
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import "intro.js/minified/introjs.min.css";
 
 const user = User.getInstance();
 
@@ -75,24 +76,130 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
   const deleteRef = useRef<HTMLDivElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
 
+  const resolveMediaType = (media: any): string | undefined => {
+    if (!media) return undefined;
+    if (typeof media.getType === "function") {
+      try {
+        const type = media.getType();
+        if (type === "photo") return "image";
+        return type;
+      } catch {
+        return undefined;
+      }
+    }
+    if (typeof media.type === "string") {
+      const type = media.type.toLowerCase();
+      if (type === "photo") return "image";
+      return type;
+    }
+    return undefined;
+  };
 
+  const toPhotoType = (media: any): PhotoType | null => {
+    if (!media) return null;
+    if (media instanceof PhotoType) return media;
+    const uri =
+      media.uri ??
+      (typeof media.getUri === "function" ? media.getUri() : undefined);
+    if (!uri) return null;
+    return new PhotoType({
+      uuid: media.uuid ?? media.id ?? uuidv4(),
+      uri,
+      type: "image",
+    });
+  };
+
+  const toVideoType = (media: any): VideoType | null => {
+    if (!media) return null;
+    if (media instanceof VideoType) return media;
+    const uri =
+      media.uri ??
+      (typeof media.getUri === "function" ? media.getUri() : undefined);
+    if (!uri) return null;
+    return new VideoType({
+      uuid: media.uuid ?? media.id ?? uuidv4(),
+      uri,
+      thumbnail: media.thumbnail ?? "",
+      duration: media.duration ?? "",
+      type: "video",
+    });
+  };
+
+  const toAudioType = (media: any): AudioType | null => {
+    if (!media) return null;
+    if (media instanceof AudioType) return media;
+    const uri =
+      media.uri ??
+      (typeof media.getUri === "function" ? media.getUri() : undefined);
+    if (!uri) return null;
+    return new AudioType({
+      uuid: media.uuid ?? media.id ?? uuidv4(),
+      uri,
+      duration: media.duration ?? "0:00",
+      name: media.name ?? "Audio Note",
+      isPlaying: typeof media.isPlaying === "boolean" ? media.isPlaying : false,
+      type: "audio",
+    });
+  };
+
+  const normalizeImageMedia = (mediaList: any[] = []): PhotoType[] =>
+    mediaList
+      .filter((item) => resolveMediaType(item) === "image")
+      .map(toPhotoType)
+      .filter((item): item is PhotoType => Boolean(item));
+
+  const normalizeVideoMedia = (mediaList: any[] = []): VideoType[] =>
+    mediaList
+      .filter((item) => resolveMediaType(item) === "video")
+      .map(toVideoType)
+      .filter((item): item is VideoType => Boolean(item));
+
+  const normalizeAudioMedia = (mediaList: any[] = []): AudioType[] =>
+    mediaList.map(toAudioType).filter((item): item is AudioType => Boolean(item));
+
+  const escapeRegExp = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   // Function to process content and convert image URLs to proper img tags
-  const processContentForImages = (content: string, images: PhotoType[]): string => {
+  const processContentForImages = (
+    content: string,
+    images: PhotoType[]
+  ): string => {
     if (!content || !images || images.length === 0) return content;
-    
+
     let processedContent = content;
-    
-    // Replace image URLs with proper img tags
+
     images.forEach((image) => {
-      if (image.uri) {
-        // Look for the image URI in the content and replace with img tag
-        const imageUrlRegex = new RegExp(image.uri.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-        const imgTag = `<img src="${image.uri}" alt="Image" loading="lazy" />`;
-        processedContent = processedContent.replace(imageUrlRegex, imgTag);
+      const uri = image?.uri;
+      if (!uri) {
+        return;
       }
+
+      if (
+        processedContent.includes(`src="${uri}"`) ||
+        processedContent.includes(`src='${uri}'`)
+      ) {
+        return;
+      }
+
+      const imageUrlRegex = new RegExp(escapeRegExp(uri), "g");
+
+      processedContent = processedContent.replace(
+        imageUrlRegex,
+        (match, offset, original) => {
+          const preceding = original
+            .slice(Math.max(0, offset - 5), offset)
+            .toLowerCase();
+
+          if (preceding.endsWith('src="') || preceding.endsWith("src='")) {
+            return match;
+          }
+
+          return `<img src="${uri}" alt="Image" loading="lazy" style="max-width:100%;height:auto;" />`;
+        }
+      );
     });
-    
+
     return processedContent;
   };
 
@@ -122,69 +229,83 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
 
       // Check if all elements are present
       if (addNote && title && save && deleteButton && date && location && typeof window !== 'undefined') {
-        import('intro.js').then((introJsModule) => {
-          const introJs = introJsModule.default;
-          const intro = introJs();
-          const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
-
-          if (!hasAddNoteIntroBeenShown) {
-            intro.setOptions({
-            steps: [
-              {
-                element: addNote,
-                intro: "Click this button to add a note",
-              },
-              {
-                element: title,
-                intro: "You can name your note here!",
-              },
-              {
-                element: save,
-                intro: "Make sure you save your note.",
-              },
-              {
-                element: deleteButton,
-                intro: "If you don't like your note, you can delete it here.",
-              },
-              {
-                element: date,
-                intro: "We will automatically date and time your entry!",
-              },
-              {
-                element: location,
-                intro: "Make sure you specify the location of your note.",
-              },
-            ],
-            scrollToElement: false,
-            skipLabel: "Skip",
-          });
-
-          intro.oncomplete(() => {
-            // After the intro is completed, set the cookie
-            setCookie("addNoteIntroShown", "true", 365);
-          });
-
-          intro.onexit(() => {
-            // Set the cookie if the user exits the intro
-            setCookie("addNoteIntroShown", "true", 365);
-          });
-
-          intro.start();
-
-          // Apply inline styling to the skip button after a short delay to ensure it has rendered
-          setTimeout(() => {
-            const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
-            if (skipButton) {
-              skipButton.style.position = "absolute";
-              skipButton.style.top = "2px"; // Move it up by decreasing the top value
-              skipButton.style.right = "20px"; // Adjust positioning as needed
-              skipButton.style.fontSize = "18px"; // Adjust font size as needed
-              skipButton.style.padding = "4px 10px"; // Adjust padding as needed
+        Promise.all([
+          import("intro.js"),
+          import("intro.js/minified/introjs.min.css"),
+        ])
+          .then(([introJsModule]) => {
+            const introFactory =
+              (introJsModule as any).introJs ||
+              (introJsModule as any).default ||
+              introJsModule;
+            if (typeof introFactory !== "function") {
+              console.error("intro.js failed to load correctly");
+              return;
             }
-            }, 100); // 100ms delay to wait for rendering
-          }
-          observer.disconnect(); // Stop observing once the elements are found and the intro is set up
-        });
+            const intro = introFactory();
+            const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
+
+            if (!hasAddNoteIntroBeenShown) {
+              intro.setOptions({
+              steps: [
+                {
+                  element: addNote,
+                  intro: "Click this button to add a note",
+                },
+                {
+                  element: title,
+                  intro: "You can name your note here!",
+                },
+                {
+                  element: save,
+                  intro: "Make sure you save your note.",
+                },
+                {
+                  element: deleteButton,
+                  intro: "If you don't like your note, you can delete it here.",
+                },
+                {
+                  element: date,
+                  intro: "We will automatically date and time your entry!",
+                },
+                {
+                  element: location,
+                  intro: "Make sure you specify the location of your note.",
+                },
+              ],
+              scrollToElement: false,
+              skipLabel: "Skip",
+            });
+
+            intro.oncomplete(() => {
+              // After the intro is completed, set the cookie
+              setCookie("addNoteIntroShown", "true", 365);
+            });
+
+            intro.onexit(() => {
+              // Set the cookie if the user exits the intro
+              setCookie("addNoteIntroShown", "true", 365);
+            });
+
+            intro.start();
+
+            // Apply inline styling to the skip button after a short delay to ensure it has rendered
+            setTimeout(() => {
+              const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
+              if (skipButton) {
+                skipButton.style.position = "absolute";
+                skipButton.style.top = "2px"; // Move it up by decreasing the top value
+                skipButton.style.right = "20px"; // Adjust positioning as needed
+                skipButton.style.fontSize = "18px"; // Adjust font size as needed
+                skipButton.style.padding = "4px 10px"; // Adjust padding as needed
+              }
+              }, 100); // 100ms delay to wait for rendering
+            }
+            observer.disconnect(); // Stop observing once the elements are found and the intro is set up
+          })
+          .catch((error) => {
+            console.error("Failed to lazy load intro.js", error);
+          });
       }
     });
 
@@ -264,9 +385,10 @@ useEffect(() => {
       "";
     
     // Process content to convert image URLs to proper img tags
-    const processedHtml = processContentForImages(initialHtml, normalizedInitialNote.media.filter(
-      (m) => m.getType && m.getType() === "image"
-    ) as PhotoType[]);
+    const processedHtml = processContentForImages(
+      initialHtml,
+      normalizeImageMedia(normalizedInitialNote.media as any[])
+    );
     
     noteHandlers.setEditorContent(processedHtml);
 
@@ -280,17 +402,9 @@ useEffect(() => {
     noteHandlers.setApprovalRequested(
       normalizedInitialNote.approvalRequested
     );
-    noteHandlers.setImages(
-      normalizedInitialNote.media.filter(
-        (m) => m.getType && m.getType() === "image"
-      ) as PhotoType[]
-    );
-    noteHandlers.setVideos(
-      normalizedInitialNote.media.filter(
-        (m) => m.getType && m.getType() === "video"
-      ) as VideoType[]
-    );
-    noteHandlers.setAudio(normalizedInitialNote.audio);
+    noteHandlers.setImages(normalizeImageMedia(normalizedInitialNote.media as any[]));
+    noteHandlers.setVideos(normalizeVideoMedia(normalizedInitialNote.media as any[]));
+    noteHandlers.setAudio(normalizeAudioMedia(normalizedInitialNote.audio as any[]));
     noteHandlers.setTags(
       normalizedInitialNote.tags.map((t) =>
         typeof t === "string" ? { label: t, origin: "user" } : t
@@ -426,20 +540,14 @@ useEffect(() => {
       
       // Process content to convert image URLs to proper img tags
       const processedContent = processContentForImages(
-        initialNote.text || "", 
-        (initialNote.media.filter(
-          (item) => item.getType() === "image"
-        ) as PhotoType[]) || []
+        initialNote.text || "",
+        normalizeImageMedia(initialNote.media as any[])
       );
       
       noteHandlers.setEditorContent(processedContent);
       noteHandlers.setTitle(initialNote.title || "");
 
-      noteHandlers.setImages(
-        (initialNote.media.filter(
-          (item) => item.getType() === "image"
-        ) as PhotoType[]) || []
-      );
+      noteHandlers.setImages(normalizeImageMedia(initialNote.media as any[]));
       noteHandlers.setTime(initialNote.time || new Date());
       noteHandlers.setLongitude(initialNote.longitude || "");
       noteHandlers.setLatitude(initialNote.latitude || "");
@@ -450,7 +558,7 @@ useEffect(() => {
         )
       );
 
-      noteHandlers.setAudio(initialNote.audio || []);
+      noteHandlers.setAudio(normalizeAudioMedia(initialNote.audio as any[]));
       noteHandlers.setIsPublished(initialNote.published || false);
 
       // Set approvalRequested if present in initialNote
@@ -458,11 +566,7 @@ useEffect(() => {
         initialNote.approvalRequested ?? false
       );
 
-      noteHandlers.setVideos(
-        (initialNote.media.filter(
-          (item) => item.getType() === "video"
-        ) as VideoType[]) || []
-      );
+      noteHandlers.setVideos(normalizeVideoMedia(initialNote.media as any[]));
     }
   }, [initialNote]);
 
@@ -920,7 +1024,7 @@ useEffect(() => {
         <div className="flex-grow w-full p-2 sm:p-4 flex flex-col">
           <ResizablePanelGroup direction="horizontal" className="w-full bg-white rounded min-h-[60vh] md:min-h-[70vh] lg:min-h-[75vh]">
             <ResizablePanel
-              defaultSize={70}
+              defaultSize={canComment && isCommentSidebarOpen ? 70 : 100}
               minSize={45}
               maxSize={85}
               className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"

@@ -41,51 +41,26 @@ import {
   TableImproved,
 } from "mui-tiptap";
 
-import { Image } from '@tiptap/extension-image'
-
-// TipTap v3: Use Image.extend() to create a custom image node
-const LazyImage = Image.extend({
-  name: 'image',
-
+const LazyResizableImage = ResizableImage.extend({
   addAttributes() {
+    const parentAttributes = this.parent?.() ?? {};
     return {
-      src: {},
-      alt: {
-        default: null,
-      },
-      title: {
-        default: null,
-      },
+      ...parentAttributes,
       loading: {
-        default: 'lazy',
+        default: "lazy",
+        renderHTML: (attributes: any) => ({
+          loading: attributes.loading,
+        }),
       },
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'img[src][loading="lazy"]',
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
-    return ['img', HTMLAttributes];
-  },
-
-  addCommands() {
-    return {
-      setImage: (options: Record<string, any>) => ({ commands }: any) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
+      style: {
+        default: "max-width:100%;height:auto;",
+        renderHTML: (attributes: any) => ({
+          style: attributes.style,
+        }),
       },
     };
   },
 });
-
 
 export type UseExtensionsOptions = {
   /** Placeholder hint to show in the text input area before a user types a message. */
@@ -175,7 +150,7 @@ export default function useExtensions({
       // https://github.com/ueberdosis/tiptap/issues/4006)
       Bold,
       Blockquote,
-      LazyImage,
+      LazyResizableImage,
       Code,
       Italic,
       Underline,

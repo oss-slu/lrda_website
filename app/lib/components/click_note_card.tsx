@@ -105,6 +105,10 @@ const ClickableNote: React.FC<{
     return cleanedContent.trim();
   };
 
+  const handleNoteClick = React.useCallback(() => {
+    console.log("ClickableNote opened note:", note);
+  }, [note]);
+
   // Load DOMPurify only on client side to avoid SSR issues
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -128,7 +132,7 @@ const ClickableNote: React.FC<{
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="z-40">
+        <div className="z-40" onClick={handleNoteClick}>
           <NoteCard note={note} />
         </div>
       </DialogTrigger>

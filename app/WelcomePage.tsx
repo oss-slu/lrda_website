@@ -47,14 +47,6 @@ function WelcomeHero() {
           >
             Explore the Map
           </a>
-          <a
-            href="https://www.slu.edu/arts-and-sciences/center-on-lived-religion/index.php"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-8 py-3 rounded-full bg-white/90 hover:bg-white text-blue-700 font-semibold text-lg shadow-lg transition border border-blue-100"
-          >
-            Visit us
-          </a>
         </div>
       </div>
     </section>
@@ -103,7 +95,7 @@ export default function WelcomePage() {
               {/* Primary CTA */}
               <a
                 className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
-                href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale."
+                href="https://religioninplace.org"
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -12,6 +12,8 @@ const GoogleMapsContext = createContext<GoogleMapsContextType>({
   isMapsApiLoaded: false,
 });
 
+const GOOGLE_MAPS_LIBRARIES: Array<'places' | 'maps'> = ['places', 'maps'];
+
 // Create a custom hook to use the GoogleMaps context
 export const useGoogleMaps = () => useContext(GoogleMapsContext);
 
@@ -25,7 +27,7 @@ export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children
   
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
-    libraries: ['places', 'maps'] as ('places' | 'maps')[], // Cast as tuple for TypeScript
+    libraries: GOOGLE_MAPS_LIBRARIES,
     id: 'google-map-script',
   });
 

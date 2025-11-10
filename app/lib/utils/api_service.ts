@@ -20,17 +20,27 @@ if (!OPENAI_API_URL) {
   throw new Error("OPENAI_API_URL is not defined in the environment variables.");
 }
 
+interface OpenAIChatChoice {
+  index: number;
+  message?: {
+    role?: string;
+    content?: string | null;
+  };
+  finish_reason?: string;
+  logprobs?: unknown;
+}
+
 interface OpenAIResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: {
-    text: string;
-    index: number;
-    logprobs: any;
-    finish_reason: string;
-  }[];
+  id?: string;
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: OpenAIChatChoice[];
+  error?: {
+    message?: string;
+    type?: string;
+    code?: string;
+  };
 }
 
 /**
@@ -70,13 +80,38 @@ export default class ApiService {
         }),
       });
 
-      const data = await response.json();
+      const data: OpenAIResponse = await response.json();
       console.log("Response from OpenAI:", data);
 
-      const tags = data.choices[0].message.content
+      if (!response.ok) {
+        const errorMessage = data?.error?.message || response.statusText;
+        const normalizedMessage = (errorMessage || "").toLowerCase();
+        const quotaExceeded =
+          response.status === 429 ||
+          normalizedMessage.includes("quota") ||
+          normalizedMessage.includes("billing");
+
+        if (quotaExceeded) {
+          console.warn(
+            "OpenAI quota or billing limit reached. Returning empty tag list so the caller can continue gracefully.",
+            errorMessage
+          );
+          return [];
+        }
+
+        throw new Error(`OpenAI API error: ${errorMessage}`);
+      }
+
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content || typeof content !== "string" || !content.trim()) {
+        throw new Error("OpenAI response was missing tag content");
+      }
+
+      const tags = content
         .trim()
         .split(",")
-        .map((tag: string) => tag.trim());
+        .map((tag: string) => tag.trim())
+        .filter((tag) => tag.length > 0);
       return tags;
     } catch (error) {
       console.error("Error generating tags:", error);
