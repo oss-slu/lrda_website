@@ -20,6 +20,9 @@ import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import NoteCard from "../../components/note_card";
+import { Dialog } from "@/components/ui/dialog";
+
 
 interface Location {
   lat: number;
@@ -53,9 +56,12 @@ const Page = () => {
   const markerClustererRef = useRef<MarkerClusterer>();
   const [emptyRegion, setEmptyRegion] = useState(false);
   const noteRefs = useRef<Refs>({});
-  const [currentPopup, setCurrentPopup] = useState<any | null>(null);
-  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const currentPopupRef = React.useRef<any | null>(null);
+  const hoverTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const markerHoveredRef = React.useRef(false);
+  const popupHoveredRef = React.useRef(false);
   const [markers, setMarkers] = useState(new Map());
+  const [modalNote, setModalNote] = useState<Note | null>(null); 
   const [skip, setSkip] = useState(0);
   const infinite = useInfiniteNotes<Note>({
     items: filteredNotes,
@@ -69,6 +75,8 @@ const Page = () => {
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
+  let popupHovered = false;
+  let markerHovered = false;
 
   const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
     if (isNewNote) {
@@ -82,6 +90,26 @@ const Page = () => {
     } else {
       console.log("Existing note selected:", note);
     }
+  };
+
+  const startPopupCloseTimer = () => {
+    // Clear any timer that's already running
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+    }
+
+    // Start a new timer
+    hoverTimerRef.current = setTimeout(() => {
+      // After 200ms, check if the mouse is NOT on the marker AND NOT on the popup
+      if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
+        
+        // If it's safe to close, close the popup
+        currentPopupRef.current.setMap(null);
+        currentPopupRef.current = null;
+        setHoveredNoteId(null);
+        setActiveNote(null);
+      }
+    }, 200); // 200ms delay
   };
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
@@ -288,47 +316,146 @@ const Page = () => {
       const map = mapRef.current;
 
       const mapClickListener = map.addListener("click", () => {
-        if (currentPopup) {
+        if (currentPopupRef.current) {
           console.log("Removing existing popup (map click)");
-          currentPopup.setMap(null);
-          setCurrentPopup(null);
+          currentPopupRef.current.setMap(null);
+          currentPopupRef.current = null;
           setActiveNote(null);
         }
       });
 
-      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => { 
-        google.maps.event.clearListeners(marker, "click");
-        google.maps.event.clearListeners(marker, "mouseover");
-        google.maps.event.clearListeners(marker, "mouseout");
+      class Popup extends google.maps.OverlayView {
+        position: google.maps.LatLng;
+        containerDiv: HTMLDivElement;
+        isClickPopup: boolean; // Differentiates click from hover
 
-        // Click event
-        marker.addListener("click", () => {
+        constructor(position: google.maps.LatLng, content: HTMLElement, isClickPopup: boolean = false) {
+          super();
+          this.position = position;
+          this.isClickPopup = isClickPopup;
+          content.classList.add("popup-bubble");
+          const bubbleAnchor = document.createElement("div");
+          bubbleAnchor.classList.add("popup-bubble-anchor");
+          bubbleAnchor.appendChild(content);
+          this.containerDiv = document.createElement("div");
+          this.containerDiv.classList.add("popup-container");
+          this.containerDiv.appendChild(bubbleAnchor);
+          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
+          
+          // Add hover listeners to the popup itself
+          this.containerDiv.addEventListener("mouseenter", () => {
+            popupHoveredRef.current = true;
+            if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          });
+          this.containerDiv.addEventListener("mouseleave", () => {
+            popupHoveredRef.current = false;
+            // Only auto-close if it was a HOVER popup
+            if (!this.isClickPopup) {
+              startPopupCloseTimer();
+            }
+          });
+        }
+        onAdd() { this.getPanes()!.floatPane.appendChild(this.containerDiv); }
+        onRemove() {
+          if (this.containerDiv.parentElement) {
+            this.containerDiv.parentElement.removeChild(this.containerDiv);
+          }
+        }
+        draw() {
+          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
+          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
+          if (display === "block") {
+            this.containerDiv.style.left = divPosition.x + "px";
+            this.containerDiv.style.top = divPosition.y + "px";
+            this.containerDiv.style.transform = "translate(-50%, calc(-100% - 10px))"; // 10px above marker
+          }
+          if (this.containerDiv.style.display !== display) {
+            this.containerDiv.style.display = display;
+          }
+        }
+      }
+
+      // 3. One function to open all popups
+      const openPopup = (note: Note, isClick: boolean) => {
+        // Close any existing popup first
+        if (currentPopupRef.current) {
+          currentPopupRef.current.setMap(null);
+        }
+        
+        if (isClick) {
+          setModalNote(note);
+          return; 
+        }
+
+        // Create the preview popup.
+        const popupContent = document.createElement("div");
+        const root = ReactDOM.createRoot(popupContent);
+        
+        // Render only the preview card
+        root.render(<NoteCard note={note} />); 
+        
+        // Create new popup
+        const popup = new Popup(
+          new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+          popupContent,
+          isClick // This will be 'false'
+        );
+        
+        // Save and show
+        currentPopupRef.current = popup;
+        popup.setMap(map);
+      };
+
+      const handleMarkerClick = (note: Note) => {
+        console.log("handleMarkerClick start", note.id);
+    
+        if (currentPopupRef.current) {
+          currentPopupRef.current.setMap(null);
+          currentPopupRef.current = null;
+        }
+
+        setModalNote(note);
+
+        setActiveNote(note);
+        if (isPanelOpen) {
+          scrollToNoteTile(note.id);
+        }
+      };
+      
+      const attachMarkerEvents = (
+        marker: google.maps.marker.AdvancedMarkerElement,
+        note: Note,
+        iconNode: HTMLElement
+      ) => {
+        const newIconNode = marker.content as HTMLElement;
+
+        newIconNode.addEventListener("click", (e) => {
+          e.stopPropagation();
           handleMarkerClick(note);
         });
 
-        // Hover events
-        marker.addListener("mouseover", () => {
-          console.log("MARKER mouseover for", note.id);
-          if (hoverTimerRef.current) {
-            clearTimeout(hoverTimerRef.current);
-            hoverTimerRef.current = null;
+        newIconNode.addEventListener("mouseenter", () => {
+          // Don't show a hover popup if a click-popup is already open
+          if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
+            return;
           }
-          showTemporaryPopup(note);
-          setHoveredNoteId(note.id);
-          if (isPanelOpen) {
-            scrollToNoteTile(note.id);
-          }
-          setActiveNote(note);
-        }); 
-
-        marker.addListener("mouseout", () => {
+          
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-          if (currentPopup) {
-            currentPopup.setMap(null);
-            setCurrentPopup(null);
+          markerHoveredRef.current = true;
+          
+          // Only open a new popup if one isn't already open
+          if (!currentPopupRef.current) {
+            openPopup(note, false); // Open as a "hover" popup
           }
-          setHoveredNoteId(null);
-          setActiveNote(null);
+          
+          setHoveredNoteId(note.id);
+          if (isPanelOpen) scrollToNoteTile(note.id);
+          setActiveNote(note);
+        });
+
+        newIconNode.addEventListener("mouseleave", () => {
+          markerHoveredRef.current = false;
+          startPopupCloseTimer(); // This handles the delay
         });
       };
 
@@ -336,27 +463,21 @@ const Page = () => {
       filteredNotes.forEach((note) => {
         const lat = parseFloat(note.latitude);
         const lng = parseFloat(note.longitude);
-        
-        // Skip invalid coordinates
         if (isNaN(lat) || isNaN(lng)) {
           console.warn(`Skipping note ${note.id}: invalid coordinates`, note);
           return;
         }
-        
         const position = new google.maps.LatLng(lat, lng);
         const iconNode = createMarkerIcon();
-
         const marker = new google.maps.marker.AdvancedMarkerElement({
           position,
           map,
           content: iconNode,
           title: note.title || "",
         });
-
         attachMarkerEvents(marker, note, iconNode);
-
         tempMarkers.set(note.id, marker);
-        (marker as any).iconNode = iconNode; // Store reference for hover effects
+        (marker as any).iconNode = iconNode;
       });
 
       setMarkers(tempMarkers);
@@ -379,13 +500,13 @@ const Page = () => {
         google.maps.event.removeListener(mapClickListener);
       };
     }
-  }, [isMapsApiLoaded, filteredNotes, mapRef.current, currentPopup]);
+  }, [isMapsApiLoaded, filteredNotes, mapRef.current]);
 
   const handleMapClick = () => {
-    if (currentPopup) {
-      currentPopup.setMap(null);
+    if (currentPopupRef.current) {
+      currentPopupRef.current.setMap(null);
     }
-    setCurrentPopup(null);
+    currentPopupRef.current = null;
     setActiveNote(null);
   };
 
@@ -513,157 +634,6 @@ const Page = () => {
       return { personalNotes: [], globalNotes: [] };
     }
   };
-
-  const handleMarkerClick = (note: Note) => {
-    console.log("handleMarkerClick start", note.id);
-    if (currentPopup) {
-      console.log(" Removing existing popup");
-      currentPopup.setMap(null);
-      setCurrentPopup(null);
-    }
-
-    setActiveNote(note);
-    if (isPanelOpen) {
-      scrollToNoteTile(note.id);
-    }
-
-    const map = mapRef.current;
-    console.log(" mapRef.current:", !!map);
-
-    if (map) {
-      const popupContent = document.createElement("div");
-      const root = ReactDOM.createRoot(popupContent);
-      root.render(<ClickableNote note={note} />);
-
-      class Popup extends google.maps.OverlayView {
-        position: google.maps.LatLng;
-        containerDiv: HTMLDivElement;
-
-        constructor(position: google.maps.LatLng, content: HTMLElement) {
-          super();
-          this.position = position;
-
-          content.classList.add("popup-bubble");
-
-          const bubbleAnchor = document.createElement("div");
-
-          bubbleAnchor.classList.add("popup-bubble-anchor");
-          bubbleAnchor.appendChild(content);
-
-          this.containerDiv = document.createElement("div");
-          this.containerDiv.classList.add("popup-container");
-          this.containerDiv.appendChild(bubbleAnchor);
-
-          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-        }
-
-        onAdd() {
-          this.getPanes()!.floatPane.appendChild(this.containerDiv);
-        }
-
-        onRemove() {
-          if (this.containerDiv.parentElement) {
-            this.containerDiv.parentElement.removeChild(this.containerDiv);
-          }
-        }
-
-        draw() {
-          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
-
-          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
-
-          if (display === "block") {
-            this.containerDiv.style.left = divPosition.x + "px";
-            this.containerDiv.style.top = divPosition.y + "px";
-          }
-
-          if (this.containerDiv.style.display !== display) {
-            this.containerDiv.style.display = display;
-          }
-        }
-      }
-
-      let popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
-
-      setCurrentPopup(popup);
-
-      popup.setMap(map);
-    }
-  };
-
-  const showTemporaryPopup = (note: Note) => {
-    // Remove existing popup first
-    if (currentPopup) {
-      currentPopup.setMap(null);
-      setCurrentPopup(null);
-    }
-
-    const map = mapRef.current;
-    if (!map) return;
-
-    const popupContent = document.createElement("div");
-    const root = ReactDOM.createRoot(popupContent);
-    root.render(<ClickableNote note={note} />);
-
-    class Popup extends google.maps.OverlayView {
-      position: google.maps.LatLng;
-      containerDiv: HTMLDivElement;
-
-      constructor(position: google.maps.LatLng, content: HTMLElement) {
-        super();
-        this.position = position;
-
-        content.classList.add("popup-bubble");
-
-        const bubbleAnchor = document.createElement("div");
-        bubbleAnchor.classList.add("popup-bubble-anchor");
-        bubbleAnchor.appendChild(content);
-
-        this.containerDiv = document.createElement("div");
-        this.containerDiv.classList.add("popup-container");
-        this.containerDiv.appendChild(bubbleAnchor);
-
-        Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-      }
-
-      onAdd() {
-        this.getPanes()!.floatPane.appendChild(this.containerDiv);
-      }
-
-      onRemove() {
-        if (this.containerDiv.parentElement) {
-          this.containerDiv.parentElement.removeChild(this.containerDiv);
-        }
-      }
-
-      draw() {
-        const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
-        const display =
-          Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
-
-        if (display === "block") {
-          this.containerDiv.style.left = divPosition.x + "px";
-          this.containerDiv.style.top = divPosition.y + "px";
-        }
-
-        if (this.containerDiv.style.display !== display) {
-          this.containerDiv.style.display = display;
-        }
-      }
-    }
-
-    const popup = new Popup(
-      new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
-      popupContent
-    );
-
-    popup.setMap(map);
-
-    hoverTimerRef.current = setTimeout(() => {
-      popup.setMap(null);
-    }, 800); // popup stays for 0.8s after hover
-  };
-
 
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
@@ -889,20 +859,17 @@ const Page = () => {
                     ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} 
         ref={notesListRef}
       >
-        {/* This is the main content area for the panel.
-          We add 'grid' and 'content-start' to ensure the empty state
-          message doesn't stretch to fill the whole panel.
-        */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 content-start">
           {isLoading ? (
-            // --- 1. LOADING STATE ---
+            // --- LOADING STATE ---
             [...Array(6)].map((_, index) => (
               <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
           ) : infinite.visibleItems.length > 0 ? (
-            // --- 2. NOTES FOUND STATE ---
+            // --- NOTES FOUND STATE ---
             infinite.visibleItems.map((note) => (
               <div
+                key={note.id}
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
@@ -911,13 +878,13 @@ const Page = () => {
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
-                key={note.id}
+                onClick={() => setModalNote(note)}
               >
-                <ClickableNote note={note} />
+                <NoteCard note={note} />
               </div>
             ))
           ) : (
-            // --- 3. EMPTY STATE (NEW) ---
+            // --- EMPTY STATE  ---
             <div className="col-span-full flex flex-col items-center justify-center text-center p-4 py-20">
               
               <h3 className="text-xl font-semibold text-gray-700 mt-4">No Results Found</h3>
@@ -937,6 +904,16 @@ const Page = () => {
           </div>
         </div>
       </div>
+      <Dialog 
+        open={modalNote !== null} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setModalNote(null);
+          }
+        }}
+      >
+        {modalNote && <ClickableNote note={modalNote} />}
+      </Dialog>
     </div>
   );
 };

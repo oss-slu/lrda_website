@@ -90,65 +90,61 @@ const ClickableNote: React.FC<{
   const data = note.text;
 
   return (
-  <Dialog>
-    <DialogTrigger asChild>
-      <div className="z-40">
-        <NoteCard note={note} />
-      </div>
-    </DialogTrigger>
-
     <DialogContent className="sm:max-w-[80%] h-[100vh] p-0 flex flex-col">
       
-      {/* Scrollable main area */}
-      <ScrollArea className="flex-1 overflow-auto">
-        <DialogHeader className="p-6">
-          <DialogTitle className="text-3xl">{note.title}</DialogTitle>
-          <DialogDescription className="flex flex-row items-center">
-            <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
-          </DialogDescription>
-          <DialogDescription className="flex flex-row items-center">
-            <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
-          </DialogDescription>
-          <DialogDescription className="flex flex-row items-center">
-            <UserCircle className="w-5 h-5" />: {creator}
-          </DialogDescription>
+      {/* 2. This is the non-scrolling header */}
+      <DialogHeader className="p-6 pb-4 border-b">
+        <DialogTitle className="text-3xl">{note.title}</DialogTitle>
+        <DialogDescription className="flex flex-row items-center">
+          <CalendarDays className="w-5 h-5" />: {formatDate(note.time)}
+        </DialogDescription>
+        <DialogDescription className="flex flex-row items-center">
+          <Clock3 className="w-5 h-5" />: {formatTime(note.time)}
+        </DialogDescription>
+        <DialogDescription className="flex flex-row items-center">
+          <UserCircle className="w-5 h-5" />: {creator}
+        </DialogDescription>
 
-          {tags.length > 0 && (
-            <DialogDescription>
-              <div className="flex flex-wrap gap-2 mb-2 items-center">
-                <Tags />
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                      tag.origin === "user"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-purple-200 text-purple-800"
-                    }`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
-              </div>
-            </DialogDescription>
-          )}
-
-          <div className="h-1 w-full bg-black bg-opacity-70 rounded-full" />
-        </DialogHeader>
-
-        {note.text && note.text.length > 0 ? (
-          <div
-            dangerouslySetInnerHTML={{ __html: data }}
-            className="mb-5 note-content px-6"
-          />
-        ) : (
-          <div className="px-6 pb-6">This Note has no content</div>
+        {tags.length > 0 && (
+          <DialogDescription>
+            <div className="flex flex-wrap gap-2 mb-2 items-center">
+              <Tags /> 
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                    tag.origin === "user"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-purple-200 text-purple-800"
+                  }`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          </DialogDescription>
         )}
+
+        <div className="h-1 w-full bg-black bg-opacity-70 rounded-full" />
+      </DialogHeader>
+
+      {/* This is the scrollable main area */}
+      <ScrollArea className="flex-1 overflow-auto min-h-0">
+        <div className="pb-20"> {/* Padding at the bottom */}
+          {note.text && note.text.length > 0 ? (
+            <div
+              dangerouslySetInnerHTML={{ __html: data }}
+              className="mb-5 note-content px-6"
+            />
+          ) : (
+            <div className="px-6 pb-6">This Note has no content</div>
+          )}
+        </div>
       </ScrollArea>
 
-      {/* Fixed footer at bottom-left */}
-      <DialogFooter className="p-0 m-0 bg-transparent">
-        <div className="flex flex-row w-28 absolute left-1 bottom-0 gap-2">
+      {/* This is the floating footer */}
+      <DialogFooter className="absolute bottom-6 left-6 z-50 p-0 m-0 bg-transparent">
+        <div className="flex flex-row w-28 gap-2">
           {note.audio.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
@@ -181,9 +177,7 @@ const ClickableNote: React.FC<{
           )}
         </div>
       </DialogFooter>
-
     </DialogContent>
-  </Dialog>
   );
 };
 
