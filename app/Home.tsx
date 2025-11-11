@@ -15,7 +15,6 @@ export default function Home() {
   const [isNewNote, setIsNewNote] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
-  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // Add refresh trigger
 
   useEffect(() => {
     const user = User.getInstance();
@@ -37,21 +36,19 @@ export default function Home() {
   };
 
   const handleNoteSaved = () => {
-    // Increment the refresh key to trigger sidebar re-fetch
-    setSidebarRefreshKey(prev => prev + 1);
-    // Don't clear the note - keep it open so user can continue editing
+    // No refetch needed; store updates handle sidebar sync
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal">
+    <ResizablePanelGroup direction="horizontal" autoSaveId="notes-layout">
       <ResizablePanel
         minSize={15}
         maxSize={30}
-        defaultSize={20}
+        defaultSize={26}
         collapsible={true}
         collapsedSize={1}
       >
-        <Sidebar onNoteSelect={handleNoteSelect} refreshKey={sidebarRefreshKey} />
+        <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={80}>

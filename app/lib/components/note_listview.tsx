@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Note } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
 import { Button } from "@/components/ui/button";
+import { FileText, Search } from "lucide-react";
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
+  isSearching?: boolean;
 };
 
 const batch_size = 15; //can change batch loading here
@@ -16,7 +18,7 @@ const extractTextFromHtml = (htmlString: string) => {
   return tempDivElement.textContent || tempDivElement.innerText || "";
 };
 
-const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
+const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [fresh, setFresh] = useState(true);
 
@@ -57,6 +59,36 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect }) => {
   const moreNotes = () => {
     setVisibleCount(prev => prev + batch_size);
   };
+
+  // Empty state: no notes at all
+  if (visibleNotes.length === 0 && !isSearching) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="bg-blue-50 rounded-full p-4 mb-4">
+          <FileText className="w-8 h-8 text-blue-500" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">No notes yet</h3>
+        <p className="text-sm text-gray-600 mb-4 max-w-xs">
+          Click the "New Note" button below to create your first note!
+        </p>
+      </div>
+    );
+  }
+
+  // Empty state: search returned no results
+  if (visibleNotes.length === 0 && isSearching) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="bg-gray-50 rounded-full p-4 mb-4">
+          <Search className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
+        <p className="text-sm text-gray-600 max-w-xs">
+          Try adjusting your search or check the other tab
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div id="notes-list" className="my-4 flex flex-col">

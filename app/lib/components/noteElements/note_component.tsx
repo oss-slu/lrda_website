@@ -11,7 +11,6 @@ import NoteToolbar from "./note_toolbar";
 import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
-import jsPDF from "jspdf"; // For PDF
 import ApiService from "../../utils/api_service";
 import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
 import {
@@ -60,7 +59,8 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
-  const updateNote = useNotesStore((state) => state.updateNote); // Get updateNote from store
+  const updateNote = useNotesStore((state) => state.updateNote);
+  const addNote = useNotesStore((state) => state.addNote);
   const rteRef = useRef<RichTextEditorRef>(null);
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
@@ -70,6 +70,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedSnapshotRef = useRef<{title:string;text:string;tags:any[];published:boolean} | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(isNewNote);
 
   const titleRef = useRef<HTMLInputElement | null>(null);
 
@@ -248,19 +250,82 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
     }
   }, [initialNote]);
 
-  // Auto-save effect: saves note 2 seconds after user stops typing
+  // Auto-save effect: saves note 2 seconds after user stops typing, only if dirty and non-blank
   useEffect(() => {
     // Clear any existing timer
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    // Don't auto-save if note doesn't have an ID yet (new notes are saved immediately on creation)
-    if (!noteState.note?.id) {
+    // Compute content state
+    const titleTrim = (noteState.title || '').trim();
+    const textTrim = (noteState.editorContent || '').trim();
+    const hasContent = titleTrim.length > 0 || textTrim.length > 0 || noteState.images.length > 0 || noteState.videos.length > 0 || noteState.audio.length > 0;
+    
+    // If this is a brand new note (no ID yet), create it in DB on first meaningful content
+    if (isCreatingNew && !noteState.note?.id && hasContent) {
+      autoSaveTimerRef.current = setTimeout(async () => {
+        setIsSaving(true);
+        try {
+          const newNoteData: any = {
+            title: noteState.title || "Untitled",
+            text: noteState.editorContent,
+            time: noteState.time,
+            media: [...noteState.images, ...noteState.videos],
+            audio: noteState.audio,
+            creator: await user.getId(),
+            latitude: noteState.latitude,
+            longitude: noteState.longitude,
+            published: noteState.isPublished,
+            tags: noteState.tags,
+            isArchived: false
+          };
+          
+          const response = await ApiService.writeNewNote(newNoteData);
+          if (!response.ok) throw new Error('Failed to create note');
+          
+          const data = await response.json();
+          const noteId = data['@id'] || data.id;
+          if (!noteId) throw new Error('No ID returned');
+          
+          const savedNote = {
+            ...newNoteData,
+            id: noteId,
+            uid: data.uid || noteId,
+          };
+          
+          // Update local state and store
+          noteHandlers.setNote(savedNote as Note);
+          addNote(savedNote as Note);
+          setIsCreatingNew(false);
+          lastSavedSnapshotRef.current = {title: noteState.title, text: noteState.editorContent, tags: noteState.tags, published: noteState.isPublished};
+          
+          toast("Note Created", { description: "Your note has been saved.", duration: 2000 });
+        } catch (error) {
+          console.error("Error creating note:", error);
+          toast("Error", { description: "Failed to create note.", duration: 4000 });
+        } finally {
+          setIsSaving(false);
+        }
+      }, 500);
+      return () => {
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      };
+    }
+
+    // For existing notes: auto-save only if dirty and has content
+    if (!noteState.note?.id || !hasContent) {
       return;
     }
 
-    // Set a new timer to auto-save after 2 seconds of inactivity
+    const last = lastSavedSnapshotRef.current;
+    const isDirty = !last || last.title !== noteState.title || last.text !== noteState.editorContent || last.published !== noteState.isPublished || JSON.stringify(last.tags) !== JSON.stringify(noteState.tags);
+
+    if (!isDirty) {
+      return; // Skip if nothing changed
+    }
+
+    // Set a new timer to auto-save after 500ms of inactivity
     autoSaveTimerRef.current = setTimeout(async () => {
       if (noteState.note?.id && !isSaving) {
         setIsSaving(true);
@@ -295,6 +360,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
               longitude: updatedNote.longitude,
             });
           }
+          lastSavedSnapshotRef.current = {title: noteState.title, text: noteState.editorContent, tags: noteState.tags, published: noteState.isPublished};
           
           // Silent save - no toast notification for auto-save
           if (onNoteSaved) {
@@ -306,7 +372,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
           setIsSaving(false);
         }
       }
-    }, 2000); // Auto-save after 2 seconds of inactivity
+    }, 500); // Auto-save after 500ms of inactivity
 
     // Cleanup function
     return () => {
@@ -314,7 +380,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [noteState.title, noteState.editorContent, noteState.tags, noteState.isPublished]);
+  }, [noteState.title, noteState.editorContent, noteState.tags, noteState.isPublished, noteState.images.length, noteState.videos.length, noteState.audio.length, isCreatingNew]);
 
   const onSave = async () => {
     const updatedNote: any = {
@@ -418,7 +484,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteSaved }
     `;
 
     if (selectedFileType === "pdf") {
-      // Generate PDF using jsPDF
+      // Generate PDF using jsPDF (dynamically import to avoid canvas in tests)
+      const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF();
       pdf.text(noteContent, 10, 10); // Add text to the PDF
       pdf.save(`${noteState.title || "note"}.pdf`); // Save the PDF file
