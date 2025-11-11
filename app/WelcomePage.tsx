@@ -186,24 +186,24 @@ export default function WelcomePage() {
         </div>
 
         {/* Right Side - App Showcase */}
-        <div className="flex-1 flex items-center justify-center h-screen relative py-16 lg:py-0 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center h-screen relative py-16 lg:py-0">
           {/* Gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-purple-100/30 to-pink-100/50" />
 
           {/* Floating elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-float" />
             <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-float-delayed" />
           </div>
 
           {/* Phone mockup */}
           <div className="relative z-10 flex items-center justify-center">
-            <div className="relative w-64 h-[500px] sm:w-80 sm:h-[600px] lg:w-96 lg:h-[700px]">
+            <div className="relative w-64 h-[90vh] max-h-[500px] sm:w-96 lg:w-96 sm:max-h-[700px] flex items-center justify-center">
               {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-[3rem] blur-2xl scale-105" />
 
               {/* Phone container with glass effect */}
-              <div className="relative w-full h-full backdrop-blur-sm rounded-[3rem] shadow-2xl border border-white/50 overflow-hidden flex items-center justify-center">
+              <div className="w-full h-full p-2 backdrop-blur-sm rounded-[3rem] shadow-2xl border border-white/50 overflow-hidden flex items-center justify-center">
                 <Image
                   src="/mobile_image_WR.png"
                   alt="Where's Religion App"
@@ -214,7 +214,6 @@ export default function WelcomePage() {
                     objectPosition: "center",
                     width: "100%",
                     height: "100%",
-                    transform: "scale(3)",
                   }}
                   priority
                 />
