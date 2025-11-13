@@ -35,6 +35,7 @@ const coreApiRouter = await createCoreRouter({
 // Mount core RERUM API
 app.use("/", coreApiRouter);
 
+
 // Add your custom LRDA/project-specific endpoints BELOW this line
 // Example:
 // import myPrivateRouter from './my-private-routes.js';
