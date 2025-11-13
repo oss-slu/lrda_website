@@ -1,20 +1,13 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react"; // Importing Plus icon
+import { Plus } from "lucide-react";
 import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
-import ApiService from "../utils/api_service";
-import introJs from "intro.js"
-import "intro.js/introjs.css"
+import "intro.js/introjs.css";
 import { useNotesStore } from "../stores/notesStore";
-
-/*
-//Bring this import back to use switch toggle for note view.
-import { Switch } from "@/components/ui/switch";
-*/
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,11 +18,12 @@ type SidebarProps = {
 const user = User.getInstance();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, refreshNotes, addNote } = useNotesStore();
+  const { notes } = useNotesStore();
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
   const [isSearching, setIsSearching] = useState(false);
 
+  console.log("Sidebar render");
   const handleAddNote = async () => {
     const userId = await user.getId();
     if (userId) {
@@ -45,29 +39,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         longitude: "",
         published: false,
         tags: [],
-        isArchived: false
+        isArchived: false,
       };
-      
+
       // Open for editing immediately; will save when user types
       onNoteSelect(draftNote, true);
     } else {
       console.error("User ID is null - cannot create a new note");
     }
   };
-
-  // Removed auto "add note" click to prevent accidental blank note creation
-
-  // Fetch notes on mount
-  useEffect(() => {
-    const loadNotes = async () => {
-      const userId = await user.getId();
-      if (userId) {
-        await fetchNotes(userId);
-      }
-    };
-    loadNotes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
 
   // Filter notes whenever notes or showPublished changes
   useEffect(() => {
@@ -83,11 +63,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     setIsSearching(true);
     const query = searchQuery.toLowerCase();
     const filtered = notes
-      .filter(note => !note.isArchived) // Filter archived
+      .filter((note) => !note.isArchived) // Filter archived
       .filter(
         (note) =>
-          (note.title.toLowerCase().includes(query) ||
-          note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
+          (note.title.toLowerCase().includes(query) || note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
           (showPublished ? note.published : !note.published)
       );
     setFilteredNotes(filtered);
@@ -97,9 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const noteList = notesToFilter || notes;
     setIsSearching(false);
     // Filter out archived notes AND filter by published status
-    const filtered = noteList
-      .filter(note => !note.isArchived)
-      .filter(note => showPublished ? note.published : !note.published);
+    const filtered = noteList.filter((note) => !note.isArchived).filter((note) => (showPublished ? note.published : !note.published));
     setFilteredNotes(filtered);
   };
 
@@ -112,29 +89,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   return (
     <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
       {/* Scrollable content area */}
-      <div className="overflow-y-auto flex-1 p-4 pb-20"> {/* pb-20 to prevent content from going under button */}
+      <div className="overflow-y-auto flex-1 p-4 pb-20">
+        {" "}
+        {/* pb-20 to prevent content from going under button */}
         <div className="w-full mb-4">
           {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
           <SearchBarNote onSearch={handleSearch} />
 
-          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
+          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1">
+            {" "}
+            {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
             <Tabs defaultValue="unpublished" className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
-                <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
+                <TabsTrigger value="unpublished" className="text-sm font-semibold">
+                  Unpublished
+                </TabsTrigger>
+                <TabsTrigger value="published" className="text-sm font-semibold">
+                  Published
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="unpublished"></TabsContent>
               <TabsContent value="published"></TabsContent>
             </Tabs>
           </div>
         </div>
-
         <div>
-          <NoteListView
-            notes={filteredNotes}
-            onNoteSelect={(note) => onNoteSelect(note, false)}
-            isSearching={isSearching}
-          />
+          <NoteListView notes={filteredNotes} onNoteSelect={(note) => onNoteSelect(note, false)} isSearching={isSearching} />
         </div>
       </div>
 
