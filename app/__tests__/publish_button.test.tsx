@@ -7,14 +7,14 @@ describe("PublishToggle Component", () => {
     render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
     const publishButton = screen.getByText(/Publish/i);
     expect(publishButton).toBeInTheDocument();
-    expect(publishButton).toHaveClass("text-black");
+    expect(publishButton).toHaveClass("text-gray-700");
   });
 
   it("renders as published when isPublished is true", () => {
     render(<PublishToggle isPublished={true} onPublishClick={jest.fn()} />);
     const publishButton = screen.getByText(/Unpublish/i);
     expect(publishButton).toBeInTheDocument();
-    expect(publishButton).toHaveClass("text-green-500");
+    expect(publishButton).toHaveClass("text-green-600");
   });
 
   it("calls onPublishClick when clicked", async () => {
@@ -30,38 +30,36 @@ describe("PublishToggle Component", () => {
     const onPublishClickMock = jest.fn(async () => {
       isPublished = !isPublished;
     });
-  
-    const { rerender } = render(
-      <PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />
-    );
-  
+
+    const { rerender } = render(<PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />);
+
     const button = screen.getByText(/Publish/i);
     fireEvent.click(button);
-  
+
     // Simulate prop change after async action
     await waitFor(() => expect(onPublishClickMock).toHaveBeenCalled());
-  
+
     // Re-render with new publish state
     rerender(<PublishToggle isPublished={true} onPublishClick={onPublishClickMock} />);
-  
+
     const notification = await screen.findByText(/Note published successfully!/i);
     expect(notification).toBeInTheDocument();
-  
+
     await waitFor(
       () => {
         expect(screen.queryByText(/Note published successfully!/i)).not.toBeInTheDocument();
       },
       { timeout: 3500 }
     );
-  });  
+  });
 
   it("updates correctly when isPublished prop changes", () => {
     const { rerender } = render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
     const button = screen.getByText(/Publish/i);
-    expect(button).toHaveClass("text-black");
+    expect(button).toHaveClass("text-gray-700");
 
     rerender(<PublishToggle isPublished={true} onPublishClick={jest.fn()} />);
     const updatedButton = screen.getByText(/Unpublish/i);
-    expect(updatedButton).toHaveClass("text-green-500");
+    expect(updatedButton).toHaveClass("text-green-600");
   });
 });
