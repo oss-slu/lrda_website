@@ -35,7 +35,7 @@ function AboutIntro() {
             <p className="text-base sm:text-lg leading-7 text-slate-700">
               Where's Religion? is an open-source application developed by humanities faculty and IT professionals at Saint Louis University
               that supports in-person research, remote data entry, media sharing, and mapping. The app is designed to facilitate a more
-              robust public understanding of religion through rigorous scholarly methods.
+              robust public understanding of religion through rigorous scholarly methods <a href="https://docs.google.com/document/d/1EYQi5vc1_45wzfxXwlLN7t7-jfIKYB3_6JXzcBPs7-M/edit?usp=sharing" color="blue">learn more</a>.
             </p>
           </div>
 

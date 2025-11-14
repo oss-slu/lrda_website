@@ -236,17 +236,36 @@ export default class ApiService {
   // When used for instructor review, can filter by approvalRequested
   /**
    * Fetches notes created by a list of students, excluding archived notes.
+   * Handles both UID and RERUM URL formats for the creator field.
    * @param {string[]} studentUids - An array of student UIDs whose notes need to be fetched.
    * @returns {Promise<any[]>} A promise that resolves to an array of notes created by the specified students.
    */
   static async fetchNotesByStudents(studentUids: string[]): Promise<any[]> {
     try {
+      if (studentUids.length === 0) {
+        console.log("⚠️ No student UIDs provided to fetchNotesByStudents");
+        return [];
+      }
+
+      // Create both UID and RERUM URL formats for each student
+      // RERUM might store creator as either the UID directly or as a RERUM URL
+      // Format: https://devstore.rerum.io/v1/id/{uid} or just the UID
+      const creatorValues: string[] = [];
+      studentUids.forEach((uid) => {
+        // Add the UID as-is (in case creator is stored as plain UID)
+        creatorValues.push(uid);
+        // Add the RERUM URL format (RERUM_PREFIX is typically "https://devstore.rerum.io/v1/")
+        // So we need to construct: RERUM_PREFIX + "id/" + uid
+        const rerumUrl = `${RERUM_PREFIX}id/${uid}`;
+        creatorValues.push(rerumUrl);
+      });
+
       const queryObj = {
         type: "message",
         published: false,
         approvalRequested: true,
         creator: {
-          $in: studentUids,
+          $in: creatorValues,
         },
         $or: [
           { isArchived: { $exists: false } },
@@ -255,11 +274,34 @@ export default class ApiService {
       };
 
       console.log("🔍 Rerum Query - fetchNotesByStudents:", JSON.stringify(queryObj));
+      console.log(`📋 Searching for ${studentUids.length} students with ${creatorValues.length} creator value variations`);
 
       const notes = await this.getPagedQuery(150, 0, queryObj);
 
-      console.log(`📥 Response (${notes.length} notes) for fetchNotesByStudents:`);
-      notes.forEach((note, idx) => {
+      // Normalize creator fields and filter to ensure we only return notes from the requested students
+      const normalizedNotes = notes.filter((note) => {
+        if (!note.creator) return false;
+        
+        // Normalize the creator field - extract UID from RERUM URLs if needed
+        let normalizedCreator = note.creator;
+        if (note.creator.includes(RERUM_PREFIX) || note.creator.includes('rerum.io')) {
+          // Extract UID from RERUM URL (format: .../v1/id/{uid} or .../id/{uid})
+          const match = note.creator.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
+          if (match && match[1]) {
+            normalizedCreator = match[1];
+          } else {
+            // Fallback: try to extract from the end of the URL
+            const parts = note.creator.split('/');
+            normalizedCreator = parts[parts.length - 1] || note.creator;
+          }
+        }
+        
+        // Check if the normalized creator matches any of the student UIDs
+        return studentUids.includes(normalizedCreator);
+      });
+
+      console.log(`📥 Response (${notes.length} total notes, ${normalizedNotes.length} after filtering) for fetchNotesByStudents:`);
+      normalizedNotes.forEach((note, idx) => {
         console.log(`  Note ${idx + 1}:`, {
           "@id": note.id,
           title: note.title,
@@ -279,7 +321,7 @@ export default class ApiService {
         });
       });
 
-      return notes;
+      return normalizedNotes;
     } catch (error) {
       console.error("❌ Error in fetchNotesByStudents:", error);
       throw new Error("Failed to fetch notes by students.");
