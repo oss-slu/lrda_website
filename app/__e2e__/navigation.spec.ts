@@ -48,14 +48,13 @@ test.describe('Navigation', () => {
     // Check that Further Reading section exists
     await expect(page.locator('h2:has-text("Further Reading")')).toBeVisible();
     
-    // Test Case 1: Citation without comma should be italicized
-    // Note: The actual title has a typo "Anthropolicial" instead of "Anthropological"
-    const citation1 = page.locator('text=/American Anthropolicial Association Resources on Ethics/');
+    // Test Case 1: Plain text citation (not italicized)
+    const citation1 = page.locator('text=/American Anthropological Association Resources on Ethics/');
     await expect(citation1).toBeVisible({ timeout: 10000 });
-    // Check if it's inside an italic span
+    // Verify it's NOT italicized (plain text)
     const italicSpan1 = citation1.locator('..').locator('span.italic, [style*="font-style: italic"]');
     const count1 = await italicSpan1.count();
-    expect(count1).toBeGreaterThan(0);
+    expect(count1).toBe(0);
     
     // Test Case 2: Citation with period - title should be italicized
     const citation2 = page.locator('text=/Engaging Communities: Writing Ethnographic Research/');

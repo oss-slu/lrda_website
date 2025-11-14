@@ -2,10 +2,17 @@
 import React from "react";
 import { formatCitation } from "../../utils/citation_formatter";
 
-const onlineResources = [
+type OnlineResource = {
+  title: string;
+  url: string;
+  plain?: boolean;
+};
+
+const onlineResources: OnlineResource[] = [
   {
-    title: "American Anthropolicial Association Resources on Ethics",
+    title: "American Anthropological Association Resources on Ethics",
     url: "https://americananthro.org/about/anthropological-ethics/",
+    plain: true,
   },
   {
     title: "Malley, Suzanne Blum and Ames Hawkins. Engaging Communities: Writing Ethnographic Research",
@@ -52,7 +59,7 @@ const ResourcesPage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline [&_span]:text-blue-600 [&_span]:italic"
               >
-                {formatCitation(resource.title)}
+                {resource.plain ? resource.title : formatCitation(resource.title)}
               </a>
             </li>
           ))}
