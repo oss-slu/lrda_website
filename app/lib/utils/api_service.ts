@@ -284,7 +284,11 @@ export default class ApiService {
         
         // Normalize the creator field - extract UID from RERUM URLs if needed
         let normalizedCreator = note.creator;
-        if (note.creator.includes(RERUM_PREFIX) || note.creator.includes('rerum.io')) {
+        // Check if creator is a URL (starts with http/https) or contains RERUM domain
+        const isUrl = note.creator.startsWith('http://') || note.creator.startsWith('https://');
+        const isRerumUrl = note.creator.includes(RERUM_PREFIX) || note.creator.includes('rerum.io');
+        
+        if (isUrl || isRerumUrl) {
           // Extract UID from RERUM URL (format: .../v1/id/{uid} or .../id/{uid})
           const match = note.creator.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
           if (match && match[1]) {
