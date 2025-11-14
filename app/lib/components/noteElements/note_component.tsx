@@ -566,7 +566,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   return (
     <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
       <ScrollArea className="flex flex-col w-full h-full min-h-0">
-        <div aria-label="Top Bar" className="w-full flex flex-col px-8 py-6">
+        <div aria-label="Top Bar" className="w-full flex flex-col px-8 pt-8">
           <Input
             id="note-title-input"
             value={noteState.title}
@@ -649,7 +649,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
               </div>
             </div>
           </div>
-          <div className="mt-6">
+          <div className="mt-2">
             <TagManager
               inputTags={noteState.tags}
               suggestedTags={suggestedTags}

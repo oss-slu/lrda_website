@@ -171,7 +171,7 @@ const TagManager: React.FC<TagManagerProps> = ({
             </div>
           ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2">
         {tags
           .filter((tag) => tag.origin === "ai")
           .map((tag, index) => (
