@@ -1,8 +1,8 @@
 import { UserData } from "../../types";
-import { getItem, setItem } from "../utils/async_storage";
+import { getItem, setItem } from "../utils/local_storage";
 import { auth, db } from "../config/firebase"; // Import Firestore database
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
-import ApiService from '../utils/api_service';
+import ApiService from "../utils/api_service";
 import { doc, getDoc } from "firebase/firestore"; // Firestore imports
 
 export class User {
@@ -70,7 +70,7 @@ export class User {
       if (user) {
         // First, try to fetch user data from the API
         const userData = await ApiService.fetchUserData(user.uid);
-        
+
         if (userData) {
           // If found in the API, set user data and persist it
           this.userData = userData;
@@ -95,23 +95,22 @@ export class User {
     });
   }
 
-
   public async login(email: string, password: string): Promise<string> {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const token = await user.getIdToken();
       console.log(`Login token: ${token}`);
-      
+
       // Store the token in local storage
-      localStorage.setItem('authToken', token);
+      localStorage.setItem("authToken", token);
       // Set the token as a cookie
       document.cookie = `authToken=${token}; path=/`;
-      const testingToken = localStorage.getItem('authToken');
+      const testingToken = localStorage.getItem("authToken");
       console.log("testing to see local storage: ", testingToken);
-  
+
       const userData = await ApiService.fetchUserData(user.uid);
-       
+
       if (userData) {
         // If user data is found in the API
         this.userData = userData;
@@ -126,7 +125,7 @@ export class User {
           console.log("User data not found in Firestore or API.");
         }
       }
-  
+
       // Persist user data and update login state
       if (this.userData) {
         await this.persistUser(this.userData);
@@ -140,19 +139,19 @@ export class User {
       return Promise.reject(error);
     }
   }
-  
+
   public async logout() {
     try {
       await signOut(auth);
       this.userData = null;
       this.clearUser();
       this.notifyLoginState();
-      
+
       // Remove the token from local storage
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("authToken");
       // Clear the cookie
-      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      
+      document.cookie = "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
       console.log("User logged out");
     } catch (error) {
       console.log("User did not successfully log out");

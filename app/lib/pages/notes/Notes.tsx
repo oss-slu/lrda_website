@@ -1,22 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Sidebar from "./lib/components/side_bar";
-import NoteEditor from "./lib/components/noteElements/note_component";
-import { Note, newNote } from "./types";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { User } from './lib/models/user_class';
+import Sidebar from "../../components/side_bar";
+import NoteEditor from "../../components/noteElements/note_component";
+import { Note, newNote } from "../../../types";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { User } from "../../models/user_class";
+import { useNotesStore } from "../../stores/notesStore";
 
-export default function Home() {
+export default function Notes() {
+  const { fetchNotes, setSelectedNoteId } = useNotesStore();
+
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
-  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // Add refresh trigger
 
+  console.log("Notes page render");
   useEffect(() => {
     const user = User.getInstance();
     // Add a slight delay before checking the login state
@@ -29,48 +28,45 @@ export default function Home() {
     }, 100); // Adjust the delay as needed
   }, []);
 
+  // Fetch notes on mount
+  useEffect(() => {
+    const user = User.getInstance();
+    const loadNotes = async () => {
+      const userId = await user.getId();
+      if (userId) {
+        await fetchNotes(userId);
+      }
+    };
+    loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
     setIsNewNote(isNew);
-    // Optional: Keep a subtle success message
-    setDebugInfo(isNew ? 'New note created!' : 'Note loaded!');
-    // Clear the message after 3 seconds
-    setTimeout(() => setDebugInfo(''), 3000);
+    // Remove success banner/message per request
+    setDebugInfo("");
   };
 
-  const handleNoteSaved = () => {
-    // Increment the refresh key to trigger sidebar re-fetch
-    setSidebarRefreshKey(prev => prev + 1);
-    // Don't clear the note - keep it open so user can continue editing
+  const handleNoteDeleted = () => {
+    const currentNotes = useNotesStore.getState().notes;
+    setSelectedNote(currentNotes[0] || undefined);
+    setSelectedNoteId(currentNotes[0]?.id || null);
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal">
-      <ResizablePanel
-        minSize={15}
-        maxSize={30}
-        defaultSize={20}
-        collapsible={true}
-        collapsedSize={1}
-      >
-        <Sidebar onNoteSelect={handleNoteSelect} refreshKey={sidebarRefreshKey} />
+    <ResizablePanelGroup direction="horizontal" autoSaveId="notes-layout">
+      <ResizablePanel minSize={22} maxSize={30} defaultSize={26} collapsible={true} collapsedSize={1}>
+        <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={80}>
-        {/* Success indicator - much cleaner */}
-        {debugInfo && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 m-2 rounded text-sm">
-            ✅ {isNewNote ? 'New note created' : 'Note loaded'} - Ready to edit!
-          </div>
-        )}
-        
-        {/* Main content area with debugging indicators */}
-        <div className="flex-1 relative">
+        {/* Main content area */}
+        <div className="h-full flex flex-col relative min-h-0">
           {isUserLoggedIn ? (
             selectedNote ? (
-              <div className="h-full w-full">
-
-                <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteSaved={handleNoteSaved} />
+              <div className="h-full w-full min-h-0 flex flex-col">
+                <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteDeleted={handleNoteDeleted} />
               </div>
             ) : (
               <div className="w-full h-full flex flex-col justify-center items-center text-3xl font-bold">
