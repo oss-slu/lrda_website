@@ -7,13 +7,11 @@ import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-// import "../../../globals.css";
 
-import { CompassIcon, GlobeIcon, LocateIcon, Navigation, UserIcon, Plus, Minus } from "lucide-react";
+import { UserIcon, Plus, Minus, Users } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
@@ -22,7 +20,6 @@ import { getItem, setItem } from "../../utils/async_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
-
 
 interface Location {
   lat: number;
@@ -54,15 +51,14 @@ const Page = () => {
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map>();
   const markerClustererRef = useRef<MarkerClusterer>();
-  const [emptyRegion, setEmptyRegion] = useState(false);
+
   const noteRefs = useRef<Refs>({});
   const currentPopupRef = React.useRef<any | null>(null);
   const hoverTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = React.useRef(false);
   const popupHoveredRef = React.useRef(false);
   const [markers, setMarkers] = useState(new Map());
-  const [modalNote, setModalNote] = useState<Note | null>(null); 
-  const [skip, setSkip] = useState(0);
+  const [modalNote, setModalNote] = useState<Note | null>(null);
   const infinite = useInfiniteNotes<Note>({
     items: filteredNotes,
     pageSize: NOTES_PAGE_SIZE,
@@ -75,22 +71,6 @@ const Page = () => {
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
-  let popupHovered = false;
-  let markerHovered = false;
-
-  const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
-    if (isNewNote) {
-      // Create a new Note from the newNote template, assigning default values for missing fields.
-      const newNoteWithDefaults: Note = {
-        ...note, // Spread existing newNote fields
-        id: "temporary-id", // Assign a temporary ID for new note
-        uid: "temporary-uid", // Assign a temporary UID
-      };
-      console.log("New note created:", newNoteWithDefaults);
-    } else {
-      console.log("Existing note selected:", note);
-    }
-  };
 
   const startPopupCloseTimer = () => {
     // Clear any timer that's already running
@@ -102,7 +82,6 @@ const Page = () => {
     hoverTimerRef.current = setTimeout(() => {
       // After 200ms, check if the mouse is NOT on the marker AND NOT on the popup
       if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
-        
         // If it's safe to close, close the popup
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
@@ -200,12 +179,12 @@ const Page = () => {
         const lastLocationString = await getItem("LastLocation");
         const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
         if (isSubscribed) {
-          if (lastLocation && typeof lastLocation.lat === 'number' && typeof lastLocation.lng === 'number') {
-          setMapCenter(lastLocation);
-          setMapZoom(10);
-          setLocationFound(true);
+          if (lastLocation && typeof lastLocation.lat === "number" && typeof lastLocation.lng === "number") {
+            setMapCenter(lastLocation);
+            setMapZoom(10);
+            setLocationFound(true);
           } else {
-          throw new Error("Invalid or missing last location in storage.");
+            throw new Error("Invalid or missing last location in storage.");
           }
         }
       } catch (error) {
@@ -229,14 +208,12 @@ const Page = () => {
       try {
         const currentLocation = (await getLocation()) as Location;
 
-        if (currentLocation && typeof currentLocation.lat === 'number' && typeof currentLocation.lng === 'number') {
-          
+        if (currentLocation && typeof currentLocation.lat === "number" && typeof currentLocation.lng === "number") {
           if (!locationFound && isComponentMounted) {
             setMapCenter(currentLocation);
             setMapZoom(10);
           }
           await setItem("LastLocation", JSON.stringify(currentLocation));
-
         } else {
           throw new Error("Failed to get valid coordinates from getLocation()");
         }
@@ -341,7 +318,7 @@ const Page = () => {
           this.containerDiv.classList.add("popup-container");
           this.containerDiv.appendChild(bubbleAnchor);
           Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-          
+
           // Add hover listeners to the popup itself
           this.containerDiv.addEventListener("mouseenter", () => {
             popupHoveredRef.current = true;
@@ -355,7 +332,9 @@ const Page = () => {
             }
           });
         }
-        onAdd() { this.getPanes()!.floatPane.appendChild(this.containerDiv); }
+        onAdd() {
+          this.getPanes()!.floatPane.appendChild(this.containerDiv);
+        }
         onRemove() {
           if (this.containerDiv.parentElement) {
             this.containerDiv.parentElement.removeChild(this.containerDiv);
@@ -381,26 +360,26 @@ const Page = () => {
         if (currentPopupRef.current) {
           currentPopupRef.current.setMap(null);
         }
-        
+
         if (isClick) {
           setModalNote(note);
-          return; 
+          return;
         }
 
         // Create the preview popup.
         const popupContent = document.createElement("div");
         const root = ReactDOM.createRoot(popupContent);
-        
+
         // Render only the preview card
-        root.render(<NoteCard note={note} />); 
-        
+        root.render(<NoteCard note={note} />);
+
         // Create new popup
         const popup = new Popup(
           new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
           popupContent,
           isClick // This will be 'false'
         );
-        
+
         // Save and show
         currentPopupRef.current = popup;
         popup.setMap(map);
@@ -408,7 +387,7 @@ const Page = () => {
 
       const handleMarkerClick = (note: Note) => {
         console.log("handleMarkerClick start", note.id);
-    
+
         if (currentPopupRef.current) {
           currentPopupRef.current.setMap(null);
           currentPopupRef.current = null;
@@ -421,12 +400,8 @@ const Page = () => {
           scrollToNoteTile(note.id);
         }
       };
-      
-      const attachMarkerEvents = (
-        marker: google.maps.marker.AdvancedMarkerElement,
-        note: Note,
-        iconNode: HTMLElement
-      ) => {
+
+      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => {
         const newIconNode = marker.content as HTMLElement;
 
         newIconNode.addEventListener("click", (e) => {
@@ -439,15 +414,15 @@ const Page = () => {
           if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
             return;
           }
-          
+
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           markerHoveredRef.current = true;
-          
+
           // Only open a new popup if one isn't already open
           if (!currentPopupRef.current) {
             openPopup(note, false); // Open as a "hover" popup
           }
-          
+
           setHoveredNoteId(note.id);
           if (isPanelOpen) scrollToNoteTile(note.id);
           setActiveNote(note);
@@ -515,10 +490,10 @@ const Page = () => {
     mapRef.current = map;
 
     const updateBounds = () => {
-      const lat =  map.getCenter()?.lat();
+      const lat = map.getCenter()?.lat();
       const lng = map.getCenter()?.lng();
 
-      if (typeof lat === 'number' && typeof lng === 'number') {
+      if (typeof lat === "number" && typeof lng === "number") {
         setMapCenter({ lat, lng });
         setMapBounds(map.getBounds());
       } else {
@@ -734,12 +709,10 @@ const Page = () => {
     try {
       const newCenter = (await getLocation()) as Location;
 
-      if (newCenter && typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
-        
+      if (newCenter && typeof newCenter.lat === "number" && typeof newCenter.lng === "number") {
         setMapCenter(newCenter);
         mapRef.current?.panTo(newCenter);
         mapRef.current?.setZoom(13);
-        
       } else {
         throw new Error("Failed to get valid coordinates from getLocation()");
       }
@@ -764,7 +737,7 @@ const Page = () => {
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
-              mapId: process.env.NEXT_PUBLIC_MAP_ID, 
+              mapId: process.env.NEXT_PUBLIC_MAP_ID,
             }}
           >
             <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
@@ -787,15 +760,16 @@ const Page = () => {
                     }`}
                   >
                     {global ? (
-                      <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                      <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
                     ) : (
                       <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
                     )}
                   </button>
                 ) : null}
               </div>
-              <div className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4
-                              ${isPanelOpen ? 'mr-[35rem]' : 'mr-4'}`}
+              <div
+                className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4
+                              ${isPanelOpen ? "mr-[35rem]" : "mr-4"}`}
               >
                 {/* Zoom Out Button */}
                 <button
@@ -836,7 +810,7 @@ const Page = () => {
           </GoogleMap>
         )}
       </div>
-      
+
       {/* NEW: Toggle Button */}
       <button
         onClick={() => setIsPanelOpen(!isPanelOpen)}
@@ -845,18 +819,18 @@ const Page = () => {
                     transition-all duration-300 ease-in-out hover:bg-gray-100`}
         style={{
           // This '34rem' MUST match the 'w-[34rem]' of your panel below
-          right: isPanelOpen ? '34rem' : '1rem' 
+          right: isPanelOpen ? "34rem" : "1rem",
         }}
       >
-        {isPanelOpen ? '>' : '<'}
+        {isPanelOpen ? ">" : "<"}
       </button>
       {/* END NEW */}
 
       {/* NOTES PANEL */}
-      <div 
+      <div
         className={`absolute top-0 right-0 h-full overflow-y-auto bg-neutral-100
                     w-[34rem] transition-transform duration-300 ease-in-out z-10
-                    ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} 
+                    ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
         ref={notesListRef}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 content-start">
@@ -886,7 +860,6 @@ const Page = () => {
           ) : (
             // --- EMPTY STATE  ---
             <div className="col-span-full flex flex-col items-center justify-center text-center p-4 py-20">
-              
               <h3 className="text-xl font-semibold text-gray-700 mt-4">No Results Found</h3>
               <p className="text-gray-500 mt-2">Sorry, there are no notes in this area. Try zooming out or moving the map.</p>
             </div>
@@ -904,8 +877,8 @@ const Page = () => {
           </div>
         </div>
       </div>
-      <Dialog 
-        open={modalNote !== null} 
+      <Dialog
+        open={modalNote !== null}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
             setModalNote(null);
@@ -920,8 +893,8 @@ const Page = () => {
 
 export default Page;
 
-
-{/* <div className="flex justify-center w-full mt-4 mb-2">
+{
+  /* <div className="flex justify-center w-full mt-4 mb-2">
           <button
             className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
             onClick={handlePrevious}
@@ -935,4 +908,5 @@ export default Page;
           >
             Next
           </button>
-        </div> */}
+        </div> */
+}
