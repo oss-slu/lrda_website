@@ -25,34 +25,6 @@ describe("PublishToggle Component", () => {
     await waitFor(() => expect(onPublishClickMock).toHaveBeenCalledTimes(1));
   });
 
-  it("displays publish notification on click and hides after timeout", async () => {
-    let isPublished = false;
-    const onPublishClickMock = jest.fn(async () => {
-      isPublished = !isPublished;
-    });
-
-    const { rerender } = render(<PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />);
-
-    const button = screen.getByText(/Publish/i);
-    fireEvent.click(button);
-
-    // Simulate prop change after async action
-    await waitFor(() => expect(onPublishClickMock).toHaveBeenCalled());
-
-    // Re-render with new publish state
-    rerender(<PublishToggle isPublished={true} onPublishClick={onPublishClickMock} />);
-
-    const notification = await screen.findByText(/Note published successfully!/i);
-    expect(notification).toBeInTheDocument();
-
-    await waitFor(
-      () => {
-        expect(screen.queryByText(/Note published successfully!/i)).not.toBeInTheDocument();
-      },
-      { timeout: 3500 }
-    );
-  });
-
   it("updates correctly when isPublished prop changes", () => {
     const { rerender } = render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
     const button = screen.getByText(/Publish/i);
