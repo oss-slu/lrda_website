@@ -122,7 +122,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
               },
               {
                 element: deleteButton,
-                intro: "If you don't like your note, you can archive it here.",
+                intro: "If you don't like your note, you can delete it here.",
               },
               {
                 element: date,
@@ -602,17 +602,17 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                 <button
                   disabled={!noteState.note?.id || isSaving}
                   className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!noteState.note?.id ? "Please wait for note to save before archiving" : "Archive this note"}
+                  title={!noteState.note?.id ? "Please wait for note to save before deleting" : "Delete this note"}
                   ref={deleteRef}
                 >
                   <FileX2 className="w-4 h-4" />
-                  <span>Archive</span>
+                  <span>Delete</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>This action cannot be undone. This will permanently archive this note.</AlertDialogDescription>
+                  <AlertDialogDescription>This action cannot be undone. This will permanently delete this note.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
