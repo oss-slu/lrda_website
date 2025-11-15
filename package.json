@@ -10,17 +10,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "@babel/core": "^7.23.0",
-    "@babel/preset-env": "^7.22.20",
-    "@babel/preset-react": "^7.22.15",
-    "@babel/preset-typescript": "^7.23.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@googlemaps/js-api-loader": "^1.16.6",
-    "@googlemaps/markerclusterer": "^2.6.2",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@googlemaps/js-api-loader": "^1.16.10",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@jest/globals": "^29.7.0",
     "@mui/icons-material": "^5.18.0",
