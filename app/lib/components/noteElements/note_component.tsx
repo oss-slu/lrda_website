@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
-import AudioPicker from "./audio_component";
 import EditorMenuControls from "../editor_menu_controls";
-import NoteToolbar from "./note_toolbar";
 import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
@@ -42,7 +39,6 @@ import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-import { initializeApp } from "firebase/app";
 import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { Button } from "@/components/ui/button";
@@ -219,23 +215,6 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
     }
   }, [initialNote]);
-
-  // useEffect(() => {
-  //   if (initialNote) {
-  //     noteHandlers.setEditorContent(initialNote.text || "");
-  //     noteHandlers.setTitle(initialNote.title || "");
-  //     noteHandlers.setImages((initialNote.media.filter((item) => item.getType() === "image") as PhotoType[]) || []);
-  //     noteHandlers.setTime(initialNote.time || new Date());
-  //     noteHandlers.setLongitude(initialNote.longitude || "");
-  //     noteHandlers.setLatitude(initialNote.latitude || "");
-  //     noteHandlers.setTags((initialNote.tags || []).map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag)));
-  //     noteHandlers.setAudio(initialNote.audio || []);
-  //     noteHandlers.setIsPublished(initialNote.published || false);
-
-  //     noteHandlers.setCounter((prevCounter) => prevCounter + 1);
-  //     noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
-  //   }
-  // }, [initialNote]);
 
   // After a note loads, place caret at the start ONCE so typing begins at top,
   // but don't override click-based placement afterward.
