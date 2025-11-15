@@ -29,7 +29,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   }, [note.creator]);
 
   return (
-    <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200">
+    <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200" data-testid="note-card">
       {note.media.length > 0 ? (
         <CompactCarousel mediaArray={note.media}></CompactCarousel>
       ) : (
