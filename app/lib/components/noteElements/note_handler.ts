@@ -104,46 +104,56 @@ export const handleDeleteNote = async ( //supposed to be archive but named as de
   user: User,
   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
 ) => {
-  if (note?.id) {
-    try {
-      const userId = await user.getId();
-
-      // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
-      const updatedNote = {
-        ...note,
-        isArchived: true, // Mark the note as archived; this IS happening
-
-        published: false,
-
-        archivedAt: new Date().toISOString(), // Add a timestamp for archiving
-      };
-
-      // update the note
-      const response = await ApiService.overwriteNote(updatedNote);
-
-      if (response.ok) {
-        toast("Success", {
-          description: "Note successfully archived.",
-          duration: 4000,
-        });
-        setNote(undefined); // Clear the note from the state after archiving
-        return true;
-      } else {
-        throw new Error("Archiving failed");
-      }
-    } catch (error) {
-      toast("Error", {
-        description: "Failed to archive note. System failure. Try again later.",
-        duration: 4000,
-      });
-      console.error("Error archiving note:", error);
-      return false;
-    }
-  } else {
+  // Check if note exists and has an ID
+  if (!note) {
     toast("Error", {
-      description: "You must first save your note before archiving it.",
+      description: "No note selected to archive.",
       duration: 4000,
     });
+    return false;
+  }
+
+  if (!note.id || note.id === "") {
+    console.log("Note ID is missing or empty:", note);
+    toast("Error", {
+      description: "This note hasn't been saved yet. Please wait a moment and try again.",
+      duration: 4000,
+    });
+    return false;
+  }
+
+  try {
+    const userId = await user.getId();
+
+    // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
+    const updatedNote = {
+      ...note,
+      isArchived: true, // Mark the note as archived; this IS happening
+      published: false,
+      archivedAt: new Date().toISOString(), // Add a timestamp for archiving
+    };
+
+    // update the note
+    const response = await ApiService.overwriteNote(updatedNote);
+
+    if (response.ok) {
+      toast("Success", {
+        description: "Note successfully archived.",
+        duration: 4000,
+      });
+      setNote(undefined); // Clear the note from the state after archiving
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error("Archive API error:", response.status, errorText);
+      throw new Error(`Archiving failed: ${response.status}`);
+    }
+  } catch (error) {
+    toast("Error", {
+      description: "Failed to archive note. Please try again.",
+      duration: 4000,
+    });
+    console.error("Error archiving note:", error);
     return false;
   }
 };

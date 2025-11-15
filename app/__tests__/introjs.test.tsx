@@ -11,10 +11,10 @@ jest.mock("firebase/database", () => ({
 }));
 
 jest.mock('intro.js', () => {
-  const mockIntroInstance = {
-    setOptions: jest.fn(() => mockIntroInstance),
-    oncomplete: jest.fn(() => mockIntroInstance),
-    onexit: jest.fn(() => mockIntroInstance),
+  const mockIntroInstance: any = {
+    setOptions: jest.fn(function(this: any) { return this; }),
+    oncomplete: jest.fn(function(this: any) { return this; }),
+    onexit: jest.fn(function(this: any) { return this; }),
     start: jest.fn(() => {
       const tooltip = document.createElement('div');
       tooltip.className = 'introjs-tooltip';
@@ -54,6 +54,7 @@ beforeEach(() => {
   Object.defineProperty(window, 'location', {
     value: {
       href: "http://localhost/",
+      hash: "",
       assign: jest.fn(),
       reload: jest.fn(),
       replace: jest.fn(),
@@ -67,7 +68,7 @@ afterEach(() => {
   jest.clearAllTimers();
   jest.useRealTimers();
   window.location.href = 'http://localhost/';
-  navigator.geolocation.clearWatch();
+  navigator.geolocation.clearWatch(0);
   cleanup();
   console.log("All mocks, timers, and global references have been cleared");
 });
@@ -131,11 +132,8 @@ describe("Intro.js feature in Page component", () => {
       expect(document.getElementById("notes-list")).toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      const tooltip = document.querySelector(".introjs-tooltip");
-      expect(tooltip).toBeInTheDocument();
-      expect(tooltip?.textContent).toContain("Welcome! Lets explore the website together.");
-    });
+    // Note: intro.js auto-start was removed to prevent accidental blank note creation
+    // The intro can still be triggered manually if needed
 
     component?.unmount();
   });

@@ -16,7 +16,7 @@ import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import { getItem, setItem } from "../../utils/async_storage";
+import { getItem, setItem } from "../../utils/local_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
