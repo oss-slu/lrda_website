@@ -260,6 +260,7 @@ export default class ApiService {
         creatorValues.push(rerumUrl);
       });
 
+      // Fetch notes requesting approval from students (matches original working behavior)
       const queryObj = {
         type: "message",
         published: false,
@@ -278,9 +279,14 @@ export default class ApiService {
 
       const notes = await this.getPagedQuery(150, 0, queryObj);
 
+      console.log(`📥 Raw notes fetched from RERUM: ${notes.length}`);
+
       // Normalize creator fields and filter to ensure we only return notes from the requested students
       const normalizedNotes = notes.filter((note) => {
-        if (!note.creator) return false;
+        if (!note.creator) {
+          console.warn(`⚠️ Note ${note.id || note.title} has no creator field`);
+          return false;
+        }
         
         // Normalize the creator field - extract UID from RERUM URLs if needed
         let normalizedCreator = note.creator;
@@ -301,10 +307,15 @@ export default class ApiService {
         }
         
         // Check if the normalized creator matches any of the student UIDs
-        return studentUids.includes(normalizedCreator);
+        const matches = studentUids.includes(normalizedCreator);
+        if (!matches) {
+          console.warn(`❌ Note creator "${normalizedCreator}" (from "${note.creator}") does not match any student UID. Student UIDs:`, studentUids);
+        }
+        return matches;
       });
 
       console.log(`📥 Response (${notes.length} total notes, ${normalizedNotes.length} after filtering) for fetchNotesByStudents:`);
+      console.log(`✅ Notes with approvalRequested=true: ${normalizedNotes.filter(n => n.approvalRequested).length}`);
       normalizedNotes.forEach((note, idx) => {
         console.log(`  Note ${idx + 1}:`, {
           "@id": note.id,
@@ -580,6 +591,8 @@ export default class ApiService {
         published: note.published,
         tags: note.tags,
         time: note.time || new Date(),
+        approvalRequested: note.approvalRequested,
+        isArchived: note.isArchived,
       }),
     });
   }
@@ -609,6 +622,7 @@ export default class ApiService {
         tags: note.tags,
         time: note.time,
         isArchived: note.isArchived,
+        approvalRequested: note.approvalRequested,
       }),
     });
   }
@@ -823,11 +837,50 @@ export default class ApiService {
       const instructorRef = doc(db, "users", instructorId);
       const approvalsRef = collection(instructorRef, "approvalRequests");
 
-      await addDoc(approvalsRef, {
+      // Serialize media and audio arrays to plain objects for Firestore
+      // Firestore cannot store custom class instances like PhotoType, VideoType, AudioType
+      const serializedData: any = {
         ...noteDetails,
         status: "pending",
         submittedAt: new Date(),
-      });
+      };
+
+      // Convert media array (PhotoType/VideoType instances) to plain objects
+      // Firestore cannot store class instances, so we need to serialize them
+      if (noteDetails.media && Array.isArray(noteDetails.media)) {
+        serializedData.media = noteDetails.media.map((item: any) => {
+          // Convert class instance to plain object by extracting properties
+          const plain: any = {
+            uuid: item.uuid || item.getUuid?.() || '',
+            type: item.type || item.getType?.() || '',
+            uri: item.uri || item.getUri?.() || '',
+          };
+          // Add video-specific properties if they exist
+          if (item.thumbnail !== undefined) plain.thumbnail = item.thumbnail;
+          if (item.duration !== undefined) plain.duration = item.duration;
+          // Add audio-specific properties if they exist
+          if (item.name !== undefined) plain.name = item.name;
+          if (item.isPlaying !== undefined) plain.isPlaying = item.isPlaying;
+          return plain;
+        });
+      }
+
+      // Convert audio array (AudioType instances) to plain objects
+      if (noteDetails.audio && Array.isArray(noteDetails.audio)) {
+        serializedData.audio = noteDetails.audio.map((item: any) => {
+          // Convert class instance to plain object by extracting properties
+          return {
+            uuid: item.uuid || item.getUuid?.() || '',
+            type: item.type || item.getType?.() || 'audio',
+            uri: item.uri || item.getUri?.() || '',
+            duration: item.duration || item.getDuration?.() || '',
+            name: item.name || '',
+            isPlaying: item.isPlaying !== undefined ? item.isPlaying : false,
+          };
+        });
+      }
+
+      await addDoc(approvalsRef, serializedData);
 
       console.log(`Approval request sent to instructor: ${instructorId}`);
     } catch (error) {

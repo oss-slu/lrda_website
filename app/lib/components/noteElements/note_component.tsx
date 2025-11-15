@@ -720,6 +720,7 @@ useEffect(() => {
       if (response.ok) {
         if (updatedApprovalStatus && instructorId) {
           // 2. Also send approval request to instructor's Firestore document
+          // Include full note data so it persists correctly and doesn't change state on refresh
           await ApiService.requestApproval({
             instructorId: instructorId,
             title: updatedNote.title || "",
@@ -730,6 +731,8 @@ useEffect(() => {
             latitude: updatedNote.latitude || "",
             longitude: updatedNote.longitude || "",
             tags: updatedNote.tags || [],
+            media: updatedNote.media || [],
+            audio: updatedNote.audio || [],
             approvalRequested: true,
           });
         }
@@ -906,9 +909,7 @@ useEffect(() => {
               onPublishClick={() =>
                 publishHandler(noteState, noteHandlers)
               }
-              onRequestApprovalClick={() =>
-                approvalRequestHandler(noteState, noteHandlers)
-              }
+              onRequestApprovalClick={handleRequestApprovalClick}
             />
           </div>
 

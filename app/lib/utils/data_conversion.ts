@@ -73,7 +73,7 @@ export default class DataConversion {
         published: message.published || false,
         tags: message.tags || [],
         uid: message.uid, // Add the uid property here
-        approvalRequested: message.approvalRequested || false,
+        approvalRequested: message.approvalRequested ?? false,
         // isArchived: note.isArchived,
 
       };
