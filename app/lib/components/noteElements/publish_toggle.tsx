@@ -19,12 +19,6 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ id, isPublished, onPublis
 
   return (
     <div className="relative">
-      {showPublishNotification && (
-        <div className="absolute top-0 right-0 mt-4 mr-4 px-4 py-2 bg-green-500 text-white rounded shadow">
-          {isPublished ? "Note published successfully!" : "Note unpublished!"}
-        </div>
-      )}
-
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

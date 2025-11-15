@@ -56,7 +56,7 @@ export default function Notes() {
 
   return (
     <ResizablePanelGroup direction="horizontal" autoSaveId="notes-layout">
-      <ResizablePanel minSize={15} maxSize={30} defaultSize={26} collapsible={true} collapsedSize={1}>
+      <ResizablePanel minSize={22} maxSize={30} defaultSize={26} collapsible={true} collapsedSize={1}>
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
