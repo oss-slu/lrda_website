@@ -10,9 +10,10 @@ type ContributorCardProps = {
   src: string;
   socials?: { github?: string; linkedin?: string };
   delay?: number;
+  offset?: number;
 };
 
-export default function ContributorCard({ name, role, src, socials, delay = 0 }: ContributorCardProps) {
+export default function ContributorCard({ name, role, src, socials, delay = 0, offset = 20 }: ContributorCardProps) {
   const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: "120px 0px" });
 
   return (
@@ -28,7 +29,13 @@ export default function ContributorCard({ name, role, src, socials, delay = 0 }:
       <div className="relative h-64 bg-slate-900 rounded-3xl overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-0">
-          <Image src={src} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+          <Image
+            src={src}
+            alt={name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+            style={{ objectPosition: `center ${offset}%` }}
+          />
 
           {/* Dark overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
