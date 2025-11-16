@@ -28,7 +28,7 @@ export default function ContributorCard({ name, role, src, socials, delay = 0 }:
       <div className="relative h-64 bg-slate-900 rounded-3xl overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-0">
-          <Image src={src} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          <Image src={src} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
 
           {/* Dark overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>

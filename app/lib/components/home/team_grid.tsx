@@ -85,20 +85,18 @@ export default function TeamGrid() {
           {/* Header section */}
           <div ref={headerRef} className={`text-center mb-20 ${motionVariants.fadeInUp}`} data-reveal={headerVisible}>
             <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 mb-6">
-              Meet The Team Behind
+              The Saint Louis University
               <span className="bg-gradient-to-r from-blue-700 via-blue-500 to-blue-300 bg-clip-text text-transparent inline-block w-full py-1">
-                Where's Religion
+                Where's Religion Team
               </span>
             </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Building the Where's Religion platform with cutting-edge technology and innovative design
-            </p>
           </div>
 
           {/* Leadership Section */}
           <div ref={initiativeRef} className={`mb-24 ${motionVariants.fadeInUp}`} data-reveal={initiativeVisible}>
             <div className="text-center mb-12">
               <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Leadership</h3>
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">Leading the Where's Religion Initiative </p>
             </div>
 
             <div className="flex flex-wrap gap-8 justify-center max-w-4xl mx-auto">
@@ -112,8 +110,9 @@ export default function TeamGrid() {
 
           {/* Contributors Section */}
           <div ref={devRef} className={`${motionVariants.fadeInUp}`} data-reveal={devVisible}>
-            <div className="text-center mb-16">
+            <div className="text-center mb-12">
               <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Contributors</h3>
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed"> Building the platform</p>
             </div>
 
             <div className="flex flex-wrap gap-8 justify-evenly">
