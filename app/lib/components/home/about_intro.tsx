@@ -1,19 +1,24 @@
 "use client";
 import React from "react";
-import Image from "next/image";
-import { Icons } from "@/app/lib/components/icons";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
 
 export default function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
   return (
-    <section id="aboutSection" ref={ref} className="w-full py-14 sm:py-20" data-reveal={isVisible}>
-      <div className="text-center mb-16 z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6">
-          <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
-            ABOUT THE PLATFORM
-          </span>
-        </div>
+    <section id="aboutSection" ref={ref} className="w-full py-14 sm:py-20 relative overflow-hidden" data-reveal={isVisible}>
+      {/* Background elements */}
+      <div className="absolute inset-0 bg-gradient-to-bl from-slate-50 via-white to-blue-100/30"></div>
+      <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-blue-400/30 to-blue-600/20 rounded-full blur-3xl"></div>
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4">
+      {/* Header section */}
+      <div className={`text-center mb-20 `}>
+        <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+          <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">ABOUT THE PLATFORM</span>
+        </h2>
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          Building the Where's Religion platform with cutting-edge technology and innovative design
+        </p>
       </div>
 
       <div className="mx-auto max-w-6xl px-4">
@@ -111,6 +116,7 @@ export default function AboutIntro() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

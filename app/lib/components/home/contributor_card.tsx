@@ -25,16 +25,11 @@ export default function ContributorCard({ name, role, src, socials, delay = 0 }:
       }}
     >
       {/* Card */}
-      <div className="relative h-64 bg-slate-900 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-slate-200 dark:border-slate-800">
+      <div className="relative h-64 bg-slate-900 rounded-3xl overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-0">
-          <Image
-            src={src}
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          
+          <Image src={src} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+
           {/* Dark overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
         </div>
@@ -43,7 +38,7 @@ export default function ContributorCard({ name, role, src, socials, delay = 0 }:
         <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
           {/* Decorative line */}
           <div className="w-8 h-0.5 bg-blue-600 mb-2"></div>
-          
+
           {/* Role tag */}
           <div className="inline-block mb-2 self-start">
             <span className="text-[10px] font-bold tracking-wider uppercase text-white/90 bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded border border-white/20">
@@ -52,13 +47,11 @@ export default function ContributorCard({ name, role, src, socials, delay = 0 }:
           </div>
 
           {/* Name */}
-          <h3 className="font-bold text-xl text-white mb-3 tracking-tight">
-            {name}
-          </h3>
+          <h3 className="font-bold text-xl text-white tracking-tight">{name}</h3>
 
-          {/* Social links */}
+          {/* Social links bottom right */}
           {socials && (
-            <div className="flex gap-2">
+            <div className="absolute bottom-5 right-5 flex gap-2">
               {socials.github && (
                 <a
                   href={socials.github}
