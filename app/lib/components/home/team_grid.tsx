@@ -20,20 +20,22 @@ const devTeam = [
   {
     name: "Zanxiang Wang",
     role: "Tech Lead",
+    offset: 10,
     src: "/aboutPageImages/Zanxiang.jpg",
     socials: { github: "https://github.com/BaloneyBoy97", linkedin: "https://www.linkedin.com/in/zanxiang-wang-352b112a0/" },
   },
   {
     name: "Jacob Maynard",
     role: "Tech Lead",
+    offset: 40,
     src: "https://github.com/InfinityBowman.png",
     socials: { github: "https://github.com/InfinityBowman", linkedin: "https://www.linkedin.com/in/jacob-maynard-283767230/" },
   },
   // Senior Developers
-  { name: "Patrick Cuba", role: "IT Architect", src: "/aboutPageImages/Patrick.jpg" },
-  { name: "Bryan Haberberger", role: "Full Stack Developer", src: "/aboutPageImages/Bryan.jpg" },
+  { name: "Patrick Cuba", role: "IT Architect", src: "/aboutPageImages/Patrick.png", offset: 10 },
+  { name: "Bryan Haberberger", role: "Full Stack Developer", src: "/aboutPageImages/Bryan.png" },
   // Developers
-  { name: "Izak Robles", role: "Developer", src: "/aboutPageImages/Izak.jpg" },
+  { name: "Izak Robles", role: "Developer", src: "/aboutPageImages/Izak.jpg", offset: 60 },
   { name: "Stuart Ray", role: "Developer", src: "/aboutPageImages/Stuart.jpg" },
   {
     name: "Amy Chen",
@@ -45,12 +47,14 @@ const devTeam = [
     name: "Justin Wang",
     role: "Developer",
     src: "/aboutPageImages/Justin.jpg",
+    offset: 70,
     socials: { github: "https://github.com/jwang-101", linkedin: "https://www.linkedin.com/in/justin-wang-2a67b1295/" },
   },
-  { name: "Sam Sheppard", role: "Developer", src: "/aboutPageImages/Sam.jpg" },
+  { name: "Sam Sheppard", role: "Developer", src: "/aboutPageImages/Sam.jpg", offset: 40 },
   {
     name: "Puneet Sontha",
     role: "Developer",
+    offset: 30,
     src: "/aboutPageImages/Puneet.jpg",
     socials: { github: "https://github.com/PunSon", linkedin: "https://www.linkedin.com/in/puneet-sontha/" },
   },
