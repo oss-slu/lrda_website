@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import TeamCard from "./team_card";
+import ContributorCard from "./contributor_card";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
 
 const initiativeTeam = [
@@ -75,34 +76,29 @@ export default function TeamGrid() {
   return (
     <section className="w-full relative overflow-hidden">
       {/* Animated background elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"></div>
-      <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-100/30"></div>
+      <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-blue-400/30 to-blue-600/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-blue-600/15 to-blue-400/15 rounded-full blur-3xl"></div>
 
       <div className="relative z-10 py-20 sm:py-32">
         <div className="mx-auto max-w-7xl px-4">
           {/* Header section */}
           <div ref={headerRef} className={`text-center mb-20 ${motionVariants.fadeInUp}`} data-reveal={headerVisible}>
-            <div className="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full text-blue-700 text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
-              Meet Our Team
-            </div>
             <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 mb-6">
-              The Saint Louis University
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent block">
-                Where's Religion Team
+              Meet The Team Behind
+              <span className="bg-gradient-to-r from-blue-700 via-blue-500 to-blue-300 bg-clip-text text-transparent inline-block w-full py-1">
+                Where's Religion
               </span>
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Leading the Where's Religion Initiative with cutting-edge technology and innovative research
+              Building the Where's Religion platform with cutting-edge technology and innovative design
             </p>
           </div>
 
-          {/* Initiative Team Section */}
+          {/* Leadership Section */}
           <div ref={initiativeRef} className={`mb-24 ${motionVariants.fadeInUp}`} data-reveal={initiativeVisible}>
             <div className="text-center mb-12">
               <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Leadership</h3>
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
             </div>
 
             <div className="flex flex-wrap gap-8 justify-center max-w-4xl mx-auto">
@@ -114,29 +110,18 @@ export default function TeamGrid() {
             </div>
           </div>
 
-          {/* Development Team Section */}
+          {/* Contributors Section */}
           <div ref={devRef} className={`${motionVariants.fadeInUp}`} data-reveal={devVisible}>
             <div className="text-center mb-16">
-              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Development Team</h3>
-              <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full"></div>
-              <p className="mt-6 text-slate-600 text-lg">Building the future of religious research</p>
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Contributors</h3>
             </div>
 
-            {/* Modern masonry-style grid */}
-            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
+            <div className="flex flex-wrap gap-8 justify-evenly">
               {devTeam.map((person, index) => (
-                <div key={person.name} className="break-inside-avoid">
-                  <TeamCard {...person} delay={index * 50} />
+                <div key={person.name} className="flex-grow basis-72 max-w-xs">
+                  <ContributorCard {...person} delay={index * 50} />
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Bottom CTA */}
-          <div className="text-center mt-24">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <span className="mr-2">🚀</span>
-              Want to join our mission?
             </div>
           </div>
         </div>

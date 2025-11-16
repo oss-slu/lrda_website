@@ -28,8 +28,8 @@ export default function TeamCard({ name, role, src, socials, delay = 0 }: TeamCa
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
 
       {/* Main card */}
-      <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg shadow-slate-200/50 group-hover:shadow-xl group-hover:shadow-slate-300/50 border border-slate-100 group-hover:border-slate-200 transition-all duration-500 group-hover:-translate-y-2">
-        {/* Profile image with modern styling */}
+      <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg shadow-slate-200/50 group-hover:shadow-xl group-hover:shadow-slate-300/50 border border-slate-100 group-hover:border-slate-200 transition-all duration-500">
+        {/* Profile image */}
         <div className="relative mx-auto w-24 h-24 mb-6">
           {/* Animated ring */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 rotate-0 group-hover:rotate-180">
@@ -37,7 +37,7 @@ export default function TeamCard({ name, role, src, socials, delay = 0 }: TeamCa
           </div>
 
           {/* Image container */}
-          <div className="relative overflow-hidden rounded-full w-full h-full ring-2 ring-slate-200 group-hover:ring-transparent transition-all duration-300">
+          <div className="relative overflow-hidden rounded-full w-full h-full transition-all duration-300">
             <Image
               src={src}
               alt={name}
