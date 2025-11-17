@@ -125,7 +125,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   const currentUUID = currentAudio ? currentAudio.uuid : null;
 
   return (
-    <div className="flex flex-col items-center p-2 h-min min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
+    <div className="flex flex-col items-center p-4 h-min min-w-[90px] max-w-[280px] shadow-sm rounded-md border border-border bg-white">
       <div className="flex flex-row max-w-[280px] w-[100%] justify-evenly align-center items-center cursor-pointer h-10">
         {editable ? (
           <Popover>
@@ -133,9 +133,9 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
               <FileUp className="primary" />
             </PopoverTrigger>
             <PopoverContent className="z-30">
-              <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
-                <div className="px-4">Upload Audio Here.</div>
-                <div className="px-4 mb-3">It must be of type '.mp3'</div>
+              <div className="flex p-6 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
+                <div className="mb-2 font-medium text-gray-900">Upload Audio Here</div>
+                <div className="mb-4 text-sm text-gray-600">It must be of type '.mp3'</div>
 
                 {/* File input for audio upload */}
                 <Input

@@ -1,19 +1,13 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react"; // Importing Plus icon
+import { Plus } from "lucide-react";
 import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
-import ApiService from "../utils/api_service";
-import DataConversion from "../utils/data_conversion";
-// intro.js will be loaded dynamically to avoid SSR issues
-
-/*
-//Bring this import back to use switch toggle for note view.
-import { Switch } from "@/components/ui/switch";
-*/
+import "intro.js/introjs.css";
+import { useNotesStore } from "../stores/notesStore";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -24,14 +18,17 @@ type SidebarProps = {
 const user = User.getInstance();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const { notes } = useNotesStore();
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [showPublished, setShowPublished] = useState(true);
+  const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
+  const [isSearching, setIsSearching] = useState(false);
 
+  console.log("Sidebar render");
   const handleAddNote = async () => {
     const userId = await user.getId();
     if (userId) {
-      const newBlankNote: newNote = {
+      // Create a local-only draft note (not saved to DB yet)
+      const draftNote: newNote = {
         title: "",
         text: "",
         time: new Date(),
@@ -40,146 +37,99 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         creator: userId,
         latitude: "",
         longitude: "",
-        published: undefined,
+        published: false,
         tags: [],
-        isArchived: false
+        isArchived: false,
       };
-      onNoteSelect(newBlankNote, true); // Notify that a new note is being added
+
+      // Open for editing immediately; will save when user types
+      onNoteSelect(draftNote, true);
     } else {
       console.error("User ID is null - cannot create a new note");
     }
   };
 
+  // Filter notes whenever notes or showPublished changes
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip SSR
-
-    const observer = new MutationObserver(async () => {
-      const addNote = document.getElementById("add-note-button");
-      console.log('Observer triggered');
-
-      if (addNote) {
-        // Dynamically import intro.js only on client side
-        const introJs = (await import("intro.js")).default;
-        const intro = introJs();
-        intro.setOptions({
-          scrollToElement: false,
-          skipLabel: "Skip",
-        });
-        intro.start();
-
-        if (addNote) {
-          addNote.click();
-        }
-
-        // Apply inline styling to the skip button after a short delay to ensure it has rendered
-        setTimeout(() => {
-          const skipButton = document.querySelector('.introjs-skipbutton') as HTMLElement;
-          if (skipButton) {
-            skipButton.style.position = 'absolute';
-            skipButton.style.top = '2px'; // Move it up by decreasing the top value
-            skipButton.style.right = '20px'; // Adjust positioning as needed
-            skipButton.style.fontSize = '18px'; // Adjust font size as needed
-            skipButton.style.padding = '4px 10px'; // Adjust padding as needed
-          }
-        }, 100); // 100ms delay to wait for rendering
-
-        observer.disconnect(); // Stop observing once the elements are found
-      }
-    });
-
-    // Start observing the body for changes
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Cleanup the observer when the component unmounts
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const fetchUserMessages = async () => {
-      try {
-        const userId = await user.getId();
-        if (userId) {
-          const userNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); // filter here?
-          const convertedNotes = DataConversion.convertMediaTypes(userNotes).reverse();
-
-          const unarchivedNotes = convertedNotes.filter((note) => !note.isArchived); //filter out archived notes
-          const publishedNotes = convertedNotes.filter((note) => note.published); //filter out unpublished notes
-
-          setNotes(unarchivedNotes);
-          setFilteredNotes(publishedNotes);
-        } else {
-          console.error("User not logged in");
-        }
-      } catch (error) {
-        console.error("Error fetching user messages:", error);
-      }
-    };
-    fetchUserMessages();
-  }, []);
+    filterNotesByPublished(showPublished, notes);
+  }, [notes, showPublished]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
+      setIsSearching(false);
       filterNotesByPublished(showPublished);
       return;
     }
+    setIsSearching(true);
     const query = searchQuery.toLowerCase();
-    const filtered = notes.filter(
-      (note) =>
-        (note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
-        (showPublished ? note.published : !note.published)
-    );
+    const filtered = notes
+      .filter((note) => !note.isArchived) // Filter archived
+      .filter(
+        (note) =>
+          (note.title.toLowerCase().includes(query) || note.tags.some((tag) => tag.label.toLowerCase().includes(query))) &&
+          (showPublished ? note.published : !note.published)
+      );
     setFilteredNotes(filtered);
   };
 
-  const filterNotesByPublished = (showPublished: boolean) => {
-    const filtered = notes.filter(note => showPublished ? note.published : !note.published);
+  const filterNotesByPublished = (showPublished: boolean, notesToFilter?: Note[]) => {
+    const noteList = notesToFilter || notes;
+    setIsSearching(false);
+    // Filter out archived notes AND filter by published status
+    const filtered = noteList.filter((note) => !note.isArchived).filter((note) => (showPublished ? note.published : !note.published));
     setFilteredNotes(filtered);
   };
 
-  const togglePublished = () => {
-    const newShowPublished = !showPublished;
+  const togglePublished = (value: string) => {
+    const newShowPublished = value === "published";
     setShowPublished(newShowPublished);
     filterNotesByPublished(newShowPublished);
   };
 
   return (
-    <div className="h-full bg-gray-200 p-4 pt-1 overflow-y-auto flex flex-col z-30 relative">
-      <div className="w-full mb-4">
-        <div className="text-center justify-center mb-1">
-          <span className="justify-center text-xl font-semibold">My Notes</span>
-        </div>
-        {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
-        <SearchBarNote onSearch={handleSearch} />
+    <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
+      {/* Scrollable content area */}
+      <div className="overflow-y-auto flex-1 p-4 pb-20">
+        {" "}
+        {/* pb-20 to prevent content from going under button */}
+        <div className="w-full mb-4">
+          {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
+          <SearchBarNote onSearch={handleSearch} />
 
-          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1"> {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
-            <Tabs defaultValue="published" className="w-full" onValueChange={togglePublished}>
+          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1">
+            {" "}
+            {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
+            <Tabs defaultValue="unpublished" className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="unpublished" className="text-sm font-semibold">Unpublished</TabsTrigger>
-                <TabsTrigger value="published" className="text-sm font-semibold">Published</TabsTrigger>
+                <TabsTrigger value="unpublished" className="text-sm font-semibold">
+                  Unpublished
+                </TabsTrigger>
+                <TabsTrigger value="published" className="text-sm font-semibold">
+                  Published
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="unpublished"></TabsContent>
               <TabsContent value="published"></TabsContent>
             </Tabs>
           </div>
         </div>
-
-      <div>
-        <NoteListView
-          notes={filteredNotes}
-          onNoteSelect={(note) => onNoteSelect(note, false)}
-        />
+        <div>
+          <NoteListView notes={filteredNotes} onNoteSelect={(note) => onNoteSelect(note, false)} isSearching={isSearching} />
+        </div>
       </div>
 
-      {/* floating add note button */}
-      <Button
-        id="add-note-button"
-        data-testid="add-note-button"
-        onClick={handleAddNote}
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black hover:bg-blue-600 text-white p-4 rounded-full shadow-lg"
-      >
-        <Plus size={24} />
-      </Button>
+      {/* Fixed Add Note button at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200 z-10">
+        <Button
+          id="add-note-button"
+          data-testid="add-note-button"
+          onClick={handleAddNote}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
+        >
+          <Plus size={18} className="mr-2" />
+          New Note
+        </Button>
+      </div>
     </div>
   );
 };

@@ -78,7 +78,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [onLocationChange]);
 
   {geoError && (
-    <div className="absolute top-16 left-1/2 tranform -translate-x-1/2 bg-white p-2 rounded shadow text-red-600 z-50">
+    <div className="absolute top-16 left-1/2 tranform -translate-x-1/2 bg-white px-4 py-2 rounded shadow text-red-600 z-50">
       {geoError}
     </div>
     )}
@@ -117,43 +117,46 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   // changes here
 
   useEffect (() => {
-  /*  const handleClickOutside = (event: MouseEvent) => {
-      if (
-        mapContainerRef.current && 
-        !mapContainerRef.current.contains(event.target as Node) &&
-        searchBarRef.current &&
-        !searchBarRef.current.contains(event.target as Node)
-      ) {
-        setIsExpanded(false); //closes map
+    // Close on Escape when expanded
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isExpanded) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }; */
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isExpanded]);
 
   return (
     <div className="relative">
       <button
         onClick={handleToggleMap}
-        className="flex items-center justify-start w-full text-sm p-2"
+        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
         aria-label="Toggle map visibility"
       >
-        <MapPin aria-label="map pin" className="mx-2 h-5 w-5" />
-        <div>Location</div>
+        <MapPin aria-label="map pin" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
+        <span>Location</span>
       </button>
       
       {isExpanded && (
         <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-75 pointer-events-none"/>
+          {/* Backdrop closes on click */}
+          <div
+            className="absolute inset-0 bg-black/75"
+            onClick={() => setIsExpanded(false)}
+            aria-hidden="true"
+          />
           
           <div className="absolute top-2 left-2 z-50">
             <button
               onClick={handleToggleMap}
-              className="text-xl text-black bg-white rounded-full p-2 shadow-md hover:bg-gray-200"
+              className="text-xl text-black bg-white rounded-full p-3 shadow-md hover:bg-gray-200"
               aria-label="Close map"
             >
               <X />
@@ -170,36 +173,43 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 type="text"
                 placeholder="Search Location"
                 style={{ pointerEvents: "auto" }}
-                className="w-full p-2 rounded shadow-md"
+                className="w-full px-4 py-2 rounded shadow-md"
               />
             </Autocomplete>
           </div>
 
           {isLoaded && (
-            <div 
-              ref={mapContainerRef}
-              className="flex justify-center items-center w-full h-full absolute inset-0 z-40"
+            <div
+              className="absolute inset-0 z-40 flex justify-center items-center"
+              onClick={() => setIsExpanded(false)}
             >
-              <GoogleMap
-                mapContainerStyle={{
-                  width: "80%",
-                  height: "80%",
-                  borderRadius: "8px",
-                }}
-                center={{ lat: latitude, lng: longitude }}
-                zoom={9}
-                options={{
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                }}
+              {/* Map container: stop click propagation so inside clicks don't close */}
+              <div
+                ref={mapContainerRef}
+                className="w-[80%] h-[80%]"
+                onClick={(e) => e.stopPropagation()}
               >
-                <MarkerF
-                  position={{ lat: latitude, lng: longitude }}
-                  draggable={true}
-                  onDragEnd={onMarkerDragEnd} // Handle marker drag event
-                />
-              </GoogleMap>
+                <GoogleMap
+                  mapContainerStyle={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "8px",
+                  }}
+                  center={{ lat: latitude, lng: longitude }}
+                  zoom={9}
+                  options={{
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  <MarkerF
+                    position={{ lat: latitude, lng: longitude }}
+                    draggable={true}
+                    onDragEnd={onMarkerDragEnd} // Handle marker drag event
+                  />
+                </GoogleMap>
+              </div>
             </div>
           )}
         </div>

@@ -86,30 +86,28 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   }
 
   return (
-    <>
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            id={id}
-            className="flex flex-row items-center p-3 justify-between cursor-pointer group"
-            onClick={handlePublishClick}
-          >
-            <div className="flex items-center space-x-2">
-              <UploadIcon className={`h-6 w-6 ${iconClass}`} />
-              <span className={`font-semibold ${iconClass}`}>{labelText}</span>
-            </div>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>{tooltipText}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-       {notification && (
+    <div className="relative">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              id={id}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors group"
+              onClick={handlePublishClick}
+            >
+              <UploadIcon className={`h-4 w-4 ${iconClass}`} />
+              <span className={iconClass}>{labelText}</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{tooltipText}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      {notification && (
         <div role="alert" className="fixed bottom-4 right-4 bg-black text-white p-2 rounded">
           {notification}
         </div>
       )}
-      </>
+    </div>
   );
 };
 

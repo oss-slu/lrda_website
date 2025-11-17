@@ -41,26 +41,50 @@ import {
   TableImproved,
 } from "mui-tiptap";
 
-const LazyResizableImage = ResizableImage.extend({
+import { Node } from '@tiptap/core'
+
+const LazyImage = Node.create({
+  name: 'image',
+
   addAttributes() {
-    const parentAttributes = this.parent?.() ?? {};
     return {
-      ...parentAttributes,
-      loading: {
-        default: "lazy",
-        renderHTML: (attributes: any) => ({
-          loading: attributes.loading,
-        }),
+      src: {},
+      alt: {
+        default: null,
       },
-      style: {
-        default: "max-width:100%;height:auto;",
-        renderHTML: (attributes: any) => ({
-          style: attributes.style,
-        }),
+      title: {
+        default: null,
+      },
+      loading: {
+        default: 'lazy',
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'img[src][loading="lazy"]',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['img', HTMLAttributes];
+  },
+
+  addCommands() {
+    return {
+      setImage: options => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
       },
     };
   },
 });
+
 
 export type UseExtensionsOptions = {
   /** Placeholder hint to show in the text input area before a user types a message. */
@@ -150,7 +174,7 @@ export default function useExtensions({
       // https://github.com/ueberdosis/tiptap/issues/4006)
       Bold,
       Blockquote,
-      LazyResizableImage,
+      // LazyImage, // Removed to avoid duplicate with ResizableImage
       Code,
       Italic,
       Underline,

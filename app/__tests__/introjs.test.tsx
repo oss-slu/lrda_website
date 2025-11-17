@@ -11,17 +11,10 @@ jest.mock("firebase/database", () => ({
 }));
 
 jest.mock('intro.js', () => {
-  type MockIntroInstance = {
-    setOptions: jest.Mock<MockIntroInstance>;
-    oncomplete: jest.Mock<MockIntroInstance>;
-    onexit: jest.Mock<MockIntroInstance>;
-    start: jest.Mock<void>;
-  };
-
-  const mockIntroInstance: MockIntroInstance = {
-    setOptions: jest.fn(() => mockIntroInstance),
-    oncomplete: jest.fn(() => mockIntroInstance),
-    onexit: jest.fn(() => mockIntroInstance),
+  const mockIntroInstance: any = {
+    setOptions: jest.fn(function(this: any) { return this; }),
+    oncomplete: jest.fn(function(this: any) { return this; }),
+    onexit: jest.fn(function(this: any) { return this; }),
     start: jest.fn(() => {
       const tooltip = document.createElement('div');
       tooltip.className = 'introjs-tooltip';
@@ -32,36 +25,6 @@ jest.mock('intro.js', () => {
   return jest.fn(() => mockIntroInstance);
 });
 
-// Mock Google Maps API context so the map and search bar render
-jest.mock('../lib/utils/GoogleMapsContext', () => ({
-  useGoogleMaps: () => ({ isMapsApiLoaded: true }),
-}));
-
-// Stub out the GoogleMap component so it renders children immediately
-jest.mock('@react-google-maps/api', () => ({
-  GoogleMap: ({ children }: any) => <div data-testid="google-map-mock">{children}</div>,
-}));
-
-
-// -------------------------------------------------------------------
-// Mock MutationObserver so that observe() immediately invokes its callback
-// -------------------------------------------------------------------
-global.MutationObserver = class {
-  callback: MutationCallback;
-  constructor(callback: MutationCallback) {
-    this.callback = callback;
-  }
-  observe(_target: Node, _options?: MutationObserverInit) {
-    // simulate a mutation event immediately
-    this.callback([], this);
-  }
-  disconnect() {
-    // no-op
-  }
-  takeRecords(): MutationRecord[] {
-    return [];
-  }
-};
 jest.mock('../lib/utils/data_conversion', () => ({
   convertMediaTypes: jest.fn(() => []),
 }));
@@ -88,14 +51,16 @@ beforeEach(() => {
     writable: true,
   });
 
-  // Mock window.location methods
-  delete (window as any).location;
-  window.location = {
-    href: "http://localhost/",
-    assign: jest.fn(),
-    reload: jest.fn(),
-    replace: jest.fn(),
-  } as any;
+  Object.defineProperty(window, 'location', {
+    value: {
+      href: "http://localhost/",
+      hash: "",
+      assign: jest.fn(),
+      reload: jest.fn(),
+      replace: jest.fn(),
+    },
+    writable: true,
+  });
 });
 
 afterEach(() => {
@@ -103,7 +68,7 @@ afterEach(() => {
   jest.clearAllTimers();
   jest.useRealTimers();
   window.location.href = 'http://localhost/';
-  navigator.geolocation.clearWatch();
+  navigator.geolocation.clearWatch(0);
   cleanup();
   console.log("All mocks, timers, and global references have been cleared");
 });
@@ -167,11 +132,8 @@ describe("Intro.js feature in Page component", () => {
       expect(document.getElementById("notes-list")).toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      const tooltip = document.querySelector(".introjs-tooltip");
-      expect(tooltip).toBeInTheDocument();
-      expect(tooltip?.textContent).toContain("Welcome! Lets explore the website together.");
-    });
+    // Note: intro.js auto-start was removed to prevent accidental blank note creation
+    // The intro can still be triggered manually if needed
 
     component?.unmount();
   });

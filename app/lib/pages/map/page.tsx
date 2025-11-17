@@ -8,17 +8,18 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Skeleton } from "@/components/ui/skeleton";
-// intro.js will be loaded dynamically to avoid SSR issues
-// import introJs from "intro.js";
-// import "intro.js/introjs.css";
+import introJs from "intro.js";
+import "intro.js/introjs.css";
 
-import { GlobeIcon, UserIcon, Plus, Minus } from "lucide-react";
+import { UserIcon, Plus, Minus, Users } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
 import { toast } from "sonner";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import { getItem, setItem } from "../../utils/async_storage";
+import { getItem, setItem } from "../../utils/local_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import NoteCard from "../../components/note_card";
+import { Dialog } from "@/components/ui/dialog";
 
 interface Location {
   lat: number;
@@ -48,18 +49,22 @@ const Page = () => {
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markerClustererRef = useRef<MarkerClusterer | null>(null);
-  const isZoomingProgrammatically = useRef(false);
-  const [emptyRegion, setEmptyRegion] = useState(false);
+  const mapRef = useRef<google.maps.Map>();
+  const markerClustererRef = useRef<MarkerClusterer>();
+
   const noteRefs = useRef<Refs>({});
-  const [currentPopup, setCurrentPopup] = useState<any | null>(null);
+  const currentPopupRef = React.useRef<any | null>(null);
+  const hoverTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const markerHoveredRef = React.useRef(false);
+  const popupHoveredRef = React.useRef(false);
   const [markers, setMarkers] = useState(new Map());
-  const [skip, setSkip] = useState(0);
+  const [modalNote, setModalNote] = useState<Note | null>(null);
   const infinite = useInfiniteNotes<Note>({
     items: filteredNotes,
     pageSize: NOTES_PAGE_SIZE,
   });
+
+  const [isPanelOpen, setIsPanelOpen] = useState(true); // Default to open
 
   const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
   const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
@@ -67,18 +72,23 @@ const Page = () => {
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
 
-  const handleNoteSelect = (note: Note | newNote, isNewNote: boolean) => {
-    if (isNewNote) {
-      // Create a new Note from the newNote template, assigning default values for missing fields.
-      const newNoteWithDefaults: Note = {
-        ...note, // Spread existing newNote fields
-        id: "temporary-id", // Assign a temporary ID for new note
-        uid: "temporary-uid", // Assign a temporary UID
-      };
-      console.log("New note created:", newNoteWithDefaults);
-    } else {
-      console.log("Existing note selected:", note);
+  const startPopupCloseTimer = () => {
+    // Clear any timer that's already running
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
     }
+
+    // Start a new timer
+    hoverTimerRef.current = setTimeout(() => {
+      // After 200ms, check if the mouse is NOT on the marker AND NOT on the popup
+      if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
+        // If it's safe to close, close the popup
+        currentPopupRef.current.setMap(null);
+        currentPopupRef.current = null;
+        setHoveredNoteId(null);
+        setActiveNote(null);
+      }
+    }, 200); // 200ms delay
   };
 
   const searchBarRef = useRef<HTMLDivElement | null>(null);
@@ -95,13 +105,10 @@ const Page = () => {
           .find((row) => row.startsWith("introShown="))
           ?.split("=")[1];
 
-        if (!introShown && typeof window !== 'undefined') {
-          // Dynamically import intro.js only on client side
-          import('intro.js').then((introJsModule) => {
-            const introJs = introJsModule.default;
-            const intro = introJs();
+        if (!introShown) {
+          const intro = introJs();
 
-            intro.setOptions({
+          intro.setOptions({
             steps: [
               {
                 element: noteRefs.current?.current,
@@ -149,8 +156,7 @@ const Page = () => {
               skipButton.style.fontSize = "18px"; // Adjust font size as needed
               skipButton.style.padding = "4px 10px"; // Adjust padding as needed
             }
-            }, 100); // 100ms delay to wait for rendering
-          });
+          }, 100); // 100ms delay to wait for rendering
         }
 
         observer.disconnect(); // Stop observing once the elements are found
@@ -168,68 +174,66 @@ const Page = () => {
 
   useEffect(() => {
     let isSubscribed = true;
-    
-    const initializeLocation = async () => {
+    const fetchLastLocation = async () => {
       try {
-        // First, try to get the current location
-        const currentLocation = (await getLocation()) as Location;
+        const lastLocationString = await getItem("LastLocation");
+        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
         if (isSubscribed) {
-          setMapCenter(currentLocation);
-          setMapZoom(10);
-          setLocationFound(true);
-          // Update the map if it's already loaded
-          if (mapRef.current) {
-            mapRef.current.setCenter(currentLocation);
-            mapRef.current.setZoom(10);
-          }
-          await setItem("LastLocation", JSON.stringify(currentLocation));
-        }
-      } catch (error) {
-        // If current location fails, try to use last known location
-        try {
-          const lastLocationString = await getItem("LastLocation");
-          const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
-          if (isSubscribed && lastLocation) {
+          if (lastLocation && typeof lastLocation.lat === "number" && typeof lastLocation.lng === "number") {
             setMapCenter(lastLocation);
             setMapZoom(10);
             setLocationFound(true);
-            // Update the map if it's already loaded
-            if (mapRef.current) {
-              mapRef.current.setCenter(lastLocation);
-              mapRef.current.setZoom(10);
-            }
           } else {
-            // Fallback to default location
-            const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-            setMapCenter(defaultLocation as Location);
-            setMapZoom(10);
-            setLocationFound(true);
-            if (mapRef.current) {
-              mapRef.current.setCenter(defaultLocation);
-              mapRef.current.setZoom(10);
-            }
+            throw new Error("Invalid or missing last location in storage.");
           }
-        } catch (storageError) {
-          // Final fallback to default location
-          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-          setMapCenter(defaultLocation as Location);
-          setMapZoom(10);
-          setLocationFound(true);
-          if (mapRef.current) {
-            mapRef.current.setCenter(defaultLocation);
-            mapRef.current.setZoom(10);
-          }
-          console.error("Failed to fetch location:", error, storageError);
         }
+      } catch (error) {
+        const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+        setMapCenter(defaultLocation as Location);
+        setMapZoom(10);
+        setLocationFound(true);
+        console.error("Failed to fetch the last location", error);
       }
     };
-
-    initializeLocation();
-
+    fetchLastLocation();
     return () => {
       isSubscribed = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isComponentMounted = true;
+
+    const fetchCurrentLocationAndUpdate = async () => {
+      try {
+        const currentLocation = (await getLocation()) as Location;
+
+        if (currentLocation && typeof currentLocation.lat === "number" && typeof currentLocation.lng === "number") {
+          if (!locationFound && isComponentMounted) {
+            setMapCenter(currentLocation);
+            setMapZoom(10);
+          }
+          await setItem("LastLocation", JSON.stringify(currentLocation));
+        } else {
+          throw new Error("Failed to get valid coordinates from getLocation()");
+        }
+      } catch (error) {
+        if (isComponentMounted) {
+          const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+          setMapCenter(defaultLocation);
+          setMapZoom(10);
+          setLocationFound(true);
+          console.log("Using default location due to error:", error);
+        }
+      }
+    };
+
+    fetchCurrentLocationAndUpdate();
+
+    return () => {
+      isComponentMounted = false;
+    };
+  }, [locationFound]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -250,7 +254,6 @@ const Page = () => {
     }
   }, []);
 
-
   useEffect(() => {
     const currentNotes = global ? globalNotes : personalNotes;
     if (!isNoteSelectedFromSearch) {
@@ -268,10 +271,8 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    markers.forEach((marker, noteId) => {
+    markers.forEach(({ marker, iconNode }, noteId) => {
       const isHovered = hoveredNoteId === noteId;
-      marker.setIcon(createMarkerIcon(isHovered));
-      marker.setZIndex(isHovered ? google.maps.Marker.MAX_ZINDEX + 1 : null);
     });
   }, [hoveredNoteId, markers]);
 
@@ -288,37 +289,170 @@ const Page = () => {
 
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
-      const tempMarkers = new Map();
+      const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
+      const map = mapRef.current;
 
-      const attachMarkerEvents = (marker: google.maps.Marker, note: Note) => {
-        google.maps.event.clearListeners(marker, "click");
-        google.maps.event.clearListeners(marker, "mouseover");
-        google.maps.event.clearListeners(marker, "mouseout");
+      const mapClickListener = map.addListener("click", () => {
+        if (currentPopupRef.current) {
+          console.log("Removing existing popup (map click)");
+          currentPopupRef.current.setMap(null);
+          currentPopupRef.current = null;
+          setActiveNote(null);
+        }
+      });
 
-        marker.addListener("click", () => handleMarkerClick(note));
+      class Popup extends google.maps.OverlayView {
+        position: google.maps.LatLng;
+        containerDiv: HTMLDivElement;
+        isClickPopup: boolean; // Differentiates click from hover
 
-        marker.addListener("mouseover", () => {
-          setHoveredNoteId(note.id);
+        constructor(position: google.maps.LatLng, content: HTMLElement, isClickPopup: boolean = false) {
+          super();
+          this.position = position;
+          this.isClickPopup = isClickPopup;
+          content.classList.add("popup-bubble");
+          const bubbleAnchor = document.createElement("div");
+          bubbleAnchor.classList.add("popup-bubble-anchor");
+          bubbleAnchor.appendChild(content);
+          this.containerDiv = document.createElement("div");
+          this.containerDiv.classList.add("popup-container");
+          this.containerDiv.appendChild(bubbleAnchor);
+          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
+
+          // Add hover listeners to the popup itself
+          this.containerDiv.addEventListener("mouseenter", () => {
+            popupHoveredRef.current = true;
+            if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          });
+          this.containerDiv.addEventListener("mouseleave", () => {
+            popupHoveredRef.current = false;
+            // Only auto-close if it was a HOVER popup
+            if (!this.isClickPopup) {
+              startPopupCloseTimer();
+            }
+          });
+        }
+        onAdd() {
+          this.getPanes()!.floatPane.appendChild(this.containerDiv);
+        }
+        onRemove() {
+          if (this.containerDiv.parentElement) {
+            this.containerDiv.parentElement.removeChild(this.containerDiv);
+          }
+        }
+        draw() {
+          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
+          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
+          if (display === "block") {
+            this.containerDiv.style.left = divPosition.x + "px";
+            this.containerDiv.style.top = divPosition.y + "px";
+            this.containerDiv.style.transform = "translate(-50%, calc(-100% - 10px))"; // 10px above marker
+          }
+          if (this.containerDiv.style.display !== display) {
+            this.containerDiv.style.display = display;
+          }
+        }
+      }
+
+      // 3. One function to open all popups
+      const openPopup = (note: Note, isClick: boolean) => {
+        // Close any existing popup first
+        if (currentPopupRef.current) {
+          currentPopupRef.current.setMap(null);
+        }
+
+        if (isClick) {
+          setModalNote(note);
+          return;
+        }
+
+        // Create the preview popup.
+        const popupContent = document.createElement("div");
+        const root = ReactDOM.createRoot(popupContent);
+
+        // Render only the preview card
+        root.render(<NoteCard note={note} />);
+
+        // Create new popup
+        const popup = new Popup(
+          new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+          popupContent,
+          isClick // This will be 'false'
+        );
+
+        // Save and show
+        currentPopupRef.current = popup;
+        popup.setMap(map);
+      };
+
+      const handleMarkerClick = (note: Note) => {
+        console.log("handleMarkerClick start", note.id);
+
+        if (currentPopupRef.current) {
+          currentPopupRef.current.setMap(null);
+          currentPopupRef.current = null;
+        }
+
+        setModalNote(note);
+
+        setActiveNote(note);
+        if (isPanelOpen) {
           scrollToNoteTile(note.id);
-          setActiveNote(note);
-          marker.setIcon(createMarkerIcon(true));
+        }
+      };
+
+      const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note, iconNode: HTMLElement) => {
+        const newIconNode = marker.content as HTMLElement;
+
+        newIconNode.addEventListener("click", (e) => {
+          e.stopPropagation();
+          handleMarkerClick(note);
         });
 
-        marker.addListener("mouseout", () => {
-          setHoveredNoteId(null);
-          setActiveNote(null);
-          marker.setIcon(createMarkerIcon(false));
+        newIconNode.addEventListener("mouseenter", () => {
+          // Don't show a hover popup if a click-popup is already open
+          if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
+            return;
+          }
+
+          if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          markerHoveredRef.current = true;
+
+          // Only open a new popup if one isn't already open
+          if (!currentPopupRef.current) {
+            openPopup(note, false); // Open as a "hover" popup
+          }
+
+          setHoveredNoteId(note.id);
+          if (isPanelOpen) scrollToNoteTile(note.id);
+          setActiveNote(note);
+        });
+
+        newIconNode.addEventListener("mouseleave", () => {
+          markerHoveredRef.current = false;
+          startPopupCloseTimer(); // This handles the delay
         });
       };
 
+      // Create new AdvancedMarkerElement instances
       filteredNotes.forEach((note) => {
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
-          icon: createMarkerIcon(false),
+        const lat = parseFloat(note.latitude);
+        const lng = parseFloat(note.longitude);
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn(`Skipping note ${note.id}: invalid coordinates`, note);
+          return;
+        }
+        const position = new google.maps.LatLng(lat, lng);
+        const iconNode = createMarkerIcon();
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          position,
+          map,
+          content: iconNode,
+          title: note.title || "",
         });
-
-        attachMarkerEvents(marker, note);
+        attachMarkerEvents(marker, note, iconNode);
         tempMarkers.set(note.id, marker);
+        (marker as any).iconNode = iconNode;
       });
 
       setMarkers(tempMarkers);
@@ -338,15 +472,16 @@ const Page = () => {
         if (markerClustererRef.current) {
           markerClustererRef.current.clearMarkers();
         }
+        google.maps.event.removeListener(mapClickListener);
       };
     }
   }, [isMapsApiLoaded, filteredNotes, mapRef.current]);
 
   const handleMapClick = () => {
-    if (currentPopup) {
-      currentPopup.setMap(null);
+    if (currentPopupRef.current) {
+      currentPopupRef.current.setMap(null);
     }
-    setCurrentPopup(null);
+    currentPopupRef.current = null;
     setActiveNote(null);
   };
 
@@ -355,63 +490,26 @@ const Page = () => {
     mapRef.current = map;
 
     const updateBounds = () => {
-      const newCenter: Location = {
-        lat: map.getCenter()?.lat() || "",
-        lng: map.getCenter()?.lng() || "",
-      };
-      const newBounds = map.getBounds();
-      setMapCenter(newCenter);
-      setMapBounds(newBounds);
-    };
+      const lat = map.getCenter()?.lat();
+      const lng = map.getCenter()?.lng();
 
+      if (typeof lat === "number" && typeof lng === "number") {
+        setMapCenter({ lat, lng });
+        setMapBounds(map.getBounds());
+      } else {
+        // Optional: log an error if you didn't get valid numbers
+        console.warn("Map bounds update skipped: invalid center");
+      }
+    };
     map.addListener("dragend", updateBounds);
     map.addListener("zoom_changed", () => {
-      // Only sync state if zoom changed from user interaction (not programmatic)
-      if (!isZoomingProgrammatically.current) {
-        const currentZoom = map.getZoom();
-        setMapZoom(currentZoom || 2);
-      }
       updateBounds();
     });
-
-    // Set initial center and zoom from state (will be updated when location is found)
-    if (mapCenter.lat && mapCenter.lng) {
-      map.setCenter(mapCenter);
-      map.setZoom(mapZoom);
-    } else {
-      // Default to a reasonable location while waiting for user location
-      const defaultLocation = { lat: 38.637334, lng: -90.286021 };
-      map.setCenter(defaultLocation);
-      map.setZoom(10);
-    }
 
     setTimeout(() => {
       updateBounds();
     }, 100);
-  }, [mapCenter, mapZoom]);
-
-  // Update map center and zoom when state changes (from location fetch or plus/minus buttons)
-  useEffect(() => {
-    if (mapRef.current && locationFound) {
-      const currentCenter = mapRef.current.getCenter();
-      const currentZoom = mapRef.current.getZoom();
-      
-      // Update center if it changed
-      if (currentCenter && (Math.abs(currentCenter.lat() - mapCenter.lat) > 0.001 || Math.abs(currentCenter.lng() - mapCenter.lng) > 0.001)) {
-        mapRef.current.setCenter(mapCenter);
-      }
-      
-      // Update zoom if it changed
-      if (currentZoom !== mapZoom) {
-        isZoomingProgrammatically.current = true;
-        mapRef.current.setZoom(mapZoom);
-        // Reset flag after a short delay to allow zoom_changed event to complete
-        setTimeout(() => {
-          isZoomingProgrammatically.current = false;
-        }, 100);
-      }
-    }
-  }, [mapZoom, mapCenter, locationFound]);
+  }, []);
 
   const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
     if (!bounds) return notes;
@@ -512,78 +610,6 @@ const Page = () => {
     }
   };
 
-  const handleMarkerClick = (note: Note) => {
-    if (currentPopup) {
-      currentPopup.setMap(null);
-      setCurrentPopup(null);
-    }
-
-    setActiveNote(note);
-    scrollToNoteTile(note.id);
-
-    const map = mapRef.current;
-
-    if (map) {
-      const popupContent = document.createElement("div");
-      const root = ReactDOM.createRoot(popupContent);
-      root.render(<ClickableNote note={note} />);
-
-      class Popup extends google.maps.OverlayView {
-        position: google.maps.LatLng;
-        containerDiv: HTMLDivElement;
-
-        constructor(position: google.maps.LatLng, content: HTMLElement) {
-          super();
-          this.position = position;
-
-          content.classList.add("popup-bubble");
-
-          const bubbleAnchor = document.createElement("div");
-
-          bubbleAnchor.classList.add("popup-bubble-anchor");
-          bubbleAnchor.appendChild(content);
-
-          this.containerDiv = document.createElement("div");
-          this.containerDiv.classList.add("popup-container");
-          this.containerDiv.appendChild(bubbleAnchor);
-
-          Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
-        }
-
-        onAdd() {
-          this.getPanes()!.floatPane.appendChild(this.containerDiv);
-        }
-
-        onRemove() {
-          if (this.containerDiv.parentElement) {
-            this.containerDiv.parentElement.removeChild(this.containerDiv);
-          }
-        }
-
-        draw() {
-          const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
-
-          const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
-
-          if (display === "block") {
-            this.containerDiv.style.left = divPosition.x + "px";
-            this.containerDiv.style.top = divPosition.y + "px";
-          }
-
-          if (this.containerDiv.style.display !== display) {
-            this.containerDiv.style.display = display;
-          }
-        }
-      }
-
-      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent);
-
-      setCurrentPopup(popup);
-
-      popup.setMap(map);
-    }
-  };
-
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
     if (isNoteClick) {
       setIsNoteSelectedFromSearch(true);
@@ -630,18 +656,16 @@ const Page = () => {
     console.log("Filtered:", filtered);
   };
 
-  function createMarkerIcon(isHighlighted: boolean) {
-    if (isHighlighted) {
-      return {
-        url: "/markerG.png",
-        scaledSize: new window.google.maps.Size(48, 48),
-      };
-    } else {
-      return {
-        url: "/markerR.png",
-        scaledSize: new window.google.maps.Size(40, 40),
-      };
-    }
+  function createMarkerIcon(): HTMLElement {
+    const div = document.createElement("div");
+    div.classList.add("custom-marker");
+    div.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" class="marker-svg">
+        <path class="marker-body" fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle class="marker-center" fill="white" cx="12" cy="9" r="2.5"/>
+      </svg>
+    `;
+    return div;
   }
 
   const toggleFilter = () => {
@@ -665,53 +689,17 @@ const Page = () => {
       duration: 3000,
     });
     return new Promise((resolve, reject) => {
-      // Check if geolocation is supported
-      if (!navigator.geolocation) {
-        const error = new Error("Geolocation is not supported by this browser");
-        console.error("Geolocation not supported");
-        reject(error);
-        return;
-      }
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newCenter = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          console.log("Location fetched successfully:", newCenter);
           resolve(newCenter);
         },
         (error) => {
-          // Enhanced error logging with specific error types
-          let errorMessage = "Unknown geolocation error";
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = "Location access denied by user";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = "Location information is unavailable";
-              break;
-            case error.TIMEOUT:
-              errorMessage = "Location request timed out";
-              break;
-            default:
-              errorMessage = `Geolocation error: ${error.message || 'Unknown error'}`;
-              break;
-          }
-          
-          console.error("Error fetching location:", {
-            code: error.code,
-            message: error.message,
-            errorType: errorMessage
-          });
-          
-          reject(new Error(errorMessage));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000 // 5 minutes
+          console.error("Error fetching location", error);
+          reject(error);
         }
       );
     });
@@ -719,61 +707,23 @@ const Page = () => {
 
   async function handleSetLocation() {
     try {
-      const newCenter = await getLocation();
-      setMapCenter(newCenter as Location);
-      mapRef.current?.panTo(newCenter as Location);
-      mapRef.current?.setZoom(13);
-      
-      toast("Location Updated", {
-        description: "Map centered on your current location",
-        duration: 2000,
-      });
+      const newCenter = (await getLocation()) as Location;
+
+      if (newCenter && typeof newCenter.lat === "number" && typeof newCenter.lng === "number") {
+        setMapCenter(newCenter);
+        mapRef.current?.panTo(newCenter);
+        mapRef.current?.setZoom(13);
+      } else {
+        throw new Error("Failed to get valid coordinates from getLocation()");
+      }
     } catch (error) {
-      console.error("Failed to set location", error);
-      
-      // Show user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : "Failed to get your location";
-      toast("Location Error", {
-        description: errorMessage,
-        duration: 5000,
-      });
+      console.error("Failed to set location:", error);
     }
   }
 
-
-  const handleNext = async () => {
-    const newSkip = skip + 150;
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-    
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-  
-  const handlePrevious = async () => {
-    const newSkip = Math.max(0, skip - 150);
-    const newNotes = global
-      ? await ApiService.fetchMessages(true, true, '', 150, newSkip)
-      : await ApiService.fetchMessages(false, false, (await user.getId()) || '', 150, newSkip);
-  
-    if (newNotes.length === 0) {
-      toast("No more notes to display");
-      return;
-    }
-    
-    setFilteredNotes(newNotes);
-    setSkip(newSkip);
-  };
-  
   return (
-    <div className="flex flex-col lg:flex-row w-full h-[90vh] min-h-[500px]">
-      <div className="flex-grow relative">
+    <div className="w-screen h-full min-w-[600px] relative overflow-hidden">
+      <div className="w-full h-full">
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -783,23 +733,11 @@ const Page = () => {
             onDragStart={handleMapClick}
             onClick={handleMapClick}
             options={{
-              // Modern Google Maps styling - Clean and minimal
-              styles: [
-                {
-                  featureType: "poi",
-                  elementType: "labels",
-                  stylers: [{ visibility: "off" }]
-                },
-                {
-                  featureType: "transit",
-                  elementType: "labels",
-                  stylers: [{ visibility: "off" }]
-                }
-              ],
               streetViewControl: false,
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
+              mapId: process.env.NEXT_PUBLIC_MAP_ID,
             }}
           >
             <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
@@ -822,14 +760,17 @@ const Page = () => {
                     }`}
                   >
                     {global ? (
-                      <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+                      <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
                     ) : (
                       <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
                     )}
                   </button>
                 ) : null}
               </div>
-              <div className="flex flex-row items-center gap-2 mr-4">
+              <div
+                className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4
+                              ${isPanelOpen ? "mr-[35rem]" : "mr-4"}`}
+              >
                 {/* Zoom Out Button */}
                 <button
                   aria-label="Zoom out"
@@ -870,39 +811,102 @@ const Page = () => {
         )}
       </div>
 
-      <div className="h-full overflow-y-auto bg-white grid grid-cols-1 lg:grid-cols-2 gap-2 p-2" ref={notesListRef}>
-        {isLoading
-          ? [...Array(6)].map((_, index) => (
+      {/* NEW: Toggle Button */}
+      <button
+        onClick={() => setIsPanelOpen(!isPanelOpen)}
+        className={`absolute top-1/2 z-20 -translate-y-1/2 bg-white rounded-full
+                    shadow-md w-8 h-8 flex items-center justify-center 
+                    transition-all duration-300 ease-in-out hover:bg-gray-100`}
+        style={{
+          // This '34rem' MUST match the 'w-[34rem]' of your panel below
+          right: isPanelOpen ? "34rem" : "1rem",
+        }}
+      >
+        {isPanelOpen ? ">" : "<"}
+      </button>
+      {/* END NEW */}
+
+      {/* NOTES PANEL */}
+      <div
+        className={`absolute top-0 right-0 h-full overflow-y-auto bg-neutral-100
+                    w-[34rem] transition-transform duration-300 ease-in-out z-10
+                    ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
+        ref={notesListRef}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 content-start">
+          {isLoading ? (
+            // --- LOADING STATE ---
+            [...Array(6)].map((_, index) => (
               <Skeleton key={index} className="w-64 h-[300px] rounded-sm flex flex-col border border-gray-200" />
             ))
-          : infinite.visibleItems.map((note) => (
+          ) : infinite.visibleItems.length > 0 ? (
+            // --- NOTES FOUND STATE ---
+            infinite.visibleItems.map((note) => (
               <div
+                key={note.id}
                 ref={(el) => {
                   if (el) noteRefs.current[note.id] = el;
                 }}
                 className={`transition-transform duration-300 ease-in-out cursor-pointer max-h-[308px] max-w-[265px] ${
-                  note.id === activeNote?.id ? "active-note" : "hover:scale-105 hover:shadow-lg hover:bg-gray-200"
+                  note.id === activeNote?.id ? "active-note" : "hover:bg-gray-100"
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
-                key={note.id}
+                onClick={() => setModalNote(note)}
               >
-                <ClickableNote note={note} />
+                <NoteCard note={note} />
               </div>
-            ))}
-        
-        <div className="col-span-full flex justify-center mt-4 min-h-10">
-          {infinite.hasMore ? (
-            <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
-              {infinite.isLoading && (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
-              )}
+            ))
+          ) : (
+            // --- EMPTY STATE  ---
+            <div className="col-span-full flex flex-col items-center justify-center text-center p-4 py-20">
+              <h3 className="text-xl font-semibold text-gray-700 mt-4">No Results Found</h3>
+              <p className="text-gray-500 mt-2">Sorry, there are no notes in this area. Try zooming out or moving the map.</p>
             </div>
-          ) : null}
+          )}
+
+          {/* --- INFINITE SCROLL LOADER --- */}
+          <div className="col-span-full flex justify-center mt-4 min-h-10">
+            {infinite.hasMore ? (
+              <div ref={infinite.loaderRef as any} className="h-10 flex items-center justify-center w-full">
+                {infinite.isLoading && (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary" aria-label="Loading more" />
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
+      <Dialog
+        open={modalNote !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setModalNote(null);
+          }
+        }}
+      >
+        {modalNote && <ClickableNote note={modalNote} />}
+      </Dialog>
     </div>
   );
 };
 
 export default Page;
+
+{
+  /* <div className="flex justify-center w-full mt-4 mb-2">
+          <button
+            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            onClick={handlePrevious}
+            disabled={skip === 0}
+          >
+            Previous
+          </button>
+          <button
+            className="mx-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            onClick={handleNext}
+          >
+            Next
+          </button>
+        </div> */
+}

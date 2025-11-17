@@ -1,17 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Tag } from "@/app/types";
 import TimePicker from "./time_picker";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
-import AudioPicker from "./audio_component";
 import EditorMenuControls from "../editor_menu_controls";
-import NoteToolbar from "./note_toolbar";
 import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
-import jsPDF from "jspdf"; // For PDF
 import ApiService from "../../utils/api_service";
 import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
 import {
@@ -29,7 +25,7 @@ import useNoteState from "./note_state";
 import { toast } from "sonner";
 import {
   handleTitleChange,
-  handleDeleteNote,
+  handleDeleteNote as handleArchiveNote,
   handleEditorChange,
   handleLocationChange,
   handleTagsChange, // Imported from note_handler
@@ -42,40 +38,51 @@ import PublishToggle from "./publish_toggle";
 import VideoComponent from "./videoComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 // intro.js will be loaded dynamically to avoid SSR issues
-import { initializeApp } from "firebase/app";
 import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { Button } from "@/components/ui/button";
 import { newNote, Note } from "@/app/types"; // make sure types are imported
+import { useNotesStore } from "../../stores/notesStore";
 
 const user = User.getInstance();
 
 type NoteEditorProps = {
   note?: Note | newNote;
   isNewNote: boolean;
+  onNoteDeleted?: () => void; // Add callback for when note is deleted
 };
 
-export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorProps) {
+export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
+  const updateNote = useNotesStore((state) => state.updateNote);
+  const addNote = useNotesStore((state) => state.addNote);
   const rteRef = useRef<RichTextEditorRef>(null);
-  const extensions = useExtensions({
-    placeholder: "Add your own content here...",
-  });
 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
-  const [notes, setNotes] = useState<Note[]>([]); // Add this to define state for notes
+  // Auto-save state (from main)
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedSnapshotRef = useRef<{ title: string; text: string; tags: any[]; published: boolean; approvalRequested?: boolean } | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(isNewNote);
+  // Teacher-student state (from december-sprint)
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState<boolean>(false);
   const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
 
   const titleRef = useRef<HTMLInputElement | null>(null);
 
-  const saveRef = useRef<HTMLDivElement | null>(null);
   const dateRef = useRef<HTMLDivElement | null>(null);
-  const deleteRef = useRef<HTMLDivElement | null>(null);
+  const deleteRef = useRef<HTMLButtonElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
+
+  console.log("NoteEditor render");
+
+  const extensions = useExtensions({
+    placeholder: "Add your own content here...",
+  });
 
   const getCookie = (name: string) => {
     if (typeof window === 'undefined') return null;
@@ -91,22 +98,18 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}`;
   };
 
-  const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
   useEffect(() => {
     if (typeof window === 'undefined') return; // Skip SSR
 
     const observer = new MutationObserver(async () => {
       const addNote = document.getElementById("add-note-button");
       const title = titleRef.current;
-      const save = saveRef.current;
       const deleteButton = deleteRef.current;
       const date = dateRef.current;
       const location = locationRef.current;
 
-      console.log("Observer triggered");
-
       // Check if all elements are present
-      if (addNote && title && save && deleteButton && date && location) {
+      if (addNote && title && deleteButton && date && location) {
         // Dynamically import intro.js only on client side
         const introJs = (await import("intro.js")).default;
         const intro = introJs();
@@ -122,10 +125,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
               {
                 element: title,
                 intro: "You can name your note here!",
-              },
-              {
-                element: save,
-                intro: "Make sure you save your note.",
               },
               {
                 element: deleteButton,
@@ -242,7 +241,16 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     }
   }, [initialNote]);
 
-  console.log("initial Note", initialNote);
+  // After a note loads, place caret at the start ONCE so typing begins at top,
+  // but don't override click-based placement afterward.
+  useEffect(() => {
+    const editor = rteRef.current?.editor;
+    if (editor) {
+      // Small timeout to ensure editor has mounted with new content
+      const t = setTimeout(() => editor.chain().focus("start").run(), 0);
+      return () => clearTimeout(t);
+    }
+  }, [noteState.note?.id]);
 
   useEffect(() => {
     if (initialNote) {
@@ -250,84 +258,168 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     }
   }, [initialNote]);
 
+  // Auto-save effect: saves note 2 seconds after user stops typing, only if dirty and non-blank
   useEffect(() => {
-    if (initialNote) {
-      noteHandlers.setEditorContent(initialNote.text || "");
-      noteHandlers.setTitle(initialNote.title || "");
-      noteHandlers.setImages((initialNote.media.filter((item) => item.getType() === "image") as PhotoType[]) || []);
-      noteHandlers.setTime(initialNote.time || new Date());
-      noteHandlers.setLongitude(initialNote.longitude || "");
-      noteHandlers.setLatitude(initialNote.latitude || "");
-      noteHandlers.setTags((initialNote.tags || []).map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag)));
-      noteHandlers.setAudio(initialNote.audio || []);
-      noteHandlers.setIsPublished(initialNote.published || false);
-      noteHandlers.setApprovalRequested(initialNote.approvalRequested || false);
-
-      noteHandlers.setCounter((prevCounter) => prevCounter + 1);
-      noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
     }
-  }, [initialNote]);
 
-  const onSave = async () => {
-    const updatedNote: any = {
-      ...noteState.note,
-      text: noteState.editorContent,
-      title: noteState.title,
-      media: [...noteState.images, ...noteState.videos],
-      published: noteState.isPublished,
-      approvalRequested: noteState.approvalRequested,
-      time: noteState.time,
-      longitude: noteState.longitude,
-      latitude: noteState.latitude,
-      tags: noteState.tags,
-      audio: noteState.audio,
-      id: noteState.note?.id || "",
-      creator: noteState.note?.creator || (await user.getId()),
-    };
+    // Compute content state
+    const titleTrim = (noteState.title || "").trim();
+    const textTrim = (noteState.editorContent || "").trim();
+    const hasContent =
+      titleTrim.length > 0 ||
+      textTrim.length > 0 ||
+      noteState.images.length > 0 ||
+      noteState.videos.length > 0 ||
+      noteState.audio.length > 0;
 
-    try {
-      if (isNewNote) {
-        await ApiService.writeNewNote(updatedNote);
-        toast("Note Created", {
-          description: "Your new note has been successfully created.",
-          duration: 2000,
-        });
-      } else {
-        await ApiService.overwriteNote(updatedNote);
-        toast("Note Saved", {
-          description: "Your note has been successfully saved.",
-          duration: 2000,
-        });
-      }
+    // If this is a brand new note (no ID yet), create it in DB on first meaningful content
+    if (isCreatingNew && !noteState.note?.id && hasContent) {
+      autoSaveTimerRef.current = setTimeout(async () => {
+        setIsSaving(true);
+        try {
+          const newNoteData: any = {
+            title: noteState.title || "Untitled",
+            text: noteState.editorContent,
+            time: noteState.time,
+            media: [...noteState.images, ...noteState.videos],
+            audio: noteState.audio,
+            creator: await user.getId(),
+            latitude: noteState.latitude,
+            longitude: noteState.longitude,
+            published: noteState.isPublished,
+            approvalRequested: noteState.approvalRequested || false,
+            tags: noteState.tags,
+            isArchived: false,
+          };
 
-      // Trigger mini-refresh: Fetch updated notes and clear input fields
-      const userId = await user.getId(); // Await the user ID
-      if (userId) {
-        const updatedNotes = await ApiService.fetchUserMessages(userId); // Fetch updated notes
-        noteHandlers.setNote(undefined); // Clear current note state
-        noteHandlers.setEditorContent(""); // Clear text editor
-        noteHandlers.setTitle(""); // Clear title field
-        noteHandlers.setTags([]); // Clear tags
-        noteHandlers.setImages([]); // Clear images
-        noteHandlers.setVideos([]); // Clear videos
-        noteHandlers.setAudio([]); // Clear audio
-        noteHandlers.setTime(new Date()); // Reset time
-        noteHandlers.setLatitude("");
-        noteHandlers.setLongitude("");
-        setNotes(updatedNotes); // Update the note list
+          const response = await ApiService.writeNewNote(newNoteData);
+          if (!response.ok) throw new Error("Failed to create note");
 
-        noteHandlers.setCounter((prevCounter) => prevCounter + 1); // Force re-render
-      } else {
-        throw new Error("User ID is null or undefined.");
-      }
-    } catch (error) {
-      console.error("Error saving note:", error);
-      toast("Error", {
-        description: "Failed to save note. Try again later.",
-        duration: 4000,
+          const data = await response.json();
+          const noteId = data["@id"] || data.id;
+          if (!noteId) throw new Error("No ID returned");
+
+          const savedNote = {
+            ...newNoteData,
+            id: noteId,
+            uid: data.uid || noteId,
+          };
+
+          // Update local state and store
+          noteHandlers.setNote(savedNote as Note);
+          addNote(savedNote as Note);
+          setIsCreatingNew(false);
+          lastSavedSnapshotRef.current = {
+            title: noteState.title,
+            text: noteState.editorContent,
+            tags: noteState.tags,
+            published: noteState.isPublished,
+            approvalRequested: noteState.approvalRequested,
+          };
+
+          toast("Note Created", { description: "Your note has been saved.", duration: 2000 });
+        } catch (error) {
+          console.error("Error creating note:", error);
+          toast("Error", { description: "Failed to create note.", duration: 4000 });
+        } finally {
+          setIsSaving(false);
+        }
+      }, 500);
+      return () => {
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      };
+    }
+
+    // For existing notes: auto-save only if dirty and has content
+    if (!noteState.note?.id || !hasContent) {
+      return;
+    }
+
+    const last = lastSavedSnapshotRef.current;
+    const isDirty =
+      !last ||
+      last.title !== noteState.title ||
+      last.text !== noteState.editorContent ||
+      last.published !== noteState.isPublished ||
+      last.approvalRequested !== noteState.approvalRequested ||
+      JSON.stringify(last.tags) !== JSON.stringify(noteState.tags);
+
+    // Update the store for instant UI updates
+    if (noteState.note?.id) {
+      updateNote(noteState.note.id, {
+        title: noteState.title || "Untitled",
+        text: noteState.editorContent,
+        tags: noteState.tags,
+        published: noteState.isPublished,
+        time: noteState.time,
+        latitude: noteState.latitude,
+        longitude: noteState.longitude,
       });
     }
-  };
+
+    if (!isDirty) {
+      return; // Skip if nothing changed
+    }
+
+    // Set a new timer to auto-save to API after 500ms of inactivity
+    autoSaveTimerRef.current = setTimeout(async () => {
+      if (noteState.note?.id && !isSaving) {
+        setIsSaving(true);
+
+        const updatedNote: any = {
+          ...noteState.note,
+          text: noteState.editorContent,
+          title: noteState.title || "Untitled",
+          media: [...noteState.images, ...noteState.videos],
+          published: noteState.isPublished,
+          approvalRequested: noteState.approvalRequested || false,
+          time: noteState.time,
+          longitude: noteState.longitude,
+          latitude: noteState.latitude,
+          tags: noteState.tags,
+          audio: noteState.audio,
+          id: noteState.note.id,
+          creator: noteState.note.creator,
+        };
+
+        try {
+          console.log("Auto-saving note...", updatedNote);
+          await ApiService.overwriteNote(updatedNote);
+
+          lastSavedSnapshotRef.current = {
+            title: noteState.title,
+            text: noteState.editorContent,
+            tags: noteState.tags,
+            published: noteState.isPublished,
+            approvalRequested: noteState.approvalRequested,
+          };
+        } catch (error) {
+          console.error("Auto-save error:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    }, 500); // Auto-save after 500ms of inactivity
+
+    // Cleanup function
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [
+    noteState.title,
+    noteState.editorContent,
+    noteState.tags,
+    noteState.isPublished,
+    noteState.images.length,
+    noteState.videos.length,
+    noteState.audio.length,
+    isCreatingNew,
+  ]);
 
   const handleRequestApprovalClick = async () => {
     try {
@@ -460,7 +552,8 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     `;
 
     if (selectedFileType === "pdf") {
-      // Generate PDF using jsPDF
+      // Generate PDF using jsPDF (dynamically import to avoid canvas in tests)
+      const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF();
       pdf.text(noteContent, 10, 10); // Add text to the PDF
       pdf.save(`${noteState.title || "note"}.pdf`); // Save the PDF file
@@ -494,52 +587,14 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     toast(`Your note has been downloaded as ${selectedFileType.toUpperCase()}`);
   };
 
-  // const addImageToNote = (imageUrl: string) => {
-  //   console.log("Before updating images", noteState.images);
-  //   const newImage = {
-  //     type: "image",
-  //     attrs: {
-  //       src: imageUrl,
-  //       alt: "Image description",
-  //       loading: "lazy",
-  //     },
-  //   };
-
-  //   const editor = rteRef.current?.editor;
-  //   if (editor) {
-  //     editor
-  //       .chain()
-  //       .focus()
-  //       .setImage(newImage.attrs)
-  //       .run();
-  //   }
-
-  //   noteHandlers.setImages((prevImages) => {
-  //     const newImages = [
-  //       ...prevImages,
-  //       new PhotoType({
-  //         uuid: uuidv4(),
-  //         uri: imageUrl,
-  //         type: "image",
-  //       }),
-  //     ];
-  //     console.log("After updating images", newImages);
-  //     return newImages;
-  //   });
-  // };
-
-  const [isAudioModalOpen, setIsAudioModalOpen] = React.useState(false);
-
   const fetchSuggestedTags = async () => {
     setLoadingTags(true);
     try {
       const editor = rteRef.current?.editor;
       if (editor) {
         const noteContent = editor.getHTML();
-        console.log("Fetching suggested tags for content:", noteContent);
 
         const tags = await ApiService.generateTags(noteContent);
-        console.log("Suggested tags received:", tags);
         setSuggestedTags(tags);
       } else {
         console.error("Editor instance is not available");
@@ -551,27 +606,74 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
     }
   };
 
+  async function handleDeleteNote(noteState: NoteStateType, user: User, noteHandlers: NoteHandlersType) {
+    try {
+      const creatorId = noteState.note?.creator || (await user.getId());
+
+      const updatedNote = {
+        ...noteState.note,
+        text: noteState.editorContent,
+        title: noteState.title,
+        media: [...noteState.images, ...noteState.videos],
+        time: noteState.time,
+        longitude: noteState.longitude,
+        latitude: noteState.latitude,
+        tags: noteState.tags,
+        audio: noteState.audio,
+        id: noteState.note?.id || "",
+        uid: noteState.note?.uid ?? "",
+        creator: creatorId || "",
+        published: !noteState.isPublished,
+        isArchived: true,
+      };
+
+      if (noteState.note?.id) {
+        updateNote(noteState.note.id, {
+          isArchived: true,
+        });
+      }
+
+      noteHandlers.setNote(updatedNote);
+
+      return await handleArchiveNote(updatedNote, user, noteHandlers.setNote);
+    } catch (error) {
+      console.error("Error updating note state:", error);
+      toast("Error", {
+        description: "Failed to update note state. Please try again later.",
+        duration: 4000,
+      });
+    }
+    return false;
+  }
+
   return (
-    <div
-      className="relative h-full w-full"
-      style={{
-        backgroundImage: `url('/splash.png')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "100%",
-      }}
-    >
-      <ScrollArea className="flex flex-col w-full h-full bg-cover bg-center">
-        <div aria-label="Top Bar" className="w-full flex flex-col mx-4">
+    <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
+      <ScrollArea className="flex flex-col w-full h-full min-h-0">
+        <div aria-label="Top Bar" className="w-full flex flex-col px-8 pt-8">
           <Input
             id="note-title-input"
             value={noteState.title}
             onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
-            placeholder="Title"
-            className="p-4 font-bold text-2xl max-w-md bg-white mt-4"
+            placeholder="Untitled"
+            className="border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out"
             ref={titleRef}
           />
-          <div className="flex flex-row bg-popup shadow-sm my-4 rounded-md border border-border bg-white justify-evenly mr-8 items-center">
+          <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
+            {/* Auto-save indicator */}
+            <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+              {isSaving ? (
+                <>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>All changes saved</span>
+                </>
+              )}
+            </div>
+
             <PublishToggle
               id="publish-toggle-button"
               isPublished={Boolean(noteState.isPublished)}
@@ -584,119 +686,98 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
               isInstructorReview={false}
             />
 
-            <div className="w-1 h-9 bg-border" />
-            <button id="save-note-button" className="hover:text-green-500 flex justify-center items-center w-full" onClick={onSave}>
-              <SaveIcon className="text-current" />
-              <div className="ml-2" ref={saveRef}>
-                Save
-              </div>
-            </button>
-            <div className="w-1  h-9 bg-border" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="hover:text-red-500 flex justify-center items-center w-full">
-                  <FileX2 className="text-current" />
-                  <div className="ml-2" ref={deleteRef}>
-                    Archive
-                  </div>
+                <button
+                  disabled={!noteState.note?.id || isSaving}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!noteState.note?.id ? "Please wait for note to save before deleting" : "Delete this note"}
+                  ref={deleteRef}
+                >
+                  <FileX2 className="w-4 h-4" />
+                  <span>Delete</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>This action cannot be undone. This will permanently archive this note.</AlertDialogDescription>
+                  <AlertDialogDescription>This action cannot be undone. This will permanently delete this note.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDeleteNote(noteState.note, user, noteHandlers.setNote)}>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      const success = await handleDeleteNote(noteState, user, noteHandlers);
+
+                      if (success && onNoteDeleted) {
+                        onNoteDeleted();
+                      }
+                    }}
+                  >
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <div className="w-1 h-7 bg-border" />
-            <div className="flex-grow" ref={dateRef}>
-              <TimePicker
-                initialDate={noteState.time || new Date()}
-                onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
-              />
-            </div>
-            <div className="w-2 h-9 bg-border" />
-            <div className="bg-white p-2 rounded" ref={locationRef}>
-              <LocationPicker
-                long={noteState.longitude}
-                lat={noteState.latitude}
-                onLocationChange={(newLong, newLat) =>
-                  handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
-                }
-              />
-            </div>
-            <div className="w-2 h-9 bg-border" />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button id="download-note-button" className="hover:text-blue-500 flex justify-center items-center w-full">
-                  <SaveIcon className="text-current" />
-                  <div className="ml-2">Download</div>
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent
-                onChange={(isOpen) => {
-                  if (!isOpen) {
-                    // Close the popup and go back to the note
+
+            <div className="flex items-center gap-4 ml-auto">
+              <div ref={dateRef}>
+                <TimePicker
+                  initialDate={noteState.time || new Date()}
+                  onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
+                />
+              </div>
+              <div ref={locationRef}>
+                <LocationPicker
+                  long={noteState.longitude}
+                  lat={noteState.latitude}
+                  onLocationChange={(newLong, newLat) =>
+                    handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
                   }
-                }}
-              >
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Select File Type</AlertDialogTitle>
-                  <AlertDialogDescription>Choose a file format for downloading your note.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex flex-col items-start px-6 mt-2 space-y-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="fileType"
-                      value="pdf"
-                      checked={selectedFileType === "pdf"}
-                      onChange={() => setSelectedFileType("pdf")}
-                    />
-                    <span>PDF</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="fileType"
-                      value="docx"
-                      checked={selectedFileType === "docx"}
-                      onChange={() => setSelectedFileType("docx")}
-                    />
-                    <span>DOCX</span>
-                  </label>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-300 text-black hover:bg-gray-400 px-4 py-2 rounded">Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDownload} className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded">
-                    Download
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                />
+              </div>
+            </div>
           </div>
-          <TagManager
-            inputTags={noteState.tags}
-            suggestedTags={suggestedTags}
-            onTagsChange={
-              (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
-            }
-            fetchSuggestedTags={fetchSuggestedTags}
-          />
+          <div className="mt-2">
+            <TagManager
+              inputTags={noteState.tags}
+              suggestedTags={suggestedTags}
+              onTagsChange={
+                (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+              }
+              fetchSuggestedTags={fetchSuggestedTags}
+            />
+          </div>
 
           {loadingTags && <p>Loading suggested tags...</p>}
         </div>
-        <div className="flex-grow w-full p-4 flex flex-col">
-          <div className=" flex-grow flex flex-col bg-white w-full rounded">
+        <div
+          className="w-full px-8 pb-8 transition-opacity duration-200 ease-in-out"
+          onMouseDown={(e) => {
+            const editor = rteRef.current?.editor;
+            if (!editor) return;
+            const target = e.target as HTMLElement;
+            // If the click is NOT inside the ProseMirror content, focus the editor at the start
+            if (!target.closest(".ProseMirror")) {
+              e.preventDefault();
+              editor.chain().focus("start").run();
+            }
+          }}
+          onKeyDown={(e) => {
+            const editor = rteRef.current?.editor;
+            if (!editor) return;
+            // When the editor is empty, allow ArrowDown to create a new paragraph so users can "go down"
+            if (e.key === "ArrowDown" && editor.isEmpty) {
+              e.preventDefault();
+              editor.chain().focus().insertContent("<p><br/></p>").run();
+            }
+          }}
+        >
+          <div className="bg-white w-full">
             <RichTextEditor
+              key={`${noteState.note?.id ?? "new"}-${noteState.title}`}
               ref={rteRef}
-              className="min-h-[712px]"
+              className="min-h-[400px] prose prose-lg max-w-none"
               extensions={extensions}
               content={noteState.editorContent}
               immediatelyRender={false}
@@ -786,46 +867,6 @@ export default function NoteEditor({ note: initialNote, isNewNote }: NoteEditorP
           </div>
         </div>
       </ScrollArea>
-      <Button
-        id="add-note-button"
-        onClick={async () => {
-          const userId = await user.getId();
-          if (userId) {
-            const blankNote: Note = {
-              id: "", // or `uuidv4()` if you want to generate one
-              uid: "", // or a placeholder unique user ID
-              title: "",
-              text: "",
-              time: new Date(),
-              media: [],
-              audio: [],
-              creator: userId,
-              latitude: "",
-              longitude: "",
-              published: undefined,
-              tags: [],
-              isArchived: false,
-            };
-
-            noteHandlers.setNote(blankNote);
-            noteHandlers.setEditorContent("");
-            noteHandlers.setTitle("");
-            noteHandlers.setTags([]);
-            noteHandlers.setImages([]);
-            noteHandlers.setVideos([]);
-            noteHandlers.setAudio([]);
-            noteHandlers.setTime(new Date());
-            noteHandlers.setLatitude("");
-            noteHandlers.setLongitude("");
-            noteHandlers.setCounter((prev) => prev + 1);
-          } else {
-            console.error("User not authenticated");
-          }
-        }}
-        className="fixed bottom-6 right-6 z-50 bg-black hover:bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg"
-      >
-        Add Note
-      </Button>
     </div>
   );
 }
