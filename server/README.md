@@ -150,11 +150,3 @@ node download-notes.js
 
 1. Change `PORT` in `.env`
 2. Update `RERUM_BASE` and `RERUM_PREFIX` accordingly
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test locally
-5. Submit a pull request
