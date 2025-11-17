@@ -135,7 +135,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
             <PopoverContent className="z-30">
               <div className="flex p-4 flex-col justify-center items-center w-96 min-w-[90px] max-w-[280px] h-min bg-white shadow-lg rounded-md">
                 <div className="px-4">Upload Audio Here.</div>
-                <div className="px-4 mb-3">It must be of type &apos;.mp3&apos;</div>
+                <div className="px-4 mb-3">It must be of type '.mp3'</div>
 
                 {/* File input for audio upload */}
                 <Input

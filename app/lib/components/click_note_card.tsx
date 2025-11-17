@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import NoteCard from "./note_card";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import AudioPicker from "./noteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
@@ -62,16 +62,11 @@ function formatTime(date: string | number | Date) {
 }
 
 // Convert old tags (strings) to new format
-// Convert old tags (strings) to new format
-const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
-  if (!Array.isArray(tags)) {
-    return []; // Return an empty array if tags is undefined or not an array
-  }
-  return tags.map((tag) =>
+const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
+  return tags.map(tag =>
     typeof tag === "string" ? { label: tag, origin: "user" } : tag
   );
 };
-
 
 // ClickableNote component
 const ClickableNote: React.FC<{
@@ -80,44 +75,7 @@ const ClickableNote: React.FC<{
   const [creator, setCreator] = useState<string>("Loading...");
   const [likes, setLikes] = useState(0);
   const [disLikes, setDisLikes] = useState(0);
-  const [sanitizedContent, setSanitizedContent] = useState<string>("");
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
-
-  // Function to clean content by removing audio URLs
-  const cleanContent = (content: string, audioArray: any[]) => {
-    if (!content || !audioArray || audioArray.length === 0) return content;
-    
-    let cleanedContent = content;
-    
-    // Remove audio URLs from content
-    audioArray.forEach((audio) => {
-      if (audio.uri) {
-        // Create a regex to match the audio URL and any surrounding text
-        const audioUrlRegex = new RegExp(`[^>]*${audio.uri.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*`, 'g');
-        cleanedContent = cleanedContent.replace(audioUrlRegex, '');
-      }
-    });
-    
-    // Clean up any empty paragraphs or divs that might be left
-    cleanedContent = cleanedContent.replace(/<p>\s*<\/p>/g, '');
-    cleanedContent = cleanedContent.replace(/<div>\s*<\/div>/g, '');
-    
-    return cleanedContent.trim();
-  };
-
-  const handleNoteClick = React.useCallback(() => {
-    console.log("ClickableNote opened note:", note);
-  }, [note]);
-
-  // Load DOMPurify only on client side to avoid SSR issues
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('dompurify').then((DOMPurify) => {
-        const data = cleanContent(note.text, note.audio);
-        setSanitizedContent(DOMPurify.default.sanitize(data));
-      });
-    }
-  }, [note.text, note.audio]);
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
@@ -129,10 +87,12 @@ const ClickableNote: React.FC<{
       });
   }, [note.creator]);
 
+  const data = note.text;
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="z-40" onClick={handleNoteClick}>
+        <div className="z-40">
           <NoteCard note={note} />
         </div>
       </DialogTrigger>
@@ -145,44 +105,38 @@ const ClickableNote: React.FC<{
           <DialogDescription className="flex flex-row align-center items-center">
             <Clock3 className="w-5 h-5" />: {formatTime(note.time) }
           </DialogDescription>
-          <div className="flex flex-row align-center items-center text-sm text-muted-foreground mb-2">
+          <DialogDescription className="flex flex-row align-center items-center">
             <UserCircle className="w-5 h-5" />: {creator}
-          </div>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2 items-center">
-              <Tags />
-              {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
-                    tag.origin === "user"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-purple-200 text-purple-800"
-                  }`}
-                >
-                  {tag.label}
-                </span>
-              ))}
-            </div>
-          )}
+          </DialogDescription>
+          <DialogDescription>
+            {tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-2 items-center">
+                <Tags />
+                {tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className={`h-5 text-xs px-2 font-semibold rounded flex justify-center items-center ${
+                      tag.origin === "user"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-purple-200 text-purple-800"
+                    }`}
+                  >
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </DialogDescription>
 
           <div className="h-1 w-[100%] bg-black bg-opacity-70 rounded-full" />
         </DialogHeader>
         <ScrollArea>
-          {note.text && note.text.length > 0 ? (
-            <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} className="mb-5" />
-          ) : (
-            "This Note has no content"
-          )}
-          
-          {/* Audio player in content area */}
-          {note.audio && note.audio.length > 0 && (
-            <div className="mt-4 mb-4">
-              <h3 className="text-lg font-semibold mb-3">Audio</h3>
-              <AudioPicker audioArray={note.audio} editable={false} />
-            </div>
-          )}
-        </ScrollArea>
+  {note.text && note.text.length > 0 ? (
+    <div dangerouslySetInnerHTML={{ __html: data }} className="mb-5" />
+  ) : (
+    "This Note has no content"
+  )}
+</ScrollArea>
         <DialogFooter>
           <div className="flex flex-row w-28 absolute left-4 bottom-4">
             {note.audio.length > 0 ? (

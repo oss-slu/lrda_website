@@ -63,18 +63,14 @@ export default function CompactCarousel({
               width={256}
               height={180}
               objectFit="cover"
-              className="rounded-t-lg h-[140px] sm:h-[180px] w-full max-w-[256px]"
+              className="rounded-t-sm h-[180px] w-[256px]"
               alt="Media content"
               quality={5}
             />
             )}
             {media.type === "video" && (
               <ReactPlayer
-                src={media.uri}
-                controls={true}
-                width="100%"
-                height="140px"
-                className="self-center object-cover bg-black rounded-t-lg"
+                {...({ url: media.uri, controls: true, width: "256px", height: "180px", className: "self-center object-cover bg-black" } as any)}
               />
             )}
             

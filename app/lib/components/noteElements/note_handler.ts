@@ -53,15 +53,12 @@ export const handlePublishChange = async (
     id: noteState.note?.id || "",
     // creator: creatorId,
     published: !noteState.isPublished,
-    approvalRequested: false,   // clear any student requests for approval
   };
 
   try {
     await ApiService.overwriteNote(updatedNote);
     noteHandlers.setIsPublished(updatedNote.published);
-    noteHandlers.setApprovalRequested(updatedNote.approvalRequested);
     noteHandlers.setNote(updatedNote);
-    noteHandlers.setCounter(c => c + 1);
 
     toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
       description: updatedNote.published
@@ -77,48 +74,6 @@ export const handlePublishChange = async (
       description: "Failed to update publish state. Try again later.",
       duration: 4000,
     });
-  }
-};
-
-export const handleApprovalRequestChange = async (
-  noteState: NoteStateType,
-  noteHandlers: NoteHandlersType
-) => {
-  if (!noteState.note) return console.error("No note loaded");
-  const updated = {
-    ...noteState.note,
-    text:    noteState.editorContent,
-    title:   noteState.title,
-    media:   [...noteState.images, ...noteState.videos],
-    tags:    noteState.tags,
-    audio:   noteState.audio,
-    time:    noteState.time,
-    longitude: noteState.longitude,
-    latitude:  noteState.latitude,
-    // flip approvalRequested, but never truly publish:
-    approvalRequested: !noteState.approvalRequested,
-    published: false,
-  };
-
-  try {
-    await ApiService.overwriteNote(updated);
-    noteHandlers.setNote(updated);
-    noteHandlers.setApprovalRequested(updated.approvalRequested);
-    noteHandlers.setCounter((c) => c + 1);
-
-    toast(
-      updated.approvalRequested
-        ? "Approval Requested"
-        : "Approval Request Canceled",
-      {
-        description: updated.approvalRequested
-          ? "Sent to your instructor for review."
-          : "Your request has been withdrawn.",
-      }
-    );
-  } catch (err) {
-    console.error("Error toggling approval request:", err);
-    toast("Error", { description: "Please try again later." });
   }
 };
 
