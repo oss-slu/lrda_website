@@ -113,12 +113,12 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="flex flex-row items-center justify-center w-[200px] group"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
           aria-label="Open Calendar"
           type="button"
         >
-          <CalendarIcon className="mx-2 h-5 w-5 text-black group-hover:text-green-500" />
-          <span className="text-black group-hover:text-green-500">
+          <CalendarIcon className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
+          <span className="text-gray-700 group-hover:text-gray-900">
             {formatDateTime(date)}
           </span>
         </button>

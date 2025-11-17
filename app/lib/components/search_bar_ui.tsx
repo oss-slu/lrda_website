@@ -7,12 +7,13 @@ type SearchBarUIProps = {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void; 
   className?: string; //accepts className as prop
 };
 
 class SearchBarUI extends React.Component<SearchBarUIProps> {
   render() {
-    const { searchText, onInputChange, onFocus, onBlur, className } = this.props;
+    const { searchText, onInputChange, onFocus, onBlur, onKeyDown, className } = this.props;
 
     return (
       <div className="flex flex-col w-full">
@@ -28,6 +29,7 @@ class SearchBarUI extends React.Component<SearchBarUIProps> {
             onChange={onInputChange}
             onFocus={onFocus}
             onBlur={onBlur}
+            onKeyDown={onKeyDown}
           />
         </div>
       </div>

@@ -3,86 +3,19 @@ import React from "react";
 import Image from "next/image";
 import { Icons } from "@/app/lib/components/icons";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
-import { IconLink } from "@/app/lib/components/IconLink";
-
-function AboutHero() {
-  const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: "120px 0px", threshold: 0.1 });
-  return (
-    <section
-      ref={ref}
-      className={`relative bg-cover bg-center bg-no-repeat min-h-[50vh] flex flex-col items-center justify-center ${motionVariants.fadeIn}`}
-      data-reveal={isVisible}
-      style={{ backgroundImage: 'url("/splash.png")' }}
-    >
-      <div className="absolute inset-0 bg-white/60" />
-      <div className="text-center mb-16 z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6">
-          <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-            ABOUT THE PLATFORM
-          </span>
-        </div>
-        <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight text-slate-900 mb-4">Where's Religion?</h2>
-        <div className="w-24 h-1 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700 mx-auto rounded-full" />
-      </div>
-      {/* CTA and Social Links */}
-      <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-        {/* Primary CTA */}
-        <a
-          className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
-          href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale."
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <span className="relative flex items-center gap-2">
-            Learn More
-            <svg
-              className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </span>
-        </a>
-
-        {/* Social links container */}
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:block text-white/40 text-sm">|</span>
-          <div className="flex items-center gap-2">
-            <IconLink
-              icon="instagram"
-              href="https://www.instagram.com/livedreligion/"
-              label="Visit Instagram"
-              size="h-6 w-6"
-              className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center hover:bg-white/20 hover:scale-110 hover:border-white/40 transition-all duration-300 shadow-lg"
-            />
-            <IconLink
-              icon="twitterX"
-              href="https://twitter.com/livedreligion"
-              label="Visit Twitter/X"
-              size="h-6 w-6"
-              className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center hover:bg-white/20 hover:scale-110 hover:border-white/40 transition-all duration-300 shadow-lg"
-            />
-            <IconLink
-              icon="github"
-              href="https://github.com/oss-slu/lrda_website"
-              label="Visit GitHub"
-              size="h-6 w-6"
-              className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center hover:bg-white/20 hover:scale-110 hover:border-white/40 transition-all duration-300 shadow-lg"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
   return (
-    <section ref={ref} className="w-full bg-gradient-to-b from-slate-50 to-white py-14 sm:py-20" data-reveal={isVisible}>
+    <section id="aboutSection" ref={ref} className="w-full py-14 sm:py-20" data-reveal={isVisible}>
+      <div className="text-center mb-16 z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6">
+          <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
+            ABOUT THE PLATFORM
+          </span>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-6xl px-4">
         {/* Mission Statement Highlight */}
         <div
@@ -354,8 +287,7 @@ function TeamCard({ name, role, src, socials }: TeamCardProps) {
 
 const Page = () => {
   return (
-    <div className="font-sans leading-6 bg-slate-50">
-      <AboutHero />
+    <div className="font-sans leading-6 bg-gradient-to-b from-slate-50 via-white to-blue-50 p-8 sm:p-4">
       <AboutIntro />
       <TeamGrid />
     </div>

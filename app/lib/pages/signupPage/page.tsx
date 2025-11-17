@@ -13,6 +13,7 @@ import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
+import StrengthIndicator from "@/components/ui/strength-indicator";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");

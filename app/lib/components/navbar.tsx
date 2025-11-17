@@ -43,14 +43,12 @@ export default function Navbar() {
     { href: "/", label: "Home" },
     { href: "/lib/pages/notes", label: "Notes", authRequired: true },
     { href: "/lib/pages/map", label: "Map" },
-    { href: "/lib/pages/aboutPage", label: "About" },
+    { href: "/#aboutSection", label: "About" },
   ];
-
 
   // Active link styling
   const linkClass = (href: string) =>
     cn(
-      //"text-2xl font-bold transition duration-300 ease-in-out mr-4",
       "text-xl font-bold transition duration-300 ease-in-out mr-6",
 
       href === "/"
@@ -85,10 +83,7 @@ export default function Navbar() {
       <div>
         {name ? (
           <div className="flex items-center gap-6">
-            <span
-              className="text-lg font-semibold min-w-max truncate max-w-[150px]"
-              title={name}
-            >
+            <span className="text-lg font-semibold min-w-max truncate max-w-[150px]" title={name}>
               Hi, {name}!
             </span>
             <Button
@@ -101,18 +96,10 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Button
-              variant="default"
-              onClick={() => (window.location.href = "/lib/pages/loginPage")}
-              className="whitespace-nowrap"
-            >
+            <Button variant="default" onClick={() => (window.location.href = "/lib/pages/loginPage")} className="whitespace-nowrap">
               Login
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => (window.location.href = "/lib/pages/signupPage")}
-              className="whitespace-nowrap"
-            >
+            <Button variant="outline" onClick={() => (window.location.href = "/lib/pages/signupPage")} className="whitespace-nowrap">
               Sign Up
             </Button>
           </div>
