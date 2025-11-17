@@ -114,7 +114,8 @@
     "tailwindcss-animate": "^1.0.7",
     "tooltip": "link:@/components/ui/tooltip",
     "tss-react": "^4.9.19",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -123,7 +124,6 @@
     "@types/file-saver": "^2.0.7",
     "@types/jest": "^29.5.14",
     "@types/google.maps": "^3.58.1",
-    "@types/next": "^9.0.0",
     "@types/node": "20.6.2",
     "@types/uuid": "^9.0.8",
     "jest": "^29.7.0",

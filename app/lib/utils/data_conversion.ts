@@ -61,26 +61,16 @@ export default class DataConversion {
       });
 
       return {
+        ...message,
         id: message["@id"],
-        title: message.title || "",
-        text: message.BodyText || "",
         time: time || "",
-        creator: message.creator || "",
         media: mediaItems || [],
         audio: audioItems || [],
-        latitude: message.latitude || "",
-        longitude: message.longitude || "",
-        published: message.published || false,
-        tags: message.tags || [],
-        uid: message.uid, // Add the uid property here
-        // isArchived: note.isArchived,
-
+        text: message.BodyText || "",
       };
     });
 
-    fetchedNotes.sort(
-      (b, a) => new Date(b.time).getTime() - new Date(a.time).getTime()
-    );
+    fetchedNotes.sort((b, a) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
     return fetchedNotes;
   }
@@ -172,29 +162,28 @@ export default class DataConversion {
 
 export function formatDateTime(date: any) {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return 'Pick a date'; // Handle invalid dates
+    return "Pick a date"; // Handle invalid dates
   }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
+  const ampm = hours < 12 ? "AM" : "PM";
 
   return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
 export function format12hourTime(date: any) {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return 'Pick a date'; // Handle invalid dates
+    return "Pick a date"; // Handle invalid dates
   }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
+  const ampm = hours < 12 ? "AM" : "PM";
 
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }
-
