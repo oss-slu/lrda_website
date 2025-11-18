@@ -13,7 +13,6 @@ overrides:
   undici@>=6.0.0 <6.21.2: '>=6.21.2'
   dompurify@<3.2.4: '>=3.2.4'
   js-yaml@<4.1.1: '>=4.1.1'
-  lodash.template@*: npm:lodash@^4.17.21
   brace-expansion@<2.0.2: '>=2.0.2'
   glob@>=10.3.7 <=11.0.3: '>=11.1.0'
 
