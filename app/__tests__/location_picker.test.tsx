@@ -46,4 +46,30 @@ describe("LocationPicker", () => {
   //   fireEvent.click(mapPinButton);
   //   expect(screen.getByTestId("google-map")).toBeInTheDocument();
   // });
+
+  it("disables the button when disabled prop is true", () => {
+    const mockOnLocationChange = jest.fn();
+    render(<LocationPicker onLocationChange={mockOnLocationChange} disabled={true} />);
+
+    const locationButton = screen.getByRole("button", { name: /toggle map visibility/i });
+    
+    // Assert that button is disabled
+    expect(locationButton).toBeDisabled();
+
+    // Try to click - should not open map
+    fireEvent.click(locationButton);
+    
+    // The map should not open, so onLocationChange should not be called
+    expect(mockOnLocationChange).not.toHaveBeenCalled();
+  });
+
+  it("allows interaction when disabled prop is false", () => {
+    const mockOnLocationChange = jest.fn();
+    render(<LocationPicker onLocationChange={mockOnLocationChange} disabled={false} />);
+
+    const locationButton = screen.getByRole("button", { name: /toggle map visibility/i });
+    
+    // Assert that button is not disabled
+    expect(locationButton).not.toBeDisabled();
+  });
 });

@@ -11,12 +11,14 @@ interface LocationPickerProps {
   long?: string;
   lat?: string;
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
+  disabled?: boolean; // Whether the location picker is disabled (read-only)
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   long,
   lat,
   onLocationChange,
+  disabled = false,
 }) => {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
@@ -137,7 +139,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     <div className="relative">
       <button
         onClick={handleToggleMap}
-        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
+        disabled={disabled}
+        className={`inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group ${
+          disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
         aria-label="Toggle map visibility"
       >
         <MapPin aria-label="map pin" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />

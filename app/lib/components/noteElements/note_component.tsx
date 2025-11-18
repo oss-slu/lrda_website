@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import TimePicker from "./time_picker";
@@ -49,6 +49,31 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 
 const user = User.getInstance();
 
+// Helper function to normalize note IDs (handles both URL format and plain ID)
+const normalizeNoteId = (id: string | undefined | null): string | null => {
+  if (!id) return null;
+  // If it's a URL, extract the ID from it
+  if (id.startsWith('http://') || id.startsWith('https://')) {
+    // Extract ID from RERUM URL format: .../v1/id/{id} or .../id/{id}
+    const match = id.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    // Fallback: get the last part of the URL
+    const parts = id.split('/');
+    return parts[parts.length - 1] || id;
+  }
+  return id;
+};
+
+// Helper function to check if two note IDs match (handles URL and plain formats)
+const noteIdsMatch = (id1: string | undefined | null, id2: string | undefined | null): boolean => {
+  const normalized1 = normalizeNoteId(id1);
+  const normalized2 = normalizeNoteId(id2);
+  if (!normalized1 || !normalized2) return false;
+  return normalized1 === normalized2;
+};
+
 type NoteEditorProps = {
   note?: Note | newNote;
   isNewNote: boolean;
@@ -59,6 +84,100 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
   const updateNote = useNotesStore((state) => state.updateNote);
   const addNote = useNotesStore((state) => state.addNote);
+  
+  // Get current note ID - try noteState first, then initialNote as fallback
+  const currentNoteId = noteState.note?.id || (noteState.note as any)?.["@id"] || ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"];
+  
+  // Subscribe to notes array - this will trigger re-renders when notes change
+  const notes = useNotesStore((state) => state.notes);
+  
+  // Subscribe to the specific note in the store to force re-renders when it changes
+  // Use a selector that will trigger re-renders when the notes array or the specific note changes
+  // We compute a hash of the note's content to ensure re-renders when content changes
+  // IMPORTANT: This selector depends on state.notes, so it will re-run whenever notes change
+  const currentNoteContentHash = useNotesStore((state) => {
+    // Get currentNoteId from the closure - this is computed from local state
+    // But the selector will re-run whenever state.notes changes
+    const noteId = noteState.note?.id || (noteState.note as any)?.["@id"] || 
+                   ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || 
+                   (initialNote as any)?.["@id"];
+    if (!noteId) return null;
+    
+    const foundNote = state.notes.find((n) => {
+      const noteId1 = n.id;
+      const noteId2 = (n as any)["@id"];
+      return noteId1 === noteId || noteId2 === noteId || 
+             noteIdsMatch(noteId, noteId1) || noteIdsMatch(noteId, noteId2);
+    });
+    if (!foundNote) return null;
+    // Return a hash of the note's content - this will change when the note changes
+    return JSON.stringify({
+      id: foundNote.id || (foundNote as any)?.["@id"],
+      text: foundNote.text || (foundNote as any)?.BodyText,
+      title: foundNote.title,
+      published: foundNote.published,
+      approvalRequested: foundNote.approvalRequested,
+      tags: foundNote.tags,
+      comments: foundNote.comments?.length || 0,
+    });
+  });
+  
+  // Use useMemo to find the current note from the store - this is reactive to both notes and currentNoteId
+  const currentNoteFromStore = useMemo(() => {
+    if (!currentNoteId) return undefined;
+    
+    const normalizedCurrentId = normalizeNoteId(currentNoteId);
+    
+    // Find note by comparing normalized IDs - check both id and @id fields
+    // Also do direct string comparison first (fastest and most reliable)
+    const found = notes.find((n) => {
+      const noteId1 = n.id;
+      const noteId2 = (n as any)["@id"];
+      // Direct match first (fastest)
+      if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
+      // Then normalized match
+      return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
+    });
+    
+    // Debug logging
+    if (!found && notes.length > 0) {
+      const firstNote = notes[0];
+      const firstNoteId1 = firstNote?.id;
+      const firstNoteId2 = (firstNote as any)?.["@id"];
+      console.log("🔍 useMemo: Note not found", {
+        currentNoteId,
+        normalizedCurrentId,
+        noteStateNoteId: noteState.note?.id || (noteState.note as any)?.["@id"],
+        initialNoteId: ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"],
+        storeNotesCount: notes.length,
+        firstStoreNote: {
+          id: firstNoteId1,
+          "@id": firstNoteId2,
+          normalizedId1: normalizeNoteId(firstNoteId1),
+          normalizedId2: normalizeNoteId(firstNoteId2),
+          directMatchId: firstNoteId1 === currentNoteId,
+          directMatchAtId: firstNoteId2 === currentNoteId,
+          normalizedMatchId: noteIdsMatch(currentNoteId, firstNoteId1),
+          normalizedMatchAtId: noteIdsMatch(currentNoteId, firstNoteId2),
+        },
+        allStoreNoteIds: notes.slice(0, 3).map(n => ({
+          id: n.id,
+          "@id": (n as any)["@id"],
+          normalizedId: normalizeNoteId(n.id || (n as any)["@id"]),
+          directMatch: (n.id === currentNoteId) || ((n as any)["@id"] === currentNoteId),
+        })),
+      });
+    } else if (found) {
+      console.log("✅ useMemo: Note found in store", {
+        currentNoteId,
+        normalizedCurrentId,
+        foundNoteId: found.id || (found as any)["@id"],
+        foundNoteNormalized: normalizeNoteId(found.id || (found as any)["@id"]),
+      });
+    }
+    
+    return found;
+  }, [notes, currentNoteId, noteState.note?.id, (initialNote && 'id' in initialNote) ? initialNote.id : undefined]);
   const rteRef = useRef<RichTextEditorRef>(null);
 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
@@ -73,10 +192,23 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const [isStudent, setIsStudent] = useState<boolean>(false);
   const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  
+  // Check if instructor is viewing a student's note (not their own)
+  const isViewingStudentNote = useMemo(() => {
+    if (!isInstructorUser || !userId || !noteState.note?.creator) {
+      return false;
+    }
+    // Instructor is viewing a note that was created by someone else (a student)
+    return noteState.note.creator !== userId;
+  }, [isInstructorUser, userId, noteState.note?.creator]);
   const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
   // Comment sidebar state
   const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState<boolean>(false);
   const [canComment, setCanComment] = useState<boolean>(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingPausedRef = useRef<boolean>(false);
+  const lastEditTimeRef = useRef<number>(Date.now());
+  const lastSyncedNoteRef = useRef<string>(""); // Store serialized version of last synced note
 
   const titleRef = useRef<HTMLInputElement | null>(null);
 
@@ -84,7 +216,13 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const deleteRef = useRef<HTMLButtonElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
 
-  console.log("NoteEditor render");
+  // Log render with current note info to track re-renders
+  console.log("NoteEditor render", {
+    currentNoteId,
+    notesCount: notes.length,
+    currentNoteContentHash: currentNoteContentHash?.substring(0, 50),
+    hasCurrentNoteInStore: !!currentNoteContentHash,
+  });
 
   const extensions = useExtensions({
     placeholder: "Add your own content here...",
@@ -280,8 +418,187 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       noteHandlers.setApprovalRequested(initialNote.approvalRequested || false);
       noteHandlers.setCounter((prevCounter) => prevCounter + 1);
       noteHandlers.setVideos((initialNote.media.filter((item) => item.getType() === "video") as VideoType[]) || []);
+
+      // Reset the sync ref when a new note is loaded
+      lastSyncedNoteRef.current = "";
+      lastEditTimeRef.current = Date.now();
     }
   }, [initialNote]);
+
+  // Watch for updates to the current note in the store and sync immediately
+  // Also watch initialNote prop for changes (important for instructor review mode)
+  useEffect(() => {
+    // Only sync if we have a note ID (not a new note)
+    const currentNoteId = noteState.note?.id || (noteState.note as any)?.["@id"] || ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"];
+    if (!currentNoteId) {
+      lastSyncedNoteRef.current = "";
+      return;
+    }
+
+    // First, check if initialNote has changed (important for instructor review mode where notes come from localNotes)
+    let sourceNote: Note | undefined = undefined;
+    if (initialNote && 'id' in initialNote) {
+      const initialNoteId = initialNote.id || (initialNote as any)?.["@id"];
+      if (initialNoteId && (initialNoteId === currentNoteId || noteIdsMatch(initialNoteId, currentNoteId))) {
+        sourceNote = initialNote as Note;
+      }
+    }
+
+    // If not found in initialNote, try to find in the store
+    if (!sourceNote) {
+      sourceNote = notes.find((n) => {
+        const noteId1 = n.id;
+        const noteId2 = (n as any)["@id"];
+        // Direct match first (fastest)
+        if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
+        // Then normalized match
+        return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
+      });
+    }
+
+    if (!sourceNote) {
+      // Only log once per render to avoid spam
+      if ((notes.length > 0 || initialNote) && !lastSyncedNoteRef.current) {
+        console.log("⚠️ Note not found in store or initialNote (sync effect):", {
+          currentNoteId,
+          normalizedCurrentId: normalizeNoteId(currentNoteId),
+          storeNotesCount: notes.length,
+          hasInitialNote: !!initialNote,
+          initialNoteId: initialNote && 'id' in initialNote ? (initialNote.id || (initialNote as any)?.["@id"]) : undefined,
+        });
+      }
+      return;
+    }
+
+    const storeNote = sourceNote;
+
+    // Handle both text and BodyText formats
+    const storeNoteText = storeNote.text || (storeNote as any).BodyText || "";
+    const storeNoteId = normalizeNoteId(storeNote.id || (storeNote as any)["@id"]) || "";
+
+    // Create a serialized version of the store note for comparison
+    // Only include fields that might change externally
+    const storeNoteKey = JSON.stringify({
+      id: storeNoteId,
+      published: storeNote.published,
+      approvalRequested: storeNote.approvalRequested,
+      tags: storeNote.tags,
+      comments: storeNote.comments?.length || 0,
+      text: storeNoteText,
+      title: storeNote.title,
+    });
+
+    // Check if this is a different version than what we last synced
+    const hasChanged = storeNoteKey !== lastSyncedNoteRef.current;
+
+    if (hasChanged) {
+      // Check if user has edited recently (within last 2 seconds)
+      const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
+      const shouldUpdate = timeSinceLastEdit > 2000; // 2 seconds grace period
+
+      if (shouldUpdate) {
+        console.log("🔄 Syncing note from store:", {
+          noteId: storeNoteId,
+          published: storeNote.published,
+          approvalRequested: storeNote.approvalRequested,
+          timeSinceLastEdit,
+          hasText: !!storeNoteText,
+          hasBodyText: !!(storeNote as any).BodyText,
+          currentEditorContent: noteState.editorContent.substring(0, 50),
+          storeNoteText: storeNoteText.substring(0, 50),
+        });
+
+        // Update the note object first
+        noteHandlers.setNote(storeNote);
+
+        // Update fields that might have changed externally
+        // For title and text, only update if user hasn't edited recently (5 seconds)
+        if (storeNote.title !== noteState.title && timeSinceLastEdit > 5000) {
+          noteHandlers.setTitle(storeNote.title);
+        }
+        if (storeNoteText !== noteState.editorContent && timeSinceLastEdit > 5000) {
+          console.log("📝 Updating editor content from store");
+          // Update editor content via state
+          noteHandlers.setEditorContent(storeNoteText);
+          // Also update the editor directly if it's available
+          const editor = rteRef.current?.editor;
+          if (editor) {
+            const currentHtml = editor.getHTML();
+            if (currentHtml !== storeNoteText) {
+              console.log("✏️ Updating editor directly via API");
+              editor.commands.setContent(storeNoteText);
+            }
+          }
+          // Increment counter to force RichTextEditor re-render
+          noteHandlers.setCounter((prev) => prev + 1);
+        }
+
+        // Always update these as they're less likely to conflict with user edits
+        if (storeNote.published !== noteState.isPublished) {
+          noteHandlers.setIsPublished(storeNote.published || false);
+        }
+        if (storeNote.approvalRequested !== noteState.approvalRequested) {
+          noteHandlers.setApprovalRequested(storeNote.approvalRequested || false);
+        }
+        if (JSON.stringify(storeNote.tags) !== JSON.stringify(noteState.tags)) {
+          noteHandlers.setTags(storeNote.tags || []);
+        }
+
+        // Update media if it changed
+        const storeImages = (storeNote.media || []).filter((item: any) => item.getType?.() === "image") as PhotoType[];
+        const storeVideos = (storeNote.media || []).filter((item: any) => item.getType?.() === "video") as VideoType[];
+        if (JSON.stringify(storeImages) !== JSON.stringify(noteState.images)) {
+          noteHandlers.setImages(storeImages);
+        }
+        if (JSON.stringify(storeVideos) !== JSON.stringify(noteState.videos)) {
+          noteHandlers.setVideos(storeVideos);
+        }
+        if (JSON.stringify(storeNote.audio) !== JSON.stringify(noteState.audio)) {
+          noteHandlers.setAudio(storeNote.audio || []);
+        }
+
+        // Update the ref to track what we've synced
+        lastSyncedNoteRef.current = storeNoteKey;
+      } else {
+        console.log("⏸️ Skipping sync - user edited recently", { timeSinceLastEdit });
+      }
+    } else {
+      // If no changes detected, still update the ref if it's empty (initial sync)
+      if (!lastSyncedNoteRef.current) {
+        lastSyncedNoteRef.current = storeNoteKey;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, currentNoteId, noteState.note?.id, noteState.editorContent, initialNote]);
+
+  // Watch for external content changes and update the editor
+  useEffect(() => {
+    const editor = rteRef.current?.editor;
+    if (!editor) return;
+
+    const currentEditorContent = editor.getHTML();
+    const stateContent = noteState.editorContent || "";
+
+    // Only update if content changed externally (not from user typing)
+    // Check if the editor content differs from state content
+    if (currentEditorContent !== stateContent) {
+      // Check if user hasn't edited recently (within last 2 seconds)
+      const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
+      
+      // Only update if it's been more than 2 seconds since last edit
+      // This prevents overwriting active user edits
+      if (timeSinceLastEdit > 2000) {
+        console.log("🔄 Updating RichTextEditor content from external change:", {
+          currentEditorContent: currentEditorContent.substring(0, 50),
+          stateContent: stateContent.substring(0, 50),
+          timeSinceLastEdit,
+        });
+        
+        // Update the editor content
+        editor.commands.setContent(stateContent);
+      }
+    }
+  }, [noteState.editorContent]);
 
   // After a note loads, place caret at the start ONCE so typing begins at top,
   // but don't override click-based placement afterward.
@@ -376,7 +693,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     }
 
     // For existing notes: auto-save only if dirty and has content
-    if (!noteState.note?.id || !hasContent) {
+    // Skip auto-save if instructor is viewing a student's note (read-only mode)
+    if (!noteState.note?.id || !hasContent || isViewingStudentNote) {
       return;
     }
 
@@ -430,6 +748,15 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         try {
           console.log("Auto-saving note...", updatedNote);
           await ApiService.overwriteNote(updatedNote);
+
+          // Update the store with the full note object after successful save
+          // This ensures the store has the latest data and triggers re-renders
+          updateNote(noteState.note.id, {
+            ...updatedNote,
+            // Ensure we preserve the note object structure
+            media: updatedNote.media || [],
+            audio: updatedNote.audio || [],
+          });
 
           lastSavedSnapshotRef.current = {
             title: noteState.title,
@@ -688,6 +1015,94 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     return false;
   }
 
+  // Polling effect: Check for updates to the current note from the store
+  useEffect(() => {
+    // Only poll if we have a note ID (not a new note)
+    if (!noteState.note?.id) {
+      return;
+    }
+
+    // Polling interval: 15 seconds (same as sidebar)
+    const POLLING_INTERVAL = 15000;
+
+    // Handle page visibility to pause/resume polling
+    const handleVisibilityChange = () => {
+      isPollingPausedRef.current = document.hidden;
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Setup polling interval
+    const startPolling = () => {
+      // Clear any existing interval
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(() => {
+        // Only poll if page is visible
+        if (isPollingPausedRef.current) {
+          return;
+        }
+
+        // Find the current note in the store
+        const storeNote = notes.find((n) => n.id === noteState.note?.id);
+        
+        if (!storeNote) {
+          return; // Note not found in store, might have been deleted
+        }
+
+        // Only update if:
+        // 1. User hasn't edited in the last 2 seconds (to avoid overwriting active edits)
+        // 2. The note in the store is different from the current note state
+        const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
+        const shouldUpdate = timeSinceLastEdit > 2000; // 2 seconds grace period
+
+        if (shouldUpdate) {
+          // Check if any important fields have changed
+          const hasChanges = 
+            storeNote.title !== noteState.title ||
+            storeNote.text !== noteState.editorContent ||
+            storeNote.published !== noteState.isPublished ||
+            storeNote.approvalRequested !== noteState.approvalRequested ||
+            JSON.stringify(storeNote.tags) !== JSON.stringify(noteState.tags) ||
+            storeNote.comments?.length !== (noteState.note?.comments?.length || 0);
+
+          if (hasChanges) {
+            // Update the note state with the latest from store
+            // Only update non-editable fields to avoid disrupting user's current edits
+            noteHandlers.setNote(storeNote);
+            
+            // Update fields that might have changed externally (comments, approval status, etc.)
+            // but preserve the user's current title and text if they're actively editing
+            if (storeNote.title !== noteState.title && timeSinceLastEdit > 5000) {
+              noteHandlers.setTitle(storeNote.title);
+            }
+            if (storeNote.text !== noteState.editorContent && timeSinceLastEdit > 5000) {
+              noteHandlers.setEditorContent(storeNote.text || "");
+            }
+            
+            // Always update these as they're less likely to conflict with user edits
+            noteHandlers.setIsPublished(storeNote.published || false);
+            noteHandlers.setApprovalRequested(storeNote.approvalRequested || false);
+            noteHandlers.setTags(storeNote.tags || []);
+          }
+        }
+      }, POLLING_INTERVAL);
+    };
+
+    startPolling();
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [noteState.note?.id, notes, noteState.title, noteState.editorContent, noteState.isPublished, noteState.approvalRequested, noteState.tags, noteHandlers]);
+
   // Create a unique key for the panel group based on whether comment sidebar is open
   // This forces a remount when the structure changes, preventing layout restoration errors
   const panelGroupKey = `${noteState.note?.id || 'new'}-${canComment && isCommentSidebarOpen ? 'open' : 'closed'}`;
@@ -711,9 +1126,16 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           <Input
             id="note-title-input"
             value={noteState.title}
-            onChange={(e) => handleTitleChange(noteHandlers.setTitle, e)}
+            onChange={(e) => {
+              lastEditTimeRef.current = Date.now();
+              handleTitleChange(noteHandlers.setTitle, e);
+            }}
             placeholder="Untitled"
-            className="border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out"
+            disabled={isViewingStudentNote}
+            readOnly={isViewingStudentNote}
+            className={`border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out ${
+              isViewingStudentNote ? "cursor-default opacity-90" : ""
+            }`}
             ref={titleRef}
           />
           <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
@@ -741,15 +1163,15 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
               instructorId={instructorId}
               onPublishClick={() => handlePublishChange(noteState, noteHandlers)}
               onRequestApprovalClick={handleRequestApprovalClick}
-              isInstructorReview={false}
+              isInstructorReview={isViewingStudentNote}
             />
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button
-                  disabled={!noteState.note?.id || isSaving}
+                  disabled={!noteState.note?.id || isSaving || isViewingStudentNote}
                   className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!noteState.note?.id ? "Please wait for note to save before deleting" : "Delete this note"}
+                  title={isViewingStudentNote ? "Cannot delete student notes" : (!noteState.note?.id ? "Please wait for note to save before deleting" : "Delete this note")}
                   ref={deleteRef}
                 >
                   <FileX2 className="w-4 h-4" />
@@ -783,6 +1205,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                 <TimePicker
                   initialDate={noteState.time || new Date()}
                   onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
+                  disabled={isViewingStudentNote}
                 />
               </div>
               <div ref={locationRef}>
@@ -792,6 +1215,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                   onLocationChange={(newLong, newLat) =>
                     handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
                   }
+                  disabled={isViewingStudentNote}
                 />
               </div>
             </div>
@@ -801,9 +1225,13 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
               inputTags={noteState.tags}
               suggestedTags={suggestedTags}
               onTagsChange={
-                (newTags) => handleTagsChange(noteHandlers.setTags, newTags) // Ensure it uses the updated function
+                (newTags) => {
+                  lastEditTimeRef.current = Date.now();
+                  handleTagsChange(noteHandlers.setTags, newTags);
+                }
               }
               fetchSuggestedTags={fetchSuggestedTags}
+              disabled={isViewingStudentNote}
             />
           </div>
 
@@ -833,14 +1261,20 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         >
           <div className="bg-white w-full">
             <RichTextEditor
-              key={`${noteState.note?.id ?? "new"}-${noteState.title}`}
+              key={`${noteState.note?.id ?? "new"}-${noteState.title}-${noteState.counter}`}
               ref={rteRef}
               className="min-h-[400px] prose prose-lg max-w-none"
               extensions={extensions}
               content={noteState.editorContent}
               immediatelyRender={false}
-              onUpdate={({ editor }) => handleEditorChange(noteHandlers.setEditorContent, editor.getHTML())}
-              renderControls={() => (
+              editable={!isViewingStudentNote}
+              onUpdate={({ editor }) => {
+                if (!isViewingStudentNote) {
+                  lastEditTimeRef.current = Date.now();
+                  handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
+                }
+              }}
+              renderControls={() => isViewingStudentNote ? null : (
                 <EditorMenuControls
                   onMediaUpload={(media) => {
                     if (media.type === "image") {

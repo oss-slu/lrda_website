@@ -9,6 +9,7 @@ import { CaptionProps } from "react-day-picker";
 interface TimePickerProps {
   initialDate?: Date; // Now optional — will fall back to today if not provided
   onTimeChange?: (date: Date) => void;
+  disabled?: boolean; // Whether the time picker is disabled (read-only)
 }
 
 function formatDateTime(date: Date) {
@@ -77,7 +78,7 @@ function CaptionDropdowns({
   );
 }
 
-export default function TimePicker({ initialDate, onTimeChange }: TimePickerProps) {
+export default function TimePicker({ initialDate, onTimeChange, disabled = false }: TimePickerProps) {
   const now = new Date();
   const [date, setDate] = useState(initialDate || now);
   const [viewMonth, setViewMonth] = useState(initialDate || now);
@@ -113,9 +114,12 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild disabled={disabled}>
         <button
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
+          disabled={disabled}
+          className={`inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group ${
+            disabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           aria-label="Open Calendar"
           type="button"
         >
@@ -150,6 +154,7 @@ export default function TimePicker({ initialDate, onTimeChange }: TimePickerProp
           type="time"
           value={formatTimeForInput(date)}
           onChange={handleTimeChange}
+          disabled={disabled}
           className="w-full"
         />
       </PopoverContent>

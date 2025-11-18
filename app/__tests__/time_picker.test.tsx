@@ -92,4 +92,39 @@ describe("TimePicker", () => {
     expect(updatedDate.getMonth()).toBe(0); // January
     expect(updatedDate.getDate()).toBe(1); // defaulted to 1st
   });
+
+  it('disables the button and time input when disabled prop is true', () => {
+    const mockOnTimeChange = jest.fn();
+    render(<TimePicker initialDate={initialDate} onTimeChange={mockOnTimeChange} disabled={true} />);
+
+    const trigger = screen.getByRole("button", { name: /open calendar/i });
+    
+    // Assert that button is disabled
+    expect(trigger).toBeDisabled();
+
+    // Try to click - should not open popover
+    fireEvent.click(trigger);
+    
+    // The popover should not open, so onTimeChange should not be called
+    expect(mockOnTimeChange).not.toHaveBeenCalled();
+  });
+
+  it('allows interaction when disabled prop is false', async () => {
+    const mockOnTimeChange = jest.fn();
+    render(<TimePicker initialDate={initialDate} onTimeChange={mockOnTimeChange} disabled={false} />);
+
+    const trigger = screen.getByRole("button", { name: /open calendar/i });
+    
+    // Assert that button is not disabled
+    expect(trigger).not.toBeDisabled();
+
+    // Should be able to interact
+    fireEvent.click(trigger);
+    
+    // Wait for popover to open
+    await waitFor(() => {
+      const timeInput = screen.getByDisplayValue("15:30");
+      expect(timeInput).toBeInTheDocument();
+    });
+  });
 });

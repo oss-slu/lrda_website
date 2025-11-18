@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -29,6 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [viewMode, setViewMode] = useState<"my" | "review">("my");
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [localNotes, setLocalNotes] = useState<Note[]>([]); // Local notes for review mode
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingPausedRef = useRef<boolean>(false);
 
   console.log("Sidebar render");
   const handleAddNote = async () => {
@@ -80,65 +82,131 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     initRoleFlags();
   }, []);
 
-  // Fetch notes based on view mode
-  useEffect(() => {
-    const fetchNotesForView = async () => {
-      try {
-        const userId = await user.getId();
-        if (!userId) {
-          console.error("User not logged in");
+  // Fetch notes based on view mode - memoized to prevent unnecessary re-renders
+  const fetchNotesForView = useCallback(async () => {
+    try {
+      const userId = await user.getId();
+      if (!userId) {
+        console.error("User not logged in");
+        return;
+      }
+
+      if (viewMode === "my") {
+        // Use notesStore for "My Notes" mode
+        await fetchNotes(userId);
+      } else if (viewMode === "review" && isInstructor) {
+        // Instructor reviewing student notes
+        const instructorData = await ApiService.fetchUserData(userId);
+        if (!instructorData || !instructorData.isInstructor) {
+          console.warn("User is not an instructor");
+          setLocalNotes([]);
+          setFilteredNotes([]);
           return;
         }
-
-        if (viewMode === "my") {
-          // Use notesStore for "My Notes" mode
-          await fetchNotes(userId);
-        } else if (viewMode === "review" && isInstructor) {
-          // Instructor reviewing student notes
-          const instructorData = await ApiService.fetchUserData(userId);
-          if (!instructorData || !instructorData.isInstructor) {
-            console.warn("User is not an instructor");
-            setLocalNotes([]);
-            setFilteredNotes([]);
-            return;
-          }
-          
-          const studentUids = instructorData.students || [];
-          console.log("📝 Student UIDs from instructor data:", studentUids);
-          
-          if (studentUids.length === 0) {
-            console.warn("No students found for instructor");
-            setLocalNotes([]);
-            setFilteredNotes([]);
-            return;
-          }
-          
-          // Fetch all notes from students
-          const allNotes = await ApiService.fetchNotesByStudents(studentUids);
-          console.log("📋 All student notes fetched:", allNotes.length);
-          const converted = DataConversion.convertMediaTypes(allNotes).reverse();
-          const unarchived = converted.filter((n) => !n.isArchived);
-          console.log("📋 Total unarchived notes:", unarchived.length);
-          
-          setLocalNotes(unarchived);
-          // Default to showing "Under Review" (awaiting approval)
-          const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
-          console.log("⏳ Awaiting approval count:", awaitingApproval.length);
-          setFilteredNotes(awaitingApproval);
-          setShowPublished(false);
+        
+        const studentUids = instructorData.students || [];
+        console.log("📝 Student UIDs from instructor data:", studentUids);
+        
+        if (studentUids.length === 0) {
+          console.warn("No students found for instructor");
+          setLocalNotes([]);
+          setFilteredNotes([]);
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching notes:", error);
+        
+        // Fetch all notes from students
+        const allNotes = await ApiService.fetchNotesByStudents(studentUids);
+        console.log("📋 All student notes fetched:", allNotes.length);
+        const converted = DataConversion.convertMediaTypes(allNotes).reverse();
+        const unarchived = converted.filter((n) => !n.isArchived);
+        console.log("📋 Total unarchived notes:", unarchived.length);
+        
+        setLocalNotes(unarchived);
+        // Default to showing "Unreviewed" (awaiting approval)
+        const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
+        console.log("⏳ Awaiting approval count:", awaitingApproval.length);
+        setFilteredNotes(awaitingApproval);
+        setShowPublished(false);
+      }
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  }, [viewMode, isInstructor, fetchNotes]);
+
+  // Initial fetch and setup polling
+  useEffect(() => {
+    fetchNotesForView();
+  }, [fetchNotesForView]);
+
+  // Setup polling for automatic note refresh
+  useEffect(() => {
+    // Polling interval: 15 seconds
+    const POLLING_INTERVAL = 15000;
+
+    // Handle page visibility to pause/resume polling
+    const handleVisibilityChange = () => {
+      isPollingPausedRef.current = document.hidden;
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Setup polling interval
+    const startPolling = () => {
+      // Clear any existing interval
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(() => {
+        // Only poll if page is visible
+        if (!isPollingPausedRef.current) {
+          fetchNotesForView();
+        }
+      }, POLLING_INTERVAL);
+    };
+
+    startPolling();
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
     };
-    fetchNotesForView();
-  }, [viewMode, isInstructor, fetchNotes]);
+  }, [fetchNotesForView]);
 
   // Filter notes whenever notes or showPublished changes
   useEffect(() => {
     const notesToFilter = viewMode === "review" ? localNotes : notes;
     filterNotesByPublished(showPublished, notesToFilter);
   }, [notes, localNotes, showPublished, viewMode]);
+
+  // Update selected note when it changes in localNotes (for instructor review mode)
+  useEffect(() => {
+    if (viewMode === "review" && localNotes.length > 0) {
+      // Get the currently selected note ID from the store
+      const selectedNoteId = useNotesStore.getState().selectedNoteId;
+      if (selectedNoteId) {
+        // Find the updated note in localNotes
+        const updatedNote = localNotes.find((n) => {
+          const noteId = n.id || (n as any)?.["@id"];
+          return noteId === selectedNoteId || 
+                 (typeof selectedNoteId === 'string' && noteId && noteId.includes(selectedNoteId)) ||
+                 (typeof noteId === 'string' && selectedNoteId && selectedNoteId.includes(noteId));
+        });
+        
+        // If found and it's different from what was last selected, update it
+        if (updatedNote) {
+          // Only update if the note content has actually changed
+          // We'll let the NoteEditor's sync effect handle the actual content comparison
+          // This just ensures the prop is updated with the latest note object
+          onNoteSelect(updatedNote, false);
+        }
+      }
+    }
+  }, [localNotes, viewMode, onNoteSelect]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -157,12 +225,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       if (!matchesText) return false;
 
       if (viewMode === "review") {
-        // Under Review vs Reviewed in review mode
+        // Unreviewed vs Reviewed in review mode
         if (showPublished) {
           // Reviewed
           return !!note.published;
         } else {
-          // Under Review
+          // Unreviewed
           return !!note.approvalRequested && !note.published;
         }
       }
@@ -179,12 +247,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     let filtered: Note[] = [];
     
     if (viewMode === "review") {
-      // Review mode: Under Review vs Reviewed
+      // Review mode: Unreviewed vs Reviewed
       if (showPublished) {
         // Reviewed
         filtered = noteList.filter((n) => !n.isArchived && !!n.published);
       } else {
-        // Under Review
+        // Unreviewed
         filtered = noteList.filter((n) => !n.isArchived && !!n.approvalRequested && !n.published);
       }
     } else {
@@ -232,7 +300,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             <Tabs defaultValue={viewMode === "review" ? "unpublished" : "unpublished"} className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="unpublished" className="text-sm font-semibold">
-                  {viewMode === "review" ? "Under Review" : "Unpublished"}
+                  {viewMode === "review" ? "Unreviewed" : "Unpublished"}
                 </TabsTrigger>
                 <TabsTrigger value="published" className="text-sm font-semibold">
                   {viewMode === "review" ? "Reviewed" : "Published"}

@@ -55,7 +55,15 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   updateNote: (id: string, updates: Partial<Note>) => {
     set((state) => ({
-      notes: state.notes.map((note) => (note.id === id ? { ...note, ...updates } : note)).filter((note) => !note.isArchived), // Ensure archived notes are removed
+      notes: state.notes.map((note) => {
+        // Match by both id and @id to handle different note formats
+        const noteId = note.id || (note as any)["@id"];
+        const matchId = id || (updates as any)["@id"];
+        if (noteId === matchId || noteId === id) {
+          return { ...note, ...updates };
+        }
+        return note;
+      }).filter((note) => !note.isArchived), // Ensure archived notes are removed
     }));
   },
 
