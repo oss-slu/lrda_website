@@ -1,22 +1,3 @@
-# Netlify Configuration
-# IMPORTANT: For automatic Netlify builds to work, configure environment variables in Netlify Dashboard:
-# Go to: Site settings > Build & deploy > Environment > Environment variables
-# Add all NEXT_PUBLIC_* variables that are used in the build
-# Required variables (set these in Netlify Dashboard, not in this file for security):
-# - NEXT_PUBLIC_FIREBASE_API_KEY
-# - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-# - NEXT_PUBLIC_FIREBASE_PROJECT_ID
-# - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-# - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-# - NEXT_PUBLIC_FIREBASE_APP_ID
-# - NEXT_PUBLIC_RERUM_PREFIX
-# - NEXT_PUBLIC_OPENAI_API_KEY
-# - NEXT_PUBLIC_OPENAI_API_URL
-# - NEXT_PUBLIC_MAP_KEY (if used)
-# - NEXT_PUBLIC_PLACES_KEY (if used)
-# - NEXT_PUBLIC_S3_PROXY_PREFIX (if used)
-# - NEXT_PUBLIC_ADMIN_PASKEY (if used)
-
 [build]
   command = "pnpm build"
   publish = ".next"
@@ -26,6 +7,5 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # CI environment variable helps with build optimization
   CI = "true"
 
