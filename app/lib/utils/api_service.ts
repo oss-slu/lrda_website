@@ -293,9 +293,22 @@ export default class ApiService {
         let normalizedCreator = note.creator;
         // Check if creator is a URL (starts with http/https) or contains RERUM domain
         const isUrl = note.creator.startsWith('http://') || note.creator.startsWith('https://');
-        const isRerumUrl = note.creator.includes(RERUM_PREFIX) || note.creator.includes('rerum.io');
+        let isRerumUrl = false;
         
-        if (isUrl || isRerumUrl) {
+        if (isUrl) {
+          try {
+            const urlObj = new URL(note.creator);
+            const hostname = urlObj.hostname.toLowerCase();
+            // Check if hostname ends with rerum.io (exact match or subdomain)
+            isRerumUrl = hostname === 'rerum.io' || hostname.endsWith('.rerum.io') ||
+                        (RERUM_PREFIX && note.creator.startsWith(RERUM_PREFIX));
+          } catch {
+            // If URL parsing fails, check if it starts with RERUM_PREFIX
+            isRerumUrl = RERUM_PREFIX ? note.creator.startsWith(RERUM_PREFIX) : false;
+          }
+        }
+        
+        if (isUrl && isRerumUrl) {
           // Extract UID from RERUM URL (format: .../v1/id/{uid} or .../id/{uid})
           const match = note.creator.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
           if (match && match[1]) {

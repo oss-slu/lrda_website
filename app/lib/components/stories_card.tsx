@@ -31,6 +31,25 @@ import MediaViewer from "./media_viewer";
 import NoteCard from "./note_card";
 
 /**
+ * Safely checks if a URL belongs to a trusted domain by parsing the hostname
+ * @param url - The URL to check
+ * @param allowedDomains - Array of allowed domain names (e.g., ['youtube.com', 'vimeo.com'])
+ * @returns true if the URL's hostname matches one of the allowed domains
+ */
+const isTrustedDomain = (url: string, allowedDomains: string[]): boolean => {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    return allowedDomains.some(domain => {
+      const domainLower = domain.toLowerCase();
+      return hostname === domainLower || hostname.endsWith('.' + domainLower);
+    });
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Extracts the first few sentences from a string of HTML content.
  * @param {string} BodyText - The HTML content to extract from.
  * @param {number} sentenceCount - The number of sentences to extract.
@@ -163,8 +182,9 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
               href.includes('video')
             )) {
               // Check if it's a valid video URL
-              const isVideoUrl = href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i) || 
-                                 href.startsWith('http') && (href.includes('video') || href.includes('youtube') || href.includes('vimeo'));
+              const isDirectVideoFile = href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
+              const isTrustedVideoHost = href.startsWith('http') && isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com']);
+              const isVideoUrl = isDirectVideoFile || isTrustedVideoHost;
               
               if (isVideoUrl) {
                 // Create a video element to replace the link
@@ -173,24 +193,32 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 videoWrapper.style.cssText = 'width: 100%; max-width: 100%; margin: 1rem auto; display: block;';
                 
                 // Check if it's YouTube/Vimeo or direct video file
-                if (href.includes('youtube.com') || href.includes('youtu.be') || href.includes('vimeo.com')) {
+                if (isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com'])) {
                   const iframe = document.createElement('iframe');
                   let embedUrl = href;
-                  if (href.includes('youtube.com/watch')) {
-                    const videoId = href.split('v=')[1]?.split('&')[0];
-                    if (videoId) {
-                      embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                  try {
+                    const urlObj = new URL(href);
+                    const hostname = urlObj.hostname.toLowerCase();
+                    
+                    if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
+                      const videoId = urlObj.searchParams.get('v');
+                      if (videoId) {
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                      }
+                    } else if (hostname === 'youtu.be') {
+                      const videoId = urlObj.pathname.slice(1).split('?')[0];
+                      if (videoId) {
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                      }
+                    } else if (hostname === 'vimeo.com' || hostname === 'www.vimeo.com') {
+                      const videoId = urlObj.pathname.slice(1).split('?')[0];
+                      if (videoId) {
+                        embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                      }
                     }
-                  } else if (href.includes('youtu.be/')) {
-                    const videoId = href.split('youtu.be/')[1]?.split('?')[0];
-                    if (videoId) {
-                      embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                    }
-                  } else if (href.includes('vimeo.com/')) {
-                    const videoId = href.split('vimeo.com/')[1]?.split('?')[0];
-                    if (videoId) {
-                      embedUrl = `https://player.vimeo.com/video/${videoId}`;
-                    }
+                  } catch {
+                    // If URL parsing fails, don't create iframe
+                    return;
                   }
                   iframe.src = embedUrl;
                   iframe.frameBorder = '0';
@@ -281,11 +309,11 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 const linkText = link.textContent || '';
                 
                 // Check if this is a video link
-                if (href && (
-                  href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i) ||
-                  linkText.toLowerCase().includes('video') ||
-                  (href.startsWith('http') && (href.includes('video') || href.includes('youtube') || href.includes('vimeo')))
-                )) {
+                const isDirectVideoFile = href && href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
+                const isTrustedVideoHost = href && href.startsWith('http') && isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com']);
+                const isVideoLink = isDirectVideoFile || isTrustedVideoHost || (href && linkText.toLowerCase().includes('video'));
+                
+                if (isVideoLink) {
                   // Check if already converted (has a video sibling or parent)
                   if (link.parentElement?.querySelector('video') || link.parentElement?.querySelector('iframe')) {
                     return;
@@ -297,25 +325,33 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                   videoWrapper.style.cssText = 'width: 100%; max-width: 100%; margin: 1rem auto; display: block;';
                   
                   // Check if it's a YouTube or Vimeo URL
-                  if (href.includes('youtube.com') || href.includes('youtu.be') || href.includes('vimeo.com')) {
+                  if (isTrustedVideoHost) {
                     // Create iframe for YouTube/Vimeo
                     const iframe = document.createElement('iframe');
                     let embedUrl = href;
-                    if (href.includes('youtube.com/watch')) {
-                      const videoId = href.split('v=')[1]?.split('&')[0];
-                      if (videoId) {
-                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    try {
+                      const urlObj = new URL(href);
+                      const hostname = urlObj.hostname.toLowerCase();
+                      
+                      if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
+                        const videoId = urlObj.searchParams.get('v');
+                        if (videoId) {
+                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        }
+                      } else if (hostname === 'youtu.be') {
+                        const videoId = urlObj.pathname.slice(1).split('?')[0];
+                        if (videoId) {
+                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        }
+                      } else if (hostname === 'vimeo.com' || hostname === 'www.vimeo.com') {
+                        const videoId = urlObj.pathname.slice(1).split('?')[0];
+                        if (videoId) {
+                          embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                        }
                       }
-                    } else if (href.includes('youtu.be/')) {
-                      const videoId = href.split('youtu.be/')[1]?.split('?')[0];
-                      if (videoId) {
-                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                      }
-                    } else if (href.includes('vimeo.com/')) {
-                      const videoId = href.split('vimeo.com/')[1]?.split('?')[0];
-                      if (videoId) {
-                        embedUrl = `https://player.vimeo.com/video/${videoId}`;
-                      }
+                    } catch {
+                      // If URL parsing fails, don't create iframe
+                      return;
                     }
                     iframe.src = embedUrl;
                     iframe.frameBorder = '0';
