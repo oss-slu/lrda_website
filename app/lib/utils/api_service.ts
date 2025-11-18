@@ -4,20 +4,21 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL;
+const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
+const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL || "";
 
-if (!RERUM_PREFIX) {
-  throw new Error("RERUM_PREFIX is not defined in the environment variables.");
-}
-
-if (!OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY is not defined in the environment variables.");
-}
-
-if (!OPENAI_API_URL) {
-  throw new Error("OPENAI_API_URL is not defined in the environment variables.");
+// Only validate at runtime, not during build/SSR
+if (typeof window !== 'undefined') {
+  if (!RERUM_PREFIX) {
+    console.error("RERUM_PREFIX is not defined in the environment variables.");
+  }
+  if (!OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEY is not defined in the environment variables.");
+  }
+  if (!OPENAI_API_URL) {
+    console.error("OPENAI_API_URL is not defined in the environment variables.");
+  }
 }
 
 interface OpenAIChatChoice {
