@@ -716,11 +716,21 @@ test.describe('Admin to Instructor Utility Functions', () => {
   // Test navbar behavior
   test.describe('Navbar Behavior', () => {
     test('should handle conditional instructor section on About page appropriately', async ({ page }) => {
-      await page.goto('/lib/pages/aboutPage');
+      // Navigate to home page where About section is now located
+      await page.goto('/');
       
       // Wait for the page to load and check eligibility
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000); // Allow time for eligibility check
+      
+      // Scroll to the About section (it's on the home page)
+      await page.evaluate(() => {
+        const aboutSection = document.getElementById('aboutSection');
+        if (aboutSection) {
+          aboutSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+      await page.waitForTimeout(1000); // Wait for scroll
       
       // Check what state the instructor section is in
       const instructorSection = page.locator('text=Become an Instructor');

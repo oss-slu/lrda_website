@@ -13,11 +13,30 @@ jest.mock('../lib/models/user_class', () => ({
   },
 }));
 
+// Track comments for the mock
+const mockComments: any[] = [];
+
 jest.mock('../lib/utils/api_service', () => ({
   __esModule: true,
   default: {
-    fetchCommentsForNote: async () => [],
-    createComment: async () => ({}),
+    fetchCommentsForNote: async () => [...mockComments],
+    createComment: async (comment: any) => {
+      // Add the comment to the mock array
+      mockComments.push({
+        id: comment.id,
+        noteId: comment.noteId,
+        text: comment.text,
+        authorId: comment.authorId,
+        authorName: comment.author,
+        createdAt: comment.createdAt,
+        position: comment.position,
+        threadId: comment.threadId,
+        parentId: comment.parentId,
+        resolved: comment.resolved,
+        archived: false,
+      });
+      return {};
+    },
     fetchCreatorName: async () => 'Student User',
     fetchUserData: async (uid: string) => {
       // Mock student with parentInstructorId (part of teacher-student relationship)
@@ -35,6 +54,11 @@ jest.mock('../lib/utils/api_service', () => ({
 }));
 
 describe('CommentSidebar - students can comment', () => {
+  beforeEach(() => {
+    // Clear mock comments before each test
+    mockComments.length = 0;
+  });
+
   test('allows generic comment without selection', async () => {
     render(<CommentSidebar noteId={'note-1'} getCurrentSelection={() => null} />);
 

@@ -46,8 +46,8 @@ const StoriesPage = () => {
       setIsLoading(true);
       const fetchedNotes = await ApiService.fetchPublishedNotes(limit, 0);
       
-      // Filter to ensure only published notes are shown (client-side safety check)
-      const publishedNotes = fetchedNotes.filter((note) => note.published === true);
+      // Filter to ensure only published and non-archived notes are shown (client-side safety check)
+      const publishedNotes = fetchedNotes.filter((note) => note.published === true && !note.isArchived);
 
       // Debugging log to check fetched data
       console.log("Fetched Notes:", publishedNotes);
@@ -82,8 +82,8 @@ const StoriesPage = () => {
     try {
       setIsLoading(true);
       const userNotes = await ApiService.getPagedQueryWithParams(150, 0, creatorId); // Increased limit to 150
-      // Filter to ensure only published notes are shown (client-side safety check)
-      const publishedUserNotes = userNotes.filter((note) => note.published === true);
+      // Filter to ensure only published and non-archived notes are shown (client-side safety check)
+      const publishedUserNotes = userNotes.filter((note) => note.published === true && !note.isArchived);
       setFilteredNotes(publishedUserNotes); // Display only published notes for the selected user
     } catch (error) {
       console.error(`Error fetching notes for user ${creatorId}:`, error);
@@ -109,11 +109,12 @@ const StoriesPage = () => {
     const lowerCaseQuery = query.toLowerCase();
     const results = notes.filter(
       (note) =>
-        note.title.toLowerCase().includes(lowerCaseQuery) ||
-        note.text.toLowerCase().includes(lowerCaseQuery) ||
-        note.tags.some((tag) =>
-          tag.label.toLowerCase().includes(lowerCaseQuery)
-        )
+        !note.isArchived &&
+        ((note.title?.toLowerCase().includes(lowerCaseQuery) ?? false) ||
+        (note.text?.toLowerCase().includes(lowerCaseQuery) ?? false) ||
+        (note.tags?.some((tag) =>
+          tag?.label?.toLowerCase().includes(lowerCaseQuery) ?? false
+        ) ?? false))
     );
     setFilteredNotes(results);
   };
@@ -124,7 +125,7 @@ const StoriesPage = () => {
       setFilteredNotes(notes); // Show all notes if no user is selected
     } else {
       const results = notes.filter(
-        (note) => note.creator === userId && note.published
+        (note) => note.creator === userId && note.published && !note.isArchived
       );
       setFilteredNotes(results);
     }

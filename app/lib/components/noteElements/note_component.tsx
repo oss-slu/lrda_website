@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import TimePicker from "./time_picker";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
@@ -9,7 +10,7 @@ import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import ApiService from "../../utils/api_service";
-import { FileX2, SaveIcon, Calendar, MapPin, Music } from "lucide-react";
+import { FileX2, SaveIcon, Calendar, MapPin, Music, MessageSquare, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +44,8 @@ import type { NoteStateType, NoteHandlersType } from "./note_state";
 import { Button } from "@/components/ui/button";
 import { newNote, Note } from "@/app/types"; // make sure types are imported
 import { useNotesStore } from "../../stores/notesStore";
+import CommentSidebar from "../comments/CommentSidebar";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const user = User.getInstance();
 
@@ -71,6 +74,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
+  // Comment sidebar state
+  const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState<boolean>(false);
+  const [canComment, setCanComment] = useState<boolean>(false);
 
   const titleRef = useRef<HTMLInputElement | null>(null);
 
@@ -112,7 +118,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       if (addNote && title && deleteButton && date && location) {
         // Dynamically import intro.js only on client side
         const introJs = (await import("intro.js")).default;
-        const intro = introJs();
+        const intro = introJs.tour();
         const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
 
         if (!hasAddNoteIntroBeenShown) {
@@ -207,17 +213,53 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   }, [noteState.videos]);
 
   useEffect(() => {
-    const initRoleFlags = async () => {
+    const fetchUserDetails = async () => {
       const roles = await user.getRoles();
-      const isInstr = await user.isInstructor();
-      setIsInstructorUser(!!isInstr);
-      setIsStudent(!!roles?.contributor && !roles?.administrator);
-      const fetchedInstructorId = await user.getInstructorId();
-      setInstructorId(fetchedInstructorId);
       const fetchedUserId = await user.getId();
+      if (!fetchedUserId) return;
+      
+      // Fetch userData to check isInstructor flag
+      let userData = null;
+      try {
+        userData = await ApiService.fetchUserData(fetchedUserId);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+      
+      // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
+      // Allow commenting for administrators even if isInstructor flag isn't set
+      const isInstr = !!roles?.administrator || !!userData?.isInstructor;
+      setIsInstructorUser(isInstr);
+      const isStudentRole = !!roles?.contributor && !roles?.administrator;
+      
+      // Check if student is part of teacher-student relationship
+      let isStudentInTeacherStudentModel = false;
+      if (isStudentRole && userData) {
+        // Student must have parentInstructorId to be part of teacher-student model
+        isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
+      }
+      
+      setIsStudent(isStudentInTeacherStudentModel);
       setUserId(fetchedUserId);
+      // Set instructorId from userData if available, otherwise use fetchedUserId if instructor
+      setInstructorId(isInstr ? fetchedUserId : null);
+      
+      // Determine if user can comment (administrator OR instructor with isInstructor flag OR student with parentInstructorId)
+      const canCommentValue = !!fetchedUserId && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel);
+      setCanComment(canCommentValue);
+      
+      // Debug logging
+      console.log("Comment button debug:", {
+        fetchedUserId,
+        roles: roles,
+        userData: userData,
+        isInstr,
+        isStudentInTeacherStudentModel,
+        canComment: canCommentValue,
+        noteId: noteState.note?.id
+      });
     };
-    initRoleFlags();
+    fetchUserDetails();
   }, []);
 
   useEffect(() => {
@@ -646,9 +688,25 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     return false;
   }
 
+  // Create a unique key for the panel group based on whether comment sidebar is open
+  // This forces a remount when the structure changes, preventing layout restoration errors
+  const panelGroupKey = `${noteState.note?.id || 'new'}-${canComment && isCommentSidebarOpen ? 'open' : 'closed'}`;
+
   return (
+    <>
     <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
-      <ScrollArea className="flex flex-col w-full h-full min-h-0">
+      <ResizablePanelGroup 
+        key={panelGroupKey}
+        direction="horizontal" 
+        className="w-full h-full"
+      >
+        <ResizablePanel
+          defaultSize={canComment && isCommentSidebarOpen && noteState.note?.id ? 70 : 100}
+          minSize={45}
+          maxSize={canComment && isCommentSidebarOpen && noteState.note?.id ? 85 : 100}
+          className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
+        >
+          <ScrollArea className="flex flex-col w-full h-full min-h-0">
         <div aria-label="Top Bar" className="w-full flex flex-col px-8 pt-8">
           <Input
             id="note-title-input"
@@ -867,6 +925,65 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           </div>
         </div>
       </ScrollArea>
+        </ResizablePanel>
+        {!!noteState.note?.id && canComment && isCommentSidebarOpen && (
+          <>
+            <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
+            <ResizablePanel
+              defaultSize={30}
+              minSize={20}
+              maxSize={40}
+              className="md:border-l min-w-[280px] md:min-w-[300px] lg:min-w-[340px] transition-[flex-basis] duration-200 ease-out"
+            >
+              <CommentSidebar
+                noteId={noteState.note.id as string}
+                getCurrentSelection={() => {
+                  const editor = rteRef.current?.editor;
+                  if (!editor) return null;
+                  const { from, to } = editor.state.selection;
+                  if (from === to) return null; // require a non-empty selection
+                  return { from, to };
+                }}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
+    {/* Sticky Comment Toggle Button - Rendered via portal to ensure it's above all relative containers */}
+    {(() => {
+      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment;
+      if (shouldShow) {
+        console.log("Rendering comment button via portal", { noteId: noteState.note?.id, canComment });
+      } else {
+        console.log("Comment button NOT showing:", {
+          isClient: typeof window !== 'undefined',
+          hasNoteId: !!noteState.note?.id,
+          canComment,
+          noteId: noteState.note?.id
+        });
+      }
+      return shouldShow ? createPortal(
+        <button
+          onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
+          className="fixed top-20 right-4 z-[9999] bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+          aria-label={isCommentSidebarOpen ? "Close comments" : "Open comments"}
+        >
+          {isCommentSidebarOpen ? (
+            <>
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Close</span>
+            </>
+          ) : (
+            <>
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Comments</span>
+            </>
+          )}
+        </button>,
+        document.body
+      ) : null;
+    })()}
+    </>
   );
 }

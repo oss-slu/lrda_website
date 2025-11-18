@@ -95,8 +95,18 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
               className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors group"
               onClick={handlePublishClick}
             >
-              <UploadIcon className={`h-4 w-4 ${iconClass}`} />
-              <span className={iconClass}>{labelText}</span>
+              <UploadIcon
+                className={`h-4 w-4 ${
+                  isPublished ? "text-green-500" : "text-gray-700 group-hover:text-green-500"
+                }`}
+              />
+              <span
+                className={`${
+                  isPublished ? "text-green-600" : "text-gray-700 group-hover:text-green-600"
+                }`}
+              >
+                {labelText}
+              </span>
             </button>
           </TooltipTrigger>
           <TooltipContent>{tooltipText}</TooltipContent>

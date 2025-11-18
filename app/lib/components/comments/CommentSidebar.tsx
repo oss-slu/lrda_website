@@ -26,24 +26,35 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   // Load existing comments whenever noteId changes and normalize author names
   useEffect(() => {
     const load = async () => {
-      if (!noteId) return;
-      const raw = await ApiService.fetchCommentsForNote(noteId);
-      // Resolve proper display names when needed
-      const enriched = await Promise.all(
-        raw.map(async (c) => {
-          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-          if (needsName && c.authorId) {
-            try {
-              const display = await ApiService.fetchCreatorName(c.authorId);
-              return { ...c, authorName: display } as any;
-            } catch {
-              return c as any;
+      if (!noteId) {
+        console.log("CommentSidebar: No noteId provided");
+        return;
+      }
+      console.log("CommentSidebar: Loading comments for noteId:", noteId);
+      try {
+        const raw = await ApiService.fetchCommentsForNote(noteId);
+        console.log("CommentSidebar: Raw comments fetched:", raw.length, raw);
+        // Resolve proper display names when needed
+        const enriched = await Promise.all(
+          raw.map(async (c) => {
+            const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
+            if (needsName && c.authorId) {
+              try {
+                const display = await ApiService.fetchCreatorName(c.authorId);
+                return { ...c, authorName: display } as any;
+              } catch {
+                return c as any;
+              }
             }
-          }
-          return c as any;
-        })
-      );
-      setComments(enriched as any);
+            return c as any;
+          })
+        );
+        console.log("CommentSidebar: Enriched comments:", enriched.length, enriched);
+        setComments(enriched as any);
+      } catch (error) {
+        console.error("CommentSidebar: Error loading comments:", error);
+        setComments([]);
+      }
     };
     load();
   }, [noteId]);
@@ -51,31 +62,39 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   // Determine whether current user is an instructor or a student (part of teacher-student relationship only)
   useEffect(() => {
     const checkInstructor = async () => {
-      const flag = await User.getInstance().isInstructor();
-      setIsInstructor(!!flag);
       const uid = await User.getInstance().getId();
+      if (!uid) return;
+      
       const roles = await User.getInstance().getRoles();
+      
+      // Fetch userData to check isInstructor flag
+      let userData = null;
+      try {
+        userData = await ApiService.fetchUserData(uid);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+      
+      // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
+      // Allow commenting for administrators even if isInstructor flag isn't set
+      const flag = !!roles?.administrator || !!userData?.isInstructor;
+      setIsInstructor(flag);
       
       // Check if user is a student (has contributor role but not administrator)
       const isStudentRole = !!roles?.contributor && !roles?.administrator;
       
       // For students, verify they have a parentInstructorId (part of teacher-student relationship)
       let isStudentInTeacherStudentModel = false;
-      if (isStudentRole && uid) {
-        try {
-          const userData = await ApiService.fetchUserData(uid);
-          // Student must have parentInstructorId to be part of teacher-student model
-          isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
-        } catch (error) {
-          console.error("Error checking student relationship:", error);
-        }
+      if (isStudentRole && userData) {
+        // Student must have parentInstructorId to be part of teacher-student model
+        isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
       }
       
-      // Allow commenting only for:
-      // 1. Instructors (isInstructor = true)
-      // 2. Students who are part of teacher-student relationship (have parentInstructorId)
-      // Exclude independent contributors (administrator=true) even if they have contributor=true
-      setCanComment(!!uid && (flag || isStudentInTeacherStudentModel));
+      // Allow commenting for:
+      // 1. Administrators (roles?.administrator)
+      // 2. Instructors (userData?.isInstructor)
+      // 3. Students who are part of teacher-student relationship (have parentInstructorId)
+      setCanComment(!!uid && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel));
     };
     checkInstructor();
   }, []);
@@ -117,7 +136,29 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     };
 
     await ApiService.createComment(newComment);
-    setComments((prev) => [...prev, newComment]);
+    // Reload comments from API to ensure we have the latest data
+    try {
+      const reloaded = await ApiService.fetchCommentsForNote(noteId);
+      const enriched = await Promise.all(
+        reloaded.map(async (c) => {
+          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
+          if (needsName && c.authorId) {
+            try {
+              const display = await ApiService.fetchCreatorName(c.authorId);
+              return { ...c, authorName: display } as any;
+            } catch {
+              return c as any;
+            }
+          }
+          return c as any;
+        })
+      );
+      setComments(enriched as any);
+    } catch (error) {
+      console.error("Error reloading comments after creation:", error);
+      // Fallback to adding locally
+      setComments((prev) => [...prev, newComment]);
+    }
     setCommentDraft(""); // Clear draft on successful submit
     setShowPopover(false);
 
@@ -164,7 +205,29 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     };
 
     await ApiService.createComment(reply);
-    setComments((prev) => [...prev, reply]);
+    // Reload comments from API to ensure we have the latest data
+    try {
+      const reloaded = await ApiService.fetchCommentsForNote(noteId);
+      const enriched = await Promise.all(
+        reloaded.map(async (c) => {
+          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
+          if (needsName && c.authorId) {
+            try {
+              const display = await ApiService.fetchCreatorName(c.authorId);
+              return { ...c, authorName: display } as any;
+            } catch {
+              return c as any;
+            }
+          }
+          return c as any;
+        })
+      );
+      setComments(enriched as any);
+    } catch (error) {
+      console.error("Error reloading comments after reply:", error);
+      // Fallback to adding locally
+      setComments((prev) => [...prev, reply]);
+    }
     setReplyDrafts((d) => ({ ...d, [threadId]: "" }));
   };
 
