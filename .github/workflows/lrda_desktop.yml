@@ -24,6 +24,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     strategy:
       matrix:
         node-version: [20.x] # Next.js 16 requires Node.js >=20.9.0
