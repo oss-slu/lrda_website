@@ -113,4 +113,10 @@ afterAll(() => {
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
   console.log = originalConsoleLog;
+  
+  // Clear any remaining timers to help with worker process cleanup
+  if (typeof jest !== 'undefined') {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  }
 });
