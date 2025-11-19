@@ -67,9 +67,9 @@ const TagManager: React.FC<TagManagerProps> = ({
       setTagInput("");
       return;
     }
-    if (tag.length > 7) {
+    if (tag.length > 28) {
       toast("Failed to add tag", {
-        description: "Tags must be 7 characters or less.",
+        description: "Tags must be 28 characters or less.",
         duration: 2000,
       });
       setTagInput("");
@@ -128,7 +128,7 @@ const TagManager: React.FC<TagManagerProps> = ({
     if (tagInput.length === 0) return { valid: true, message: "" };
     if (tagInput.includes(" ")) return { valid: false, message: "No spaces allowed" };
     if (tagInput.length < 1) return { valid: false, message: "Too short (min 1)" };
-    if (tagInput.length > 7) return { valid: false, message: "Too long (max 7)" };
+    if (tagInput.length > 28) return { valid: false, message: "Too long (max 28)" };
     if (tags.find((t) => t.label === tagInput)) return { valid: false, message: "Already exists" };
     return { valid: true, message: "Press Enter to add" };
   };
@@ -144,7 +144,7 @@ const TagManager: React.FC<TagManagerProps> = ({
             placeholder="Add tags..."
             onKeyDown={handleKeyDown}
             onChange={handleInputChange}
-            maxLength={7}
+            maxLength={28}
             disabled={disabled}
             readOnly={disabled}
             className={`bg-white pr-16 ${
@@ -152,7 +152,7 @@ const TagManager: React.FC<TagManagerProps> = ({
             } ${
               tagInput.length > 0 && !validation.valid 
                 ? "border-red-300 focus-visible:ring-red-500" 
-                : tagInput.length >= 1 && tagInput.length <= 7 && validation.valid
+                  : tagInput.length >= 1 && tagInput.length <= 28 && validation.valid
                 ? "border-green-300 focus-visible:ring-green-500"
                 : ""
             }`}
