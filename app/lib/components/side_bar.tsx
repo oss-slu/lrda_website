@@ -12,7 +12,6 @@ import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
@@ -21,12 +20,11 @@ type SidebarProps = {
 const user = User.getInstance();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes } = useNotesStore();
+  const { notes, fetchNotes, viewMode } = useNotesStore();
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
   const [isSearching, setIsSearching] = useState(false);
-  // Teacher-student view mode (from december-sprint)
-  const [viewMode, setViewMode] = useState<"my" | "review">("my");
+  // Teacher-student view mode (from december-sprint) - now from store
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [localNotes, setLocalNotes] = useState<Note[]>([]); // Local notes for review mode
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -279,22 +277,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
           <SearchBarNote onSearch={handleSearch} />
 
-          {/* View mode selector for instructors */}
-          {isInstructor && (
-            <div className="mb-2 mt-2">
-              <Select value={viewMode} onValueChange={(v) => setViewMode(v as "my" | "review")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select view" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="my">My Notes</SelectItem>
-                  <SelectItem value="review">Review Notes</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="flex flex-row items-center text-center justify-between pt-1 mt-1">
+          <div className="flex flex-row items-center text-center justify-between pt-1 mt-4">
             {" "}
             {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
             <Tabs defaultValue={viewMode === "review" ? "unpublished" : "unpublished"} className="w-full" onValueChange={togglePublished}>

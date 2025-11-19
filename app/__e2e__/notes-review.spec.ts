@@ -61,16 +61,28 @@ test.describe('Notes Review UI', () => {
   });
 
   test('Review Notes shows Unreviewed/Reviewed tabs when instructor toggle is available', async ({ page }) => {
-    // If the instructor dropdown exists, switch to Review Notes and check labels
-    const viewSelect = page.locator('div[role="combobox"]:has-text("My Notes"), div[role="combobox"]:has-text("Review Notes")').first();
-    if (!(await viewSelect.isVisible().catch(() => false))) {
-      test.skip(true, 'Instructor view toggle not available in this environment');
+    // Hover over Notes link in navbar to show dropdown
+    const notesLink = page.locator('a:has-text("Notes")').first();
+    if (!(await notesLink.isVisible().catch(() => false))) {
+      test.skip(true, 'Notes link not available in this environment');
     }
-    await viewSelect.click();
-    await page.locator('[role="option"]:has-text("Review Notes")').click();
-    // Tabs should read Unreviewed / Reviewed in review mode
-    await expect(page.locator('button:has-text("Unreviewed")').first()).toBeVisible();
-    await expect(page.locator('button:has-text("Reviewed")').first()).toBeVisible();
+    
+    // Hover over Notes link to show dropdown
+    await notesLink.hover();
+    await page.waitForTimeout(500); // Wait for dropdown to appear
+    
+    // Click on "Students Notes" option in the dropdown
+    const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
+    if (await studentsNotesOption.isVisible().catch(() => false)) {
+      await studentsNotesOption.click();
+      await page.waitForTimeout(1000); // Wait for mode switch
+      
+      // Tabs should read Unreviewed / Reviewed in review mode
+      await expect(page.locator('button:has-text("Unreviewed")').first()).toBeVisible();
+      await expect(page.locator('button:has-text("Reviewed")').first()).toBeVisible();
+    } else {
+      test.skip(true, 'Students Notes option not available - user may not be an instructor');
+    }
   });
 
   test('Approve label visible for instructor reviewing a student note when applicable', async ({ page }) => {
@@ -91,12 +103,17 @@ test.describe('Notes Review UI', () => {
   });
 
   test('instructor cannot edit student note content when in review mode', async ({ page }) => {
-    // Switch to Review Notes mode if available
-    const viewSelect = page.locator('div[role="combobox"]:has-text("My Notes"), div[role="combobox"]:has-text("Review Notes")').first();
-    if (await viewSelect.isVisible().catch(() => false)) {
-      await viewSelect.click();
-      await page.locator('[role="option"]:has-text("Review Notes")').click();
-      await page.waitForTimeout(1000); // Wait for mode switch
+    // Switch to Review Notes mode if available via navbar dropdown
+    const notesLink = page.locator('a:has-text("Notes")').first();
+    if (await notesLink.isVisible().catch(() => false)) {
+      await notesLink.hover();
+      await page.waitForTimeout(500); // Wait for dropdown to appear
+      
+      const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
+      if (await studentsNotesOption.isVisible().catch(() => false)) {
+        await studentsNotesOption.click();
+        await page.waitForTimeout(1000); // Wait for mode switch
+      }
     }
 
     await ensureNoteSelected(page);
@@ -125,12 +142,17 @@ test.describe('Notes Review UI', () => {
   });
 
   test('instructor can still comment on student notes', async ({ page }) => {
-    // Switch to Review Notes mode if available
-    const viewSelect = page.locator('div[role="combobox"]:has-text("My Notes"), div[role="combobox"]:has-text("Review Notes")').first();
-    if (await viewSelect.isVisible().catch(() => false)) {
-      await viewSelect.click();
-      await page.locator('[role="option"]:has-text("Review Notes")').click();
-      await page.waitForTimeout(1000);
+    // Switch to Review Notes mode if available via navbar dropdown
+    const notesLink = page.locator('a:has-text("Notes")').first();
+    if (await notesLink.isVisible().catch(() => false)) {
+      await notesLink.hover();
+      await page.waitForTimeout(500); // Wait for dropdown to appear
+      
+      const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
+      if (await studentsNotesOption.isVisible().catch(() => false)) {
+        await studentsNotesOption.click();
+        await page.waitForTimeout(1000);
+      }
     }
 
     await ensureNoteSelected(page);

@@ -119,11 +119,11 @@ const InstructorSignupPage = () => {
        createdAt: Timestamp.now(),
      };
 
-      // Save user data in Firestore `users` collection
+     // Save user data in Firestore `users` collection
       if (!db) {
         throw new Error("Firebase db is not initialized");
       }
-      const userDocRef = doc(db, "users", user.uid);
+     const userDocRef = doc(db, "users", user.uid);
      await setDoc(userDocRef, userData);
 
      toast.success("Instructor account created successfully! Logging you in...");

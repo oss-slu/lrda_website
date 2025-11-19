@@ -5,9 +5,23 @@ import "@testing-library/jest-dom";
 
 
 jest.mock("@react-google-maps/api", () => ({
-  GoogleMap: ({ children }) => <div data-testid="google-map">{children}</div>,
+  GoogleMap: ({ children }: any) => <div data-testid="google-map">{children}</div>,
   MarkerF: () => <div />,
+  Autocomplete: ({ children }: any) => <div data-testid="autocomplete">{children}</div>,
   useJsApiLoader: () => ({ isLoaded: true }),
+}));
+
+jest.mock("../lib/utils/GoogleMapsContext", () => ({
+  useGoogleMaps: () => true,
+}));
+
+jest.mock("../lib/utils/location_cache", () => ({
+  getCachedLocation: jest.fn().mockResolvedValue("Test City"),
+}));
+
+jest.mock("../lib/components/search_bar_map", () => ({
+  __esModule: true,
+  default: () => <div data-testid="search-bar-map" />,
 }));
 
 describe("LocationPicker", () => {
@@ -47,27 +61,34 @@ describe("LocationPicker", () => {
   //   expect(screen.getByTestId("google-map")).toBeInTheDocument();
   // });
 
-  it("disables the button when disabled prop is true", () => {
+  it("allows viewing location when disabled prop is true (read-only mode)", () => {
     const mockOnLocationChange = jest.fn();
-    render(<LocationPicker onLocationChange={mockOnLocationChange} disabled={true} />);
+    render(<LocationPicker onLocationChange={mockOnLocationChange} disabled={true} lat="40.7128" long="-74.0060" />);
 
-    const locationButton = screen.getByRole("button", { name: /toggle map visibility/i });
+    // When disabled, aria-label is "View location (read-only)", when enabled it's "Toggle map visibility"
+    const locationButton = screen.getByRole("button", { name: /view location|toggle map visibility/i });
     
-    // Assert that button is disabled
-    expect(locationButton).toBeDisabled();
+    // Button is not disabled - it's clickable for viewing (read-only mode for instructors)
+    expect(locationButton).not.toBeDisabled();
+    
+    // Button should have the read-only aria-label
+    expect(locationButton).toHaveAttribute("aria-label", "View location (read-only)");
 
-    // Try to click - should not open map
+    // Clicking should open the map for viewing
     fireEvent.click(locationButton);
     
-    // The map should not open, so onLocationChange should not be called
-    expect(mockOnLocationChange).not.toHaveBeenCalled();
+    // The map should be visible after clicking
+    expect(screen.getByTestId("google-map")).toBeInTheDocument();
+    
+    // The map opens for viewing, but location changes are prevented by the disabled prop on marker
+    // onLocationChange should not be called when marker is dragged (handled by draggable={!disabled})
   });
 
   it("allows interaction when disabled prop is false", () => {
     const mockOnLocationChange = jest.fn();
     render(<LocationPicker onLocationChange={mockOnLocationChange} disabled={false} />);
 
-    const locationButton = screen.getByRole("button", { name: /toggle map visibility/i });
+    const locationButton = screen.getByRole("button", { name: /toggle map visibility|view location/i });
     
     // Assert that button is not disabled
     expect(locationButton).not.toBeDisabled();

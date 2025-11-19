@@ -8,6 +8,7 @@ interface NotesState {
   isLoading: boolean;
   error: string | null;
   selectedNoteId: string | null;
+  viewMode: "my" | "review"; // Teacher-student view mode
 
   // Actions
   fetchNotes: (userId: string) => Promise<void>;
@@ -17,6 +18,7 @@ interface NotesState {
   removeNote: (id: string) => void;
   clearNotes: () => void;
   setSelectedNoteId: (id: string | null) => void;
+  setViewMode: (mode: "my" | "review") => void;
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -24,6 +26,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   isLoading: false,
   error: null,
   selectedNoteId: null,
+  viewMode: "my",
 
   fetchNotes: async (userId: string) => {
     set({ isLoading: true, error: null });
@@ -79,5 +82,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   setSelectedNoteId: (id: string | null) => {
     set({ selectedNoteId: id });
+  },
+
+  setViewMode: (mode: "my" | "review") => {
+    set({ viewMode: mode });
   },
 }));

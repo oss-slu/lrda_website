@@ -3,9 +3,15 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import TagManager from '../lib/components/noteElements/tag_manager';
 
+// Define Tag type to match the component
+type Tag = {
+  label: string;
+  origin: 'user' | 'ai';
+};
+
 describe('TagManager', () => {
   // Initial tags array is updated to include the correct object format
-  const initialTags = [{ label: 'ExampleTag', origin: 'user' }];
+  const initialTags: Tag[] = [{ label: 'ExampleTag', origin: 'user' }];
 
   it('renders without crashing', () => {
     // Test to ensure the TagManager component renders without throwing an error
@@ -19,16 +25,16 @@ describe('TagManager', () => {
 
     // Get the input field for adding tags
     const input = screen.getByPlaceholderText('Add tags...');
-    // Simulate user typing a new tag and pressing Enter (5 characters max)
-    fireEvent.change(input, { target: { value: 'NewTa' } });
+    // Simulate user typing a new tag and pressing Enter (7 characters max)
+    fireEvent.change(input, { target: { value: 'NewTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
     // Assert that the new tag is now displayed in the document
-    expect(screen.getByText('NewTa')).toBeInTheDocument();
+    expect(screen.getByText('NewTag')).toBeInTheDocument();
     // Assert that the mock function was called with the expected updated tags array
     expect(mockOnTagsChange).toHaveBeenCalledWith([
       ...initialTags,
-      { label: 'NewTa', origin: 'user' } // Updated expected format to match TagManager's structure
+      { label: 'NewTag', origin: 'user' } // Updated expected format to match TagManager's structure
     ]);
   });
 
@@ -46,18 +52,19 @@ describe('TagManager', () => {
     expect(mockOnTagsChange).not.toHaveBeenCalled(); // Assert that the callback was not called
   });
 
-  it('does not add a tag with less than 3 characters', () => {
+  it('adds a tag with exactly 1 character (minimum)', () => {
     const mockOnTagsChange = jest.fn();
     render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
 
     const input = screen.getByPlaceholderText('Add tags...');
-    // Simulate user trying to add a short tag
-    fireEvent.change(input, { target: { value: 'ab' } });
+    // Simulate user trying to add a single character tag (minimum allowed)
+    fireEvent.change(input, { target: { value: 'a' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    // Assert that the tag is not added
-    expect(screen.queryByText('ab')).not.toBeInTheDocument();
-    expect(mockOnTagsChange).not.toHaveBeenCalled();
+    // Assert that the tag is added (min is 1)
+    expect(mockOnTagsChange).toHaveBeenCalledWith([
+      { label: 'a', origin: 'user' }
+    ]);
   });
 
   it('does not add duplicate tags', () => {
@@ -76,12 +83,12 @@ describe('TagManager', () => {
     ]);
   });
 
-  it('does not add a tag with more than 5 characters', () => {
+  it('does not add a tag with more than 7 characters', () => {
     const mockOnTagsChange = jest.fn();
     render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
 
     const input = screen.getByPlaceholderText('Add tags...');
-    // Simulate user trying to add a tag longer than 5 characters
+    // Simulate user trying to add a tag longer than 7 characters
     fireEvent.change(input, { target: { value: 'TooLongTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
@@ -90,23 +97,23 @@ describe('TagManager', () => {
     expect(mockOnTagsChange).not.toHaveBeenCalled();
   });
 
-  it('adds a tag with exactly 5 characters', () => {
+  it('adds a tag with exactly 7 characters (maximum)', () => {
     const mockOnTagsChange = jest.fn();
     render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
 
     const input = screen.getByPlaceholderText('Add tags...');
-    // Simulate user typing a tag with exactly 5 characters
-    fireEvent.change(input, { target: { value: 'Valid' } });
+    // Simulate user typing a tag with exactly 7 characters (maximum allowed)
+    fireEvent.change(input, { target: { value: 'ValidTg' } }); // 7 characters
     fireEvent.keyDown(input, { key: 'Enter' });
 
     // Assert that the callback was called with the new tag
     expect(mockOnTagsChange).toHaveBeenCalledWith([
-      { label: 'Valid', origin: 'user' }
+      { label: 'ValidTg', origin: 'user' }
     ]);
     
     // The tag should be in the document (check for the tag text in the rendered output)
     // Note: The tag is rendered in a div with the tag label, so we check for it
-    const tagElement = screen.queryByText('Valid');
+    const tagElement = screen.queryByText('ValidTg');
     if (tagElement) {
       expect(tagElement).toBeInTheDocument();
     } else {
@@ -167,7 +174,7 @@ describe('TagManager', () => {
     expect(input).not.toBeDisabled();
 
     // Should be able to add a tag
-    fireEvent.change(input, { target: { value: 'NewTa' } });
+    fireEvent.change(input, { target: { value: 'NewTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(mockOnTagsChange).toHaveBeenCalled();

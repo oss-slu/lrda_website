@@ -42,7 +42,7 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
       setVisibleCount((prev) => Math.min(prev, items.length));
     } else if (prevLength === 0 && currentLength > 0) {
       // Initial load
-      setVisibleCount(pageSize);
+    setVisibleCount(pageSize);
     }
     
     prevItemsLengthRef.current = currentLength;

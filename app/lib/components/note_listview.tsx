@@ -126,10 +126,10 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
         return (
           <div
             key={note.id}
-            className={`p-3 m-1 z-10 rounded-lg cursor-pointer transition-all duration-200 ${
+            className={`p-2.5 mb-1.5 z-10 rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${
               note.id === selectedNoteId
-                ? "bg-blue-50 border border-blue-200 text-blue-900"
-                : "bg-white hover:bg-gray-50 border border-gray-100 text-gray-900"
+                ? "bg-blue-50 border-2 border-blue-300 text-blue-900 shadow-md"
+                : "bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 hover:shadow-md hover:border-gray-300"
             }`}
             onClick={() => handleLoadText(note)}
           >

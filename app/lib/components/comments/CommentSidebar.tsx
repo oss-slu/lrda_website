@@ -32,25 +32,25 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       }
       console.log("CommentSidebar: Loading comments for noteId:", noteId);
       try {
-        const raw = await ApiService.fetchCommentsForNote(noteId);
+      const raw = await ApiService.fetchCommentsForNote(noteId);
         console.log("CommentSidebar: Raw comments fetched:", raw.length, raw);
-        // Resolve proper display names when needed
-        const enriched = await Promise.all(
-          raw.map(async (c) => {
-            const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-            if (needsName && c.authorId) {
-              try {
-                const display = await ApiService.fetchCreatorName(c.authorId);
-                return { ...c, authorName: display } as any;
-              } catch {
-                return c as any;
-              }
+      // Resolve proper display names when needed
+      const enriched = await Promise.all(
+        raw.map(async (c) => {
+          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
+          if (needsName && c.authorId) {
+            try {
+              const display = await ApiService.fetchCreatorName(c.authorId);
+              return { ...c, authorName: display } as any;
+            } catch {
+              return c as any;
             }
-            return c as any;
-          })
-        );
+          }
+          return c as any;
+        })
+      );
         console.log("CommentSidebar: Enriched comments:", enriched.length, enriched);
-        setComments(enriched as any);
+      setComments(enriched as any);
       } catch (error) {
         console.error("CommentSidebar: Error loading comments:", error);
         setComments([]);
@@ -157,7 +157,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     } catch (error) {
       console.error("Error reloading comments after creation:", error);
       // Fallback to adding locally
-      setComments((prev) => [...prev, newComment]);
+    setComments((prev) => [...prev, newComment]);
     }
     setCommentDraft(""); // Clear draft on successful submit
     setShowPopover(false);
@@ -226,7 +226,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     } catch (error) {
       console.error("Error reloading comments after reply:", error);
       // Fallback to adding locally
-      setComments((prev) => [...prev, reply]);
+    setComments((prev) => [...prev, reply]);
     }
     setReplyDrafts((d) => ({ ...d, [threadId]: "" }));
   };

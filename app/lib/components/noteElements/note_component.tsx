@@ -10,7 +10,7 @@ import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import ApiService from "../../utils/api_service";
-import { FileX2, SaveIcon, Calendar, MapPin, Music, MessageSquare, X } from "lucide-react";
+import { FileX2, SaveIcon, Calendar, MapPin, Music, MessageSquare, X, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +46,8 @@ import { newNote, Note } from "@/app/types"; // make sure types are imported
 import { useNotesStore } from "../../stores/notesStore";
 import CommentSidebar from "../comments/CommentSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import CommentBubble from "../CommentBubble";
 
 const user = User.getInstance();
 
@@ -185,7 +187,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Auto-save state (from main)
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedSnapshotRef = useRef<{ title: string; text: string; tags: any[]; published: boolean; approvalRequested?: boolean } | null>(null);
+  const lastSavedSnapshotRef = useRef<{ title: string; text: string; tags: any[]; published: boolean; approvalRequested?: boolean; latitude?: string; longitude?: string } | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(isNewNote);
   // Teacher-student state (from december-sprint)
   const [instructorId, setInstructorId] = useState<string | null>(null);
@@ -202,9 +204,13 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     return noteState.note.creator !== userId;
   }, [isInstructorUser, userId, noteState.note?.creator]);
   const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
+  const [isDownloadPopoverOpen, setIsDownloadPopoverOpen] = useState<boolean>(false);
   // Comment sidebar state
   const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState<boolean>(false);
   const [canComment, setCanComment] = useState<boolean>(false);
+  // Comment bubble state for text selection
+  const [showCommentBubble, setShowCommentBubble] = useState<boolean>(false);
+  const [commentBubblePosition, setCommentBubblePosition] = useState<{ top: number; left: number } | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingPausedRef = useRef<boolean>(false);
   const lastEditTimeRef = useRef<number>(Date.now());
@@ -617,6 +623,107 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     }
   }, [initialNote]);
 
+  // Track text selection and show comment bubble
+  // Only show when instructor is viewing a student's note (not their own)
+  useEffect(() => {
+    const editor = rteRef.current?.editor;
+    // Show bubble only when: can comment AND viewing a student note (instructor reviewing student work)
+    if (!editor || !canComment || !isViewingStudentNote) {
+      setShowCommentBubble(false);
+      return;
+    }
+
+    const updateBubblePosition = () => {
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+
+      if (hasSelection) {
+        try {
+          // Get the bounding rectangle of the selected text using the editor's view
+          const { $anchor, $head } = editor.state.selection;
+          const startPos = Math.min($anchor.pos, $head.pos);
+          const endPos = Math.max($anchor.pos, $head.pos);
+          
+          // Get DOM coordinates
+          const startDom = editor.view.domAtPos(startPos);
+          const endDom = editor.view.domAtPos(endPos);
+          
+          const startNode = startDom.node as HTMLElement;
+          const endNode = endDom.node as HTMLElement;
+          
+          if (startNode && endNode) {
+            // Get the range for the selection
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const rect = range.getBoundingClientRect();
+              const editorContainer = editor.view.dom.closest('.ProseMirror')?.getBoundingClientRect();
+              
+              if (editorContainer && rect.width > 0 && rect.height > 0) {
+                // Position bubble above the selection, slightly to the right
+                // Use absolute positioning relative to the editor container
+                // The bubble is inside a relative container, so it will scroll with content
+                const top = rect.top - editorContainer.top - 45; // 45px above selection
+                const left = rect.right - editorContainer.left + 10; // 10px to the right
+                
+                setCommentBubblePosition({ top, left });
+                setShowCommentBubble(true);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error calculating comment bubble position:", error);
+          setShowCommentBubble(false);
+        }
+      } else {
+        setShowCommentBubble(false);
+      }
+    };
+
+    // Listen to selection changes via editor events
+    const handleSelectionUpdate = () => {
+      // Small delay to ensure DOM is updated
+      setTimeout(updateBubblePosition, 10);
+    };
+    
+    // Also listen to scroll events to update bubble position
+    const handleScroll = () => {
+      if (showCommentBubble) {
+        updateBubblePosition();
+      }
+    };
+    
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    
+    // Also listen to mouseup to catch selection changes
+    const handleMouseUp = () => {
+      setTimeout(updateBubblePosition, 10);
+    };
+    
+    const editorElement = editor.view.dom;
+    const scrollContainer = editorElement.closest('[data-radix-scroll-area-viewport]') || 
+                           editorElement.closest('.overflow-auto') ||
+                           editorElement.closest('.ScrollArea') ||
+                           editorElement.parentElement;
+    
+    editorElement.addEventListener('mouseup', handleMouseUp);
+    editorElement.addEventListener('keyup', handleSelectionUpdate);
+    
+    // Listen to scroll events on the scroll container
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editorElement.removeEventListener('mouseup', handleMouseUp);
+      editorElement.removeEventListener('keyup', handleSelectionUpdate);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [canComment, isViewingStudentNote, showCommentBubble]);
+
   // Auto-save effect: saves note 2 seconds after user stops typing, only if dirty and non-blank
   useEffect(() => {
     // Clear any existing timer
@@ -677,6 +784,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             tags: noteState.tags,
             published: noteState.isPublished,
             approvalRequested: noteState.approvalRequested,
+            latitude: noteState.latitude,
+            longitude: noteState.longitude,
           };
 
           toast("Note Created", { description: "Your note has been saved.", duration: 2000 });
@@ -705,6 +814,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       last.text !== noteState.editorContent ||
       last.published !== noteState.isPublished ||
       last.approvalRequested !== noteState.approvalRequested ||
+      last.latitude !== noteState.latitude ||
+      last.longitude !== noteState.longitude ||
       JSON.stringify(last.tags) !== JSON.stringify(noteState.tags);
 
     // Update the store for instant UI updates
@@ -764,6 +875,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             tags: noteState.tags,
             published: noteState.isPublished,
             approvalRequested: noteState.approvalRequested,
+            latitude: noteState.latitude,
+            longitude: noteState.longitude,
           };
         } catch (error) {
           console.error("Auto-save error:", error);
@@ -781,6 +894,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     };
   }, [
     noteState.title,
+    noteState.latitude,
+    noteState.longitude,
     noteState.editorContent,
     noteState.tags,
     noteState.isPublished,
@@ -903,8 +1018,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     }
   };
 
-  const handleDownload = async () => {
-    if (!selectedFileType) {
+  const handleDownload = async (fileType?: "pdf" | "docx") => {
+    const typeToUse = fileType || selectedFileType;
+    if (!typeToUse) {
       alert("Please select a file type.");
       return;
     }
@@ -920,13 +1036,13 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       Time: ${noteState.time}
     `;
 
-    if (selectedFileType === "pdf") {
+    if (typeToUse === "pdf") {
       // Generate PDF using jsPDF (dynamically import to avoid canvas in tests)
       const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF();
       pdf.text(noteContent, 10, 10); // Add text to the PDF
       pdf.save(`${noteState.title || "note"}.pdf`); // Save the PDF file
-    } else if (selectedFileType === "docx") {
+    } else if (typeToUse === "docx") {
       // Generate Word document using docx
       const doc = new Document({
         sections: [
@@ -953,7 +1069,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       URL.revokeObjectURL(url);
     }
 
-    toast(`Your note has been downloaded as ${selectedFileType.toUpperCase()}`);
+    toast(`Your note has been downloaded as ${typeToUse.toUpperCase()}`);
   };
 
   const fetchSuggestedTags = async () => {
@@ -1116,9 +1232,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         className="w-full h-full"
       >
         <ResizablePanel
-          defaultSize={canComment && isCommentSidebarOpen && noteState.note?.id ? 70 : 100}
+          defaultSize={canComment && isCommentSidebarOpen && isViewingStudentNote && noteState.note?.id ? 70 : 100}
           minSize={45}
-          maxSize={canComment && isCommentSidebarOpen && noteState.note?.id ? 85 : 100}
+          maxSize={canComment && isCommentSidebarOpen && isViewingStudentNote && noteState.note?.id ? 85 : 100}
           className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
         >
           <ScrollArea className="flex flex-col w-full h-full min-h-0">
@@ -1206,18 +1322,56 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                   initialDate={noteState.time || new Date()}
                   onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
                   disabled={isViewingStudentNote}
+                  // Allow viewing time even when disabled (read-only mode for instructors)
                 />
               </div>
               <div ref={locationRef}>
                 <LocationPicker
                   long={noteState.longitude}
                   lat={noteState.latitude}
-                  onLocationChange={(newLong, newLat) =>
-                    handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat)
-                  }
+                  onLocationChange={(newLong, newLat) => {
+                    handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat);
+                    // Autosave will be triggered automatically by the useEffect that watches noteState changes
+                    lastEditTimeRef.current = Date.now();
+                  }}
                   disabled={isViewingStudentNote}
+                  // Allow viewing location even when disabled (read-only mode for instructors)
                 />
               </div>
+              <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
+                    aria-label="Download note"
+                    // Download is always enabled - instructors can download student notes
+                  >
+                    <Download aria-label="download" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
+                    <span>Download</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="end">
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={async () => {
+                        setIsDownloadPopoverOpen(false);
+                        await handleDownload("pdf");
+                      }}
+                      className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    >
+                      Download as PDF
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsDownloadPopoverOpen(false);
+                        await handleDownload("docx");
+                      }}
+                      className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    >
+                      Download as DOCX
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <div className="mt-2">
@@ -1259,7 +1413,20 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             }
           }}
         >
-          <div className="bg-white w-full">
+          <div className="bg-white w-full relative">
+            {/* Comment Bubble - Shows when text is selected (only when instructor is viewing student notes) */}
+            {showCommentBubble && commentBubblePosition && canComment && isViewingStudentNote && (
+              <CommentBubble
+                onClick={() => {
+                  // Open comment sidebar and focus on adding a comment
+                  setIsCommentSidebarOpen(true);
+                  setShowCommentBubble(false);
+                  // The CommentSidebar will use getCurrentSelection to get the selected text
+                }}
+                top={commentBubblePosition.top}
+                left={commentBubblePosition.left}
+              />
+            )}
             <RichTextEditor
               key={`${noteState.note?.id ?? "new"}-${noteState.title}-${noteState.counter}`}
               ref={rteRef}
@@ -1360,7 +1527,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         </div>
       </ScrollArea>
         </ResizablePanel>
-        {!!noteState.note?.id && canComment && isCommentSidebarOpen && (
+        {!!noteState.note?.id && canComment && isCommentSidebarOpen && isViewingStudentNote && (
           <>
             <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
             <ResizablePanel
@@ -1386,7 +1553,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     </div>
     {/* Sticky Comment Toggle Button - Rendered via portal to ensure it's above all relative containers */}
     {(() => {
-      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment;
+      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment && isViewingStudentNote;
       if (shouldShow) {
         console.log("Rendering comment button via portal", { noteId: noteState.note?.id, canComment });
       } else {

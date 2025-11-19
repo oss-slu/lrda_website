@@ -6,9 +6,15 @@ import { usePathname } from "next/navigation";
 
 // Jest globals (it, expect, describe, beforeAll) are available via @types/jest
 
-// Mock usePathname
+// Mock next/navigation
+const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   usePathname: jest.fn(),
+  useRouter: jest.fn(() => ({
+    push: mockPush,
+    replace: jest.fn(),
+    refresh: jest.fn(),
+  })),
 }));
 
 interface MockUser extends User {
@@ -39,6 +45,40 @@ jest.mock("../lib/models/user_class", () => {
 jest.mock("../lib/config/firebase", () => ({
   auth:   {},   // a fake auth object
   db:     {},   // a fake Firestore object
+}));
+
+// Mock useNotesStore
+jest.mock("../lib/stores/notesStore", () => ({
+  useNotesStore: jest.fn((selector) => {
+    const mockStore = {
+      viewMode: "my",
+      setViewMode: jest.fn(),
+    };
+    return selector ? selector(mockStore) : mockStore;
+  }),
+}));
+
+// Mock ApiService
+jest.mock("../lib/utils/api_service", () => ({
+  __esModule: true,
+  default: {
+    fetchUserData: jest.fn().mockResolvedValue({}),
+  },
+}));
+
+// Mock Select component
+jest.mock("../../components/ui/select", () => ({
+  Select: ({ children, value, onValueChange }: any) => (
+    <div data-testid="select">{children}</div>
+  ),
+  SelectTrigger: ({ children, className }: any) => (
+    <button className={className} data-testid="select-trigger">{children}</button>
+  ),
+  SelectValue: ({ children }: any) => <span>{children}</span>,
+  SelectContent: ({ children }: any) => <div data-testid="select-content">{children}</div>,
+  SelectItem: ({ children, value, onClick }: any) => (
+    <div data-testid={`select-item-${value}`} onClick={onClick}>{children}</div>
+  ),
 }));
 
 

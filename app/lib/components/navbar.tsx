@@ -1,16 +1,22 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useNotesStore } from "../stores/notesStore";
+import ApiService from "../utils/api_service";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const user = User.getInstance();
 
 export default function Navbar() {
   const [name, setName] = useState<string | null>(null);
+  const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { viewMode, setViewMode } = useNotesStore();
 
   const handleLogout = async () => {
     try {
@@ -37,6 +43,27 @@ export default function Navbar() {
     };
     fetchName();
   }, []);
+
+  // Check if user is instructor
+  useEffect(() => {
+    const checkInstructorStatus = async () => {
+      if (!name) return;
+      try {
+        const roles = await user.getRoles();
+        const userId = await user.getId();
+        
+        if (userId) {
+          const userData = await ApiService.fetchUserData(userId);
+          // Check if user is an instructor (has administrator role OR isInstructor flag)
+          const isInstr = !!roles?.administrator || !!userData?.isInstructor;
+          setIsInstructor(isInstr);
+        }
+      } catch (error) {
+        console.error("Error checking instructor status:", error);
+      }
+    };
+    checkInstructorStatus();
+  }, [name]);
 
   // Define nav items
   const navItems = [
@@ -68,14 +95,45 @@ export default function Navbar() {
         {navItems.map(
           (item) =>
             (!item.authRequired || name) && (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={linkClass(item.href)}
-                aria-current={pathname.startsWith(item.href) ? "page" : undefined}
-              >
-                {item.label}
-              </Link>
+              item.href === "/lib/pages/notes" && isInstructor ? (
+                <div key={item.href} className="mr-6">
+                  <Select
+                    value={viewMode}
+                    onValueChange={(value) => {
+                      setViewMode(value as "my" | "review");
+                      router.push("/lib/pages/notes");
+                    }}
+                  >
+                    <SelectTrigger 
+                      className={cn(
+                        "text-xl font-bold transition duration-300 ease-in-out border-none bg-transparent text-blue-300 hover:text-blue-500 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-0 w-auto shadow-none",
+                        pathname.startsWith(item.href) ? "text-blue-500" : ""
+                      )}
+                    >
+                      <SelectValue>
+                        <span className={cn(
+                          pathname.startsWith(item.href) ? "text-blue-500" : "text-blue-300 hover:text-blue-500"
+                        )}>
+                          {item.label}
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="my">My Notes</SelectItem>
+                      <SelectItem value="review">Students Notes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={linkClass(item.href)}
+                  aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              )
             )
         )}
       </div>
