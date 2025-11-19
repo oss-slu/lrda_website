@@ -84,7 +84,7 @@ export default function TeamGrid() {
       <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-blue-400/30 to-blue-600/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-blue-600/15 to-blue-400/15 rounded-full blur-3xl"></div>
 
-      <div className="relative z-10 py-20 sm:py-32">
+      <div className="relative z-10 py-10">
         <div className="mx-auto max-w-7xl px-4">
           {/* Header section */}
           <div ref={headerRef} className={`text-center mb-20 ${motionVariants.fadeInUp}`} data-reveal={headerVisible}>
