@@ -158,7 +158,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
           key={currentUUID}
           defaultValue={curRec}
         >
-          <SelectTrigger placeholder={placeVal} className="w-[180px]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue
               placeholder={placeVal}
               defaultValue={"SelectRecording"}

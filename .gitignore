@@ -5,3 +5,10 @@ yarn.lock
 .env.local
 .env
 pnpm-lock.yaml
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+*.trace
+firebase-admin.json
