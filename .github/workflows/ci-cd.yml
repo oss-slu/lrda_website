@@ -53,7 +53,8 @@ jobs:
       - name: Authenticate GitHub CLI
         if: github.event_name == 'push'
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token || echo "GitHub CLI authentication failed, continuing anyway"
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -63,6 +64,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
           # Check if there's an open PR for this branch
+          # If gh command fails, default to false (run the workflow)
           PR_COUNT=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
           if [ "$PR_COUNT" -gt 0 ]; then
             echo "has-pr=true" >> $GITHUB_OUTPUT

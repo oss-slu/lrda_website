@@ -97,32 +97,49 @@ export default function Navbar() {
             (!item.authRequired || name) && (
               item.href === "/lib/pages/notes" && isInstructor ? (
                 <div key={item.href} className="mr-6">
-                  <Select
-                    value={viewMode}
-                    onValueChange={(value) => {
-                      setViewMode(value as "my" | "review");
-                      router.push("/lib/pages/notes");
-                    }}
-                  >
-                    <SelectTrigger 
-                      className={cn(
-                        "text-xl font-bold transition duration-300 ease-in-out border-none bg-transparent text-blue-300 hover:text-blue-500 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-0 w-auto shadow-none",
-                        pathname.startsWith(item.href) ? "text-blue-500" : ""
-                      )}
+                  {!pathname.startsWith("/lib/pages/notes") ? (
+                    // If not on notes page, show a Link that navigates first
+                    <Link
+                      href="/lib/pages/notes"
+                      className={linkClass(item.href)}
+                      onClick={() => {
+                        // Ensure viewMode is set to "my" by default when navigating from another page
+                        if (!viewMode) {
+                          setViewMode("my");
+                        }
+                      }}
                     >
-                      <SelectValue>
-                        <span className={cn(
-                          pathname.startsWith(item.href) ? "text-blue-500" : "text-blue-300 hover:text-blue-500"
-                        )}>
-                          {item.label}
-                        </span>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="my">My Notes</SelectItem>
-                      <SelectItem value="review">Students Notes</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      {item.label}
+                    </Link>
+                  ) : (
+                    // If already on notes page, show the Select dropdown
+                    <Select
+                      value={viewMode}
+                      onValueChange={(value) => {
+                        setViewMode(value as "my" | "review");
+                        router.push("/lib/pages/notes");
+                      }}
+                    >
+                      <SelectTrigger 
+                        className={cn(
+                          "text-xl font-bold transition duration-300 ease-in-out border-none bg-transparent text-blue-300 hover:text-blue-500 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-0 w-auto shadow-none",
+                          pathname.startsWith(item.href) ? "text-blue-500" : ""
+                        )}
+                      >
+                        <SelectValue>
+                          <span className={cn(
+                            pathname.startsWith(item.href) ? "text-blue-500" : "text-blue-300 hover:text-blue-500"
+                          )}>
+                            {item.label}
+                          </span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="my">My Notes</SelectItem>
+                        <SelectItem value="review">Students Notes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               ) : (
                 <Link

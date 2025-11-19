@@ -197,12 +197,29 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   
   // Check if instructor is viewing a student's note (not their own)
   const isViewingStudentNote = useMemo(() => {
-    if (!isInstructorUser || !userId || !noteState.note?.creator) {
-      return false;
-    }
-    // Instructor is viewing a note that was created by someone else (a student)
-    return noteState.note.creator !== userId;
+    const result = !!(isInstructorUser && userId && noteState.note?.creator && noteState.note.creator !== userId);
+    console.log("🔍 isViewingStudentNote calculation:", {
+      isInstructorUser,
+      userId,
+      noteCreator: noteState.note?.creator,
+      result,
+      areEqual: noteState.note?.creator === userId
+    });
+    return result;
   }, [isInstructorUser, userId, noteState.note?.creator]);
+
+  // Check if student is viewing their own note (to see instructor comments/feedback)
+  const isStudentViewingOwnNote = useMemo(() => {
+    const result = !!(isStudent && userId && noteState.note?.creator && noteState.note.creator === userId);
+    console.log("🔍 isStudentViewingOwnNote calculation:", {
+      isStudent,
+      userId,
+      noteCreator: noteState.note?.creator,
+      result,
+      areEqual: noteState.note?.creator === userId
+    });
+    return result;
+  }, [isStudent, userId, noteState.note?.creator]);
   const [selectedFileType, setSelectedFileType] = useState<"pdf" | "docx">("pdf");
   const [isDownloadPopoverOpen, setIsDownloadPopoverOpen] = useState<boolean>(false);
   // Comment sidebar state
@@ -358,16 +375,23 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
   useEffect(() => {
     const fetchUserDetails = async () => {
+      console.log("🔍 fetchUserDetails: Starting...");
       const roles = await user.getRoles();
       const fetchedUserId = await user.getId();
-      if (!fetchedUserId) return;
+      console.log("🔍 fetchUserDetails: Got userId and roles", { fetchedUserId, roles });
+      
+      if (!fetchedUserId) {
+        console.log("⚠️ fetchUserDetails: No userId, returning early");
+        return;
+      }
       
       // Fetch userData to check isInstructor flag
       let userData = null;
       try {
         userData = await ApiService.fetchUserData(fetchedUserId);
+        console.log("🔍 fetchUserDetails: Fetched userData", userData);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("❌ Error fetching user data:", error);
       }
       
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
@@ -388,23 +412,32 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       // Set instructorId from userData if available, otherwise use fetchedUserId if instructor
       setInstructorId(isInstr ? fetchedUserId : null);
       
-      // Determine if user can comment (administrator OR instructor with isInstructor flag OR student with parentInstructorId)
-      const canCommentValue = !!fetchedUserId && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel);
+      // Determine if user can comment/view comments:
+      // - Administrators OR instructors with isInstructor flag (can comment on student notes)
+      // - Students viewing their own notes (can view instructor comments/feedback)
+      const canCommentValue = !!fetchedUserId && (
+        !!roles?.administrator || 
+        !!userData?.isInstructor || 
+        isStudentInTeacherStudentModel
+      );
       setCanComment(canCommentValue);
       
       // Debug logging
-      console.log("Comment button debug:", {
+      console.log("✅ Comment button debug:", {
         fetchedUserId,
         roles: roles,
         userData: userData,
         isInstr,
         isStudentInTeacherStudentModel,
         canComment: canCommentValue,
-        noteId: noteState.note?.id
+        noteId: noteState.note?.id,
+        isAdministrator: !!roles?.administrator,
+        hasIsInstructorFlag: !!userData?.isInstructor,
+        noteCreator: noteState.note?.creator
       });
     };
     fetchUserDetails();
-  }, []);
+  }, [noteState.note?.id, noteState.note?.creator]); // Re-run when note or creator changes to ensure canComment is set correctly
 
   useEffect(() => {
     if (initialNote) {
@@ -627,8 +660,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Only show when instructor is viewing a student's note (not their own)
   useEffect(() => {
     const editor = rteRef.current?.editor;
-    // Show bubble only when: can comment AND viewing a student note (instructor reviewing student work)
-    if (!editor || !canComment || !isViewingStudentNote) {
+    // Show bubble when: can comment AND (instructor viewing student note OR student viewing own note)
+    if (!editor || !canComment || (!isViewingStudentNote && !isStudentViewingOwnNote)) {
       setShowCommentBubble(false);
       return;
     }
@@ -722,7 +755,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         scrollContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [canComment, isViewingStudentNote, showCommentBubble]);
+  }, [canComment, isViewingStudentNote, isStudentViewingOwnNote, showCommentBubble]);
 
   // Auto-save effect: saves note 2 seconds after user stops typing, only if dirty and non-blank
   useEffect(() => {
@@ -1221,7 +1254,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
   // Create a unique key for the panel group based on whether comment sidebar is open
   // This forces a remount when the structure changes, preventing layout restoration errors
-  const panelGroupKey = `${noteState.note?.id || 'new'}-${canComment && isCommentSidebarOpen ? 'open' : 'closed'}`;
+  const panelGroupKey = `${noteState.note?.id || 'new'}-${canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) ? 'open' : 'closed'}`;
 
   return (
     <>
@@ -1232,9 +1265,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         className="w-full h-full"
       >
         <ResizablePanel
-          defaultSize={canComment && isCommentSidebarOpen && isViewingStudentNote && noteState.note?.id ? 70 : 100}
+          defaultSize={canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 70 : 100}
           minSize={45}
-          maxSize={canComment && isCommentSidebarOpen && isViewingStudentNote && noteState.note?.id ? 85 : 100}
+          maxSize={canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 85 : 100}
           className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
         >
           <ScrollArea className="flex flex-col w-full h-full min-h-0">
@@ -1415,7 +1448,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         >
           <div className="bg-white w-full relative">
             {/* Comment Bubble - Shows when text is selected (only when instructor is viewing student notes) */}
-            {showCommentBubble && commentBubblePosition && canComment && isViewingStudentNote && (
+            {showCommentBubble && commentBubblePosition && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
               <CommentBubble
                 onClick={() => {
                   // Open comment sidebar and focus on adding a comment
@@ -1527,7 +1560,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         </div>
       </ScrollArea>
         </ResizablePanel>
-        {!!noteState.note?.id && canComment && isCommentSidebarOpen && isViewingStudentNote && (
+        {!!noteState.note?.id && canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && (
           <>
             <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
             <ResizablePanel
@@ -1553,15 +1586,29 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     </div>
     {/* Sticky Comment Toggle Button - Rendered via portal to ensure it's above all relative containers */}
     {(() => {
-      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment && isViewingStudentNote;
+      // Show comment button when:
+      // 1. Instructor viewing a student's note (to give feedback), OR
+      // 2. Student viewing their own note (to see instructor feedback)
+      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment && (isViewingStudentNote || isStudentViewingOwnNote);
       if (shouldShow) {
-        console.log("Rendering comment button via portal", { noteId: noteState.note?.id, canComment });
+        console.log("✅ Rendering comment button via portal", { 
+          noteId: noteState.note?.id, 
+          canComment,
+          isViewingStudentNote,
+          isStudentViewingOwnNote
+        });
       } else {
-        console.log("Comment button NOT showing:", {
+        console.log("❌ Comment button NOT showing:", {
           isClient: typeof window !== 'undefined',
           hasNoteId: !!noteState.note?.id,
           canComment,
-          noteId: noteState.note?.id
+          isViewingStudentNote,
+          isStudentViewingOwnNote,
+          noteId: noteState.note?.id,
+          noteCreator: noteState.note?.creator,
+          userId: userId,
+          isInstructorUser: isInstructorUser,
+          isStudent: isStudent
         });
       }
       return shouldShow ? createPortal(

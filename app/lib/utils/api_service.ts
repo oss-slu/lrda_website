@@ -62,7 +62,7 @@ export default class ApiService {
       },
       {
         role: "user",
-        content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Each tag must be between 1 and 7 characters. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.`,
+        content: `Suggest 20 one-word tags for the following notes:\n${noteContent}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Each tag must be between 3 and 28 characters. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.`,
       },
     ];
 
@@ -112,7 +112,7 @@ export default class ApiService {
         .trim()
         .split(",")
         .map((tag: string) => tag.trim())
-                .filter((tag) => tag.length >= 1 && tag.length <= 7);
+                .filter((tag) => tag.length >= 3 && tag.length <= 28);
       return tags;
     } catch (error) {
       console.error("Error generating tags:", error);
