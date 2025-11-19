@@ -5,3 +5,5 @@ yarn.lock
 .env.local
 .env
 pnpm-lock.yaml
+
+firebase-admin.json
