@@ -227,6 +227,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Comment bubble state for text selection
   const [showCommentBubble, setShowCommentBubble] = useState<boolean>(false);
   const [commentBubblePosition, setCommentBubblePosition] = useState<{ top: number; left: number } | null>(null);
+  // Track if any popup is open (location map, time picker, download popover, etc.)
+  const [isAnyPopupOpen, setIsAnyPopupOpen] = useState<boolean>(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingPausedRef = useRef<boolean>(false);
   const lastEditTimeRef = useRef<number>(Date.now());
@@ -755,6 +757,55 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       }
     };
   }, [canComment, isViewingStudentNote, isStudentViewingOwnNote, showCommentBubble]);
+
+  // Track when any popup is open and auto-close comment bubble/button
+  useEffect(() => {
+    const checkForOpenPopups = () => {
+      // Check for location map overlay (fixed inset-0 with z-50 or z-40)
+      const locationMapOverlay = document.querySelector('.fixed.inset-0.z-50, .fixed.inset-0.z-40');
+      
+      // Check for open PopoverContent elements (Radix UI popovers) - shadcn/ui uses data-state="open"
+      const openPopovers = document.querySelectorAll('[data-state="open"]');
+      
+      // Check for AlertDialog (which uses data-state="open")
+      const openDialogs = document.querySelectorAll('[role="alertdialog"][data-state="open"]');
+      
+      // Check if any popup is open
+      const hasOpenPopup = !!(locationMapOverlay || openPopovers.length > 0 || openDialogs.length > 0);
+      
+      // Update popup state
+      setIsAnyPopupOpen(hasOpenPopup);
+      
+      // If any popup is open, close the comment bubble
+      if (hasOpenPopup && showCommentBubble) {
+        setShowCommentBubble(false);
+      }
+    };
+
+    // Check immediately
+    checkForOpenPopups();
+
+    // Set up MutationObserver to watch for DOM changes (popups opening/closing)
+    const observer = new MutationObserver(() => {
+      checkForOpenPopups();
+    });
+
+    // Observe the document body for changes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-state', 'class', 'role'],
+    });
+
+    // Also check periodically as a fallback (every 200ms)
+    const interval = setInterval(checkForOpenPopups, 200);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, [showCommentBubble]);
 
   // Auto-save effect: saves note 2 seconds after user stops typing, only if dirty and non-blank
   useEffect(() => {
@@ -1588,7 +1639,12 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       // Show comment button when:
       // 1. Instructor viewing a student's note (to give feedback), OR
       // 2. Student viewing their own note (to see instructor feedback)
-      const shouldShow = typeof window !== 'undefined' && !!noteState.note?.id && canComment && (isViewingStudentNote || isStudentViewingOwnNote);
+      // 3. AND no popups are currently open (location map, time picker, etc.)
+      const shouldShow = typeof window !== 'undefined' && 
+                        !!noteState.note?.id && 
+                        canComment && 
+                        (isViewingStudentNote || isStudentViewingOwnNote) &&
+                        !isAnyPopupOpen;
       if (shouldShow) {
         console.log("✅ Rendering comment button via portal", { 
           noteId: noteState.note?.id, 

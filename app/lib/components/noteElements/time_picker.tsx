@@ -22,11 +22,8 @@ type CustomCaptionProps = CaptionProps & {
   onDayClick?: (date: Date) => void;
 };
 
-function CaptionDropdowns({
-  calendarMonth,
-  onMonthChange,
-  onDayClick,
-}: CustomCaptionProps) {
+function CaptionDropdowns(props: any) {
+  const { displayMonth, onMonthChange, onDayClick } = props;
   const fromYear = 1200;
   const toYear = new Date().getFullYear();
 
@@ -34,8 +31,6 @@ function CaptionDropdowns({
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
   const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
-
-  const displayMonth = calendarMonth?.date || new Date();
 
   const handleChange = (newMonth: number, newYear: number) => {
     const newDate = new Date(displayMonth);
@@ -138,17 +133,15 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
           month={viewMonth}
           onMonthChange={setViewMonth}
           initialFocus
-          {...({
-            components: {
-              Caption: (props: any) => (
-                <CaptionDropdowns
-                  {...props}
-                  onMonthChange={setViewMonth}
-                  onDayClick={handleDayClick}
-                />
-              ),
-            },
-          } as any)}
+          components={{
+            Caption: (props: any) => (
+              <CaptionDropdowns
+                {...props}
+                onMonthChange={setViewMonth}
+                onDayClick={handleDayClick}
+              />
+            ),
+          } as any}
         />
         <Input
           type="time"

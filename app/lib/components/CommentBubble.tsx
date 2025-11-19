@@ -26,7 +26,7 @@ export default function CommentBubble({ onClick, top, left, right, bottom }: Com
   return (
     <button 
       onClick={onClick} 
-      className="absolute z-[10000] bg-white rounded-full p-1.5 shadow-lg border border-gray-300 hover:shadow-xl hover:bg-blue-50 transition-all pointer-events-auto"
+      className="absolute z-40 bg-white rounded-full p-1.5 shadow-lg border border-gray-300 hover:shadow-xl hover:bg-blue-50 transition-all pointer-events-auto"
       style={positionStyle}
       aria-label="Comment on selected text"
     >

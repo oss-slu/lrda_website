@@ -303,18 +303,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         </div>
       </div>
 
-      {/* Fixed Add Note button at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200 z-10">
-        <Button
-          id="add-note-button"
-          data-testid="add-note-button"
-          onClick={handleAddNote}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
-        >
-          <Plus size={18} className="mr-2" />
-          New Note
-        </Button>
-      </div>
+      {/* Fixed Add Note button at bottom - only show when NOT in review mode (instructor viewing student notes) */}
+      {viewMode !== "review" && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200 z-10">
+          <Button
+            id="add-note-button"
+            data-testid="add-note-button"
+            onClick={handleAddNote}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
+          >
+            <Plus size={18} className="mr-2" />
+            New Note
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
