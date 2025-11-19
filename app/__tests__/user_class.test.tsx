@@ -9,6 +9,20 @@ jest.mock("firebase/database", () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
 
+// Mock the firebase config to return a mock auth object
+jest.mock('../lib/config/firebase', () => {
+  const mockAuth = {
+    currentUser: null,
+  };
+  const mockDb = {};
+  return {
+    auth: mockAuth,
+    db: mockDb,
+    realtimeDb: null,
+    storage: null,
+  };
+});
+
 describe('User class', () => {
   let user: User;
   const mockUserData = {

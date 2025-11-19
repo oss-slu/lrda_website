@@ -1,6 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent } from "@testing-library/react";
 import Page from "../lib/pages/loginPage/page";
+
+/**
+ * Since `moxios` does not provide TypeScript types, we declare it as any to suppress type errors.
+ * Alternatively, you can add a .d.ts file with 'declare module "moxios";' in your project.
+ */
+// @ts-ignore
 import moxios from 'moxios';
 
 jest.mock("firebase/database", () => ({
@@ -74,7 +80,7 @@ describe("Page Component", () => {
 
   it("renders essential elements", () => {
     render(<Page />);
-    expect(screen.getByPlaceholderText("Username...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Email...")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Password...")).toBeInTheDocument();
     expect(screen.getByText("Forgot Password?")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
@@ -82,8 +88,8 @@ describe("Page Component", () => {
 
   it("captures username input", () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText("Username..."), { target: { value: 'testuser' } });
-    expect((screen.getByPlaceholderText("Username...") as HTMLInputElement).value).toBe('testuser');
+    fireEvent.change(screen.getByPlaceholderText("Email..."), { target: { value: 'testuser' } });
+    expect((screen.getByPlaceholderText("Email...") as HTMLInputElement).value).toBe('testuser');
   });
   
   it("captures password input", () => {

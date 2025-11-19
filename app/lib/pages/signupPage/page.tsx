@@ -40,6 +40,7 @@ const SignupPage = () => {
     if (!validateLastName(lastName)) return;
 
     try {
+      if (!auth) throw new Error("Firebase auth is not initialized");
       // Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -61,6 +62,7 @@ const SignupPage = () => {
       };
   
       // Store the user data in Firestore under the "users" collection
+      if (!db) throw new Error("Firestore is not initialized");
       await setDoc(doc(db, "users", user.uid), userData);
   
       // Set the user as logged in

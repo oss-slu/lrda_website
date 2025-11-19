@@ -8,6 +8,7 @@ interface NotesState {
   isLoading: boolean;
   error: string | null;
   selectedNoteId: string | null;
+  viewMode: "my" | "review"; // Teacher-student view mode
 
   // Actions
   fetchNotes: (userId: string) => Promise<void>;
@@ -17,6 +18,7 @@ interface NotesState {
   removeNote: (id: string) => void;
   clearNotes: () => void;
   setSelectedNoteId: (id: string | null) => void;
+  setViewMode: (mode: "my" | "review") => void;
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -24,6 +26,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   isLoading: false,
   error: null,
   selectedNoteId: null,
+  viewMode: "my",
 
   fetchNotes: async (userId: string) => {
     set({ isLoading: true, error: null });
@@ -55,7 +58,15 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   updateNote: (id: string, updates: Partial<Note>) => {
     set((state) => ({
-      notes: state.notes.map((note) => (note.id === id ? { ...note, ...updates } : note)).filter((note) => !note.isArchived), // Ensure archived notes are removed
+      notes: state.notes.map((note) => {
+        // Match by both id and @id to handle different note formats
+        const noteId = note.id || (note as any)["@id"];
+        const matchId = id || (updates as any)["@id"];
+        if (noteId === matchId || noteId === id) {
+          return { ...note, ...updates };
+        }
+        return note;
+      }).filter((note) => !note.isArchived), // Ensure archived notes are removed
     }));
   },
 
@@ -71,5 +82,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   setSelectedNoteId: (id: string | null) => {
     set({ selectedNoteId: id });
+  },
+
+  setViewMode: (mode: "my" | "review") => {
+    set({ viewMode: mode });
   },
 }));

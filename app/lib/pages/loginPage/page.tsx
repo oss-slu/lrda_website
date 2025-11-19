@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import LoginButton from "../../components/login_button";
 import RegisterButton from "../../components/register_button";
 import { toast } from "sonner";
@@ -29,7 +30,7 @@ const Page = () => {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Username..."
+              placeholder="Email..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
@@ -44,9 +45,10 @@ const Page = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
-          <button className="mb-2 text-sm text-blue-500 hover:underline">
-            Forgot Password?
-          </button>
+          <Link href="/lib/pages/ForgotPassword" className="mb-2 text-sm text-blue-500 hover:underline">
+  Forgot Password?
+</Link>
+
           <div className="flex flex-col sm:flex-row items-center justify-center">
             <LoginButton username={username} password={password}></LoginButton>
             <div className="w-10 h-1 sm:h-0 sm:w-5"></div>

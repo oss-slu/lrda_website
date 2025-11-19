@@ -3,11 +3,14 @@ import { Note } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
 import { FileText, Search } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
+import ApiService from "../utils/api_service";
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
   isSearching?: boolean;
+  viewMode?: "my" | "review";
+  isInstructor?: boolean;
 };
 
 const batch_size = 15; //can change batch loading here
@@ -18,10 +21,11 @@ const extractTextFromHtml = (htmlString: string) => {
   return tempDivElement.textContent || tempDivElement.innerText || "";
 };
 
-const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false }) => {
+const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false, viewMode = "my", isInstructor = false }) => {
   const { selectedNoteId, setSelectedNoteId } = useNotesStore();
   const [fresh, setFresh] = useState(true);
   const [visibleCount, setVisibleCount] = useState(batch_size);
+  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (notes.length > 0 && fresh) {
@@ -30,6 +34,34 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
       setFresh(false);
     }
   }, [notes, onNoteSelect, fresh]);
+
+  // Fetch creator names for instructors in review mode
+  useEffect(() => {
+    const fetchCreatorNames = async () => {
+      if (viewMode === "review" && isInstructor) {
+        const names: Record<string, string> = {};
+        const uniqueCreators = Array.from(new Set(notes.map(note => note.creator).filter(Boolean) as string[]));
+        
+        await Promise.all(
+          uniqueCreators.map(async (creatorId) => {
+            try {
+              const name = await ApiService.fetchCreatorName(creatorId);
+              names[creatorId] = name || "Unknown User";
+            } catch (error) {
+              console.error(`Error fetching creator name for ${creatorId}:`, error);
+              names[creatorId] = "Unknown User";
+            }
+          })
+        );
+        
+        setCreatorNames(names);
+      } else {
+        setCreatorNames({});
+      }
+    };
+    
+    fetchCreatorNames();
+  }, [notes, viewMode, isInstructor]);
 
   const handleLoadText = (note: Note) => {
     onNoteSelect(note, false);
@@ -94,10 +126,10 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
         return (
           <div
             key={note.id}
-            className={`p-3 m-1 z-10 rounded-lg cursor-pointer transition-all duration-200 ${
+            className={`p-2.5 mb-1.5 z-10 rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${
               note.id === selectedNoteId
-                ? "bg-blue-50 border border-blue-200 text-blue-900"
-                : "bg-white hover:bg-gray-50 border border-gray-100 text-gray-900"
+                ? "bg-blue-50 border-2 border-blue-300 text-blue-900 shadow-md"
+                : "bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 hover:shadow-md hover:border-gray-300"
             }`}
             onClick={() => handleLoadText(note)}
           >
@@ -106,6 +138,11 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
                 <h3 className="text-sm font-semibold truncate flex-1 mr-2">{note.title || "Untitled"}</h3>
                 <span className="text-xs text-gray-500 flex-shrink-0">{handleGetTime(note.time)}</span>
               </div>
+              {viewMode === "review" && isInstructor && note.creator && (
+                <p className="text-xs text-gray-500 font-medium">
+                  By: {creatorNames[note.creator] || "Loading..."}
+                </p>
+              )}
               <p className="text-xs text-gray-600 truncate leading-relaxed">{noteTextContent}</p>
             </div>
           </div>
