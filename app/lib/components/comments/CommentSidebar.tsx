@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { Key, ReactNode } from "react";
 import { Comment } from "@/app/types";
 import CommentPopover from "../CommentPopover";
@@ -22,18 +22,19 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const [canComment, setCanComment] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [commentDraft, setCommentDraft] = useState<string>(""); // Preserve draft comment text
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingPausedRef = useRef<boolean>(false);
 
-  // Load existing comments whenever noteId changes and normalize author names
-  useEffect(() => {
-    const load = async () => {
-      if (!noteId) {
-        console.log("CommentSidebar: No noteId provided");
-        return;
-      }
-      console.log("CommentSidebar: Loading comments for noteId:", noteId);
-      try {
+  // Function to load comments - memoized with useCallback
+  const loadComments = useCallback(async () => {
+    if (!noteId) {
+      console.log("CommentSidebar: No noteId provided");
+      return;
+    }
+    console.log("CommentSidebar: Loading comments for noteId:", noteId);
+    try {
       const raw = await ApiService.fetchCommentsForNote(noteId);
-        console.log("CommentSidebar: Raw comments fetched:", raw.length, raw);
+      console.log("CommentSidebar: Raw comments fetched:", raw.length, raw);
       // Resolve proper display names when needed
       const enriched = await Promise.all(
         raw.map(async (c) => {
@@ -49,15 +50,70 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
           return c as any;
         })
       );
-        console.log("CommentSidebar: Enriched comments:", enriched.length, enriched);
+      console.log("CommentSidebar: Enriched comments:", enriched.length, enriched);
       setComments(enriched as any);
-      } catch (error) {
-        console.error("CommentSidebar: Error loading comments:", error);
-        setComments([]);
+    } catch (error) {
+      console.error("CommentSidebar: Error loading comments:", error);
+      setComments([]);
+    }
+  }, [noteId]);
+
+  // Load existing comments whenever noteId changes and normalize author names
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
+
+  // Polling effect: automatically refresh comments every 15 seconds
+  useEffect(() => {
+    if (!noteId) return;
+
+    const POLLING_INTERVAL = 15000; // 15 seconds
+
+    // Handle visibility change to pause/resume polling
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isPollingPausedRef.current = true;
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } else {
+        isPollingPausedRef.current = false;
+        // Restart polling when page becomes visible
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+        pollingIntervalRef.current = setInterval(() => {
+          if (!isPollingPausedRef.current) {
+            loadComments();
+          }
+        }, POLLING_INTERVAL);
       }
     };
-    load();
-  }, [noteId]);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Start polling
+    const startPolling = () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = setInterval(() => {
+        if (!isPollingPausedRef.current) {
+          loadComments();
+        }
+      }, POLLING_INTERVAL);
+    };
+
+    startPolling();
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [loadComments]);
 
   // Determine whether current user is an instructor or a student (part of teacher-student relationship only)
   useEffect(() => {
