@@ -271,14 +271,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
       {/* Scrollable content area */}
       <div className="overflow-y-auto flex-1 p-4 pb-20">
-        {" "}
         {/* pb-20 to prevent content from going under button */}
-        <div className="w-full mb-4">
+        <div className="w-full">
           {/*Search bar only updates the set of displayed notes to filter properly when used again after switching note view.*/}
           <SearchBarNote onSearch={handleSearch} />
 
-          <div className="flex flex-row items-center text-center justify-between pt-1 mt-4">
-            {" "}
+          <div className="flex flex-row items-center text-center justify-between pt-1 mt-2">
             {/* Experimental change. From https://ui.shadcn.com/docs/components/tabs */}
             <Tabs defaultValue={viewMode === "review" ? "unpublished" : "unpublished"} className="w-full" onValueChange={togglePublished}>
               <TabsList className="grid w-full grid-cols-2">

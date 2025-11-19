@@ -10,7 +10,7 @@ import useExtensions from "../../utils/use_extensions";
 import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import ApiService from "../../utils/api_service";
-import { FileX2, SaveIcon, Calendar, MapPin, Music, MessageSquare, X, Download } from "lucide-react";
+import { FileX2, MessageSquare, X, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +41,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 // intro.js will be loaded dynamically to avoid SSR issues
 import type { NoteStateType, NoteHandlersType } from "./note_state";
 
-import { Button } from "@/components/ui/button";
 import { newNote, Note } from "@/app/types"; // make sure types are imported
 import { useNotesStore } from "../../stores/notesStore";
 import CommentSidebar from "../comments/CommentSidebar";
