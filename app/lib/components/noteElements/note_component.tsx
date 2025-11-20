@@ -1343,12 +1343,12 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
               {isSaving ? (
                 <>
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>Saving...</span>
+                  <span className="w-12">Saving...</span>
                 </>
               ) : (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>All changes saved</span>
+                  <span className="w-12">Saved</span>
                 </>
               )}
             </div>
