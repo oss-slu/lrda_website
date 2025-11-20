@@ -8,8 +8,7 @@ import DataConversion from "../../utils/data_conversion";
 import { User } from "../../models/user_class";
 import ClickableNote from "../../components/click_note_card";
 import { Skeleton } from "@/components/ui/skeleton";
-import introJs from "intro.js";
-import "intro.js/introjs.css";
+// intro.js will be loaded dynamically to avoid SSR issues
 
 import { UserIcon, Plus, Minus, Users } from "lucide-react";
 import * as ReactDOM from "react-dom/client";
@@ -49,8 +48,8 @@ const Page = () => {
   const [locationFound, setLocationFound] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const mapRef = useRef<google.maps.Map>();
-  const markerClustererRef = useRef<MarkerClusterer>();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerClustererRef = useRef<MarkerClusterer | null>(null);
 
   const noteRefs = useRef<Refs>({});
   const currentPopupRef = React.useRef<any | null>(null);
@@ -94,7 +93,8 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const observer = new MutationObserver(() => {
+    if (typeof window === 'undefined') return; // Skip SSR
+    const observer = new MutationObserver(async () => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
 
@@ -106,7 +106,9 @@ const Page = () => {
           ?.split("=")[1];
 
         if (!introShown) {
-          const intro = introJs();
+          // Dynamically import intro.js only on client side
+          const introJs = (await import("intro.js")).default;
+          const intro = introJs.tour();
 
           intro.setOptions({
             steps: [

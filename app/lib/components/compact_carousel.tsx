@@ -70,11 +70,7 @@ export default function CompactCarousel({
             )}
             {media.type === "video" && (
               <ReactPlayer
-                url={media.uri}
-                controls={true}
-                width="256px"
-                height="180px"
-                className="self-center object-cover bg-black"
+                {...({ url: media.uri, controls: true, width: "256px", height: "180px", className: "self-center object-cover bg-black" } as any)}
               />
             )}
             

@@ -1,3 +1,4 @@
+import { Key, ReactNode } from "react";
 import {
   Media,
   PhotoType,
@@ -17,14 +18,37 @@ export type MediaData = {
   uri: string;
 };
 
+export type Comment = {
+  authorName: ReactNode;
+  id: Key | null | undefined;
+  noteId: string;
+  uid: string;
+  text: string;
+  author: string;     // Display name
+  authorId: string;   // UID of the commenter
+  role: "instructor" | "student"; // For styling or permissions
+  createdAt: string;  // ISO date
+  position?: { from: number; to: number } | null; // Anchor to selected range
+  threadId?: string | null; // Thread grouping id
+  parentId?: string | null; // Parent comment id when this is a reply
+  resolved?: boolean; // Whether the thread is resolved
+  archived?: boolean; // Soft-delete flag
+};
+
+
+
 export type UserData = {
   uid: string;
   name: string;
+  students?: string[]; // <-- 🔥 ADD THIS
   roles: {
     administrator: boolean;
     contributor: boolean;
   };
+  isInstructor?: boolean; // New field for instructors
+  parentInstructorId?: string; // New field for students
 };
+
 
 export type Note = {
   id: string;
@@ -37,9 +61,11 @@ export type Note = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
+  approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   uid: string;
   isArchived?: boolean; //add property of archived, then filter for it
+  comments?: Comment[]
 };
 
 export type CombinedResult =
@@ -56,6 +82,7 @@ export type newNote = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
+  approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   isArchived?: boolean;
 };
