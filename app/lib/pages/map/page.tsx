@@ -68,6 +68,19 @@ const Page = () => {
   const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
   const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
 
+  // Resize map when panel opens/closes
+  useEffect(() => {
+    if (mapRef.current) {
+      // Use setTimeout to ensure DOM has updated
+      const timer = setTimeout(() => {
+        if (mapRef.current) {
+          google.maps.event.trigger(mapRef.current, "resize");
+        }
+      }, 300); // Match the transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [isPanelOpen]);
+
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
 
@@ -185,16 +198,30 @@ const Page = () => {
             setMapCenter(lastLocation);
             setMapZoom(10);
             setLocationFound(true);
+            // Trigger resize after location is set
+            setTimeout(() => {
+              if (mapRef.current) {
+                google.maps.event.trigger(mapRef.current, "resize");
+              }
+            }, 100);
           } else {
-            throw new Error("Invalid or missing last location in storage.");
+            // No last location stored - use default (this is expected, not an error)
+            const defaultLocation = { lat: 38.637334, lng: -90.286021 };
+            setMapCenter(defaultLocation as Location);
+            setMapZoom(10);
+            setLocationFound(true);
           }
         }
       } catch (error) {
+        // Only log actual errors (parsing failures, etc.), not missing location
         const defaultLocation = { lat: 38.637334, lng: -90.286021 };
         setMapCenter(defaultLocation as Location);
         setMapZoom(10);
         setLocationFound(true);
-        console.error("Failed to fetch the last location", error);
+        // Only log if it's an actual error (not just missing data)
+        if (error instanceof Error && !error.message.includes("Invalid or missing last location")) {
+          console.error("Failed to fetch the last location", error);
+        }
       }
     };
     fetchLastLocation();
@@ -214,6 +241,12 @@ const Page = () => {
           if (!locationFound && isComponentMounted) {
             setMapCenter(currentLocation);
             setMapZoom(10);
+            // Trigger resize after location is set
+            setTimeout(() => {
+              if (mapRef.current) {
+                google.maps.event.trigger(mapRef.current, "resize");
+              }
+            }, 100);
           }
           await setItem("LastLocation", JSON.stringify(currentLocation));
         } else {
@@ -290,7 +323,21 @@ const Page = () => {
   }, [locationFound, global]);
 
   useEffect(() => {
-    if (isMapsApiLoaded && mapRef.current && filteredNotes.length > 0) {
+    if (isMapsApiLoaded && mapRef.current) {
+      // Clear existing markers first
+      if (markerClustererRef.current) {
+        markerClustererRef.current.clearMarkers();
+      }
+      markers.forEach((marker) => {
+        marker.map = null;
+      });
+      setMarkers(new Map());
+
+      // If no filtered notes, stop here
+      if (filteredNotes.length === 0) {
+        return;
+      }
+
       const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
       const map = mapRef.current;
 
@@ -459,10 +506,6 @@ const Page = () => {
 
       setMarkers(tempMarkers);
 
-      if (markerClustererRef.current) {
-        markerClustererRef.current.clearMarkers();
-      }
-
       markerClustererRef.current = new MarkerClusterer({
         markers: Array.from(tempMarkers.values()),
         map: mapRef.current,
@@ -541,20 +584,22 @@ const Page = () => {
       let globalNotes: Note[] = [];
       if (userId) {
         setIsLoggedIn(true);
-        personalNotes = (await ApiService.fetchUserMessages(userId)).filter((note) => !note.isArchived); //filter here?
+        personalNotes = await ApiService.fetchUserMessages(userId);
 
         // Convert media types and filter out archived notes for personal notes
+        // Show only notes where isArchived is false or undefined
         personalNotes = DataConversion.convertMediaTypes(personalNotes)
           .reverse()
-          .filter((note) => !note.isArchived); // Filter out archived personal notes
+          .filter((note) => note.isArchived !== true); // Filter out archived personal notes
       }
 
-      globalNotes = (await ApiService.fetchPublishedNotes()).filter((note) => !note.isArchived);
+      globalNotes = await ApiService.fetchPublishedNotes();
 
-      // Convert media types and filter out archived notes for global notes
+      // Convert media types and filter for global notes
+      // Show only published notes where isArchived is false or undefined
       globalNotes = DataConversion.convertMediaTypes(globalNotes)
         .reverse()
-        .filter((note) => !note.isArchived); // Filter out archived global notes
+        .filter((note) => note.published === true && note.isArchived !== true); // Only published and not archived
 
       return { personalNotes, globalNotes };
     } catch (error) {
@@ -671,10 +716,12 @@ const Page = () => {
   }
 
   const toggleFilter = () => {
-    setGlobal(!global);
-    const notesToUse = !global ? globalNotes : personalNotes;
+    const newGlobal = !global;
+    setGlobal(newGlobal);
+    const notesToUse = newGlobal ? globalNotes : personalNotes;
     setNotes(notesToUse);
-    setFilteredNotes(notesToUse);
+    // Update filtered notes based on map bounds when toggling
+    updateFilteredNotes(mapCenter, mapBounds, notesToUse);
     setIsLoaded(false);
   };
 
@@ -715,6 +762,12 @@ const Page = () => {
         setMapCenter(newCenter);
         mapRef.current?.panTo(newCenter);
         mapRef.current?.setZoom(13);
+        // Trigger resize to ensure map adjusts to container size
+        setTimeout(() => {
+          if (mapRef.current) {
+            google.maps.event.trigger(mapRef.current, "resize");
+          }
+        }, 100);
       } else {
         throw new Error("Failed to get valid coordinates from getLocation()");
       }
@@ -725,7 +778,81 @@ const Page = () => {
 
   return (
     <div className="w-screen h-full min-w-[600px] relative overflow-hidden">
-      <div className="w-full h-full">
+      {/* Search bar and controls - positioned relative to viewport, not map container */}
+      <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-40 pointer-events-none">
+        <div className="flex flex-row w-[30vw] left-0 z-40 m-5 align-center items-center pointer-events-auto">
+          <div className="min-w-[80px] mr-3" ref={searchBarRef}>
+            <SearchBarMap
+              onSearch={handleSearch}
+              onNotesSearch={handleNotesSearch}
+              isLoaded={isMapsApiLoaded}
+              filteredNotes={filteredNotes}
+            />
+          </div>
+          {isLoggedIn ? (
+            <button
+              aria-label={global ? "Show personal posts" : "Show global posts"}
+              onClick={toggleFilter}
+              type="button"
+              className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
+                global ? "text-blue-600" : "text-green-600"
+              }`}
+            >
+              {global ? (
+                <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+              ) : (
+                <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+              )}
+            </button>
+          ) : null}
+        </div>
+        <div
+          className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4 pointer-events-auto
+                        ${isPanelOpen ? "mr-[35rem]" : "mr-4"}`}
+        >
+          {/* Zoom Out Button */}
+          <button
+            aria-label="Zoom out"
+            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+            onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
+            type="button"
+          >
+            <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+          </button>
+          {/* Zoom In Button */}
+          <button
+            aria-label="Zoom in"
+            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+            onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
+            type="button"
+          >
+            <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+          </button>
+          {/* Locate Button */}
+          <button
+            aria-label="Find my location"
+            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4 p-2 md:p-3 xl:p-3 flex items-center justify-center"
+            onClick={handleSetLocation}
+            type="button"
+          >
+            <svg
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
+            >
+              <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div 
+        className="h-full transition-all duration-300 ease-in-out"
+        style={{
+          width: isPanelOpen ? 'calc(100% - 34rem)' : '100%',
+        }}
+      >
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -741,75 +868,7 @@ const Page = () => {
               disableDefaultUI: true,
               mapId: process.env.NEXT_PUBLIC_MAP_ID,
             }}
-          >
-            <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-10">
-              <div className="flex flex-row w-[30vw] left-0 z-10 m-5 align-center items-center">
-                <div className="min-w-[80px] mr-3" ref={searchBarRef}>
-                  <SearchBarMap
-                    onSearch={handleSearch}
-                    onNotesSearch={handleNotesSearch}
-                    isLoaded={isMapsApiLoaded}
-                    filteredNotes={filteredNotes}
-                  />
-                </div>
-                {isLoggedIn ? (
-                  <button
-                    aria-label={global ? "Show personal posts" : "Show global posts"}
-                    onClick={toggleFilter}
-                    type="button"
-                    className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
-                      global ? "text-blue-600" : "text-green-600"
-                    }`}
-                  >
-                    {global ? (
-                      <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                    ) : (
-                      <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                    )}
-                  </button>
-                ) : null}
-              </div>
-              <div
-                className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4
-                              ${isPanelOpen ? "mr-[35rem]" : "mr-4"}`}
-              >
-                {/* Zoom Out Button */}
-                <button
-                  aria-label="Zoom out"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-                  onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
-                  type="button"
-                >
-                  <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                </button>
-                {/* Zoom In Button */}
-                <button
-                  aria-label="Zoom in"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-                  onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
-                  type="button"
-                >
-                  <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-                </button>
-                {/* Locate Button */}
-                <button
-                  aria-label="Find my location"
-                  className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4 p-2 md:p-3 xl:p-3 flex items-center justify-center"
-                  onClick={handleSetLocation}
-                  type="button"
-                >
-                  <svg
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
-                  >
-                    <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </GoogleMap>
+          />
         )}
       </div>
 
@@ -831,7 +890,7 @@ const Page = () => {
       {/* NOTES PANEL */}
       <div
         className={`absolute top-0 right-0 h-full overflow-y-auto bg-neutral-100
-                    w-[34rem] transition-transform duration-300 ease-in-out z-10
+                    w-[34rem] transition-transform duration-300 ease-in-out z-30
                     ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
         ref={notesListRef}
       >

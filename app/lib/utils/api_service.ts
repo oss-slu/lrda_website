@@ -1066,6 +1066,51 @@ export default class ApiService {
       res.status(500).json({ message: "Internal server error" });
     }
   }
+
+  /**
+   * Sends an email notification when a new instructor signs up
+   * @param email - Instructor's email address
+   * @param name - Instructor's full name
+   * @param description - Instructor's description/application text
+   * @returns Promise<boolean> - Success status
+   */
+  static async sendInstructorNotification(
+    email: string,
+    name: string,
+    description: string
+  ): Promise<boolean> {
+    try {
+      if (!email || !name || !description) {
+        throw new Error('Missing required fields');
+      }
+
+      // Call server-side API route to send email (handles environment variables securely)
+      const response = await fetch('/api/send-instructor-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          name,
+          description,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        console.log('✅ Email notification sent successfully');
+        return true;
+      } else {
+        console.error('❌ Failed to send email notification:', result.error || result.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error sending instructor notification:', error);
+      return false;
+    }
+  }
 }
 
 export function getVideoThumbnail(file: File, seekTo = 0.0) {

@@ -22,7 +22,13 @@ jest.mock('intro.js', () => {
       document.body.appendChild(tooltip);
     }),
   };
-  return jest.fn(() => mockIntroInstance);
+  const mockIntroJs: any = jest.fn(() => mockIntroInstance);
+  // Add tour method to the default export
+  mockIntroJs.tour = jest.fn(() => mockIntroInstance);
+  return {
+    __esModule: true,
+    default: mockIntroJs,
+  };
 });
 
 jest.mock('../lib/utils/data_conversion', () => ({

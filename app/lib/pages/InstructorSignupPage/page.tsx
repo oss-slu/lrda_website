@@ -7,6 +7,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { User } from "../../models/user_class";
+import ApiService from "../../utils/api_service";
 
 const InstructorSignupPage = () => {
   const router = useRouter();
@@ -125,6 +126,18 @@ const InstructorSignupPage = () => {
       }
      const userDocRef = doc(db, "users", user.uid);
      await setDoc(userDocRef, userData);
+
+     // Send email notification to admin
+     try {
+       await ApiService.sendInstructorNotification(
+         email,
+         `${firstName} ${lastName}`,
+         description
+       );
+     } catch (emailError) {
+       console.error('Error sending email notification:', emailError);
+       // Don't fail the signup if email fails
+     }
 
      toast.success("Instructor account created successfully! Logging you in...");
 

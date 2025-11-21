@@ -15,7 +15,7 @@ interface NoteCardProps {
 
 const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   const title = note.title;
-  const tags: string[] = note.tags.map((tag) => tag.label); // Ensure correct mapping to labels
+  const tags: string[] = (note.tags || []).map((tag) => tag.label); // Ensure correct mapping to labels
   const [creator, setCreator] = useState<string>("Loading...");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(note.time ? new Date(note.time) : undefined);
 

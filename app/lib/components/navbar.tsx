@@ -32,6 +32,28 @@ export default function Navbar() {
   useEffect(() => {
     const fetchName = async () => {
       try {
+        // Check if there's an auth token (user is logged in)
+        const authToken = localStorage.getItem("authToken");
+        if (!authToken) {
+          setName(null);
+          return;
+        }
+
+        // Try to get user data directly from localStorage first (faster, avoids cache issues)
+        const userDataStr = localStorage.getItem("userData");
+        if (userDataStr) {
+          try {
+            const userData = JSON.parse(userDataStr);
+            if (userData?.name) {
+              setName(userData.name);
+              return;
+            }
+          } catch (e) {
+            // If parsing fails, fall through to getUserName
+          }
+        }
+
+        // Fallback to User class method
         const userName = await user.getName();
         setName(userName);
         if (userName) {
@@ -40,10 +62,11 @@ export default function Navbar() {
         }
       } catch {
         console.log("No user cached or login failed");
+        setName(null);
       }
     };
     fetchName();
-  }, []);
+  }, [pathname]); // Re-fetch when route changes
 
   // Check if user is instructor
   useEffect(() => {
