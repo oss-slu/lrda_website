@@ -93,7 +93,7 @@ const InstructorSignupPage = () => {
     }
 
     if (!description.trim()) {
-      toast.error("Please provide a description of why you want to become an instructor.");
+      toast.error("Please provide a description of why you want to become an Instructor.");
       return;
     }
   
