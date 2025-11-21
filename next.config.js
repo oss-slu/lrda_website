@@ -1,15 +1,15 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'livedreligion.s3.amazonaws.com',
+        protocol: "https",
+        hostname: "livedreligion.s3.amazonaws.com",
       },
     ],
     unoptimized: true,
   },
-  // Next.js 16 uses Turbopack by default, but we explicitly use webpack
+  // Next.js 16 uses Turbopack by default, this is legacy
   webpack: (config, { isServer }) => {
     config.module.rules.push({
       test: /\.m?js$/, // Handle both .js and .mjs files
@@ -30,7 +30,6 @@ const nextConfig = {
 
     return config;
   },
-  // Explicitly configure Turbopack (even if empty) to avoid warning
   turbopack: {},
   async rewrites() {
     return [
@@ -41,5 +40,3 @@ const nextConfig = {
     ];
   },
 };
-
-module.exports = nextConfig;

@@ -125,7 +125,7 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto p-4 bg-white shadow-lg z-30 rounded-md space-y-2">
+      <PopoverContent className="w-auto">
         <Calendar
           mode="single"
           selected={date}

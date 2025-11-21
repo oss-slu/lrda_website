@@ -218,7 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const filtered = notesToSearch.filter((note) => {
       const matchesText =
         note.title.toLowerCase().includes(query) ||
-        note.tags.some((tag) => tag.label.toLowerCase().includes(query));
+        (note.tags && Array.isArray(note.tags) && note.tags.some((tag) => tag.label.toLowerCase().includes(query)));
 
       if (!matchesText) return false;
 
@@ -268,7 +268,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   };
 
   return (
-    <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-30 relative">
+    <div className="h-full min-w-[280px] bg-gray-50 border-r border-gray-200 flex flex-col z-10 relative">
       {/* Scrollable content area */}
       <div className="overflow-y-auto flex-1 p-4 pb-20">
         {/* pb-20 to prevent content from going under button */}

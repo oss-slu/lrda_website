@@ -62,7 +62,8 @@ function formatTime(date: string | number | Date) {
 }
 
 // Convert old tags (strings) to new format
-const convertOldTags = (tags: (Tag | string)[]): Tag[] => {
+const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
+  if (!Array.isArray(tags)) return [];
   return tags.map(tag =>
     typeof tag === "string" ? { label: tag, origin: "user" } : tag
   );

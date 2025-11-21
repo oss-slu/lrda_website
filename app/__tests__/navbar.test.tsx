@@ -130,20 +130,38 @@ describe("Navbar Component", () => {
 
   it("displays user name when logged in", async () => {
     mockedUsePathname.mockReturnValue("/");
+    // Set up localStorage with auth token and user data
+    window.localStorage.setItem("authToken", "mock-token");
+    window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
+    
     await act(async () => {
       render(<Navbar />);
     });
 
-    expect(screen.getByText(/Hi, John Doe!/i)).toBeTruthy();
+    // Wait for async user data fetching
+    await waitFor(() => {
+      expect(screen.getByText(/Hi, John Doe!/i)).toBeTruthy();
+    });
     expect(screen.queryByText(/login/i)).toBeNull();
   });
 
   it("renders Notes link when logged in", async () => {
     mockedUsePathname.mockReturnValue("/lib/pages/notes");
+    // Set up localStorage with auth token and user data
+    window.localStorage.setItem("authToken", "mock-token");
+    window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
+    // Mock instructor role
+    userMock.getRoles.mockResolvedValue({ administrator: true, contributor: true });
+    userMock.getId.mockResolvedValue("test-uid");
+    
     await act(async () => {
       render(<Navbar />);
     });
-    expect(screen.getByText(/Notes/i)).toBeTruthy(); // Updated text
+    
+    // Wait for async operations
+    await waitFor(() => {
+      expect(screen.getByText(/Notes/i)).toBeTruthy();
+    });
     expect(screen.getByRole("navigation")).toBeTruthy();
   });
 
@@ -161,13 +179,22 @@ describe("Navbar Component", () => {
 
   it("highlights Notes when pathname starts with '/lib/pages/notes'", async () => {
     mockedUsePathname.mockReturnValue("/lib/pages/notes");
+    // Set up localStorage with auth token and user data
+    window.localStorage.setItem("authToken", "mock-token");
+    window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
+    // Mock instructor role
+    userMock.getRoles.mockResolvedValue({ administrator: true, contributor: true });
+    userMock.getId.mockResolvedValue("test-uid");
 
     await act(async () => {
       render(<Navbar />);
     });
 
-    const notesLink = screen.getByText("Notes");
-    expect(notesLink).toHaveClass("text-blue-500");
+    // Wait for async operations
+    await waitFor(() => {
+      const notesLink = screen.getByText("Notes");
+      expect(notesLink).toHaveClass("text-blue-500");
+    });
   });
 
   it("does not highlight Home when pathname is '/lib/pages/map'", async () => {
