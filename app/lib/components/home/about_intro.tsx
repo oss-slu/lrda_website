@@ -19,7 +19,7 @@ export default function AboutIntro() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6 cursor-pointer transition-all duration-300 hover:opacity-90 hover:shadow-md"
           >
-            <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600 underline decoration-2 underline-offset-3" style={{ textDecorationColor: 'rgb(59 130 246)' }}>
+            <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
               ABOUT THE PLATFORM
             </span>
           </Link>
