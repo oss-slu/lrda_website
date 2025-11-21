@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
 
 export default function AboutIntro() {
@@ -14,7 +15,15 @@ export default function AboutIntro() {
       {/* Header section */}
       <div className={`text-center mb-20 `}>
         <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 mb-6">
-          <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">ABOUT THE PLATFORM</span>
+          <Link 
+            href="https://docs.google.com/document/d/1EYQi5vc1_45wzfxXwlLN7t7-jfIKYB3_6JXzcBPs7-M/edit?usp=sharing" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600 underline decoration-2 underline-offset-4 cursor-pointer transition-all duration-300 hover:opacity-80 inline-block"
+            style={{ textDecorationColor: 'rgb(59 130 246)' }}
+          >
+            ABOUT THE PLATFORM
+          </Link>
         </h2>
         <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
           Building the Where's Religion platform with cutting-edge technology and innovative design
