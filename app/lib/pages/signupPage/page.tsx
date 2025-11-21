@@ -204,7 +204,7 @@ const SignupPage = () => {
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">
-              Will you be working under an instructor?
+              Will you be working under an Instructor?
             </label>
             <div className="flex space-x-4">
               <label>
@@ -256,7 +256,7 @@ const SignupPage = () => {
               href="/lib/pages/InstructorSignupPage" 
               className="text-blue-600 hover:text-blue-800 underline text-sm"
             >
-              Want to sign up as an instructor?
+              Want to sign up as an Instructor?
             </Link>
           </div>
 

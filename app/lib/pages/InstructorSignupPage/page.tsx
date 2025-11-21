@@ -305,7 +305,7 @@ const InstructorSignupPage = () => {
               Why do you want to become an Instructor? *
             </label>
             <textarea
-              placeholder="Describe your teaching experience, expertise, and motivation for becoming an instructor..."
+              placeholder="Describe your teaching experience, expertise, and motivation for becoming an Instructor..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg resize-none"
