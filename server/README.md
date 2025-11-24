@@ -33,7 +33,7 @@ cp .env.example .env
 Using Docker (recommended):
 
 ```bash
-docker-compose up -d mongo
+docker-compose up --build -d
 ```
 
 This starts:
