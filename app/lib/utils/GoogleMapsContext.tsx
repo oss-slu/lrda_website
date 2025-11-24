@@ -19,13 +19,17 @@ interface GoogleMapsProviderProps {
   children: ReactNode;
 }
 
+// Move libraries array outside component to prevent reload warning
+const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
+
 // Create the provider component
 export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
   const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
   
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
-    libraries: ['places', 'maps'] as ('places' | 'maps')[], // Cast as tuple for TypeScript
+    libraries: GOOGLE_MAPS_LIBRARIES,
+    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ''],
     id: 'google-map-script',
   });
 

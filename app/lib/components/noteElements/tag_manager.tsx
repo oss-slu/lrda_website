@@ -14,6 +14,7 @@ interface TagManagerProps {
   suggestedTags?: string[];// Suggested tags provided by AI
   onTagsChange: (tags: Tag[]) => void;// Callback to notify parent components of tag changes
   fetchSuggestedTags: () => void;// Function to fetch suggested tags
+  disabled?: boolean;// Whether the tag manager is disabled (read-only)
 }
 
 const TagManager: React.FC<TagManagerProps> = ({
@@ -21,6 +22,7 @@ const TagManager: React.FC<TagManagerProps> = ({
   suggestedTags,
   onTagsChange,
   fetchSuggestedTags,
+  disabled = false,
 }) => {
   const convertOldTags = useMemo(() => {
     return (tags: (Tag | string)[]): Tag[] => {
@@ -45,6 +47,10 @@ const TagManager: React.FC<TagManagerProps> = ({
   }, [inputTags, convertOldTags]); // Removed tags from the dependencies
 
   const addTag = (tag: string, origin: "user" | "ai") => {
+    // Don't add tags if disabled
+    if (disabled) {
+      return;
+    }
     if (tag.includes(" ")) {
       toast("Failed to add tag", {
         description: "Your tag must not contain spaces.",
@@ -53,9 +59,17 @@ const TagManager: React.FC<TagManagerProps> = ({
       setTagInput("");
       return;
     }
-    if (tag.length <= 2) {
+    if (tag.length < 1) {
       toast("Failed to add tag", {
-        description: "Tags must be longer than 2 characters.",
+        description: "Tags must be at least 1 character.",
+        duration: 2000,
+      });
+      setTagInput("");
+      return;
+    }
+    if (tag.length > 28) {
+      toast("Failed to add tag", {
+        description: "Tags must be 28 characters or less.",
         duration: 2000,
       });
       setTagInput("");
@@ -80,6 +94,10 @@ const TagManager: React.FC<TagManagerProps> = ({
   };
 
   const removeTag = (tagToRemove: string) => {
+    // Don't remove tags if disabled
+    if (disabled) {
+      return;
+    }
     setTags((prevTags) => {
       const updatedTags = prevTags.filter((tag) => tag.label !== tagToRemove);
       onTagsChange(updatedTags); // Notify parent component of tag changes
@@ -88,24 +106,29 @@ const TagManager: React.FC<TagManagerProps> = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !disabled) {
       addTag(tagInput, "user");
     }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTagInput(event.target.value);
+    if (!disabled) {
+      setTagInput(event.target.value);
+    }
   };
 
   const handleSuggestedTagClick = (tag: string) => {
-    addTag(tag, "ai");
+    if (!disabled) {
+      addTag(tag, "ai");
+    }
   };
 
   // Helper function to get validation status
   const getValidationStatus = () => {
     if (tagInput.length === 0) return { valid: true, message: "" };
     if (tagInput.includes(" ")) return { valid: false, message: "No spaces allowed" };
-    if (tagInput.length <= 2) return { valid: false, message: "Too short (min 3)" };
+    if (tagInput.length < 1) return { valid: false, message: "Too short (min 1)" };
+    if (tagInput.length > 28) return { valid: false, message: "Too long (max 28)" };
     if (tags.find((t) => t.label === tagInput)) return { valid: false, message: "Already exists" };
     return { valid: true, message: "Press Enter to add" };
   };
@@ -121,10 +144,15 @@ const TagManager: React.FC<TagManagerProps> = ({
             placeholder="Add tags..."
             onKeyDown={handleKeyDown}
             onChange={handleInputChange}
+            maxLength={28}
+            disabled={disabled}
+            readOnly={disabled}
             className={`bg-white pr-16 ${
+              disabled ? "cursor-default opacity-60" : ""
+            } ${
               tagInput.length > 0 && !validation.valid 
                 ? "border-red-300 focus-visible:ring-red-500" 
-                : tagInput.length > 2 && validation.valid
+                  : tagInput.length >= 1 && tagInput.length <= 28 && validation.valid
                 ? "border-green-300 focus-visible:ring-green-500"
                 : ""
             }`}
@@ -142,7 +170,10 @@ const TagManager: React.FC<TagManagerProps> = ({
         </div>
         <button
           onClick={fetchSuggestedTags}
-          className="p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm ml-1"
+          disabled={disabled}
+          className={`p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all shadow-sm ml-1 ${
+            disabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           title="Generate AI tags"
         >
           <Sparkles className="h-4 w-4" />
@@ -163,7 +194,10 @@ const TagManager: React.FC<TagManagerProps> = ({
             >
               <button
                 onClick={() => removeTag(tag.label)}
-                className="text-gray-600 hover:text-gray-900"
+                disabled={disabled}
+                className={`text-gray-600 hover:text-gray-900 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <XIcon className="h-3 w-3" />
               </button>
@@ -171,7 +205,7 @@ const TagManager: React.FC<TagManagerProps> = ({
             </div>
           ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2">
         {tags
           .filter((tag) => tag.origin === "ai")
           .map((tag, index) => (
@@ -181,7 +215,10 @@ const TagManager: React.FC<TagManagerProps> = ({
             >
               <button
                 onClick={() => removeTag(tag.label)}
-                className="text-purple-600 hover:text-purple-900"
+                disabled={disabled}
+                className={`text-purple-600 hover:text-purple-900 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <XIcon className="h-3 w-3" />
               </button>
@@ -197,7 +234,10 @@ const TagManager: React.FC<TagManagerProps> = ({
               <button
                 key={index}
                 onClick={() => handleSuggestedTagClick(tag)}
-                className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded hover:bg-purple-300"
+                disabled={disabled}
+                className={`text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded hover:bg-purple-300 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {tag}
               </button>

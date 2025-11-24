@@ -5,13 +5,17 @@ import NoteEditor from "../../components/noteElements/note_component";
 import { Note, newNote } from "../../../types";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { User } from "../../models/user_class";
+import { useNotesStore } from "../../stores/notesStore";
 
 export default function Notes() {
+  const { fetchNotes, setSelectedNoteId } = useNotesStore();
+
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
 
+  console.log("Notes page render");
   useEffect(() => {
     const user = User.getInstance();
     // Add a slight delay before checking the login state
@@ -24,6 +28,19 @@ export default function Notes() {
     }, 100); // Adjust the delay as needed
   }, []);
 
+  // Fetch notes on mount
+  useEffect(() => {
+    const user = User.getInstance();
+    const loadNotes = async () => {
+      const userId = await user.getId();
+      if (userId) {
+        await fetchNotes(userId);
+      }
+    };
+    loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
     setIsNewNote(isNew);
@@ -31,19 +48,15 @@ export default function Notes() {
     setDebugInfo("");
   };
 
-  const handleNoteSaved = () => {
-    // No refetch needed; store updates handle sidebar sync
+  const handleNoteDeleted = () => {
+    const currentNotes = useNotesStore.getState().notes;
+    setSelectedNote(currentNotes[0] || undefined);
+    setSelectedNoteId(currentNotes[0]?.id || null);
   };
 
   return (
     <ResizablePanelGroup direction="horizontal" autoSaveId="notes-layout">
-      <ResizablePanel
-        minSize={15}
-        maxSize={30}
-        defaultSize={26}
-        collapsible={true}
-        collapsedSize={1}
-      >
+      <ResizablePanel minSize={22} maxSize={30} defaultSize={26} collapsible={true} collapsedSize={1}>
         <Sidebar onNoteSelect={handleNoteSelect} />
       </ResizablePanel>
       <ResizableHandle withHandle />
@@ -53,8 +66,7 @@ export default function Notes() {
           {isUserLoggedIn ? (
             selectedNote ? (
               <div className="h-full w-full min-h-0 flex flex-col">
-
-                <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteSaved={handleNoteSaved} />
+                <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteDeleted={handleNoteDeleted} />
               </div>
             ) : (
               <div className="w-full h-full flex flex-col justify-center items-center text-3xl font-bold">

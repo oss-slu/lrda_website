@@ -15,7 +15,7 @@ function WelcomeHero() {
       style={{ backgroundImage: 'url("/splash.png")' }}
     >
       {/* Gradient overlay with modern feel */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-600/85 to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70" />
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -26,16 +26,13 @@ function WelcomeHero() {
         />
       </div>
 
-      <div className="relative text-center text-white p-8 sm:p-12 max-w-4xl z-10">
-        <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight md:leading-[1.1] mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 pb-2">
-          Where's Religion?
+      <div className="relative text-center text-white p-8 sm:p-12 w-full z-10">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tight leading-none mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-200 pb-2 whitespace-nowrap">
+          Where&apos;s Religion?
         </h1>
         <p className="mt-6 text-xl sm:text-2xl md:text-3xl font-light text-white/95 leading-relaxed max-w-2xl mx-auto">
-          The platform advancing the study of <span className="font-semibold text-blue-300">lived religion</span>
+          advancing the study of <span className="font-semibold text-blue-300">religion</span> and <span className="font-semibold text-blue-300">public life</span>
         </p>
-        <div className="inline-block mt-8 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm font-medium">
-          Open Source · Collaborative · Ethnography
-        </div>
         {/* CTA Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
@@ -98,7 +95,7 @@ export default function WelcomePage() {
               {/* Primary CTA */}
               <a
                 className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
-                href="https://religioninplace.org/blog/wheres-religion/#:~:text=Where's%20Religion%3F%20is%20conceptualized%20and,and%20cultural%20diversity%20at%20scale."
+                href="https://religioninplace.org"
                 target="_blank"
                 rel="noopener noreferrer"
               >

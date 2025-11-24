@@ -1,0 +1,134 @@
+name: lrda-monorepo
+version: 1
+
+# High-level description for LLM agents and tooling
+about:
+  project: Lived Religion in the Digital Age (LRDA)
+  monorepo: true
+  description: Next.js app with an Express server and a reusable server core package.
+
+# Environment constraints to help agents pick correct runtimes and CLIs
+environment:
+  node: ">=24.9.0"
+  packageManager: "pnpm@10.20.0"
+  shell: "/bin/zsh"
+
+# Repository structure and key package scopes
+workspace:
+  root: "."
+  packages:
+    - name: web
+      path: "."
+      type: nextjs
+      scripts:
+        dev: "pnpm dev"
+        build: "pnpm build"
+        start: "pnpm start"
+        lint: "pnpm lint"
+        test: "pnpm test"
+    - name: server
+      path: "server"
+      type: express
+      scripts:
+        dev: "pnpm --filter server dev"
+        start: "pnpm --filter server start"
+        test: "pnpm --filter server test"
+    - name: lrda-server-core
+      path: "packages/lrda-server-core"
+      type: library
+      scripts:
+        dev: "pnpm --filter lrda-server-core dev"
+        start: "pnpm --filter lrda-server-core start"
+        test: "pnpm --filter lrda-server-core test"
+        db: "pnpm --filter lrda-server-core db"
+
+# Default commands for agents to run common tasks
+commands:
+  install: "pnpm install"
+  # Root build only builds Next.js app by default. Use per-package builds if needed.
+  build:
+    - name: web
+      run: "pnpm build"
+  dev:
+    - name: web
+      run: "pnpm dev"
+    - name: server
+      run: "pnpm --filter server dev"
+  start:
+    - name: web
+      run: "pnpm start"
+    - name: server
+      run: "pnpm --filter server start"
+  test:
+    - name: web
+      run: "pnpm test"
+    - name: server
+      run: "pnpm --filter server test"
+    - name: lrda-server-core
+      run: "pnpm --filter lrda-server-core test"
+  lint:
+    - name: web
+      run: "pnpm lint"
+
+# How agents should select context for reasoning/editing
+context:
+  include:
+    - "app/**"
+    - "components/**"
+    - "lib/**"
+    - "server/**"
+    - "packages/lrda-server-core/**"
+    - "*.{js,ts,tsx,jsx,json,md}"
+  exclude:
+    - "**/node_modules/**"
+    - "**/.next/**"
+    - "**/dist/**"
+    - "**/coverage/**"
+    - "public/**"
+    - "**/*.map"
+    - "**/.DS_Store"
+
+# Common environment variables that builds/dev frequently need
+secrets:
+  - name: NEXT_PUBLIC_FIREBASE_API_KEY
+  - name: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  - name: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  - name: MONGODB_URI
+  - name: PORT
+
+# Optional tools/hooks an agent may use
+tools:
+  docker:
+    available: true
+    notes: "Used by lrda-server-core db script (Mongo). Run only if needed."
+  http:
+    allowed: false
+    notes: "Agents should avoid network unless explicitly enabled."
+
+# Guardrails and conventions for edits
+conventions:
+  - "Use pnpm workspaces; prefer --filter for package-scoped commands."
+  - "Do not commit build artifacts (e.g., .next, dist)."
+  - "Match existing formatting and TypeScript settings."
+  - "Avoid changing Node/TS configs unless necessary."
+
+# Quick recipes for common tasks
+recipes:
+  run-web:
+    steps:
+      - "pnpm install"
+      - "pnpm dev"
+  run-server:
+    steps:
+      - "pnpm install"
+      - "pnpm --filter server dev"
+  test-all:
+    steps:
+      - "pnpm --filter . test || true"
+      - "pnpm --filter server test || true"
+      - "pnpm --filter lrda-server-core test || true"
+  start-all:
+    steps:
+      - "pnpm --filter lrda-server-core start"
+      - "pnpm --filter server start"
+      - "pnpm start"

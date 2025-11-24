@@ -1,23 +1,35 @@
-name: lrda_desktop CI
+name: lrda_desktop CI (DEPRECATED - Use ci-cd.yml instead)
 
+# DISABLED: This workflow is deprecated. Use .github/workflows/ci-cd.yml instead.
+# This workflow is kept for reference but will not run automatically.
 on:
-  push:
-    branches:
-      - main # replace with the name of your default branch if different
-      - openai_tags
-      - memoryleak
-  pull_request:
-    branches:
-      - main # replace with the name of your default branch if different
-      - openai_tags
-      - memoryleak
+  workflow_dispatch:  # Only allows manual trigger, disabled from automatic runs
+  # push:
+  #   branches:
+  #     - main
+  #     - openai_tags
+  #     - memoryleak
+  #     - december-sprint
+  # pull_request:
+  #   branches:
+  #     - main
+  #     - openai_tags
+  #     - memoryleak
+  #     - december-sprint
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     strategy:
       matrix:
-        node-version: [18.x] # Adjust according to your project's Node.js version
+        node-version: [20.x] # Next.js 16 requires Node.js >=20.9.0
 
     steps:
       - uses: actions/checkout@v2
@@ -28,6 +40,25 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@8.11.0
       - name: Install dependencies
-        run: pnpm install # Replace 'npm install' with 'pnpm install'
+        run: pnpm install
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Kill any existing processes on port 3000
+        run: |
+          pkill -f "next start" || true
+          pkill -f "next dev" || true
+          sleep 2
       - name: Run tests
-        run: pnpm test # or 'npm test' if you're using npm
+        run: pnpm test
+        env:
+          # Mock environment variables for CI
+          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
+          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
+          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
+          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
+          CI: "true"

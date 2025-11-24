@@ -114,6 +114,7 @@ export const handleDeleteNote = async ( //supposed to be archive but named as de
   }
 
   if (!note.id || note.id === "") {
+    console.log("Note ID is missing or empty:", note);
     toast("Error", {
       description: "This note hasn't been saved yet. Please wait a moment and try again.",
       duration: 4000,

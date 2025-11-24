@@ -3,6 +3,38 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent } from "@testing-library/react";
 import NoteListView from "../lib/components/note_listview";
 
+// Mock Firebase modules to prevent real initialization
+jest.mock("../lib/config/firebase", () => ({
+  auth: {},
+  db: {},
+  realtimeDb: {},
+  storage: {},
+}));
+
+jest.mock("firebase/auth", () => ({
+  getAuth: jest.fn(() => ({ currentUser: { uid: "mockUserId", email: "mock@example.com" } })),
+  signInWithEmailAndPassword: jest.fn(),
+  signOut: jest.fn(),
+  onAuthStateChanged: jest.fn(),
+}));
+
+jest.mock("firebase/app", () => ({
+  initializeApp: jest.fn(),
+}));
+
+jest.mock("firebase/firestore", () => ({
+  getFirestore: jest.fn(),
+  Timestamp: jest.fn(),
+}));
+
+jest.mock("firebase/database", () => ({
+  getDatabase: jest.fn(),
+}));
+
+jest.mock("firebase/storage", () => ({
+  getStorage: jest.fn(),
+}));
+
 describe("NoteListView", () => {
   const mockNotes = [
     { id: 1, title: "Note 1", text: "Content 1", time: new Date() },

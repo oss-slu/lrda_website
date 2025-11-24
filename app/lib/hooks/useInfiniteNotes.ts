@@ -22,13 +22,31 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<Element | null>(null);
+  const prevItemsLengthRef = useRef<number>(0);
 
   const hasMore = useMemo(() => visibleCount < items.length, [visibleCount, items.length]);
 
-  // Reset pagination when source items change
+  // Reset pagination only when items are replaced (length decreases or stays same but different items)
+  // Don't reset when items are appended (length increases)
   useEffect(() => {
+    const prevLength = prevItemsLengthRef.current;
+    const currentLength = items.length;
+    
+    // If length decreased or stayed same, it's a replacement - reset
+    // If length increased, it's an append - don't reset, just update visible count if needed
+    if (currentLength < prevLength || (currentLength === prevLength && prevLength > 0)) {
+      // Items were replaced, reset pagination
+      setVisibleCount(pageSize);
+    } else if (currentLength > prevLength && prevLength > 0) {
+      // Items were appended, don't reset but ensure visibleCount doesn't exceed items.length
+      setVisibleCount((prev) => Math.min(prev, items.length));
+    } else if (prevLength === 0 && currentLength > 0) {
+      // Initial load
     setVisibleCount(pageSize);
-  }, [items, pageSize]);
+    }
+    
+    prevItemsLengthRef.current = currentLength;
+  }, [items.length, pageSize]);
 
   const loadNext = useCallback(() => {
     if (isLoading || !hasMore) return;
