@@ -18,13 +18,17 @@ services:
       ME_CONFIG_BASICAUTH_ENABLED: true
       ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
       ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
-  
-  server:
-    build: .
-    restart: always
-    ports:
-      - 3001:3001
-    env_file:
-      - .env
-    depends_on:
-      - mongo
+
+  # server:
+  #   build:
+  #     context: ..
+  #     dockerfile: server/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 3001:3001
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - mongo
+  #   volumes:
+  #     - ./server:/app/server
