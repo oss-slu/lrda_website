@@ -418,6 +418,13 @@ const Page = () => {
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           markerHoveredRef.current = true;
 
+<<<<<<< Updated upstream
+=======
+          if (isPanelOpen) {
+            scrollToNoteTile(note.id); // Only scroll if the panel is already open
+          }
+          
+>>>>>>> Stashed changes
           // Only open a new popup if one isn't already open
           if (!currentPopupRef.current) {
             openPopup(note, false); // Open as a "hover" popup
