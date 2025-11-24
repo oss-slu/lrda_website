@@ -11,11 +11,6 @@ const PORT = process.env.PORT || 4000;
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(cookieParser());
 
-// Initialize Firebase admin if possible (silently proceed if DISABLE_AUTH true)
-initializeFirebaseAdmin().catch((err) => {
-  console.warn('Firebase admin initialization warning:', err && err.message ? err.message : err);
-});
-
 let rerumRouter = null;
 try {
   // Try to require the rerum package/router. This project expects the rerum router
@@ -42,6 +37,28 @@ app.get('/', (req, res) => {
   res.json({ status: 'lrda-server OK' });
 });
 
-app.listen(PORT, () => {
-  console.log(`LRDA server proxy listening on port ${PORT}`);
+// Protected test route: POST /__auth_test returns authenticated user info
+app.post('/__auth_test', firebaseAuthMiddleware, (req, res) => {
+  res.json({ message: 'Auth successful', user: req.user || { note: 'DISABLE_AUTH=true (dev mode)' } });
 });
+
+// Start server after Firebase initialization
+(async function startServer() {
+  try {
+    await initializeFirebaseAdmin();
+    if (process.env.DISABLE_AUTH !== 'true') {
+      console.log('Firebase admin initialized');
+    } else {
+      console.log('Auth disabled (DISABLE_AUTH=true) — running in dev mode');
+    }
+  } catch (err) {
+    console.warn(
+      'Firebase admin initialization failed. Set DISABLE_AUTH=true to skip, or provide FIREBASE_SERVICE_ACCOUNT/FIREBASE_SERVICE_ACCOUNT_PATH.',
+      err && err.message ? err.message : err
+    );
+  }
+
+  app.listen(PORT, () => {
+    console.log(`LRDA server proxy listening on port ${PORT}`);
+  });
+})();
