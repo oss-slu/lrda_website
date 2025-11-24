@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
+import Link from "next/link";
 
 export default function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
@@ -104,16 +105,46 @@ export default function AboutIntro() {
           </div>
         </div>
 
-        {/* Center Connection */}
-        <div className={`mt-16 text-center ${motionVariants.fadeInUp}`} data-reveal={isVisible}>
-          <div className="inline-block bg-gradient-to-r from-blue-50 via-slate-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl px-8 py-6 shadow-md">
-            <p className="text-lg sm:text-xl text-slate-700">
-              A keystone outcome of the{" "}
-              <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
-                Center on Lived Religion
-              </span>{" "}
-              at Saint Louis University
-            </p>
+         {/* Center Connection */}
+         <div className={`mt-16 text-center ${motionVariants.fadeInUp}`} data-reveal={isVisible}>
+          <div className="inline-block bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200/60 rounded-3xl px-8 py-8 shadow-lg backdrop-blur-sm max-w-3xl">
+            <div className="mb-6">
+              <p className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
+                Built by the{" "}
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                  Center on Lived Religion
+                </span>
+              </p>
+              <p className="text-base sm:text-lg text-slate-600 font-medium">
+                Pioneering the future of digital religious studies at Saint Louis University
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
+              <Link
+                href="/lib/pages/wheres-religion"
+                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+              >
+                Explore the Platform
+              </Link>
+              <Link
+                href="/lib/pages/wheres-religion#getting-started"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-blue-300 text-blue-700 font-semibold rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 transform hover:scale-105"
+              >
+                Getting Started
+              </Link>
+              <Link
+                href="/lib/pages/wheres-religion#faqs"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-700 font-semibold rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-200 transform hover:scale-105"
+              >
+                FAQs
+              </Link>
+              <Link
+                href="/lib/pages/wheres-religion#for-researchers"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-purple-300 text-purple-700 font-semibold rounded-xl shadow-sm hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 transform hover:scale-105"
+              >
+                For Researchers
+              </Link>
+            </div>
           </div>
         </div>
       </div>
