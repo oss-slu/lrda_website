@@ -111,7 +111,7 @@ export default function AboutIntro() {
             <div className="mb-6">
               <p className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
                 Built by the{" "}
-                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
                   Center on Lived Religion
                 </span>
               </p>
@@ -139,7 +139,7 @@ export default function AboutIntro() {
               </Link>
               <Link
                 href="/lib/pages/wheres-religion#faqs"
-                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-700 font-semibold rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-blue-300 text-blue-700 font-semibold rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
               >
                 FAQs
               </Link>
