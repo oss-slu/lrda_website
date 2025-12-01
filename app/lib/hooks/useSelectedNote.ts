@@ -52,8 +52,6 @@ export function useSelectedNote(): SelectedNoteHook {
         setSelectedId(urlId);
     }
     
-    // NOTE: If you are using Next.js App Router, 'popstate' handling is often unnecessary 
-    // as router.replace() and useSearchParams() automatically synchronize the state.
   }, [searchParams]);
 
 

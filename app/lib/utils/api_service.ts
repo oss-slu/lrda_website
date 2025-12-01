@@ -191,6 +191,34 @@ export default class ApiService {
     return await response.json();
   }
 
+  static async fetchNoteById(id: string): Promise<Note | null> {
+    try {
+      // 1. Construct the API endpoint for fetching a single note
+      const url = `/api/notes/detail?id=${id}`; 
+      
+      // 2. Make the request
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        // Handle network error (e.g., 404, 500)
+        console.error(`API service failed to fetch note ID ${id}. Status: ${response.status}`);
+        return null;
+      }
+      
+      const noteData = await response.json();
+      
+      // 3. Return the data, typed as a Note (assuming your backend returns the full object)
+      return noteData as Note;
+
+    } catch (error) {
+      console.error(`Error fetching note ID ${id}:`, error);
+      return null;
+    }
+  }
+
   /**
    * Fetches all messages for a specific user.
    * @param {string} userId - The ID of the user whose messages are to be fetched.

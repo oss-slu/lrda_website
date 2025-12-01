@@ -20,6 +20,8 @@ import { getItem, setItem } from "../../utils/local_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
+import { useRouter, useSearchParams } from 'next/navigation'; // Needed for the hook
+import { useSelectedNote } from '../../hooks/useSelectedNote';
 
 interface Location {
   lat: number;
@@ -57,6 +59,7 @@ const Page = () => {
   const hoverTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = React.useRef(false);
   const popupHoveredRef = React.useRef(false);
+  const { selectedNoteId, setSelectedNoteId } = useSelectedNote();
   const [markers, setMarkers] = useState(new Map());
   const [modalNote, setModalNote] = useState<Note | null>(null);
   const infinite = useInfiniteNotes<Note>({
@@ -71,6 +74,27 @@ const Page = () => {
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
+
+  // ⬇️ 2. ADD SYNCHRONIZATION EFFECT HERE ⬇️
+  useEffect(() => {
+    if (selectedNoteId) {
+      // 🚨 CRITICAL STEP: Fetch the note data when the URL has an ID
+      // You must replace 'fetchNoteData' with your actual function that gets a Note object by ID.
+      // This is necessary for deep-linking/page reloads.
+      
+      // Placeholder for your API call:
+      ApiService.fetchNoteById(selectedNoteId).then(note => { // Assuming a function exists in ApiService
+          if (note) {
+              setModalNote(note); // Open the modal with the loaded note object
+          } else {
+              // Handle 404/invalid ID: clear the URL
+              setSelectedNoteId(null); 
+          }
+      });
+    } else {
+        setModalNote(null); // Close the modal if the URL parameter is cleared
+    }
+  }, [selectedNoteId]); // This watches the URL ID
 
   const startPopupCloseTimer = () => {
     // Clear any timer that's already running
@@ -418,13 +442,10 @@ const Page = () => {
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           markerHoveredRef.current = true;
 
-<<<<<<< Updated upstream
-=======
           if (isPanelOpen) {
             scrollToNoteTile(note.id); // Only scroll if the panel is already open
           }
           
->>>>>>> Stashed changes
           // Only open a new popup if one isn't already open
           if (!currentPopupRef.current) {
             openPopup(note, false); // Open as a "hover" popup
