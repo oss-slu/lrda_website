@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import Link from "next/link";
 import { useReveal, motionVariants } from "@/app/lib/utils/motion";
+import Link from "next/link";
 
 export default function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
@@ -11,21 +11,18 @@ export default function AboutIntro() {
       <div className="absolute inset-0 bg-gradient-to-bl from-slate-50 via-white to-blue-100/30"></div>
       <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-blue-400/30 to-blue-600/20 rounded-full blur-3xl"></div>
 
-      <div className="relative z-10">
-        <div className="text-center mb-16">
-          <Link 
-            href="https://docs.google.com/document/d/1EYQi5vc1_45wzfxXwlLN7t7-jfIKYB3_6JXzcBPs7-M/edit?usp=sharing" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-full mb-6 cursor-pointer transition-all duration-300 hover:opacity-90 hover:shadow-md"
-          >
-            <span className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
-              ABOUT THE PLATFORM
-            </span>
-          </Link>
-        </div>
+      <div className="relative z-10 mx-auto max-w-6xl px-4">
+      {/* Header section */}
+      <div className={`text-center mb-20 `}>
+        <h2 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+          <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">ABOUT THE PLATFORM</span>
+        </h2>
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          Building the Where's Religion platform with cutting-edge technology and innovative design
+        </p>
+      </div>
 
-        <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-6xl px-4">
         {/* Mission Statement Highlight */}
         <div
           className={`bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 p-6 sm:p-8 rounded-r-lg ${motionVariants.fadeInUp}`}
@@ -108,19 +105,48 @@ export default function AboutIntro() {
           </div>
         </div>
 
-        {/* Center Connection */}
-        <div className={`mt-16 text-center ${motionVariants.fadeInUp}`} data-reveal={isVisible}>
-          <div className="inline-block bg-gradient-to-r from-blue-50 via-slate-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl px-8 py-6 shadow-md">
-            <p className="text-lg sm:text-xl text-slate-700">
-              A keystone outcome of the{" "}
-              <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
-                Center on Lived Religion
-              </span>{" "}
-              at Saint Louis University
-            </p>
+         {/* Center Connection */}
+         <div className={`mt-16 text-center ${motionVariants.fadeInUp}`} data-reveal={isVisible}>
+          <div className="inline-block bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200/60 rounded-3xl px-8 py-8 shadow-lg backdrop-blur-sm max-w-3xl">
+            <div className="mb-6">
+              <p className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
+                Built by the{" "}
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-600">
+                  Center on Lived Religion
+                </span>
+              </p>
+              <p className="text-base sm:text-lg text-slate-600 font-medium">
+                Pioneering the future of digital religious studies at Saint Louis University
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
+              <Link
+                href="/lib/pages/wheres-religion"
+                className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative flex items-center gap-2">
+                  Learn More
+                  <svg
+                    className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </Link>
+              <Link
+                href="/lib/pages/wheres-religion#faqs"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-blue-300 text-blue-700 font-semibold rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+              >
+                FAQs
+              </Link>
+            </div>
           </div>
         </div>
-        </div>
+      </div>
       </div>
     </section>
   );

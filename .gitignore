@@ -13,4 +13,3 @@ playwright-report/
 test-results/
 playwright/.cache/
 *.trace
-firebase-admin.json
