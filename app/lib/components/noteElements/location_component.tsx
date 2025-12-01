@@ -6,22 +6,26 @@ import { GoogleMap, MarkerF, Autocomplete } from "@react-google-maps/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import SearchBarMap from "../search_bar_map";
+import { getCachedLocation } from "../../utils/location_cache";
 
 interface LocationPickerProps {
   long?: string;
   lat?: string;
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
+  disabled?: boolean; // Whether the location picker is disabled (read-only)
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   long,
   lat,
   onLocationChange,
+  disabled = false,
 }) => {
   const [longitude, setLongitude] = useState<number>(0);
   const [latitude, setLatitude] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState(false); 
-  const mapRef = useRef<google.maps.Map>();
+  const [locationName, setLocationName] = useState<string>(""); // City name from reverse geocoding
+  const mapRef = useRef<google.maps.Map | null>(null);
   const isLoaded = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const searchBarRef = useRef<HTMLInputElement | null>(null);
@@ -54,6 +58,30 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     }
   }, [lat, long]);
+
+  // Fetch city name from coordinates using reverse geocoding
+  useEffect(() => {
+    const fetchLocationName = async () => {
+      if (latitude && longitude && latitude !== 0 && longitude !== 0) {
+        const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
+        if (MAPS_API_KEY) {
+          try {
+            const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);
+            // Extract city name from formatted address (usually first part before comma)
+            const cityName = location.split(',')[0].trim();
+            setLocationName(cityName || location || "");
+          } catch (error) {
+            console.error("Error fetching location name:", error);
+            setLocationName("");
+          }
+        }
+      } else {
+        setLocationName("");
+      }
+    };
+
+    fetchLocationName();
+  }, [latitude, longitude]);
   
 
   // Handle getting the current geolocation
@@ -110,7 +138,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const handleToggleMap = () => {
     const newState = !isExpanded;
     setIsExpanded(newState);
-    if (newState) {
+    // Only fetch current location if not disabled and coordinates are not set
+    if (newState && !disabled && (!latitude || !longitude || latitude === 0 || longitude === 0)) {
       handleGetCurrentLocation(); // fetch location when map is opening
     }
   };
@@ -137,11 +166,25 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     <div className="relative">
       <button
         onClick={handleToggleMap}
-        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
-        aria-label="Toggle map visibility"
+        // Allow viewing map even when disabled (read-only mode for instructors)
+        className={`inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group ${
+          disabled ? "opacity-75" : ""
+        }`}
+        aria-label={disabled ? "View location (read-only)" : "Toggle map visibility"}
+        title={latitude && longitude ? (locationName || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`) : undefined}
       >
         <MapPin aria-label="map pin" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
         <span>Location</span>
+        {locationName && (
+          <span className="text-xs text-gray-500 ml-1 truncate max-w-[150px]" title={locationName}>
+            {locationName}
+          </span>
+        )}
+        {!locationName && latitude && longitude && (
+          <span className="text-xs text-gray-500 ml-1">
+            ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+          </span>
+        )}
       </button>
       
       {isExpanded && (
@@ -172,6 +215,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 ref={searchBarRef}
                 type="text"
                 placeholder="Search Location"
+                disabled={disabled}
                 style={{ pointerEvents: "auto" }}
                 className="w-full px-4 py-2 rounded shadow-md"
               />
@@ -205,8 +249,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 >
                   <MarkerF
                     position={{ lat: latitude, lng: longitude }}
-                    draggable={true}
-                    onDragEnd={onMarkerDragEnd} // Handle marker drag event
+                    draggable={!disabled}
+                    onDragEnd={disabled ? undefined : onMarkerDragEnd} // Only allow dragging when not disabled
                   />
                 </GoogleMap>
               </div>

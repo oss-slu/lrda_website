@@ -62,13 +62,13 @@ const Carousel = React.forwardRef<
       {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
-      },
-      plugins
+      } as any,
+      plugins as any
     )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
-    const onSelect = React.useCallback((api: CarouselApi) => {
+    const onSelect = React.useCallback((api: any) => {
       if (!api) {
         return
       }
@@ -103,7 +103,7 @@ const Carousel = React.forwardRef<
         return
       }
 
-      setApi(api)
+      setApi(api as any)
     }, [api, setApi])
 
     React.useEffect(() => {

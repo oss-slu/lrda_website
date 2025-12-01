@@ -31,11 +31,7 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
             {/* Render Video */}
             {media.type === "video" && (
               <ReactPlayer
-                url={media.uri}
-                controls={true}
-                width="100%"
-                height="100%"
-                className="self-center"
+                {...({ url: media.uri, controls: true, width: "100%", height: "100%", className: "self-center" } as any)}
               />
             )}
 

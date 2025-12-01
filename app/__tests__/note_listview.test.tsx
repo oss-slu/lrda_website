@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import NoteListView from "../lib/components/note_listview";
 
 // Mock Firebase modules to prevent real initialization
-jest.mock("../lib/config/firebase.js", () => ({
+jest.mock("../lib/config/firebase", () => ({
   auth: {},
   db: {},
   realtimeDb: {},

@@ -15,6 +15,7 @@ const useNoteState = (initialNote: Note | undefined) => {
   const [latitude, setLatitude] = useState<string>(initialNote?.latitude || "");
   const [tags, setTags] = useState<Tag[]>(initialNote?.tags || []); // Update to Tag[]
   const [isPublished, setIsPublished] = useState<boolean>(initialNote?.published || false);
+  const [approvalRequested, setApprovalRequested] = useState<boolean>(initialNote?.approvalRequested || false);
   const [counter, setCounter] = useState<number>(0);
 
   return {
@@ -29,6 +30,7 @@ const useNoteState = (initialNote: Note | undefined) => {
       latitude,
       tags,
       isPublished,
+      approvalRequested,
       videos,
       counter,
     },
@@ -44,6 +46,7 @@ const useNoteState = (initialNote: Note | undefined) => {
       setTags,
       setVideos,
       setIsPublished,
+      setApprovalRequested,
       setCounter,
     },
   };

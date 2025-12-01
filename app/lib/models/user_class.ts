@@ -66,6 +66,7 @@ export class User {
   }
 
   private async initializeUser() {
+    if (!auth) return;
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         // First, try to fetch user data from the API
@@ -77,6 +78,7 @@ export class User {
           this.persistUser(userData);
         } else {
           // If not found in the API, try Firestore
+          if (!db) return;
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             this.userData = userDoc.data() as UserData;
@@ -96,6 +98,7 @@ export class User {
   }
 
   public async login(email: string, password: string): Promise<string> {
+    if (!auth) throw new Error("Firebase auth is not initialized");
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -117,6 +120,7 @@ export class User {
         console.log("User data found in API:", userData);
       } else {
         // If not found in the API, try fetching from Firestore
+        if (!db) return "success";
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           this.userData = userDoc.data() as UserData;
@@ -141,6 +145,7 @@ export class User {
   }
 
   public async logout() {
+    if (!auth) return;
     try {
       await signOut(auth);
       this.userData = null;

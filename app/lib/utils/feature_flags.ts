@@ -1,9 +1,5 @@
 "use server";
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
-
-if (!RERUM_PREFIX) {
-  throw new Error("RERUM_PREFIX is not defined in the environment variables.");
-}
+const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
 
 /**
  * Adds or updates the About Page feature flag in your custom DB.
@@ -11,6 +7,9 @@ if (!RERUM_PREFIX) {
  * @returns {Promise<Response>} The response from the API.
  */
 export async function editAboutPageFlag(enabled: boolean): Promise<Response> {
+  if (!RERUM_PREFIX) {
+    return Promise.reject(new Error("RERUM_PREFIX is not defined in the environment variables."));
+  }
   const aboutPageFlagId = await getAboutPageFlagId();
   if (!aboutPageFlagId) return Promise.reject("Feature flag ID is not set. Fetch the flag before editing.");
   return fetch(RERUM_PREFIX + "overwrite", {
@@ -34,6 +33,10 @@ export async function editAboutPageFlag(enabled: boolean): Promise<Response> {
  * @returns {Promise<boolean>} Whether the new About page is enabled.
  */
 export async function getAboutPageFlag(): Promise<boolean> {
+  if (!RERUM_PREFIX) {
+    console.error("RERUM_PREFIX is not defined in the environment variables.");
+    return false;
+  }
   const response = await fetch(RERUM_PREFIX + "query", {
     method: "POST",
     headers: {
@@ -54,6 +57,10 @@ export async function getAboutPageFlag(): Promise<boolean> {
  * @returns {Promise<string | null>} The ID of the new About page feature flag.
  */
 export async function getAboutPageFlagId(): Promise<string | null> {
+  if (!RERUM_PREFIX) {
+    console.error("RERUM_PREFIX is not defined in the environment variables.");
+    return null;
+  }
   const response = await fetch(RERUM_PREFIX + "query", {
     method: "POST",
     headers: {

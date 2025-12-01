@@ -12,14 +12,24 @@ jest.mock("firebase/database", () => ({
 
 // Mock introJs to simulate tooltips being added
 jest.mock('intro.js', () => {
-  return jest.fn(() => ({
-    setOptions: jest.fn(), 
+  const mockIntroInstance: any = {
+    setOptions: jest.fn(function(this: any) { return this; }),
+    oncomplete: jest.fn(function(this: any) { return this; }),
+    onexit: jest.fn(function(this: any) { return this; }),
     start: jest.fn(() => {
       const tooltip = document.createElement('div'); // Create a new div element
       tooltip.className = 'introjs-tooltip'; // Set the class name to simulate an Intro.js tooltip
+      tooltip.textContent = "Don't show again"; // Add the expected text content
       document.body.appendChild(tooltip); // Append the tooltip div to the body to mimic the behavior of Intro.js
     }),
-  }));
+  };
+  const mockIntroJs: any = jest.fn(() => mockIntroInstance);
+  // Add tour method to the default export
+  mockIntroJs.tour = jest.fn(() => mockIntroInstance);
+  return {
+    __esModule: true,
+    default: mockIntroJs,
+  };
 });
 
 // Mock the API service to avoid actual network calls
@@ -51,15 +61,13 @@ beforeEach(() => {
   });
 
   // Mock window.location methods
-  Object.defineProperty(window, 'location', {
-    value: {
-      href: "http://localhost/",
-      assign: jest.fn(),
-      reload: jest.fn(),
-      replace: jest.fn(),
-    },
-    writable: true,
-  });
+  delete (window as any).location;
+  window.location = {
+    href: "http://localhost/",
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+  } as any;
 });
 
 // Cleanup after each test to ensure a clean state

@@ -43,7 +43,8 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       // Internal logic to update the component about login status
       console.log("Login status:", status);
       if (status == "success") {
-        localStorage.setItem(username, password);
+        // Do not store passwords in localStorage - security risk
+        // Authentication is handled by Firebase Auth tokens
         window.location.href = "/lib/pages/map";
       }
       setIsLoading(false);
