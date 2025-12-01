@@ -84,7 +84,7 @@ export default function WheresReligionPage() {
             <Button
               variant="outline"
               size="lg"
-              className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+              className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:text-white hover:scale-105 hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-purple-600 rounded-xl"
             >
               ← Back to About
             </Button>
@@ -318,7 +318,11 @@ export default function WheresReligionPage() {
         {/* Back to top button */}
         <div className="text-center mt-12">
           <Link href="/#aboutSection">
-            <Button variant="outline" size="lg" className="bg-white border-2 border-blue-300 hover:bg-blue-50">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="bg-white border-2 border-blue-300 hover:bg-white hover:text-slate-900 hover:scale-105 hover:shadow-md hover:border-blue-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 rounded-xl"
+            >
               ← Back to About
             </Button>
           </Link>

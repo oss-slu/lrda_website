@@ -122,27 +122,26 @@ export default function AboutIntro() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
               <Link
                 href="/lib/pages/wheres-religion"
-                className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+                className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
               >
-                Explore the Platform
-              </Link>
-              <Link
-                href="/lib/pages/wheres-religion#getting-started"
-                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-blue-300 text-blue-700 font-semibold rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 transform hover:scale-105"
-              >
-                Getting Started
+                <span className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative flex items-center gap-2">
+                  Learn More
+                  <svg
+                    className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
               </Link>
               <Link
                 href="/lib/pages/wheres-religion#faqs"
-                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-700 font-semibold rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-200 transform hover:scale-105"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-700 font-semibold rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
               >
                 FAQs
-              </Link>
-              <Link
-                href="/lib/pages/wheres-religion#for-researchers"
-                className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-purple-300 text-purple-700 font-semibold rounded-xl shadow-sm hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 transform hover:scale-105"
-              >
-                For Researchers
               </Link>
             </div>
           </div>
