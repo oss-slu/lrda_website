@@ -146,7 +146,6 @@
     "tailwindcss": "^3.4.18",
     "typescript": "5.9.3"
   },
-  "packageManager": "pnpm@8.11.0+sha256.5858806c3b292cbec89b5533662168a957358e2bbd86431516d441dc1aface89",
   "pnpm": {
     "overrides": {
       "form-data@<2.5.4": ">=2.5.4",
@@ -160,5 +159,9 @@
       "brace-expansion@<2.0.2": ">=2.0.2",
       "glob@>=10.3.7 <=11.0.3": ">=11.1.0"
     }
+  },
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
