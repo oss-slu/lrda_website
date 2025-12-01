@@ -79,9 +79,9 @@ const InstructorDashboardPage = () => {
     const filtered = notes.filter((note) =>
       note.title.toLowerCase().includes(lowerQuery) ||
       note.text.toLowerCase().includes(lowerQuery) ||
-      note.tags.some((tag) =>
+      (note.tags && Array.isArray(note.tags) && note.tags.some((tag) =>
         (typeof tag === "string" ? tag : tag.label).toLowerCase().includes(lowerQuery)
-      )
+      ))
     );
     setFilteredNotes(filtered);
   };

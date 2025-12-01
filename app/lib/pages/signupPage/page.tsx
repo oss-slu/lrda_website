@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import RegisterButton from "../../components/register_button";
 import { toast } from "sonner";
@@ -8,9 +8,10 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { validateEmail, validatePassword, validateFirstName, validateLastName } from "../../utils/validation";
 import { User } from "../../models/user_class";
 import ApiService from "../../utils/api_service";
-import { Timestamp, doc, setDoc } from "firebase/firestore";
+import { Timestamp, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
 import StrengthIndicator from "@/components/ui/strength-indicator";
+import Select from "react-select"; // Import react-select
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +20,44 @@ const SignupPage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [institution, setInstitution] = useState("");
+  const [workingUnderInstructor, setWorkingUnderInstructor] = useState(""); // Tracks radio button state
+  const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([]); // List of instructors
+  const [selectedInstructor, setSelectedInstructor] = useState<{ value: string; label: string } | null>(null); // Selected instructor from dropdown
   const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
+
+  // Fetch instructors for the dropdown
+  useEffect(() => {
+    const fetchInstructors = async () => {
+      try {
+        console.log("Fetching instructors...");
+  
+        if (!db) {
+          throw new Error("Firestore is not initialized");
+        }
+  
+        // Query the 'users' collection to get instructors
+        const instructorsRef = collection(db, "users");
+        const instructorsQuery = query(instructorsRef, where("isInstructor", "==", true));
+        const querySnapshot = await getDocs(instructorsQuery);
+  
+        // Map the results into the format required for react-select
+        const instructorsList = querySnapshot.docs.map((doc) => ({
+          value: doc.id, // Store the instructor's user ID
+          label: doc.data().name || doc.data().email || "Unknown Instructor", // Display the instructor's name
+        }));
+  
+        console.log("Instructors fetched:", instructorsList);
+        setInstructors(instructorsList);
+      } catch (error) {
+        console.error("Error fetching instructors:", error);
+        toast.error("Failed to fetch instructors. Please try again.");
+      }
+    };
+  
+    if (workingUnderInstructor === "yes") {
+      fetchInstructors();
+    }
+  }, [workingUnderInstructor]);
 
   const handleSignup = async () => {
     if (!validateEmail(email)) return;
@@ -39,6 +77,12 @@ const SignupPage = () => {
     if (!validateFirstName(firstName)) return;
     if (!validateLastName(lastName)) return;
 
+    // Validate instructor selection if working under an instructor
+    if (workingUnderInstructor === "yes" && !selectedInstructor) {
+      toast.error("Please select an instructor");
+      return;
+    }
+
     try {
       if (!auth) throw new Error("Firebase auth is not initialized");
       // Create the user in Firebase Authentication
@@ -49,21 +93,36 @@ const SignupPage = () => {
       const fullName = `${firstName} ${lastName}`;
   
       // Prepare user data for Firestore
-      const userData = {
+      const userData: any = {
         uid: user.uid,
         email,
         name: fullName,
         institution,
-        roles: {
-          administrator: true,
-          contributor: true,
-        },
+        roles: workingUnderInstructor === "yes"
+          ? { contributor: true } // Contributor if under an instructor
+          : { administrator: true, contributor: true }, // Full roles for independent users
         createdAt: Timestamp.now(),
+        ...(workingUnderInstructor === "yes" && selectedInstructor
+          ? { parentInstructorId: selectedInstructor.value, instructorName: selectedInstructor.label } // Add instructor relationship
+          : {}),
       };
   
       // Store the user data in Firestore under the "users" collection
       if (!db) throw new Error("Firestore is not initialized");
       await setDoc(doc(db, "users", user.uid), userData);
+  
+      // If working under an instructor, update the instructor's students array
+      if (workingUnderInstructor === "yes" && selectedInstructor) {
+        const instructorRef = doc(db, "users", selectedInstructor.value);
+  
+        // Use arrayUnion to add the student ID to the instructor's students array
+        await updateDoc(
+          instructorRef,
+          { students: arrayUnion(user.uid) }
+        );
+  
+        console.log(`Added student (${user.uid}) to instructor (${selectedInstructor.value})`);
+      }
   
       // Set the user as logged in
       const userInstance = User.getInstance();
@@ -143,6 +202,47 @@ const SignupPage = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium mb-2">
+              Will you be working under an Instructor?
+            </label>
+            <div className="flex space-x-4">
+              <label>
+                <input
+                  type="radio"
+                  value="yes"
+                  checked={workingUnderInstructor === "yes"}
+                  onChange={(e) => setWorkingUnderInstructor(e.target.value)}
+                  className="mr-2"
+                />
+                Yes
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="no"
+                  checked={workingUnderInstructor === "no"}
+                  onChange={(e) => setWorkingUnderInstructor(e.target.value)}
+                  className="mr-2"
+                />
+                No
+              </label>
+            </div>
+          </div>
+          {workingUnderInstructor === "yes" && (
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">
+                Select an Instructor
+              </label>
+              <Select
+                options={instructors}
+                value={selectedInstructor}
+                onChange={(selected) => setSelectedInstructor(selected)}
+                placeholder="Choose an Instructor"
+                isClearable
+              />
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row items-center justify-center">
             <button
               onClick={handleSignup}
@@ -151,7 +251,14 @@ const SignupPage = () => {
               Sign Up
             </button>
           </div>
-         
+          <div className="mt-4 text-center">
+            <Link 
+              href="/lib/pages/InstructorSignupPage" 
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              Want to sign up as an Instructor?
+            </Link>
+          </div>
 
         </div>
       </div>
