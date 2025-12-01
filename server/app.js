@@ -1,13 +1,21 @@
 import express from "express";
 import { createCoreRouter } from "lrda-server-core";
-import { firebaseAuthMiddleware } from "./auth.js";
+import { selectiveAuthMiddleware } from "./auth.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
 
+// Apply selective authentication middleware globally
+// This protects POST, PUT, PATCH, DELETE routes while allowing GET requests
+app.use(selectiveAuthMiddleware);
+
 const coreApiRouter = await createCoreRouter({
-  auth: { disableAuth: process.env.DISABLE_AUTH === "true", authMiddleware: firebaseAuthMiddleware, enableClientRoutes: false },
+  auth: { 
+    disableAuth: true, // Disable auth in core router since we handle it at server level
+    authMiddleware: null, 
+    enableClientRoutes: false 
+  },
   scalar: {
     baseServerUrl: "/",
     mountPath: "/reference",

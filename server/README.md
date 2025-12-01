@@ -74,16 +74,72 @@ The OpenAPI spec is available at http://localhost:3001/openapi.json
 
 ## Authentication
 
+The server implements **selective authentication** that protects data-modifying operations while keeping read operations public:
+
+- **✅ Public (no auth required)**: GET requests and read-only operations
+- **🔒 Protected (auth required)**: POST, PUT, PATCH, DELETE requests
+
 ### Development Mode
 
-Set `DISABLE_AUTH=true` in your `.env` file to disable authentication for development.
+Set `DISABLE_AUTH=true` in your `.env` file to completely bypass authentication for local development:
+
+```env
+DISABLE_AUTH=true
+```
+
+When enabled, you'll see `[Auth] Authentication bypassed (DISABLE_AUTH=true)` in the server logs.
 
 ### Production Mode
 
-1. Set `DISABLE_AUTH=false`
-2. Configure Firebase Admin SDK:
-   - Place your Firebase service account JSON file as `firebase-admin.json`
-   - Or set `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+1. Set `DISABLE_AUTH=false` in your `.env` file
+2. Obtain the `firebase-admin.json` service account file from your team lead
+3. Place it in the `server/` directory
+4. Configure the path in `.env`:
+
+```env
+DISABLE_AUTH=false
+GOOGLE_APPLICATION_CREDENTIALS=./firebase-admin.json
+```
+
+### Protected Routes
+
+The following routes require Firebase authentication when `DISABLE_AUTH=false`:
+
+- `POST /v1/create` - Create new objects
+- `POST /v1/bulkCreate` - Bulk create
+- `PUT /v1/bulkUpdate` - Bulk update  
+- `PUT /v1/update` - Update objects
+- `PATCH /v1/patch` - Patch update
+- `PATCH /v1/set` - Set properties
+- `PATCH /v1/unset` - Unset properties
+- `DELETE /v1/delete` - Delete objects
+- `POST /v1/overwrite` - Overwrite objects
+- `POST /v1/release` - Release objects
+
+### Public Routes (Always Accessible)
+
+- `GET /v1/id/:id` - Get object by ID
+- `POST /v1/query` - Query objects (GET-like operation)
+- `GET /v1/since/:id` - Get version history since
+- `GET /v1/history/:id` - Get full version history
+- `GET /reference` - API documentation
+- `GET /openapi.json` - OpenAPI specification
+
+### Making Authenticated Requests
+
+Include a Firebase ID token in the Authorization header:
+
+```bash
+curl http://localhost:3001/v1/create \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN" \
+  -d '{"label": "My Note", "description": "Note content"}'
+```
+
+### Testing Authentication
+
+See [TEST_AUTH.md](./TEST_AUTH.md) for comprehensive testing instructions.
 
 ### Using Firebase Emulator
 
@@ -121,16 +177,17 @@ node download-notes.js
 
 ### Environment Variables
 
-| Variable                  | Description             | Default                                   |
-| ------------------------- | ----------------------- | ----------------------------------------- |
-| `PORT`                    | Server port             | `3001`                                    |
-| `MONGO_CONNECTION_STRING` | MongoDB connection URL  | `mongodb://root:example@localhost:27017/` |
-| `MONGO_DB`                | Database name           | `testdb`                                  |
-| `MONGO_COLLECTION`        | Collection name         | `testcollection`                          |
-| `DISABLE_AUTH`            | Disable authentication  | `true`                                    |
-| `DOWN`                    | Server maintenance mode | `false`                                   |
-| `READONLY`                | Read-only mode          | `false`                                   |
-| `TRUST_PROXY`             | Trust proxy headers     | `false`                                   |
+| Variable                         | Description                      | Default                                   |
+| -------------------------------- | -------------------------------- | ----------------------------------------- |
+| `PORT`                           | Server port                      | `3001`                                    |
+| `MONGO_CONNECTION_STRING`        | MongoDB connection URL           | `mongodb://root:example@localhost:27017/` |
+| `MONGO_DB`                       | Database name                    | `testdb`                                  |
+| `MONGO_COLLECTION`               | Collection name                  | `testcollection`                          |
+| `DISABLE_AUTH`                   | Disable authentication           | `true`                                    |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Firebase service account | `./firebase-admin.json`                   |
+| `DOWN`                           | Server maintenance mode          | `false`                                   |
+| `READONLY`                       | Read-only mode                   | `false`                                   |
+| `TRUST_PROXY`                    | Trust proxy headers              | `false`                                   |
 
 ## Troubleshooting
 
@@ -142,11 +199,29 @@ node download-notes.js
 
 ### Authentication Errors
 
-1. For development, set `DISABLE_AUTH=true`
-2. For production, ensure Firebase credentials are configured
-3. Check `auth.js` for middleware configuration
+**"No token provided" (401)**
+- You're trying to modify data (POST/PUT/PATCH/DELETE) without authentication
+- For development: Set `DISABLE_AUTH=true` in `.env`
+- For production: Include `Authorization: Bearer <token>` header
+
+**"Invalid token" (401)**
+- Firebase token is expired (tokens expire after 1 hour)
+- Firebase credentials not configured correctly
+- Ensure `firebase-admin.json` exists and `GOOGLE_APPLICATION_CREDENTIALS` is set
+
+**Authentication bypass not working**
+- Verify `DISABLE_AUTH=true` in `.env` (not `.env.example`)
+- Restart server after changing `.env`
+- Check for `[Auth] Authentication bypassed` in server logs
 
 ### Port Conflicts
 
 1. Change `PORT` in `.env`
 2. Update `RERUM_BASE` and `RERUM_PREFIX` accordingly
+
+### Firebase Setup Issues
+
+1. Request `firebase-admin.json` from your team lead
+2. Place file in `server/` directory
+3. Verify path in `.env` matches file location
+4. Check file contains valid JSON with service account credentials
