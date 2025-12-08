@@ -22,6 +22,7 @@ import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
 import { useRouter, useSearchParams } from 'next/navigation'; // Needed for the hook
 import { useSelectedNote } from '../../hooks/useSelectedNote';
+import { redirect } from 'next/navigation';
 import { extractNoteId } from "../../utils/url_conversion";
 
 interface Location {
@@ -75,35 +76,28 @@ const Page = () => {
 
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
-
-
+  const router = useRouter();
 
   useEffect(() => {
     if (selectedNoteId) {
-      console.log("SYNC: Fetching note ID:", selectedNoteId); // Log 1: Check if the fetch starts
-      
-      ApiService.fetchNoteById(selectedNoteId).then(note => {
-        
-        console.log("SYNC: Rerùm fetch result:", note); // Log 2: Check returned data (should be a Note object)
-        
-        if (note) {
-          // ⚠️ Potential Failure Point: Data Conversion
-          // Do you need to run this single note through a conversion function 
-          // like DataConversion.convertMediaTypes(note) before setting it?
-          
-          setModalNote(note); 
-          console.log("SYNC: SUCCESS! Modal should open."); 
-        } else {
-          // This runs if fetchNoteById returned null (e.g., 404 or catch block)
-          setSelectedNoteId(null); 
-          console.log("SYNC: Fetch failed or note not found. Clearing URL."); 
-        }
-      })
-      .catch(error => {
-          // This is the fallback if the promise chain throws an error
-          console.error("SYNC ERROR: API Fetch rejected!", error);
-          setSelectedNoteId(null); 
-      });
+      console.log("SYNC: Fetching note ID:", selectedNoteId);
+
+      ApiService.fetchNoteById(selectedNoteId)
+        .then(note => {
+          console.log("SYNC: Rerùm fetch result:", note);
+
+          if (note) {
+            setModalNote(note);
+            console.log("SYNC: SUCCESS! Modal should open.");
+          } else {
+            console.log("SYNC: Note not found → redirecting to /not-found");
+            router.push("/not-found");
+          }
+        })
+        .catch(error => {
+          console.error("SYNC ERROR:", error);
+          router.push("/not-found");
+        });
     } else {
       setModalNote(null);
     }
