@@ -22,6 +22,7 @@ import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
 import { useRouter, useSearchParams } from 'next/navigation'; // Needed for the hook
 import { useSelectedNote } from '../../hooks/useSelectedNote';
+import { extractNoteId } from "../../utils/url_conversion";
 
 interface Location {
   lat: number;
@@ -75,26 +76,38 @@ const Page = () => {
   const user = User.getInstance();
   const { isMapsApiLoaded } = useGoogleMaps();
 
-  // ⬇️ 2. ADD SYNCHRONIZATION EFFECT HERE ⬇️
+
+
   useEffect(() => {
     if (selectedNoteId) {
-      // 🚨 CRITICAL STEP: Fetch the note data when the URL has an ID
-      // You must replace 'fetchNoteData' with your actual function that gets a Note object by ID.
-      // This is necessary for deep-linking/page reloads.
+      console.log("SYNC: Fetching note ID:", selectedNoteId); // Log 1: Check if the fetch starts
       
-      // Placeholder for your API call:
-      ApiService.fetchNoteById(selectedNoteId).then(note => { // Assuming a function exists in ApiService
-          if (note) {
-              setModalNote(note); // Open the modal with the loaded note object
-          } else {
-              // Handle 404/invalid ID: clear the URL
-              setSelectedNoteId(null); 
-          }
+      ApiService.fetchNoteById(selectedNoteId).then(note => {
+        
+        console.log("SYNC: Rerùm fetch result:", note); // Log 2: Check returned data (should be a Note object)
+        
+        if (note) {
+          // ⚠️ Potential Failure Point: Data Conversion
+          // Do you need to run this single note through a conversion function 
+          // like DataConversion.convertMediaTypes(note) before setting it?
+          
+          setModalNote(note); 
+          console.log("SYNC: SUCCESS! Modal should open."); 
+        } else {
+          // This runs if fetchNoteById returned null (e.g., 404 or catch block)
+          setSelectedNoteId(null); 
+          console.log("SYNC: Fetch failed or note not found. Clearing URL."); 
+        }
+      })
+      .catch(error => {
+          // This is the fallback if the promise chain throws an error
+          console.error("SYNC ERROR: API Fetch rejected!", error);
+          setSelectedNoteId(null); 
       });
     } else {
-        setModalNote(null); // Close the modal if the URL parameter is cleared
+      setModalNote(null);
     }
-  }, [selectedNoteId]); // This watches the URL ID
+  }, [selectedNoteId]);
 
   const startPopupCloseTimer = () => {
     // Clear any timer that's already running
@@ -386,7 +399,8 @@ const Page = () => {
         }
 
         if (isClick) {
-          setModalNote(note);
+          setSelectedNoteId(extractNoteId(note.id));
+          //setModalNote(note);
           return;
         }
 
@@ -416,8 +430,10 @@ const Page = () => {
           currentPopupRef.current.setMap(null);
           currentPopupRef.current = null;
         }
-
-        setModalNote(note);
+        console.log("HANDLER CALL: Attempting to set URL ID:", note.id); 
+        //setModalNote(note);
+        const cleanId = extractNoteId(note.id);
+        setSelectedNoteId(cleanId);
 
         setActiveNote(note);
         if (isPanelOpen) {
@@ -441,10 +457,6 @@ const Page = () => {
 
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           markerHoveredRef.current = true;
-
-          if (isPanelOpen) {
-            scrollToNoteTile(note.id); // Only scroll if the panel is already open
-          }
           
           // Only open a new popup if one isn't already open
           if (!currentPopupRef.current) {
@@ -504,6 +516,7 @@ const Page = () => {
       };
     }
   }, [isMapsApiLoaded, filteredNotes, mapRef.current]);
+
 
   const handleMapClick = () => {
     if (currentPopupRef.current) {
@@ -880,7 +893,11 @@ const Page = () => {
                 }`}
                 onMouseEnter={() => setHoveredNoteId(note.id)}
                 onMouseLeave={() => setHoveredNoteId(null)}
-                onClick={() => setModalNote(note)}
+                //onClick={() => setModalNote(note)}
+                onClick={() => {
+                  console.log("Clicked note:", note);
+                  setSelectedNoteId(extractNoteId(note.id));
+                }}
               >
                 <NoteCard note={note} />
               </div>
@@ -909,7 +926,8 @@ const Page = () => {
         open={modalNote !== null}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
-            setModalNote(null);
+            //setModalNote(null);
+            setSelectedNoteId(null);
           }
         }}
       >

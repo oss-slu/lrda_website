@@ -26,9 +26,10 @@ export function useSelectedNote(): SelectedNoteHook {
     } else {
       newParams.delete('selected');
     }
+    const newUrl = `?${newParams.toString()}`;
     
     // router.replace updates the URL without adding a new entry to the history stack
-    router.replace(`?${newParams.toString()}`);
+    router.replace(newUrl);
   }, [router, searchParams]);
 
   // Public setter function

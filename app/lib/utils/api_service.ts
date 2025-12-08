@@ -191,33 +191,42 @@ export default class ApiService {
     return await response.json();
   }
 
+
   static async fetchNoteById(id: string): Promise<Note | null> {
     try {
-      // 1. Construct the API endpoint for fetching a single note
-      const url = `/api/notes/detail?id=${id}`; 
-      
-      // 2. Make the request
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      let cleanId = id;
+
+      // Ensure we get the clean, short ID
+      if (id.startsWith('http')) {
+        const parts = id.split('/'); 
+        cleanId = parts[parts.length - 1]; 
+      }
+
+      // Call the local proxy route
+      const proxyUrl = `/api/rerum/note/${cleanId}`;
+      const response = await fetch(proxyUrl);
 
       if (!response.ok) {
-        // Handle network error (e.g., 404, 500)
-        console.error(`API service failed to fetch note ID ${id}. Status: ${response.status}`);
+        console.error(`Local Proxy failed to fetch note ID ${cleanId}. Status: ${response.status}`);
         return null;
       }
-      
+
       const noteData = await response.json();
-      
-      // 3. Return the data, typed as a Note (assuming your backend returns the full object)
-      return noteData as Note;
+
+      // Normalize: always provide a `text` property for the UI
+      const normalizedNote: Note = {
+        ...noteData,
+        text: noteData.BodyText || '', // map BodyText -> text
+      };
+
+      return normalizedNote;
 
     } catch (error) {
-      console.error(`Error fetching note ID ${id}:`, error);
+      console.error(`Error fetching note ID ${id} via proxy:`, error);
       return null;
     }
   }
+
 
   /**
    * Fetches all messages for a specific user.
