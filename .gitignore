@@ -9,6 +9,14 @@ pnpm-lock.yaml
 firebase-admin.json
 all_notes.json
 
+# Firebase Emulators
+firebase-emulator-data/
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+ui-debug.log
+storage-debug.log
+
 # Playwright
 playwright-report/
 test-results/
