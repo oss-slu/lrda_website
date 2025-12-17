@@ -173,9 +173,8 @@ export function useMapMarkers({
         if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
         markerHoveredRef.current = true;
 
-        if (!currentPopupRef.current) {
-          openPopup(note, false);
-        }
+        // Always open new popup for the hovered marker (closes old one automatically)
+        openPopup(note, false);
 
         setHoveredNoteId(note.id);
         if (isPanelOpen) scrollToNoteTile(note.id);
