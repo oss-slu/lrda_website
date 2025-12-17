@@ -75,8 +75,8 @@ if (shouldInitializeFirebase()) {
     if (useEmulators && typeof window !== "undefined") {
       // Use a flag to prevent multiple connections
       const emulatorKey = "__FIREBASE_EMULATORS_CONNECTED__";
-      if (!(window as Record<string, unknown>)[emulatorKey]) {
-        (window as Record<string, unknown>)[emulatorKey] = true;
+      if (!(window as unknown as Record<string, unknown>)[emulatorKey]) {
+        (window as unknown as Record<string, unknown>)[emulatorKey] = true;
 
         try {
           connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
@@ -87,7 +87,7 @@ if (shouldInitializeFirebase()) {
         } catch (emulatorError) {
           console.warn("Failed to connect to Firebase emulators. Make sure they are running with: pnpm firebase:emulators", emulatorError);
           // Reset the flag so it can retry on next page load
-          (window as Record<string, unknown>)[emulatorKey] = false;
+          (window as unknown as Record<string, unknown>)[emulatorKey] = false;
         }
       }
     }
