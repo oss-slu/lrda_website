@@ -3,22 +3,29 @@ import { render, waitFor, act, cleanup, RenderResult } from "@testing-library/re
 import "@testing-library/jest-dom";
 import Page from "../lib/pages/map/page";
 import Page2 from "../lib/components/noteElements/note_component";
+import { createTestWrapper } from "./utils/testQueryClient";
 
-jest.mock('firebase/auth');
-jest.mock('../lib/utils/api_service');
+jest.mock("firebase/auth");
+jest.mock("../lib/utils/api_service");
 jest.mock("firebase/database", () => ({
   getDatabase: jest.fn(),
 }));
 
-jest.mock('intro.js', () => {
+jest.mock("intro.js", () => {
   const mockIntroInstance: any = {
-    setOptions: jest.fn(function(this: any) { return this; }),
-    oncomplete: jest.fn(function(this: any) { return this; }),
-    onexit: jest.fn(function(this: any) { return this; }),
+    setOptions: jest.fn(function (this: any) {
+      return this;
+    }),
+    oncomplete: jest.fn(function (this: any) {
+      return this;
+    }),
+    onexit: jest.fn(function (this: any) {
+      return this;
+    }),
     start: jest.fn(() => {
-      const tooltip = document.createElement('div');
-      tooltip.className = 'introjs-tooltip';
-      tooltip.textContent = 'Welcome! Lets explore the website together.';
+      const tooltip = document.createElement("div");
+      tooltip.className = "introjs-tooltip";
+      tooltip.textContent = "Welcome! Lets explore the website together.";
       document.body.appendChild(tooltip);
     }),
   };
@@ -31,7 +38,7 @@ jest.mock('intro.js', () => {
   };
 });
 
-jest.mock('../lib/utils/data_conversion', () => ({
+jest.mock("../lib/utils/data_conversion", () => ({
   convertMediaTypes: jest.fn(() => []),
 }));
 
@@ -69,10 +76,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.querySelectorAll('.introjs-tooltip').forEach(tooltip => tooltip.remove());
+  document.querySelectorAll(".introjs-tooltip").forEach((tooltip) => tooltip.remove());
   jest.clearAllTimers();
   jest.useRealTimers();
-  window.location.href = 'http://localhost/';
+  window.location.href = "http://localhost/";
   navigator.geolocation.clearWatch(0);
   cleanup();
   console.log("All mocks, timers, and global references have been cleared");
@@ -82,7 +89,7 @@ describe("Intro.js feature in Page component", () => {
   it("renders the Page component without crashing", async () => {
     let component: RenderResult | undefined;
     await act(async () => {
-      component = render(<Page />);
+      component = render(<Page />, { wrapper: createTestWrapper() });
     });
     component?.unmount();
   });
@@ -123,7 +130,7 @@ describe("Intro.js feature in Page component", () => {
 
     let component: RenderResult | undefined;
     await act(async () => {
-      component = render(<Page />);
+      component = render(<Page />, { wrapper: createTestWrapper() });
     });
 
     await act(async () => {
@@ -144,10 +151,10 @@ describe("Intro.js feature in Page component", () => {
   });
 
   it("does not trigger introJs if elements are missing (Page)", async () => {
-    document.body.innerHTML = '';
+    document.body.innerHTML = "";
     let component: RenderResult | undefined;
     await act(async () => {
-      component = render(<Page />);
+      component = render(<Page />, { wrapper: createTestWrapper() });
     });
     component?.unmount();
   });

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Note } from "@/app/types";
-import ApiService from "../utils/api_service";
+import { useCreatorName } from "../hooks/queries/useUsers";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Calendar as CalendarIcon, TagsIcon, User2Icon, ImageIcon } from "lucide-react";
 import CompactCarousel from "./compact_carousel";
@@ -16,17 +16,8 @@ interface NoteCardProps {
 const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
   const title = note.title;
   const tags: string[] = (note.tags || []).map((tag) => tag.label); // Ensure correct mapping to labels
-  const [creator, setCreator] = useState<string>("Loading...");
+  const { data: creator, isPending: isCreatorLoading } = useCreatorName(note.creator);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(note.time ? new Date(note.time) : undefined);
-
-  useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
-      .then((name) => setCreator(name))
-      .catch((error) => {
-        console.error("Error fetching creator name:", error);
-        setCreator("Error loading name");
-      });
-  }, [note.creator]);
 
   return (
     <div className="w-64 bg-white h-[300px] rounded-sm shadow flex flex-col border border-gray-200" data-testid="note-card">
@@ -46,7 +37,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
         <div className="flex flex-col h-[100px] justify-evenly">
           <div className="flex flex-row  items-center align-middle">
             <User2Icon className="mr-2" size={15} />
-            <p className="text-[15px] text-gray-500 truncate">{creator}</p>
+            <p className="text-[15px] text-gray-500 truncate">{isCreatorLoading ? "Loading..." : creator ?? "Unknown"}</p>
           </div>
           {/* Interactive Calendar with formatted display */}
           <div className="flex flex-row items-center">

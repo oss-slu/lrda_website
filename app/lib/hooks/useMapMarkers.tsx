@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as ReactDOM from "react-dom/client";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Note } from "@/app/types";
 import { createPopupClass, PopupInstance } from "../components/map/MapPopup";
 import NoteCard from "../components/note_card";
@@ -33,14 +34,13 @@ export function useMapMarkers({
   setIsLoading,
   scrollToNoteTile,
 }: UseMapMarkersProps) {
+  const queryClient = useQueryClient();
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = useRef(false);
   const popupHoveredRef = useRef(false);
-  const [markers, setMarkers] = useState(
-    new Map<string, google.maps.marker.AdvancedMarkerElement>()
-  );
+  const [markers, setMarkers] = useState(new Map<string, google.maps.marker.AdvancedMarkerElement>());
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -49,11 +49,7 @@ export function useMapMarkers({
     }
 
     hoverTimerRef.current = setTimeout(() => {
-      if (
-        !markerHoveredRef.current &&
-        !popupHoveredRef.current &&
-        currentPopupRef.current
-      ) {
+      if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
         setHoveredNoteId(null);
@@ -110,10 +106,7 @@ export function useMapMarkers({
       startPopupCloseTimer,
     });
 
-    const tempMarkers = new Map<
-      string,
-      google.maps.marker.AdvancedMarkerElement
-    >();
+    const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
 
     const mapClickListener = map.addListener("click", () => {
       if (currentPopupRef.current) {
@@ -136,16 +129,13 @@ export function useMapMarkers({
 
       const popupContent = document.createElement("div");
       const root = ReactDOM.createRoot(popupContent);
-      root.render(<NoteCard note={note} />);
-
-      const popup = new Popup(
-        new google.maps.LatLng(
-          parseFloat(note.latitude),
-          parseFloat(note.longitude)
-        ),
-        popupContent,
-        isClick
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <NoteCard note={note} />
+        </QueryClientProvider>
       );
+
+      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent, isClick);
 
       currentPopupRef.current = popup;
       popup.setMap(map);
@@ -167,10 +157,7 @@ export function useMapMarkers({
     };
 
     // Attach events to marker
-    const attachMarkerEvents = (
-      marker: google.maps.marker.AdvancedMarkerElement,
-      note: Note
-    ) => {
+    const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note) => {
       const iconNode = marker.content as HTMLElement;
 
       iconNode.addEventListener("click", (e) => {

@@ -16,6 +16,7 @@ import { useMapLocation } from "../../hooks/useMapLocation";
 import { useMapMarkers } from "../../hooks/useMapMarkers";
 import { useMapIntro } from "../../hooks/useMapIntro";
 import { filterNotesByMapBounds, filterNotesByQuery, filterNotesByTitleAndTags, Location } from "../../utils/mapUtils";
+import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from "../../constants/mapConstants";
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
@@ -29,7 +30,6 @@ const Page = () => {
     mapBounds,
     locationFound,
     isPanelOpen,
-    isLoading,
     activeNote,
     hoveredNoteId,
     modalNote,
@@ -53,7 +53,6 @@ const Page = () => {
       mapBounds: state.mapBounds,
       locationFound: state.locationFound,
       isPanelOpen: state.isPanelOpen,
-      isLoading: state.isLoading,
       activeNote: state.activeNote,
       hoveredNoteId: state.hoveredNoteId,
       modalNote: state.modalNote,
@@ -84,8 +83,18 @@ const Page = () => {
   const { isMapsApiLoaded } = useGoogleMaps();
 
   // TanStack Query for notes data
-  const { data: globalNotes = [] } = useGlobalMapNotes();
-  const { data: personalNotes = [] } = usePersonalMapNotes(authUser?.uid ?? null);
+  const { data: globalNotes = [], isPending: isGlobalPending, isError: isGlobalError, error: globalError } = useGlobalMapNotes();
+  const {
+    data: personalNotes = [],
+    isPending: isPersonalPending,
+    isError: isPersonalError,
+    error: personalError,
+  } = usePersonalMapNotes(authUser?.uid ?? null);
+
+  // Derived loading and error states based on current view
+  const notesLoading = isGlobalView ? isGlobalPending : isPersonalPending;
+  const notesError = isGlobalView ? isGlobalError : isPersonalError;
+  const notesErrorMessage = isGlobalView ? globalError?.message : personalError?.message;
 
   // Derived state - current notes based on global/personal view
   const notes = useMemo(() => {
@@ -183,11 +192,6 @@ const Page = () => {
     }
   }, [setActiveNote]);
 
-  // Set loading to false after initial render
-  useEffect(() => {
-    setIsLoading(false);
-  }, [setIsLoading]);
-
   // Map load handler
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {
@@ -205,12 +209,22 @@ const Page = () => {
         }
       };
 
+      const updateZoom = () => {
+        const zoom = map.getZoom();
+        if (typeof zoom === "number") {
+          setMapZoom(zoom);
+        }
+      };
+
       map.addListener("dragend", updateBounds);
-      map.addListener("zoom_changed", updateBounds);
+      map.addListener("zoom_changed", () => {
+        updateBounds();
+        updateZoom();
+      });
 
       setTimeout(updateBounds, 100);
     },
-    [setMapCenter, setMapBounds]
+    [setMapCenter, setMapBounds, setMapZoom]
   );
 
   // Search handlers
@@ -250,7 +264,7 @@ const Page = () => {
   }, [isGlobalView, setIsGlobalView]);
 
   return (
-    <div className="w-screen h-full min-w-[600px] relative overflow-hidden">
+    <div className="w-screen h-full relative overflow-hidden">
       {/* Map Controls - Search, zoom, location buttons */}
       <MapControls
         ref={searchBarRef}
@@ -263,16 +277,22 @@ const Page = () => {
         onSearch={handleSearch}
         onNotesSearch={handleNotesSearch}
         onToggleView={toggleFilter}
-        onZoomIn={() => setMapZoom(Math.min(mapZoom + 1, 21))}
-        onZoomOut={() => setMapZoom(Math.max(mapZoom - 1, 1))}
+        onZoomIn={() => {
+          const currentZoom = mapRef.current?.getZoom() ?? mapZoom;
+          mapRef.current?.setZoom(Math.min(currentZoom + 1, 21));
+        }}
+        onZoomOut={() => {
+          const currentZoom = mapRef.current?.getZoom() ?? mapZoom;
+          mapRef.current?.setZoom(Math.max(currentZoom - 1, 1));
+        }}
         onLocate={handleSetLocation}
       />
 
-      {/* Map Container */}
+      {/* Map Container - full width on mobile (panel overlays), adjusted on desktop */}
       <div
-        className="h-full transition-all duration-300 ease-in-out"
+        className="h-full w-full md:transition-all md:duration-300 md:ease-in-out"
         style={{
-          width: isPanelOpen ? "calc(100% - 34rem)" : "100%",
+          width: isPanelOpen ? MAP_WIDTH_WITH_PANEL : "100%",
         }}
       >
         {isMapsApiLoaded && (
@@ -298,7 +318,9 @@ const Page = () => {
       <MapNotesPanel
         ref={notesListRef}
         isPanelOpen={isPanelOpen}
-        isLoading={isLoading}
+        isLoading={notesLoading}
+        isError={notesError}
+        errorMessage={notesErrorMessage}
         visibleItems={infinite.visibleItems}
         hasMore={infinite.hasMore}
         isLoadingMore={infinite.isLoading}

@@ -4,6 +4,7 @@ import React, { forwardRef } from "react";
 import { UserIcon, Plus, Minus, Users } from "lucide-react";
 import SearchBarMap from "../search_bar_map";
 import { Note } from "@/app/types";
+import { PANEL_WIDTH } from "../../constants/mapConstants";
 
 interface MapControlsProps {
   // Search
@@ -72,10 +73,12 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           ) : null}
         </div>
 
-        {/* Right side - Zoom and location */}
+        {/* Right side - Zoom and location - stays at right edge on mobile since panel overlays */}
         <div
-          className={`flex flex-row items-center gap-2 transition-all duration-300 ease-in-out mr-4 pointer-events-auto
-                      ${isPanelOpen ? "mr-[35rem]" : "mr-4"}`}
+          className="flex flex-row items-center gap-2 transition-all duration-300 ease-in-out pointer-events-auto mr-4 md:mr-0"
+          style={{
+            marginRight: isPanelOpen ? `calc(${PANEL_WIDTH} + 1rem)` : undefined,
+          }}
         >
           {/* Zoom Out Button */}
           <button
