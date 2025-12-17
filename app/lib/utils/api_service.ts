@@ -9,7 +9,7 @@ const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL || "";
 
 // Only validate at runtime, not during build/SSR
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   if (!RERUM_PREFIX) {
     console.error("RERUM_PREFIX is not defined in the environment variables.");
   }
@@ -87,10 +87,7 @@ export default class ApiService {
       if (!response.ok) {
         const errorMessage = data?.error?.message || response.statusText;
         const normalizedMessage = (errorMessage || "").toLowerCase();
-        const quotaExceeded =
-          response.status === 429 ||
-          normalizedMessage.includes("quota") ||
-          normalizedMessage.includes("billing");
+        const quotaExceeded = response.status === 429 || normalizedMessage.includes("quota") || normalizedMessage.includes("billing");
 
         if (quotaExceeded) {
           console.warn(
@@ -112,7 +109,7 @@ export default class ApiService {
         .trim()
         .split(",")
         .map((tag: string) => tag.trim())
-                .filter((tag) => tag.length >= 3 && tag.length <= 28);
+        .filter((tag) => tag.length >= 3 && tag.length <= 28);
       return tags;
     } catch (error) {
       console.error("Error generating tags:", error);
@@ -269,10 +266,7 @@ export default class ApiService {
         creator: {
           $in: creatorValues,
         },
-        $or: [
-          { isArchived: { $exists: false } },
-          { isArchived: false },
-        ],
+        $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
       };
 
       console.log("🔍 Rerum Query - fetchNotesByStudents:", JSON.stringify(queryObj));
@@ -288,26 +282,26 @@ export default class ApiService {
           console.warn(`⚠️ Note ${note.id || note.title} has no creator field`);
           return false;
         }
-        
+
         // Normalize the creator field - extract UID from RERUM URLs if needed
         let normalizedCreator = note.creator;
         // Check if creator is a URL (starts with http/https) or contains RERUM domain
-        const isUrl = note.creator.startsWith('http://') || note.creator.startsWith('https://');
+        const isUrl = note.creator.startsWith("http://") || note.creator.startsWith("https://");
         let isRerumUrl = false;
-        
+
         if (isUrl) {
           try {
             const urlObj = new URL(note.creator);
             const hostname = urlObj.hostname.toLowerCase();
             // Check if hostname ends with rerum.io (exact match or subdomain)
-            isRerumUrl = hostname === 'rerum.io' || hostname.endsWith('.rerum.io') ||
-                        (RERUM_PREFIX && note.creator.startsWith(RERUM_PREFIX));
+            isRerumUrl =
+              hostname === "rerum.io" || hostname.endsWith(".rerum.io") || (RERUM_PREFIX && note.creator.startsWith(RERUM_PREFIX));
           } catch {
             // If URL parsing fails, check if it starts with RERUM_PREFIX
             isRerumUrl = RERUM_PREFIX ? note.creator.startsWith(RERUM_PREFIX) : false;
           }
         }
-        
+
         if (isUrl && isRerumUrl) {
           // Extract UID from RERUM URL (format: .../v1/id/{uid} or .../id/{uid})
           const match = note.creator.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
@@ -315,21 +309,24 @@ export default class ApiService {
             normalizedCreator = match[1];
           } else {
             // Fallback: try to extract from the end of the URL
-            const parts = note.creator.split('/');
+            const parts = note.creator.split("/");
             normalizedCreator = parts[parts.length - 1] || note.creator;
           }
         }
-        
+
         // Check if the normalized creator matches any of the student UIDs
         const matches = studentUids.includes(normalizedCreator);
         if (!matches) {
-          console.warn(`❌ Note creator "${normalizedCreator}" (from "${note.creator}") does not match any student UID. Student UIDs:`, studentUids);
+          console.warn(
+            `❌ Note creator "${normalizedCreator}" (from "${note.creator}") does not match any student UID. Student UIDs:`,
+            studentUids
+          );
         }
         return matches;
       });
 
       console.log(`📥 Response (${notes.length} total notes, ${normalizedNotes.length} after filtering) for fetchNotesByStudents:`);
-      console.log(`✅ Notes with approvalRequested=true: ${normalizedNotes.filter(n => n.approvalRequested).length}`);
+      console.log(`✅ Notes with approvalRequested=true: ${normalizedNotes.filter((n) => n.approvalRequested).length}`);
       normalizedNotes.forEach((note, idx) => {
         console.log(`  Note ${idx + 1}:`, {
           "@id": note.id,
@@ -364,11 +361,7 @@ export default class ApiService {
     }
     try {
       const usersRef = collection(db, "users");
-      const q = query(
-        usersRef,
-        where("parentInstructorId", "==", instructorId),
-        where("isInstructor", "==", false)
-      );
+      const q = query(usersRef, where("parentInstructorId", "==", instructorId), where("isInstructor", "==", false));
       const snap = await getDocs(q);
       const users: { uid: string; name: string; email: string }[] = [];
 
@@ -416,17 +409,17 @@ export default class ApiService {
   /**
    * Fetches all messages for a specific user.
    */
-  static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<any[]> {
+  static async fetchUserMessages(userId: string, limit: number = 150, skip: number = 0): Promise<Note[]> {
     const queryObj = { type: "message", creator: userId };
-    return await this.getPagedQuery(limit, skip, queryObj);
+    return (await this.getPagedQuery(limit, skip, queryObj)) as Note[];
   }
 
   /**
    * Fetches all Published Notes.
    */
-  static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<any[]> {
+  static async fetchPublishedNotes(limit: number = 150, skip: number = 0): Promise<Note[]> {
     const queryObj = { type: "message", published: true };
-    return await this.getPagedQuery(limit, skip, queryObj);
+    return (await this.getPagedQuery(limit, skip, queryObj)) as Note[];
   }
 
   /**
@@ -439,7 +432,7 @@ export default class ApiService {
     neLng: number,
     swLat: number,
     swLng: number
-  ): Promise<any[]> {
+  ): Promise<Note[]> {
     const queryObj = {
       type: "message",
       published: true,
@@ -448,7 +441,7 @@ export default class ApiService {
       "longitude[gte]": swLng,
       "longitude[lte]": neLng,
     } as any;
-    return await this.getPagedQuery(limit, skip, queryObj);
+    return (await this.getPagedQuery(limit, skip, queryObj)) as Note[];
   }
   /**
    * Fetches user data from the API based on UID.
@@ -466,17 +459,17 @@ export default class ApiService {
       if (userDoc.exists()) {
         const firestoreData = userDoc.data();
         // Removed sensitive data logging for security
-        
+
         // Ensure the data has the required structure
         const userData: UserData = {
           uid: firestoreData.uid || uid,
-          name: firestoreData.name || '',
+          name: firestoreData.name || "",
           roles: firestoreData.roles || { administrator: false, contributor: false },
           isInstructor: firestoreData.isInstructor || false,
           students: firestoreData.students || [],
-          parentInstructorId: firestoreData.parentInstructorId
+          parentInstructorId: firestoreData.parentInstructorId,
         };
-        
+
         // Removed sensitive data logging for security
         return userData;
       } else {
@@ -732,17 +725,16 @@ export default class ApiService {
   static async createComment(comment: Comment) {
     try {
       // Extract authorName as string if it's a ReactNode
-      const authorNameStr = typeof comment.authorName === 'string' 
-        ? comment.authorName 
-        : (comment.authorName as any)?.toString() || comment.author || '';
-      
+      const authorNameStr =
+        typeof comment.authorName === "string" ? comment.authorName : (comment.authorName as any)?.toString() || comment.author || "";
+
       const response = await fetch(`${RERUM_PREFIX}create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          type: "comment",   // Special Rerum type
+          type: "comment", // Special Rerum type
           noteId: comment.noteId, // Associate comment with a Note
           text: comment.text,
           authorId: comment.authorId,
@@ -784,7 +776,7 @@ export default class ApiService {
       });
 
       const comments = await queryResponse.json();
-      
+
       if (!comments || comments.length === 0) {
         throw new Error("No comments found for this thread");
       }
@@ -805,8 +797,8 @@ export default class ApiService {
       });
 
       const responses = await Promise.all(updatePromises);
-      const failed = responses.filter(r => !r.ok);
-      
+      const failed = responses.filter((r) => !r.ok);
+
       if (failed.length > 0) {
         throw new Error(`Failed to resolve ${failed.length} comment(s) in thread`);
       }
@@ -865,9 +857,9 @@ export default class ApiService {
         serializedData.media = noteDetails.media.map((item: any) => {
           // Convert class instance to plain object by extracting properties
           const plain: any = {
-            uuid: item.uuid || item.getUuid?.() || '',
-            type: item.type || item.getType?.() || '',
-            uri: item.uri || item.getUri?.() || '',
+            uuid: item.uuid || item.getUuid?.() || "",
+            type: item.type || item.getType?.() || "",
+            uri: item.uri || item.getUri?.() || "",
           };
           // Add video-specific properties if they exist
           if (item.thumbnail !== undefined) plain.thumbnail = item.thumbnail;
@@ -884,11 +876,11 @@ export default class ApiService {
         serializedData.audio = noteDetails.audio.map((item: any) => {
           // Convert class instance to plain object by extracting properties
           return {
-            uuid: item.uuid || item.getUuid?.() || '',
-            type: item.type || item.getType?.() || 'audio',
-            uri: item.uri || item.getUri?.() || '',
-            duration: item.duration || item.getDuration?.() || '',
-            name: item.name || '',
+            uuid: item.uuid || item.getUuid?.() || "",
+            type: item.type || item.getType?.() || "audio",
+            uri: item.uri || item.getUri?.() || "",
+            duration: item.duration || item.getDuration?.() || "",
+            name: item.name || "",
             isPlaying: item.isPlaying !== undefined ? item.isPlaying : false,
           };
         });
@@ -903,7 +895,6 @@ export default class ApiService {
     }
   }
 
-
   /**
    * Fetches the name of the creator by first checking Firestore, then falling back to RERUM API.
    * Checks multiple fields (name, displayName, email) and handles various ID formats.
@@ -914,8 +905,9 @@ export default class ApiService {
     try {
       // Normalize creatorId - extract UID from RERUM URLs if needed
       let normalizedId = creatorId;
-      const isRerumUrl = creatorId && (creatorId.startsWith("https://devstore.rerum.io/") || creatorId.startsWith("http://devstore.rerum.io/"));
-      
+      const isRerumUrl =
+        creatorId && (creatorId.startsWith("https://devstore.rerum.io/") || creatorId.startsWith("http://devstore.rerum.io/"));
+
       if (isRerumUrl) {
         // Extract the UID from the URL (assuming format like https://devstore.rerum.io/v1/id/{uid})
         const parts = creatorId.split("/");
@@ -976,7 +968,7 @@ export default class ApiService {
       const headers = {
         "Content-Type": "application/json",
       };
-      
+
       // Try with normalized ID first - check both uid and wr:uid fields
       let body = {
         $or: [
@@ -994,7 +986,7 @@ export default class ApiService {
       });
 
       let data = await response.json();
-      
+
       // If no result with normalized ID and it's different from original, try original
       if ((!data.length || !data[0]) && normalizedId !== creatorId) {
         body = {
@@ -1007,13 +999,13 @@ export default class ApiService {
             { "@id": creatorId } as any,
           ],
         };
-        
+
         response = await fetch(url, {
           method: "POST",
           headers,
           body: JSON.stringify(body),
         });
-        
+
         data = await response.json();
       }
 
@@ -1030,7 +1022,7 @@ export default class ApiService {
           return result.email.trim();
         }
       }
-      
+
       // Return a fallback instead of throwing - let the caller decide how to handle
       return "Unknown creator";
     } catch (error) {
@@ -1074,21 +1066,17 @@ export default class ApiService {
    * @param description - Instructor's description/application text
    * @returns Promise<boolean> - Success status
    */
-  static async sendInstructorNotification(
-    email: string,
-    name: string,
-    description: string
-  ): Promise<boolean> {
+  static async sendInstructorNotification(email: string, name: string, description: string): Promise<boolean> {
     try {
       if (!email || !name || !description) {
-        throw new Error('Missing required fields');
+        throw new Error("Missing required fields");
       }
 
       // Call server-side API route to send email (handles environment variables securely)
-      const response = await fetch('/api/send-instructor-notification', {
-        method: 'POST',
+      const response = await fetch("/api/send-instructor-notification", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email,
@@ -1098,16 +1086,16 @@ export default class ApiService {
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
-        console.log('✅ Email notification sent successfully');
+        console.log("✅ Email notification sent successfully");
         return true;
       } else {
-        console.error('❌ Failed to send email notification:', result.error || result.message);
+        console.error("❌ Failed to send email notification:", result.error || result.message);
         return false;
       }
     } catch (error) {
-      console.error('Error sending instructor notification:', error);
+      console.error("Error sending instructor notification:", error);
       return false;
     }
   }

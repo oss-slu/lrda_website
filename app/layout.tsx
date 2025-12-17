@@ -5,6 +5,7 @@ import Navbar from "./lib/components/navbar";
 import { NextAppDirEmotionCacheProvider } from "tss-react/next/appDir";
 import { Toaster } from "@/components/ui/sonner";
 import { GoogleMapsProvider } from "./lib/utils/GoogleMapsContext";
+import QueryProvider from "./lib/providers/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,13 +20,15 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
     <html lang="en">
       <head />
       <body className="flex flex-col h-screen">
-        <GoogleMapsProvider>
-          <Navbar />
-          <div className="flex-grow overflow-y-auto scroll-smooth">
-            <NextAppDirEmotionCacheProvider options={{ key: "css" }}>{children}</NextAppDirEmotionCacheProvider>
-          </div>
-          <Toaster />
-        </GoogleMapsProvider>
+        <QueryProvider>
+          <GoogleMapsProvider>
+            <Navbar />
+            <div className="flex-grow overflow-y-auto scroll-smooth">
+              <NextAppDirEmotionCacheProvider options={{ key: "css" }}>{children}</NextAppDirEmotionCacheProvider>
+            </div>
+            <Toaster />
+          </GoogleMapsProvider>
+        </QueryProvider>
       </body>
     </html>
   );

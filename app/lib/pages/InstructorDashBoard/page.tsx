@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Note } from "@/app/types";
 import { useAuthStore } from "../../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
+import { useQuery } from "@tanstack/react-query";
 import ApiService from "../../utils/api_service";
-import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard"; // NEW
+import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 const InstructorDashboardPage = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [students, setStudents] = useState<{ uid: string; name: string }[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Use auth store for user data
   const { user: authUser } = useAuthStore(
@@ -23,75 +21,73 @@ const InstructorDashboardPage = () => {
     }))
   );
 
-  useEffect(() => {
-    const fetchInstructorData = async () => {
-      try {
-        const userId = authUser?.uid;
-        if (!userId) {
-          throw new Error("Not logged in");
-        }
-        const userData = await ApiService.fetchUserData(userId);
-
-        if (!userData || !userData.isInstructor) {
-          throw new Error("Access denied. Instructor only.");
-        }
-
-        const studentIds = userData.students || [];
-        if (studentIds.length === 0) {
-          toast("No students linked to this instructor.");
-          setIsLoading(false);
-          return;
-        }
-
-        const notes = await ApiService.fetchNotesByStudents(studentIds);
-        setNotes(notes);
-        setFilteredNotes(notes);
-
-        const studentNames = await Promise.all(
-          studentIds.map(async (uid: string) => {
-            const name = await ApiService.fetchCreatorName(uid);
-            return { uid, name };
-          })
-        );
-
-        setStudents(studentNames);
-      } catch (error) {
-        console.error("Error loading instructor dashboard:", error);
-        toast.error("Failed to load dashboard.");
-      } finally {
-        setIsLoading(false);
+  // Fetch instructor data (user info and students)
+  const { data: instructorData } = useQuery({
+    queryKey: ["instructor", authUser?.uid],
+    queryFn: async () => {
+      if (!authUser?.uid) return null;
+      const userData = await ApiService.fetchUserData(authUser.uid);
+      if (!userData || !userData.isInstructor) {
+        throw new Error("Access denied. Instructor only.");
       }
-    };
+      return userData;
+    },
+    enabled: !!authUser?.uid,
+  });
 
-    fetchInstructorData();
-  }, [authUser?.uid]);
+  const studentIds = instructorData?.students || [];
 
-  const handleStudentChange = (uid: string) => {
-    setSelectedStudent(uid);
-    if (uid === "") {
-      setFilteredNotes(notes);
-    } else {
-      const filtered = notes.filter((note) => note.creator === uid);
-      setFilteredNotes(filtered);
+  // Fetch student notes
+  const { data: notes = [], isLoading: notesLoading } = useQuery({
+    queryKey: ["instructor-notes", studentIds],
+    queryFn: async () => {
+      if (studentIds.length === 0) {
+        toast("No students linked to this instructor.");
+        return [];
+      }
+      return await ApiService.fetchNotesByStudents(studentIds);
+    },
+    enabled: studentIds.length > 0,
+  });
+
+  // Fetch student names
+  const { data: students = [] } = useQuery({
+    queryKey: ["student-names", studentIds],
+    queryFn: async () => {
+      return Promise.all(
+        studentIds.map(async (uid: string) => {
+          const name = await ApiService.fetchCreatorName(uid);
+          return { uid, name };
+        })
+      );
+    },
+    enabled: studentIds.length > 0,
+  });
+
+  // Filter notes by selected student and search query
+  const filteredNotes = useMemo(() => {
+    let filtered = notes;
+
+    if (selectedStudent) {
+      filtered = filtered.filter((note: Note) => note.creator === selectedStudent);
     }
-  };
 
-  const handleSearch = (query: string) => {
-    const lowerQuery = query.toLowerCase();
-    if (!lowerQuery.trim()) {
-      setFilteredNotes(notes);
-      return;
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (note: Note) =>
+          note.title.toLowerCase().includes(lowerQuery) ||
+          note.text.toLowerCase().includes(lowerQuery) ||
+          (note.tags &&
+            Array.isArray(note.tags) &&
+            note.tags.some((tag) => (typeof tag === "string" ? tag : tag.label).toLowerCase().includes(lowerQuery)))
+      );
     }
-    const filtered = notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(lowerQuery) ||
-        note.text.toLowerCase().includes(lowerQuery) ||
-        (note.tags &&
-          Array.isArray(note.tags) &&
-          note.tags.some((tag) => (typeof tag === "string" ? tag : tag.label).toLowerCase().includes(lowerQuery)))
-    );
-    setFilteredNotes(filtered);
-  };
+
+    return filtered;
+  }, [notes, selectedStudent, searchQuery]);
+
+  const isLoading = notesLoading && studentIds.length > 0;
 
   return (
     <div className="flex flex-col w-screen h-[90vh] min-w-[600px] bg-gray-100 p-6">
@@ -101,12 +97,13 @@ const InstructorDashboardPage = () => {
         <input
           type="text"
           placeholder="Search notes..."
-          onChange={(e) => handleSearch(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full max-w-md p-2 border rounded-lg shadow-sm"
         />
 
         {/* Student Filter Dropdown */}
-        <select value={selectedStudent} onChange={(e) => handleStudentChange(e.target.value)} className="p-2 border rounded-lg shadow-sm">
+        <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} className="p-2 border rounded-lg shadow-sm">
           <option value="">All Students</option>
           {students.map((student) => (
             <option key={student.uid} value={student.uid}>

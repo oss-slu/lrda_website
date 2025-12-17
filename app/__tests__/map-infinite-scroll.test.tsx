@@ -3,6 +3,7 @@ import { render, screen, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 // @ts-ignore
 import Page from "app/lib/pages/map/page";
+import { createTestWrapper } from "./utils/testQueryClient";
 
 // Mock Firebase config to avoid real initialization
 jest.mock("app/lib/config/firebase", () => ({
@@ -99,7 +100,7 @@ describe("Map page infinite scroll", () => {
   });
 
   it("renders initial 16 notes and loads more on sentinel intersect, shows spinner", async () => {
-    render(<Page />);
+    render(<Page />, { wrapper: createTestWrapper() });
 
     // wait until first batch visible
     await screen.findAllByTestId("note-card");
