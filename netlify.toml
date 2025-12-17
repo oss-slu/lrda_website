@@ -18,6 +18,7 @@
 # - NEXT_PUBLIC_ADMIN_PASKEY (optional)
 
 [build]
+  base = "."
   command = "pnpm add -D -w @netlify/plugin-nextjs && pnpm build"
   publish = ".next"
 

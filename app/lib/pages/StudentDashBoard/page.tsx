@@ -1,20 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Note } from "@/app/types";
-import ApiService from "../../utils/api_service";
 import { useAuthStore } from "../../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
+import { useQuery } from "@tanstack/react-query";
+import ApiService from "../../utils/api_service";
 import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { toast } from "sonner";
 
 const StudentDashboardPage: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Use auth store for user data
   const { user: authUser } = useAuthStore(
@@ -23,46 +19,35 @@ const StudentDashboardPage: React.FC = () => {
     }))
   );
 
-  useEffect(() => {
-    const fetchPendingFeedback = async () => {
-      try {
-        const userId = authUser?.uid;
-        if (!userId) return;
+  // Fetch notes with pending feedback
+  const { data: notes = [], isLoading } = useQuery({
+    queryKey: ["student-feedback", authUser?.uid],
+    queryFn: async () => {
+      if (!authUser?.uid) return [];
 
-        // Fetch notes created by this student, still unpublished, with at least one comment
-        const queryObj = {
-          type: "message",
-          published: false,
-          creator: userId,
-          approvalRequested: true,
-          $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
-        };
-        const fetched = await ApiService.getPagedQuery(150, 0, queryObj);
-        const withComments = (fetched as Note[]).filter((note) => (note.comments || []).length > 0);
-        setNotes(withComments);
-        setFilteredNotes(withComments);
-      } catch (error) {
-        console.error("Error loading student feedback dashboard:", error);
-        toast.error("Failed to load feedback.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      // Fetch notes created by this student, still unpublished, with at least one comment
+      const queryObj = {
+        type: "message",
+        published: false,
+        creator: authUser.uid,
+        approvalRequested: true,
+        $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
+      };
+      const fetched = await ApiService.getPagedQuery(150, 0, queryObj);
+      return (fetched as Note[]).filter((note) => (note.comments || []).length > 0);
+    },
+    enabled: !!authUser?.uid,
+  });
 
-    fetchPendingFeedback();
-  }, [authUser?.uid]);
+  // Filter notes by search query
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim()) return notes;
 
-  const handleSearch = (query: string) => {
-    const lower = query.toLowerCase();
-    if (!lower.trim()) {
-      setFilteredNotes(notes);
-      return;
-    }
-    const filtered = notes.filter(
+    const lower = searchQuery.toLowerCase();
+    return notes.filter(
       (note) => note.title.toLowerCase().includes(lower) || (note.comments || []).some((c) => c.text.toLowerCase().includes(lower))
     );
-    setFilteredNotes(filtered);
-  };
+  }, [notes, searchQuery]);
 
   return (
     <div className="flex flex-col w-screen h-[90vh] min-w-[600px] bg-gray-50 p-6">
@@ -73,7 +58,8 @@ const StudentDashboardPage: React.FC = () => {
         <input
           type="text"
           placeholder="Search feedback..."
-          onChange={(e) => handleSearch(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full max-w-md p-2 border rounded-lg shadow-sm"
         />
       </div>

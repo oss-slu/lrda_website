@@ -1,11 +1,10 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import SearchBarMap from "../../components/search_bar_map";
 import { Note, newNote } from "@/app/types";
-import ApiService from "../../utils/api_service";
-import DataConversion from "../../utils/data_conversion";
 import { useAuthStore } from "../../stores/authStore";
+import { useMapStore } from "../../stores/mapStore";
 import { useShallow } from "zustand/react/shallow";
 import ClickableNote from "../../components/click_note_card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +19,7 @@ import { getItem, setItem } from "../../utils/local_storage";
 import { useGoogleMaps } from "../../utils/GoogleMapsContext";
 import NoteCard from "../../components/note_card";
 import { Dialog } from "@/components/ui/dialog";
+import { useGlobalMapNotes, usePersonalMapNotes } from "../../hooks/queries/useNotes";
 
 interface Location {
   lat: number;
@@ -31,43 +31,92 @@ interface Refs {
 }
 
 const Page = () => {
-  // Infinite notes manages visible count
-  const [notes, setNotes] = useState<Note[]>([]);
+  // Map store for UI state
+  const {
+    mapCenter,
+    mapZoom,
+    mapBounds,
+    locationFound,
+    isPanelOpen,
+    isLoading,
+    activeNote,
+    hoveredNoteId,
+    modalNote,
+    isNoteSelectedFromSearch,
+    isGlobalView,
+    setMapCenter,
+    setMapZoom,
+    setMapBounds,
+    setLocationFound,
+    setIsPanelOpen,
+    setIsLoading,
+    setActiveNote,
+    setHoveredNoteId,
+    setModalNote,
+    setIsNoteSelectedFromSearch,
+    setIsGlobalView,
+  } = useMapStore(
+    useShallow((state) => ({
+      mapCenter: state.mapCenter,
+      mapZoom: state.mapZoom,
+      mapBounds: state.mapBounds,
+      locationFound: state.locationFound,
+      isPanelOpen: state.isPanelOpen,
+      isLoading: state.isLoading,
+      activeNote: state.activeNote,
+      hoveredNoteId: state.hoveredNoteId,
+      modalNote: state.modalNote,
+      isNoteSelectedFromSearch: state.isNoteSelectedFromSearch,
+      isGlobalView: state.isGlobalView,
+      setMapCenter: state.setMapCenter,
+      setMapZoom: state.setMapZoom,
+      setMapBounds: state.setMapBounds,
+      setLocationFound: state.setLocationFound,
+      setIsPanelOpen: state.setIsPanelOpen,
+      setIsLoading: state.setIsLoading,
+      setActiveNote: state.setActiveNote,
+      setHoveredNoteId: state.setHoveredNoteId,
+      setModalNote: state.setModalNote,
+      setIsNoteSelectedFromSearch: state.setIsNoteSelectedFromSearch,
+      setIsGlobalView: state.setIsGlobalView,
+    }))
+  );
+
+  // Auth store
+  const { user: authUser, isLoggedIn: authIsLoggedIn } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isLoggedIn: state.isLoggedIn,
+    }))
+  );
+  const { isMapsApiLoaded } = useGoogleMaps();
+
+  // TanStack Query for notes data
+  const { data: globalNotes = [], isLoading: globalLoading } = useGlobalMapNotes();
+  const { data: personalNotes = [] } = usePersonalMapNotes(authUser?.uid ?? null);
+
+  // Derived state - current notes based on global/personal view
+  const notes = useMemo(() => {
+    return isGlobalView ? globalNotes : personalNotes;
+  }, [isGlobalView, globalNotes, personalNotes]);
+
+  // Filtered notes based on map bounds
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [activeNote, setActiveNote] = useState<Note | null>(null);
-  const [personalNotes, setPersonalNotes] = useState<Note[]>([]);
-  const [isNoteSelectedFromSearch, setIsNoteSelectedFromSearch] = useState(false);
-  const [globalNotes, setGlobalNotes] = useState<Note[]>([]);
-  const [global, setGlobal] = useState(true);
-  const [mapCenter, setMapCenter] = useState<Location>({
-    lat: 38.005984,
-    lng: -24.334449,
-  });
-  const [mapZoom, setMapZoom] = useState(2);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoaded] = useState(true);
-  const [locationFound, setLocationFound] = useState(false);
-  const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
-  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+
+  // Refs
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
-
   const noteRefs = useRef<Refs>({});
   const currentPopupRef = React.useRef<any | null>(null);
   const hoverTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = React.useRef(false);
   const popupHoveredRef = React.useRef(false);
   const [markers, setMarkers] = useState(new Map());
-  const [modalNote, setModalNote] = useState<Note | null>(null);
+
   const infinite = useInfiniteNotes<Note>({
     items: filteredNotes,
     pageSize: NOTES_PAGE_SIZE,
   });
-
-  const [isPanelOpen, setIsPanelOpen] = useState(true); // Default to open
-
-  const [lastGlobalDate, setLastGlobalDate] = useState<string | undefined>(undefined);
-  const [lastPersonalDate, setLastPersonalDate] = useState<string | undefined>(undefined);
 
   // Resize map when panel opens/closes
   useEffect(() => {
@@ -81,14 +130,6 @@ const Page = () => {
       return () => clearTimeout(timer);
     }
   }, [isPanelOpen]);
-
-  const { user: authUser, isLoggedIn: authIsLoggedIn } = useAuthStore(
-    useShallow((state) => ({
-      user: state.user,
-      isLoggedIn: state.isLoggedIn,
-    }))
-  );
-  const { isMapsApiLoaded } = useGoogleMaps();
 
   const startPopupCloseTimer = () => {
     // Clear any timer that's already running
@@ -295,13 +336,13 @@ const Page = () => {
     }
   }, []);
 
+  // Update filtered notes when map bounds or notes change
   useEffect(() => {
-    const currentNotes = global ? globalNotes : personalNotes;
     if (!isNoteSelectedFromSearch) {
-      updateFilteredNotes(mapCenter, mapBounds, currentNotes);
+      updateFilteredNotes(mapCenter, mapBounds, notes);
     }
-    setIsLoaded(false);
-  }, [mapCenter, mapZoom, mapBounds, globalNotes, personalNotes, global]);
+    setIsLoading(false);
+  }, [mapCenter, mapZoom, mapBounds, notes, isNoteSelectedFromSearch]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -316,17 +357,6 @@ const Page = () => {
       const isHovered = hoveredNoteId === noteId;
     });
   }, [hoveredNoteId, markers]);
-
-  useEffect(() => {
-    if (locationFound) {
-      fetchNotes().then(({ personalNotes, globalNotes }) => {
-        setPersonalNotes(personalNotes);
-        setGlobalNotes(globalNotes);
-        const initialNotes = global ? globalNotes : personalNotes;
-        setNotes(initialNotes);
-      });
-    }
-  }, [locationFound, global]);
 
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current) {
@@ -517,7 +547,7 @@ const Page = () => {
         map: mapRef.current,
       });
 
-      setIsLoaded(false);
+      setIsLoading(false);
 
       return () => {
         if (markerClustererRef.current) {
@@ -562,105 +592,23 @@ const Page = () => {
     }, 100);
   }, []);
 
-  const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notes: Note[]): Note[] => {
-    if (!bounds) return notes;
+  const filterNotesByMapBounds = (bounds: google.maps.LatLngBounds | null, notesToFilter: Note[]): Note[] => {
+    if (!bounds) return notesToFilter;
 
     const ne = bounds.getNorthEast();
     const sw = bounds.getSouthWest();
 
-    const returnVal = notes.filter((note) => {
+    return notesToFilter.filter((note) => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
       return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
     });
-    return returnVal;
   };
 
-  const updateFilteredNotes = async (center: Location, bounds: google.maps.LatLngBounds | null, allNotes: Note[]) => {
+  const updateFilteredNotes = (center: Location, bounds: google.maps.LatLngBounds | null, allNotes: Note[]) => {
     const visibleNotes = filterNotesByMapBounds(bounds, allNotes);
     setFilteredNotes(visibleNotes);
-    setIsLoaded(false);
-  };
-
-  const fetchNotes = async () => {
-    try {
-      const userId = authUser?.uid;
-
-      let personalNotes: Note[] = [];
-      let globalNotes: Note[] = [];
-      if (userId) {
-        setIsLoggedIn(true);
-        personalNotes = await ApiService.fetchUserMessages(userId);
-
-        // Convert media types and filter out archived notes for personal notes
-        // Show only notes where isArchived is false or undefined
-        personalNotes = DataConversion.convertMediaTypes(personalNotes)
-          .reverse()
-          .filter((note) => note.isArchived !== true); // Filter out archived personal notes
-      }
-
-      globalNotes = await ApiService.fetchPublishedNotes();
-
-      // Convert media types and filter for global notes
-      // Show only published notes where isArchived is false or undefined
-      globalNotes = DataConversion.convertMediaTypes(globalNotes)
-        .reverse()
-        .filter((note) => note.published === true && note.isArchived !== true); // Only published and not archived
-
-      return { personalNotes, globalNotes };
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return { personalNotes: [], globalNotes: [] };
-    }
-  };
-
-  const fetchNotes1 = async () => {
-    try {
-      const userId = authUser?.uid;
-
-      let personalNotes: Note[] = [];
-      let globalNotes: Note[] = [];
-
-      if (userId) {
-        setIsLoggedIn(true);
-        personalNotes = await ApiService.fetchNotesByDate(16, lastPersonalDate, false, userId);
-        console.log("Fetched personal notes:", personalNotes);
-        // Sort by time ascending
-        personalNotes = personalNotes
-          .filter((note) => !note.isArchived)
-          .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-
-        personalNotes = DataConversion.convertMediaTypes(personalNotes);
-
-        // Update cursor for next page
-        if (personalNotes.length > 0) {
-          setLastPersonalDate(personalNotes[personalNotes.length - 1].time.toISOString());
-        }
-      }
-
-      globalNotes = await ApiService.fetchNotesByDate(16, lastGlobalDate, true);
-
-      console.log("%cFetched global notes:%o", "color: green; font-weight: bold;", globalNotes); // Sort by time ascending
-      globalNotes = globalNotes.filter((note) => !note.isArchived).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-
-      globalNotes = DataConversion.convertMediaTypes(globalNotes);
-
-      // Update cursor for next page
-      if (globalNotes.length > 0) {
-        setLastGlobalDate(globalNotes[globalNotes.length - 1].time.toISOString());
-      }
-
-      setPersonalNotes((prev) => [...prev, ...personalNotes]);
-      setGlobalNotes((prev) => [...prev, ...globalNotes]);
-
-      const initialNotes = global ? globalNotes : personalNotes;
-      setNotes(initialNotes);
-
-      return { personalNotes, globalNotes };
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return { personalNotes: [], globalNotes: [] };
-    }
+    setIsLoading(false);
   };
 
   const handleSearch = (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => {
@@ -722,13 +670,12 @@ const Page = () => {
   }
 
   const toggleFilter = () => {
-    const newGlobal = !global;
-    setGlobal(newGlobal);
-    const notesToUse = newGlobal ? globalNotes : personalNotes;
-    setNotes(notesToUse);
+    const newGlobal = !isGlobalView;
+    setIsGlobalView(newGlobal);
+    // Notes will automatically update via useMemo when isGlobalView changes
     // Update filtered notes based on map bounds when toggling
+    const notesToUse = newGlobal ? globalNotes : personalNotes;
     updateFilteredNotes(mapCenter, mapBounds, notesToUse);
-    setIsLoaded(false);
   };
 
   const scrollToNoteTile = (noteId: string) => {
@@ -795,16 +742,16 @@ const Page = () => {
               filteredNotes={filteredNotes}
             />
           </div>
-          {isLoggedIn ? (
+          {authIsLoggedIn ? (
             <button
-              aria-label={global ? "Show personal posts" : "Show global posts"}
+              aria-label={isGlobalView ? "Show personal posts" : "Show global posts"}
               onClick={toggleFilter}
               type="button"
               className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
-                global ? "text-blue-600" : "text-green-600"
+                isGlobalView ? "text-blue-600" : "text-green-600"
               }`}
             >
-              {global ? (
+              {isGlobalView ? (
                 <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
               ) : (
                 <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
@@ -820,7 +767,7 @@ const Page = () => {
           <button
             aria-label="Zoom out"
             className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-            onClick={() => setMapZoom((z) => Math.max(z - 1, 1))}
+            onClick={() => setMapZoom(Math.max(mapZoom - 1, 1))}
             type="button"
           >
             <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
@@ -829,7 +776,7 @@ const Page = () => {
           <button
             aria-label="Zoom in"
             className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
-            onClick={() => setMapZoom((z) => Math.min(z + 1, 21))}
+            onClick={() => setMapZoom(Math.min(mapZoom + 1, 21))}
             type="button"
           >
             <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
