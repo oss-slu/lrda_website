@@ -8,6 +8,7 @@ pnpm-lock.yaml
 
 firebase-admin.json
 all_notes.json
+*.tsbuildinfo
 
 # Firebase Emulators
 firebase-emulator-data/
