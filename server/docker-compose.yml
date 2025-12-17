@@ -19,6 +19,22 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
       ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
 
+  # LocalStack - Local AWS S3 emulator
+  # Access S3 at http://localhost:4566
+  # Web UI at http://localhost:4566/_localstack/health
+  localstack:
+    image: localstack/localstack
+    restart: always
+    ports:
+      - "4566:4566" # LocalStack Gateway
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+      - PERSISTENCE=1
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+
   # server:
   #   build:
   #     context: ..
@@ -32,3 +48,5 @@ services:
   #     - mongo
   #   volumes:
   #     - ./server:/app/server
+volumes:
+  localstack-data:

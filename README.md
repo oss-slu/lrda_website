@@ -6,23 +6,9 @@ Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)
 
 ## Getting Started
 
-First, run the development server:
+> **New Contributors:** See our detailed [Contributing Guide](CONTRIBUTING.md) for step-by-step setup instructions.
 
-```bash
-pnpm install
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Information Regarding Keys
-
-This application uses **Firebase** **Google Maps** **ChatGpt** keys. To gain access to the keys for development please get in touch with yashkamal.bhatia@slu.edu.
-We are planning to get things dockerized and available for development without needing any keys or online access to servers (aside from Google Maps which you can use your own).
+See the [Server README](server/README.md) and [Contributing Guide](CONTRIBUTING.md#local-backend-setup) for details.
 
 ## We Are Using
 
