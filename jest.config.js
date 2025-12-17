@@ -21,7 +21,7 @@ const customJestConfig = {
     "^intro\\.js/introjs\\.css$": "<rootDir>/app/__mocks__/styleMock.js",
   },
   // Exclude Playwright E2E tests and server packages from Jest runs
-  testPathIgnorePatterns: ["<rootDir>/app/__e2e__/", "<rootDir>/node_modules/", "<rootDir>/packages/", "<rootDir>/server/"],
+  testPathIgnorePatterns: ["<rootDir>/app/__e2e__/", "<rootDir>/app/__tests__/utils/", "<rootDir>/node_modules/", "<rootDir>/packages/", "<rootDir>/server/"],
 };
 
 module.exports = createJestConfig({
