@@ -4,7 +4,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+// Normalize RERUM_PREFIX to always have a trailing slash
+const rawRerumPrefix = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+const RERUM_PREFIX = rawRerumPrefix.endsWith("/") ? rawRerumPrefix : `${rawRerumPrefix}/`;
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
 const OPENAI_API_URL = process.env.NEXT_PUBLIC_OPENAI_API_URL || "";
 

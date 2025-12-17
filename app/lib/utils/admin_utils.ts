@@ -1,14 +1,15 @@
 import { Note } from "@/app/types";
 import { JSONContent } from "@tiptap/core";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress"
+import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import ApiService from "./api_service";
 
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
+// Normalize RERUM_PREFIX to always have a trailing slash
+const rawRerumPrefix = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+const RERUM_PREFIX = rawRerumPrefix.endsWith("/") ? rawRerumPrefix : `${rawRerumPrefix}/`;
 
 // creator: "https://devstore.rerum.io/v1/id/5f284ecfe4b00e5e099907c1", // Test User Account
-
 
 export async function getTestNote(): Promise<any> {
   const url = `${RERUM_PREFIX}query`;
@@ -87,7 +88,7 @@ export const handleLogin = async (username: string, password: string) => {
 export const handleAddParameter = async (parameterName: string, parameterType: string, setProgress: (value: number) => void) => {
   const allNotes = await getEveryNote();
   toast("Request Is being run. Please Wait. This can take a while.", {
-    description: `${parameterName} is being added to ${(allNotes).length} notes. Please Wait.`,
+    description: `${parameterName} is being added to ${allNotes.length} notes. Please Wait.`,
     duration: 2000,
   });
 
@@ -126,14 +127,13 @@ export const handleAddParameter = async (parameterName: string, parameterType: s
     description: `${parameterName} has been added to all Notes.`,
     duration: 2000,
   });
-  return "no errors"
+  return "no errors";
 };
-
 
 export const handleRemoveParameter = async (parameterName: string, setProgress: (value: number) => void) => {
   const allNotes = await getEveryNote();
   toast("Request Is being run. Please Wait. This can take a while.", {
-    description: `${parameterName} is being removed from ${(allNotes).length} notes. Please Wait.`,
+    description: `${parameterName} is being removed from ${allNotes.length} notes. Please Wait.`,
     duration: 2000,
   });
 
@@ -152,20 +152,19 @@ export const handleRemoveParameter = async (parameterName: string, setProgress: 
         body: JSON.stringify(note),
       });
       counter++;
-      setProgress((counter / totalNotes) * 100); 
+      setProgress((counter / totalNotes) * 100);
     } catch (error) {
       console.error(`Failed to update note ${note["@id"]}:`, error);
     }
   });
-  
+
   await Promise.all(updatePromises);
   toast(`Request is complete.`, {
     description: `${parameterName} has been removed from all Notes.`,
     duration: 2000,
   });
-  return "no errors"
+  return "no errors";
 };
-
 
 export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) => {
   try {
@@ -178,37 +177,36 @@ export const handleAddUid = async (oldRerumId: string, newFirebaseId: string) =>
     };
 
     const overwriteResponse = await fetch(`${RERUM_PREFIX}overwrite`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(updatedUser),
     });
 
     return overwriteResponse;
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     throw error;
   }
 };
 
-
 export const handleUpdateCreatorUid = async (oldRerumId: string, newFirebaseId: string) => {
   try {
     const notes = await ApiService.fetchMessages(false, false, oldRerumId);
-    
+
     const updatePromises = notes.map(async (note: any) => {
       note.creator = newFirebaseId;
 
       try {
         const overwriteResponse = await fetch(`${RERUM_PREFIX}overwrite`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(note),
         });
-        
+
         return {
           noteId: note["@id"],
           status: overwriteResponse.ok ? "success" : "failure",
@@ -227,7 +225,7 @@ export const handleUpdateCreatorUid = async (oldRerumId: string, newFirebaseId: 
     const results = await Promise.all(updatePromises);
     return results;
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     throw error;
   }
 };

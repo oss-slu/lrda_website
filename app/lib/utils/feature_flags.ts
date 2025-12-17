@@ -1,5 +1,7 @@
 "use server";
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+// Normalize RERUM_PREFIX to always have a trailing slash
+const rawRerumPrefix = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+const RERUM_PREFIX = rawRerumPrefix.endsWith("/") ? rawRerumPrefix : `${rawRerumPrefix}/`;
 
 /**
  * Adds or updates the About Page feature flag in your custom DB.

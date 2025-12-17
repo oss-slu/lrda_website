@@ -27,7 +27,9 @@ import {
 } from "../../utils/admin_utils";
 import { Progress } from "@/components/ui/progress";
 
-const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;
+// Normalize RERUM_PREFIX to always have a trailing slash
+const rawRerumPrefix = process.env.NEXT_PUBLIC_RERUM_PREFIX || "";
+const RERUM_PREFIX = rawRerumPrefix.endsWith("/") ? rawRerumPrefix : `${rawRerumPrefix}/`;
 const paskey = process.env.NEXT_PUBLIC_ADMIN_PASKEY;
 
 interface noteTemplate {
