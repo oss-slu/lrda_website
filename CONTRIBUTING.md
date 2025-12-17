@@ -46,12 +46,17 @@ This guide helps new contributors get the Where's Religion? web application runn
 
 ## Quick Start (5 minutes)
 
+See [Environment Setup](#environment-setup) for configuring local auth
+
 ### 1. Clone and Install
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/lrda_website.git
 cd lrda_website
 pnpm install
+
+
+pnpm dev
 ```
 
 ### 2. Set Up Environment Variables
@@ -67,7 +72,6 @@ Edit `.env.local` with your configuration (see [Environment Setup](#environment-
 ```bash
 cd server
 docker compose up -d
-cd ..
 ```
 
 This starts MongoDB and the data store locally.
@@ -75,6 +79,7 @@ This starts MongoDB and the data store locally.
 ### 4. Run the Backend Development Server
 
 ```bash
+ # From the server folder
 pnpm dev
 ```
 
