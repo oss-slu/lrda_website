@@ -335,6 +335,9 @@ jobs:
           # Create netlify state directory and link file (non-interactive)
           mkdir -p .netlify
           echo "{\"siteId\":\"$NETLIFY_SITE_ID\"}" > .netlify/state.json
+
+          # Link the site explicitly to avoid project detection issues
+          netlify link --id "$NETLIFY_SITE_ID"
           
           # Determine deployment type and deploy with explicit site ID
           # NETLIFY_AUTH_TOKEN is automatically used by Netlify CLI when set as env var
