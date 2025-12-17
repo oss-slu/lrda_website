@@ -17,6 +17,10 @@ database-debug.log
 ui-debug.log
 storage-debug.log
 
+# LocalStack (local S3)
+.localstack/
+localstack-data/
+
 # Playwright
 playwright-report/
 test-results/

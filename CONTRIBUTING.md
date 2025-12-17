@@ -159,7 +159,7 @@ For full access to the development environment, contact the team lead at yashkam
 
 ## Local Backend Setup
 
-The backend uses MongoDB and a custom RERUM-compatible API server.
+The backend uses MongoDB, a custom RERUM-compatible API server, and LocalStack for S3 emulation.
 
 ### Starting the Backend
 
@@ -172,8 +172,19 @@ This starts:
 
 - **MongoDB** on port 27017
 - **Mongo Express** (DB admin UI) on port 8081
+- **LocalStack** (S3 emulator) on port 4566
 
-### Accessing Mongo Express
+### Initialize LocalStack S3 (First time only)
+
+After starting Docker, run this to create the S3 bucket:
+
+> **Note:** You need the AWS CLI installed. Install with: `brew install awscli`
+
+```bash
+./scripts/init-localstack.sh
+```
+
+### Accessing Mongo Express (optional)
 
 Open [http://localhost:8081](http://localhost:8081) with:
 
