@@ -7,7 +7,6 @@ import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import EditorMenuControls from "../editor_menu_controls";
 import useExtensions from "../../utils/use_extensions";
-import { User } from "../../models/user_class";
 import { Document, Packer, Paragraph } from "docx"; // For DOCX
 import ApiService from "../../utils/api_service";
 import { FileX2, MessageSquare, X, Download } from "lucide-react";
@@ -43,13 +42,12 @@ import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { newNote, Note } from "@/app/types"; // make sure types are imported
 import { useNotesStore } from "../../stores/notesStore";
+import { useAuthStore } from "../../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 import CommentSidebar from "../comments/CommentSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import CommentBubble from "../CommentBubble";
-
-const user = User.getInstance();
 
 // Helper function to normalize note IDs (handles both URL format and plain ID)
 const normalizeNoteId = (id: string | undefined | null): string | null => {
@@ -84,6 +82,13 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
+
+  // Use auth store for user data (reactive, no singleton)
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
 
   // Use individual selectors for actions (stable references, no re-renders)
   const updateNote = useNotesStore((state) => state.updateNote);
@@ -333,8 +338,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   useEffect(() => {
     const fetchUserDetails = async () => {
       console.log("🔍 fetchUserDetails: Starting...");
-      const roles = await user.getRoles();
-      const fetchedUserId = await user.getId();
+      const roles = authUser?.roles;
+      const fetchedUserId = authUser?.uid;
       console.log("🔍 fetchUserDetails: Got userId and roles", { fetchedUserId, roles });
 
       if (!fetchedUserId) {
@@ -390,7 +395,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       });
     };
     fetchUserDetails();
-  }, [noteState.note?.id, noteState.note?.creator]); // Re-run when note or creator changes to ensure canComment is set correctly
+  }, [authUser, noteState.note?.id, noteState.note?.creator]); // Re-run when auth user or note changes
 
   useEffect(() => {
     if (initialNote) {
@@ -792,7 +797,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             time: noteState.time,
             media: [...noteState.images, ...noteState.videos],
             audio: noteState.audio,
-            creator: await user.getId(),
+            creator: authUser?.uid,
             latitude: noteState.latitude,
             longitude: noteState.longitude,
             published: noteState.isPublished,
@@ -960,7 +965,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         tags: noteState.tags,
         audio: noteState.audio,
         id: noteState.note?.id || "",
-        creator: noteState.note?.creator || (await user.getId()),
+        creator: noteState.note?.creator || authUser?.uid,
         approvalRequested: updatedApprovalStatus,
         instructorId: instructorId || null,
         published: false, // Student notes are never published directly
@@ -1010,8 +1015,8 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   };
 
   const handlePublishChange = async (noteState: NoteStateType, noteHandlers: NoteHandlersType) => {
-    const creatorId = noteState.note?.creator || (await user.getId());
-    const roles = await user.getRoles();
+    const creatorId = noteState.note?.creator || authUser?.uid;
+    const roles = authUser?.roles;
     const isStudentRole = !!roles?.contributor && !roles?.administrator;
 
     const updatedNote: any = {
@@ -1126,9 +1131,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     }
   };
 
-  async function handleDeleteNote(noteState: NoteStateType, user: User, noteHandlers: NoteHandlersType) {
+  async function handleDeleteNote(noteState: NoteStateType, noteHandlers: NoteHandlersType) {
     try {
-      const creatorId = noteState.note?.creator || (await user.getId());
+      const creatorId = noteState.note?.creator || authUser?.uid;
 
       const updatedNote = {
         ...noteState.note,
@@ -1155,7 +1160,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
       noteHandlers.setNote(updatedNote);
 
-      return await handleArchiveNote(updatedNote, user, noteHandlers.setNote);
+      return await handleArchiveNote(updatedNote, noteHandlers.setNote);
     } catch (error) {
       console.error("Error updating note state:", error);
       toast("Error", {
@@ -1357,7 +1362,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={async () => {
-                            const success = await handleDeleteNote(noteState, user, noteHandlers);
+                            const success = await handleDeleteNote(noteState, noteHandlers);
 
                             if (success && onNoteDeleted) {
                               onNoteDeleted();

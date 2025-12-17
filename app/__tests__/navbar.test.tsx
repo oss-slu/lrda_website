@@ -1,7 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"; // Import act from testing-library
 import Navbar from "../lib/components/navbar";
-import { User } from "../lib/models/user_class";
 import { usePathname } from "next/navigation";
 
 // Jest globals (it, expect, describe, beforeAll) are available via @types/jest
@@ -17,34 +16,28 @@ jest.mock("next/navigation", () => ({
   })),
 }));
 
-interface MockUser extends User {
-  getName: jest.Mock;
-  login: jest.Mock;
-  logout: jest.Mock;
-  getId: jest.Mock;
-  hasOnboarded: jest.Mock;
-  getRoles: jest.Mock;
-}
+// Mock auth store with configurable state
+const mockAuthState = {
+  user: null as any,
+  isLoggedIn: false,
+  isLoading: false,
+  isInitialized: true,
+  login: jest.fn(),
+  logout: jest.fn(),
+  getId: jest.fn(),
+  getName: jest.fn(),
+  getRoles: jest.fn(),
+};
 
-jest.mock("../lib/models/user_class", () => {
-  return {
-    User: {
-      getInstance: jest.fn().mockImplementation(() => ({
-        getName: jest.fn().mockResolvedValue("John Doe"),
-        login: jest.fn(),
-        logout: jest.fn(),
-        getId: jest.fn(),
-        hasOnboarded: jest.fn(),
-        getRoles: jest.fn(),
-      })),
-    },
-  };
-});
-
+jest.mock("../lib/stores/authStore", () => ({
+  useAuthStore: jest.fn((selector) => {
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
+}));
 
 jest.mock("../lib/config/firebase", () => ({
-  auth:   {},   // a fake auth object
-  db:     {},   // a fake Firestore object
+  auth: {}, // a fake auth object
+  db: {}, // a fake Firestore object
 }));
 
 // Mock useNotesStore
@@ -68,19 +61,20 @@ jest.mock("../lib/utils/api_service", () => ({
 
 // Mock Select component
 jest.mock("../../components/ui/select", () => ({
-  Select: ({ children, value, onValueChange }: any) => (
-    <div data-testid="select">{children}</div>
-  ),
+  Select: ({ children, value, onValueChange }: any) => <div data-testid="select">{children}</div>,
   SelectTrigger: ({ children, className }: any) => (
-    <button className={className} data-testid="select-trigger">{children}</button>
+    <button className={className} data-testid="select-trigger">
+      {children}
+    </button>
   ),
   SelectValue: ({ children }: any) => <span>{children}</span>,
   SelectContent: ({ children }: any) => <div data-testid="select-content">{children}</div>,
   SelectItem: ({ children, value, onClick }: any) => (
-    <div data-testid={`select-item-${value}`} onClick={onClick}>{children}</div>
+    <div data-testid={`select-item-${value}`} onClick={onClick}>
+      {children}
+    </div>
   ),
 }));
-
 
 const localStorageMock = (function () {
   let store: Record<string, string> = {};
@@ -102,13 +96,17 @@ Object.defineProperty(window, "localStorage", {
 });
 
 describe("Navbar Component", () => {
-  const userMock = User.getInstance() as unknown as MockUser;
   const mockedUsePathname = usePathname as jest.Mock;
 
   beforeEach(() => {
-    userMock.getName.mockReset();
-    userMock.login.mockReset();
-    userMock.logout.mockReset();
+    // Reset mock auth state
+    mockAuthState.user = null;
+    mockAuthState.isLoggedIn = false;
+    mockAuthState.login.mockReset();
+    mockAuthState.logout.mockReset();
+    mockAuthState.getId.mockReset();
+    mockAuthState.getName.mockReset();
+    mockAuthState.getRoles.mockReset();
     window.localStorage.clear();
     mockedUsePathname.mockReset();
   });
@@ -118,22 +116,25 @@ describe("Navbar Component", () => {
     // For now, let's just test that the navbar renders without crashing
     // The authentication logic is complex and difficult to mock properly
     render(<Navbar />);
-    
+
     // Check that the navbar renders with basic navigation elements
     expect(screen.getByText(/Home/i)).toBeTruthy();
     expect(screen.getByText(/Resources/i)).toBeTruthy();
     expect(screen.getByText(/Stories/i)).toBeTruthy();
-    
+
     // The navbar should render without crashing, regardless of auth state
     expect(screen.getByRole("navigation")).toBeTruthy();
   });
 
   it("displays user name when logged in", async () => {
     mockedUsePathname.mockReturnValue("/");
+    // Set up auth state as logged in
+    mockAuthState.user = { name: "John Doe", uid: "test-uid", roles: { administrator: false, contributor: true } };
+    mockAuthState.isLoggedIn = true;
     // Set up localStorage with auth token and user data
     window.localStorage.setItem("authToken", "mock-token");
     window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
-    
+
     await act(async () => {
       render(<Navbar />);
     });
@@ -146,22 +147,22 @@ describe("Navbar Component", () => {
   });
 
   it("renders Notes link when logged in", async () => {
+    // Set up auth state BEFORE render
+    mockAuthState.user = { name: "John Doe", uid: "test-uid", roles: { administrator: true, contributor: true } };
+    mockAuthState.isLoggedIn = true;
+
     mockedUsePathname.mockReturnValue("/lib/pages/notes");
     // Set up localStorage with auth token and user data
     window.localStorage.setItem("authToken", "mock-token");
     window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
-    // Mock instructor role
-    userMock.getRoles.mockResolvedValue({ administrator: true, contributor: true });
-    userMock.getId.mockResolvedValue("test-uid");
-    
+
     await act(async () => {
       render(<Navbar />);
     });
-    
-    // Wait for async operations
-    await waitFor(() => {
-      expect(screen.getByText(/Notes/i)).toBeTruthy();
-    });
+
+    // Notes link should appear for logged-in users (using getAllByText since there may be multiple matches like "My Notes")
+    const notesElements = screen.getAllByText(/Notes/i);
+    expect(notesElements.length).toBeGreaterThan(0);
     expect(screen.getByRole("navigation")).toBeTruthy();
   });
 
@@ -179,12 +180,12 @@ describe("Navbar Component", () => {
 
   it("highlights Notes when pathname starts with '/lib/pages/notes'", async () => {
     mockedUsePathname.mockReturnValue("/lib/pages/notes");
+    // Set up auth state as logged in with roles
+    mockAuthState.user = { name: "John Doe", uid: "test-uid", roles: { administrator: true, contributor: true } };
+    mockAuthState.isLoggedIn = true;
     // Set up localStorage with auth token and user data
     window.localStorage.setItem("authToken", "mock-token");
     window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
-    // Mock instructor role
-    userMock.getRoles.mockResolvedValue({ administrator: true, contributor: true });
-    userMock.getId.mockResolvedValue("test-uid");
 
     await act(async () => {
       render(<Navbar />);

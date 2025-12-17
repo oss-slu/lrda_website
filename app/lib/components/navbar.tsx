@@ -2,18 +2,25 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotesStore } from "../stores/notesStore";
+import { useAuthStore } from "../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const user = User.getInstance();
-
 export default function Navbar() {
-  const [name, setName] = useState<string | null>(null);
+  // Use auth store for reactive auth state
+  const { user, isLoggedIn, logout } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isLoggedIn: state.isLoggedIn,
+      logout: state.logout,
+    }))
+  );
+  const name = user?.name ?? null;
+
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const pathname = usePathname();
@@ -27,60 +34,20 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await user.logout();
-      localStorage.removeItem(name || "");
+      await logout();
       if (typeof window !== "undefined") window.location.href = "/";
     } catch (error) {
       console.error("Logout failed", error);
     }
   };
 
-  useEffect(() => {
-    const fetchName = async () => {
-      try {
-        // Check if there's an auth token (user is logged in)
-        const authToken = localStorage.getItem("authToken");
-        if (!authToken) {
-          setName(null);
-          return;
-        }
-
-        // Try to get user data directly from localStorage first (faster, avoids cache issues)
-        const userDataStr = localStorage.getItem("userData");
-        if (userDataStr) {
-          try {
-            const userData = JSON.parse(userDataStr);
-            if (userData?.name) {
-              setName(userData.name);
-              return;
-            }
-          } catch (e) {
-            // If parsing fails, fall through to getUserName
-          }
-        }
-
-        // Fallback to User class method
-        const userName = await user.getName();
-        setName(userName);
-        if (userName) {
-          const item = localStorage.getItem(userName);
-          if (item) await user.login(userName, item);
-        }
-      } catch {
-        console.log("No user cached or login failed");
-        setName(null);
-      }
-    };
-    fetchName();
-  }, [pathname]); // Re-fetch when route changes
-
   // Check if user is instructor
   useEffect(() => {
     const checkInstructorStatus = async () => {
-      if (!name) return;
+      if (!user?.uid) return;
       try {
-        const roles = await user.getRoles();
-        const userId = await user.getId();
+        const roles = user.roles;
+        const userId = user.uid;
 
         if (userId) {
           const userData = await ApiService.fetchUserData(userId);
@@ -93,7 +60,7 @@ export default function Navbar() {
       }
     };
     checkInstructorStatus();
-  }, [name]);
+  }, [user]);
 
   // Define nav items
   const navItems = [

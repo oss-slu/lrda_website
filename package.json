@@ -7,9 +7,10 @@
     "dev:emulators": "NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "pnpm run test:unit && pnpm run test:e2e",
-    "test:unit": "jest",
+    "test:unit": "jest --no-watchman",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -143,6 +144,8 @@
     "@types/react-slick": "^0.23.13",
     "autoprefixer": "10.4.21",
     "babel-jest": "^30.2.0",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.0.10",
     "firebase-tools": "^15.0.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
@@ -166,7 +169,16 @@
       "js-yaml@<4.1.1": ">=4.1.1",
       "brace-expansion@<2.0.2": ">=2.0.2",
       "glob@>=10.3.7 <=11.0.3": ">=11.1.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "core-js",
+      "esbuild",
+      "protobufjs",
+      "re2",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "packageManager": "pnpm@10.20.0",
   "engines": {

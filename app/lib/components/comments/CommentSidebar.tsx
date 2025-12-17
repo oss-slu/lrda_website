@@ -7,7 +7,8 @@ import CommentPopover from "../CommentPopover";
 import ApiService from "../../utils/api_service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 import { v4 as uuidv4 } from "uuid";
 
 interface CommentSidebarProps {
@@ -24,6 +25,13 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const [commentDraft, setCommentDraft] = useState<string>(""); // Preserve draft comment text
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingPausedRef = useRef<boolean>(false);
+
+  // Use auth store for user data
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
 
   // Function to load comments - memoized with useCallback
   const loadComments = useCallback(async () => {
@@ -118,11 +126,11 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   // Determine whether current user is an instructor or a student (part of teacher-student relationship only)
   useEffect(() => {
     const checkInstructor = async () => {
-      const uid = await User.getInstance().getId();
+      const uid = authUser?.uid;
       if (!uid) return;
-      
-      const roles = await User.getInstance().getRoles();
-      
+
+      const roles = authUser?.roles;
+
       // Fetch userData to check isInstructor flag
       let userData = null;
       try {
@@ -130,22 +138,22 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
-      
+
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
       // Allow commenting for administrators even if isInstructor flag isn't set
       const flag = !!roles?.administrator || !!userData?.isInstructor;
       setIsInstructor(flag);
-      
+
       // Check if user is a student (has contributor role but not administrator)
       const isStudentRole = !!roles?.contributor && !roles?.administrator;
-      
+
       // For students, verify they have a parentInstructorId (part of teacher-student relationship)
       let isStudentInTeacherStudentModel = false;
       if (isStudentRole && userData) {
         // Student must have parentInstructorId to be part of teacher-student model
         isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
       }
-      
+
       // Allow commenting for:
       // 1. Administrators (roles?.administrator)
       // 2. Instructors (userData?.isInstructor)
@@ -153,7 +161,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       setCanComment(!!uid && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel));
     };
     checkInstructor();
-  }, []);
+  }, [authUser]);
 
   // Handler when instructor submits a new comment
   const handleSubmitComment = async (text: string) => {
@@ -163,9 +171,8 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     // Selection is optional; allow generic comments
     const selection = getCurrentSelection ? getCurrentSelection() : null;
 
-    const userApi = User.getInstance();
-    const authorId = (await userApi.getId()) ?? "";
-    const fallbackAuthor = (await userApi.getName()) ?? "";
+    const authorId = authUser?.uid ?? "";
+    const fallbackAuthor = authUser?.name ?? "";
     let authorDisplay = fallbackAuthor;
     try {
       if (authorId) {
@@ -213,7 +220,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     } catch (error) {
       console.error("Error reloading comments after creation:", error);
       // Fallback to adding locally
-    setComments((prev) => [...prev, newComment]);
+      setComments((prev) => [...prev, newComment]);
     }
     setCommentDraft(""); // Clear draft on successful submit
     setShowPopover(false);
@@ -233,9 +240,8 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const handleReply = async (threadId: string) => {
     const trimmed = (replyDrafts[threadId] || "").trim();
     if (!trimmed) return;
-    const userApi = User.getInstance();
-    const authorId = (await userApi.getId()) ?? "";
-    const fallbackAuthor = (await userApi.getName()) ?? "";
+    const authorId = authUser?.uid ?? "";
+    const fallbackAuthor = authUser?.name ?? "";
     let authorDisplay = fallbackAuthor;
     try {
       if (authorId) {
@@ -282,7 +288,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     } catch (error) {
       console.error("Error reloading comments after reply:", error);
       // Fallback to adding locally
-    setComments((prev) => [...prev, reply]);
+      setComments((prev) => [...prev, reply]);
     }
     setReplyDrafts((d) => ({ ...d, [threadId]: "" }));
   };
@@ -335,9 +341,18 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
                 {isInstructor && (
                   <div className="flex gap-1.5 ml-2 shrink-0">
                     {!root.resolved && (
-                      <Button size="sm" className="h-7 px-2 text-xs" variant="secondary" onClick={() => handleResolveThread(String(root.threadId))}>Resolve</Button>
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        variant="secondary"
+                        onClick={() => handleResolveThread(String(root.threadId))}
+                      >
+                        Resolve
+                      </Button>
                     )}
-                    <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(root.id)}>Delete</Button>
+                    <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(root.id)}>
+                      Delete
+                    </Button>
                   </div>
                 )}
               </div>
@@ -351,7 +366,9 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] sm:text-[11px] text-gray-400">{new Date(r.createdAt).toLocaleString()}</p>
                         {isInstructor && (
-                          <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(r.id)}>Delete</Button>
+                          <Button size="sm" className="h-7 px-2 text-xs" variant="ghost" onClick={() => handleDeleteComment(r.id)}>
+                            Delete
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -367,7 +384,9 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
                     value={replyDrafts[String(root.threadId || root.id)] || ""}
                     onChange={(e) => setReplyDrafts((d) => ({ ...d, [String(root.threadId || root.id)]: e.target.value }))}
                   />
-                  <Button size="sm" className="h-7 px-2 text-xs" onClick={() => handleReply(String(root.threadId || root.id))}>Reply</Button>
+                  <Button size="sm" className="h-7 px-2 text-xs" onClick={() => handleReply(String(root.threadId || root.id))}>
+                    Reply
+                  </Button>
                 </div>
               )}
             </div>

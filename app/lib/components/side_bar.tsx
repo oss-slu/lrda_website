@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import SearchBarNote from "./search_bar_note";
@@ -8,6 +7,7 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import "intro.js/introjs.css";
 import { useNotesStore } from "../stores/notesStore";
+import { useAuthStore } from "../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
@@ -18,8 +18,6 @@ type SidebarProps = {
   onNoteSelect: (note: Note | newNote, isNewNote: boolean) => void;
 };
 
-const user = User.getInstance();
-
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const { notes, fetchNotes, viewMode } = useNotesStore(
     useShallow((state) => ({
@@ -28,9 +26,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       viewMode: state.viewMode,
     }))
   );
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const { user } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
   const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   // Teacher-student view mode (from december-sprint) - now from store
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [localNotes, setLocalNotes] = useState<Note[]>([]); // Local notes for review mode
@@ -39,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
   console.log("Sidebar render");
   const handleAddNote = async () => {
-    const userId = await user.getId();
+    const userId = user?.uid;
     if (userId) {
       // Create a local-only draft note (not saved to DB yet)
       const draftNote: newNote = {
@@ -66,17 +69,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // Initialize instructor role
   useEffect(() => {
     const initRoleFlags = async () => {
-      const roles = await user.getRoles();
-      const userId = await user.getId();
+      if (!user?.uid) {
+        setIsInstructor(false);
+        return;
+      }
+
+      const roles = user.roles;
+      const userId = user.uid;
 
       // Fetch userData to check isInstructor flag
       let userData = null;
-      if (userId) {
-        try {
-          userData = await ApiService.fetchUserData(userId);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
+      try {
+        userData = await ApiService.fetchUserData(userId);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
 
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
@@ -85,12 +91,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       setIsInstructor(isInstr);
     };
     initRoleFlags();
-  }, []);
+  }, [user]);
 
   // Fetch notes based on view mode - memoized to prevent unnecessary re-renders
   const fetchNotesForView = useCallback(async () => {
     try {
-      const userId = await user.getId();
+      const userId = user?.uid;
       if (!userId) {
         console.error("User not logged in");
         return;
@@ -105,7 +111,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         if (!instructorData || !instructorData.isInstructor) {
           console.warn("User is not an instructor");
           setLocalNotes([]);
-          setFilteredNotes([]);
           return;
         }
 
@@ -115,7 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         if (studentUids.length === 0) {
           console.warn("No students found for instructor");
           setLocalNotes([]);
-          setFilteredNotes([]);
           return;
         }
 
@@ -127,10 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         console.log("📋 Total unarchived notes:", unarchived.length);
 
         setLocalNotes(unarchived);
-        // Default to showing "Unreviewed" (awaiting approval)
-        const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
-        console.log("⏳ Awaiting approval count:", awaitingApproval.length);
-        setFilteredNotes(awaitingApproval);
+        // Reset to showing "Unreviewed" (awaiting approval) when fetching fresh
         setShowPublished(false);
       }
     } catch (error) {
@@ -182,11 +183,29 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     };
   }, [fetchNotesForView]);
 
-  // Filter notes whenever notes or showPublished changes
-  useEffect(() => {
+  // Derive filteredNotes from source data - no manual sync needed
+  const filteredNotes = useMemo(() => {
+    // If searching, use search results
+    if (isSearching && searchResults !== null) {
+      return searchResults;
+    }
+
     const notesToFilter = viewMode === "review" ? localNotes : notes;
-    filterNotesByPublished(showPublished, notesToFilter);
-  }, [notes, localNotes, showPublished, viewMode]);
+
+    if (viewMode === "review") {
+      // Review mode: Unreviewed vs Reviewed
+      if (showPublished) {
+        // Reviewed
+        return notesToFilter.filter((n) => !n.isArchived && !!n.published);
+      } else {
+        // Unreviewed
+        return notesToFilter.filter((n) => !n.isArchived && !!n.approvalRequested && !n.published);
+      }
+    } else {
+      // My Notes mode: Published vs Unpublished
+      return notesToFilter.filter((note) => !note.isArchived && (showPublished ? note.published : !note.published));
+    }
+  }, [notes, localNotes, showPublished, viewMode, isSearching, searchResults]);
 
   // Update selected note when it changes in localNotes (for instructor review mode)
   useEffect(() => {
@@ -218,7 +237,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setIsSearching(false);
-      filterNotesByPublished(showPublished);
+      setSearchResults(null);
       return;
     }
     setIsSearching(true);
@@ -245,35 +264,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       // My Notes mode: Published vs Unpublished
       return showPublished ? !!note.published : !note.published;
     });
-    setFilteredNotes(filtered);
-  };
-
-  const filterNotesByPublished = (showPublished: boolean, notesToFilter?: Note[]) => {
-    const noteList = notesToFilter || (viewMode === "review" ? localNotes : notes);
-    setIsSearching(false);
-    let filtered: Note[] = [];
-
-    if (viewMode === "review") {
-      // Review mode: Unreviewed vs Reviewed
-      if (showPublished) {
-        // Reviewed
-        filtered = noteList.filter((n) => !n.isArchived && !!n.published);
-      } else {
-        // Unreviewed
-        filtered = noteList.filter((n) => !n.isArchived && !!n.approvalRequested && !n.published);
-      }
-    } else {
-      // My Notes mode: Published vs Unpublished
-      filtered = noteList.filter((note) => !note.isArchived).filter((note) => (showPublished ? note.published : !note.published));
-    }
-
-    setFilteredNotes(filtered);
+    setSearchResults(filtered);
   };
 
   const togglePublished = (value: string) => {
     const newShowPublished = value === "published";
     setShowPublished(newShowPublished);
-    filterNotesByPublished(newShowPublished);
+    // Clear search when switching tabs
+    setIsSearching(false);
+    setSearchResults(null);
   };
 
   return (

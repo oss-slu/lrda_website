@@ -1,11 +1,5 @@
 import { Key, ReactNode } from "react";
-import {
-  Media,
-  PhotoType,
-  VideoType,
-  AudioType,
-} from "./lib/models/media_class";
-import { User } from "./lib/models/user_class";
+import { Media, PhotoType, VideoType, AudioType } from "./lib/models/media_class";
 
 export interface Tag {
   label: string;
@@ -24,18 +18,16 @@ export type Comment = {
   noteId: string;
   uid: string;
   text: string;
-  author: string;     // Display name
-  authorId: string;   // UID of the commenter
+  author: string; // Display name
+  authorId: string; // UID of the commenter
   role: "instructor" | "student"; // For styling or permissions
-  createdAt: string;  // ISO date
+  createdAt: string; // ISO date
   position?: { from: number; to: number } | null; // Anchor to selected range
   threadId?: string | null; // Thread grouping id
   parentId?: string | null; // Parent comment id when this is a reply
   resolved?: boolean; // Whether the thread is resolved
   archived?: boolean; // Soft-delete flag
 };
-
-
 
 export type UserData = {
   uid: string;
@@ -48,7 +40,6 @@ export type UserData = {
   isInstructor?: boolean; // New field for instructors
   parentInstructorId?: string; // New field for students
 };
-
 
 export type Note = {
   id: string;
@@ -65,12 +56,10 @@ export type Note = {
   tags: Tag[];
   uid: string;
   isArchived?: boolean; //add property of archived, then filter for it
-  comments?: Comment[]
+  comments?: Comment[];
 };
 
-export type CombinedResult =
-  | (google.maps.places.AutocompletePrediction & { type: "suggestion" })
-  | (Note & { type: "note" });
+export type CombinedResult = (google.maps.places.AutocompletePrediction & { type: "suggestion" }) | (Note & { type: "note" });
 
 export type newNote = {
   title: string;
@@ -140,10 +129,4 @@ export type AddNoteScreenProps = {
 export type ImageNote = {
   image: string;
   note: Note;
-};
-
-export type GoogleMapProps = {
-  route: any;
-  updateCounter: any;
-  user: User;
 };

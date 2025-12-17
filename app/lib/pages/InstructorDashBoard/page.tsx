@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Note } from "@/app/types";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 import ApiService from "../../utils/api_service";
 import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard"; // NEW
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,11 +16,17 @@ const InstructorDashboardPage = () => {
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // Use auth store for user data
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
+
   useEffect(() => {
     const fetchInstructorData = async () => {
       try {
-        const userInstance = User.getInstance();
-        const userId = await userInstance.getId();
+        const userId = authUser?.uid;
         if (!userId) {
           throw new Error("Not logged in");
         }
@@ -28,7 +35,6 @@ const InstructorDashboardPage = () => {
         if (!userData || !userData.isInstructor) {
           throw new Error("Access denied. Instructor only.");
         }
-
 
         const studentIds = userData.students || [];
         if (studentIds.length === 0) {
@@ -58,7 +64,7 @@ const InstructorDashboardPage = () => {
     };
 
     fetchInstructorData();
-  }, []);
+  }, [authUser?.uid]);
 
   const handleStudentChange = (uid: string) => {
     setSelectedStudent(uid);
@@ -76,12 +82,13 @@ const InstructorDashboardPage = () => {
       setFilteredNotes(notes);
       return;
     }
-    const filtered = notes.filter((note) =>
-      note.title.toLowerCase().includes(lowerQuery) ||
-      note.text.toLowerCase().includes(lowerQuery) ||
-      (note.tags && Array.isArray(note.tags) && note.tags.some((tag) =>
-        (typeof tag === "string" ? tag : tag.label).toLowerCase().includes(lowerQuery)
-      ))
+    const filtered = notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(lowerQuery) ||
+        note.text.toLowerCase().includes(lowerQuery) ||
+        (note.tags &&
+          Array.isArray(note.tags) &&
+          note.tags.some((tag) => (typeof tag === "string" ? tag : tag.label).toLowerCase().includes(lowerQuery)))
     );
     setFilteredNotes(filtered);
   };
@@ -99,11 +106,7 @@ const InstructorDashboardPage = () => {
         />
 
         {/* Student Filter Dropdown */}
-        <select
-          value={selectedStudent}
-          onChange={(e) => handleStudentChange(e.target.value)}
-          className="p-2 border rounded-lg shadow-sm"
-        >
+        <select value={selectedStudent} onChange={(e) => handleStudentChange(e.target.value)} className="p-2 border rounded-lg shadow-sm">
           <option value="">All Students</option>
           {students.map((student) => (
             <option key={student.uid} value={student.uid}>
@@ -118,19 +121,12 @@ const InstructorDashboardPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-screen-lg">
           {isLoading ? (
             [...Array(6)].map((_, idx) => (
-              <Skeleton
-                key={`skeleton-${idx}`}
-                className="w-full h-[400px] rounded-sm border border-gray-300"
-              />
+              <Skeleton key={`skeleton-${idx}`} className="w-full h-[400px] rounded-sm border border-gray-300" />
             ))
           ) : filteredNotes.length > 0 ? (
-            filteredNotes.map((note) => (
-              <InstructorEnhancedNoteCard key={note.id || note.title} note={note} />
-            ))
+            filteredNotes.map((note) => <InstructorEnhancedNoteCard key={note.id || note.title} note={note} />)
           ) : (
-            <div className="col-span-full text-center text-gray-600">
-              No approval requests found.
-            </div>
+            <div className="col-span-full text-center text-gray-600">No approval requests found.</div>
           )}
         </div>
       </div>

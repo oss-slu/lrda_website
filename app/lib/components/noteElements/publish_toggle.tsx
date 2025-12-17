@@ -3,13 +3,9 @@
 
 import React, { useEffect, useState } from "react";
 import { UploadIcon } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/tooltip";
-import { User } from "../../models/user_class";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface PublishToggleProps {
   id?: string;
@@ -33,14 +29,18 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
 }) => {
   const [isStudent, setIsStudent] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
-  
+
+  // Use auth store for user roles
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
 
   useEffect(() => {
-    (async () => {
-      const roles = await User.getInstance().getRoles();
-      setIsStudent(!!roles?.contributor && !roles?.administrator);
-    })();
-  }, []);
+    const roles = authUser?.roles;
+    setIsStudent(!!roles?.contributor && !roles?.administrator);
+  }, [authUser]);
 
   const handlePublishClick = () => {
     if (isStudent) {
@@ -95,18 +95,8 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
               className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors group"
               onClick={handlePublishClick}
             >
-              <UploadIcon
-                className={`h-4 w-4 ${
-                  isPublished ? "text-green-500" : "text-gray-700 group-hover:text-green-500"
-                }`}
-              />
-              <span
-                className={`${
-                  isPublished ? "text-green-600" : "text-gray-700 group-hover:text-green-600"
-                }`}
-              >
-                {labelText}
-              </span>
+              <UploadIcon className={`h-4 w-4 ${isPublished ? "text-green-500" : "text-gray-700 group-hover:text-green-500"}`} />
+              <span className={`${isPublished ? "text-green-600" : "text-gray-700 group-hover:text-green-600"}`}>{labelText}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>{tooltipText}</TooltipContent>

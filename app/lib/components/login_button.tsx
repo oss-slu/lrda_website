@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { User } from "../models/user_class";
+import { useAuthStore } from "../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/button";
 
 type LoginButtonProps = {
@@ -8,9 +9,13 @@ type LoginButtonProps = {
   password: string;
 };
 
-const user = User.getInstance();
-
 const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
+  const { login } = useAuthStore(
+    useShallow((state) => ({
+      login: state.login,
+    }))
+  );
+
   const [isLoading, setIsLoading] = useState(false);
   const [snackState, toggleSnack] = useState(false);
 
@@ -39,7 +44,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
 
     setIsLoading(true);
     try {
-      const status = await user.login(username, password);
+      const status = await login(username, password);
       // Internal logic to update the component about login status
       console.log("Login status:", status);
       if (status == "success") {
@@ -72,10 +77,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
           <div className="fixed bottom-10 inset-x-0 flex justify-center items-center">
             <div className="bg-white w-80 rounded-lg text-center p-2">
               <p className="mb-2">Invalid User Credentials</p>
-              <button
-                className="text-sm text-blue-500 hover:underline"
-                onClick={onDismissSnackBar}
-              >
+              <button className="text-sm text-blue-500 hover:underline" onClick={onDismissSnackBar}>
                 Dismiss
               </button>
             </div>

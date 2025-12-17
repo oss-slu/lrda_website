@@ -6,7 +6,7 @@ import { auth, db } from "../../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
 import ApiService from "../../utils/api_service";
 
 const InstructorSignupPage = () => {
@@ -23,7 +23,6 @@ const InstructorSignupPage = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [emailError, setEmailError] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,7 +42,7 @@ const InstructorSignupPage = () => {
     return (checks.length / Object.keys(passwordValidationFeedback).length) * 100;
   };
 
-  const handlePasswordChange = (e: { target: { value: any; }; }) => {
+  const handlePasswordChange = (e: { target: { value: any } }) => {
     const value = e.target.value;
     setPassword(value);
     setPasswordStrength(calculatePasswordStrength(value));
@@ -53,10 +52,10 @@ const InstructorSignupPage = () => {
     const value = e.target.value;
     setEmail(value);
     setEmailError(false); // Reset error state while typing
-  
+
     // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
-  
+
     // Set a timeout to validate the email after the user stops typing
     setTypingTimeout(
       setTimeout(() => {
@@ -71,12 +70,12 @@ const InstructorSignupPage = () => {
       toast.error("Please fill in all fields.");
       return;
     }
-  
+
     if (!validateEmail(email)) {
       toast.error("Please use a valid email address.");
       return;
     }
-  
+
     if (
       !passwordValidationFeedback.length ||
       !passwordValidationFeedback.uppercase ||
@@ -86,7 +85,7 @@ const InstructorSignupPage = () => {
       toast.error("Password does not meet the required criteria.");
       return;
     }
-  
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match.");
       return;
@@ -96,84 +95,78 @@ const InstructorSignupPage = () => {
       toast.error("Please provide a description of why you want to become an Instructor.");
       return;
     }
-  
+
     if (!auth) {
       console.error("Firebase auth is not initialized");
       return;
     }
     try {
       console.log("Starting user registration with Firebase Authentication...");
-  
-     // Create user in Firebase Authentication
-     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-     const user = userCredential.user;
-     console.log("User successfully registered:", user.uid);
 
-     // Prepare user data
-     const userData = {
-       uid: user.uid,
-       email,
-       name: `${firstName} ${lastName}`,
-       description: description, // Description is now mandatory for all instructor signups
-       isInstructor: true, // This page is specifically for instructor signup
-       students: [], // Empty array to store students
-       createdAt: Timestamp.now(),
-     };
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("User successfully registered:", user.uid);
 
-     // Save user data in Firestore `users` collection
+      // Prepare user data
+      const userData = {
+        uid: user.uid,
+        email,
+        name: `${firstName} ${lastName}`,
+        description: description, // Description is now mandatory for all instructor signups
+        isInstructor: true, // This page is specifically for instructor signup
+        students: [], // Empty array to store students
+        createdAt: Timestamp.now(),
+      };
+
+      // Save user data in Firestore `users` collection
       if (!db) {
         throw new Error("Firebase db is not initialized");
       }
-     const userDocRef = doc(db, "users", user.uid);
-     await setDoc(userDocRef, userData);
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, userData);
 
-     // Send email notification to admin
-     try {
-       await ApiService.sendInstructorNotification(
-         email,
-         `${firstName} ${lastName}`,
-         description
-       );
-     } catch (emailError) {
-       console.error('Error sending email notification:', emailError);
-       // Don't fail the signup if email fails
-     }
+      // Send email notification to admin
+      try {
+        await ApiService.sendInstructorNotification(email, `${firstName} ${lastName}`, description);
+      } catch (emailError) {
+        console.error("Error sending email notification:", emailError);
+        // Don't fail the signup if email fails
+      }
 
-     toast.success("Instructor account created successfully! Logging you in...");
+      toast.success("Instructor account created successfully! Logging you in...");
 
-     // Auto-login the user using the User class
-     const userInstance = User.getInstance();
-     try {
-       await userInstance.login(email, password);
-       console.log("Instructor auto-logged in successfully");
-       
-       // Redirect to map page
-       router.push('/lib/pages/map');
-     } catch (loginError) {
-       console.error("Auto-login failed:", loginError);
-       // Still show success message and reset form even if auto-login fails
-       toast.success("Instructor account created! Please log in manually.");
-     }
+      // Auto-login the user using the auth store
+      const { login } = useAuthStore.getState();
+      try {
+        await login(email, password);
+        console.log("Instructor auto-logged in successfully");
 
-     // Reset form fields
-     setEmail("");
-     setPassword("");
-     setConfirmPassword("");
-     setFirstName("");
-     setLastName("");
-     setDescription("");
-   } catch (error) {
-     if (error instanceof Error) {
-       console.error("Error during signup: ", error.message);
-       toast.error(`Signup failed: ${error.message}`);
-     } else {
-       console.error("Unexpected error during signup: ", error);
-       toast.error("Signup failed: An unexpected error occurred.");
-     }
-   }
- };
-  
-  
+        // Redirect to map page
+        router.push("/lib/pages/map");
+      } catch (loginError) {
+        console.error("Auto-login failed:", loginError);
+        // Still show success message and reset form even if auto-login fails
+        toast.success("Instructor account created! Please log in manually.");
+      }
+
+      // Reset form fields
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setFirstName("");
+      setLastName("");
+      setDescription("");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Error during signup: ", error.message);
+        toast.error(`Signup failed: ${error.message}`);
+      } else {
+        console.error("Unexpected error during signup: ", error);
+        toast.error("Signup failed: An unexpected error occurred.");
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD] min-h-screen">
@@ -185,9 +178,7 @@ const InstructorSignupPage = () => {
           className="w-full md:w-1/2 bg-white p-8 rounded-lg shadow-lg relative"
           style={{ minHeight: "50px" }} // Ensure minimum height to avoid upward push
         >
-          <h1 className="text-black-500 font-bold mb-10 text-center text-3xl">
-            Instructor Sign Up
-          </h1>
+          <h1 className="text-black-500 font-bold mb-10 text-center text-3xl">Instructor Sign Up</h1>
           <h2 className="text-black-300 font-semibold mb-10 text-center text-xl">
             For managing, editing, and evaluating users within your group.
           </h2>
@@ -220,9 +211,7 @@ const InstructorSignupPage = () => {
               onChange={handleEmailChange}
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
-            {emailError && (
-              <p className="text-red-500 text-sm mt-1">Please use a valid .edu email address.</p>
-            )}
+            {emailError && <p className="text-red-500 text-sm mt-1">Please use a valid .edu email address.</p>}
           </div>
           <div className="mb-4 relative">
             <input
@@ -235,47 +224,25 @@ const InstructorSignupPage = () => {
               onBlur={() => setIsPasswordFocused(false)}
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
-            <button
-              type="button"
-              onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-              className="absolute right-4 top-3 text-gray-500"
-            >
+            <button type="button" onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="absolute right-4 top-3 text-gray-500">
               {isPasswordVisible ? "👁️" : "👁️‍🗨️"}
             </button>
             {isPasswordFocused && (
               <>
                 <div className="text-sm mt-2">
-                  <p>
-                    {passwordValidationFeedback.length ? "✔" : "✖"} At least 8 characters
-                  </p>
-                  <p>
-                    {passwordValidationFeedback.uppercase ? "✔" : "✖"} At least 1 uppercase letter
-                  </p>
-                  <p>
-                    {passwordValidationFeedback.special ? "✔" : "✖"} At least 1 special character
-                  </p>
-                  <p>
-                    {passwordValidationFeedback.number ? "✔" : "✖"} At least 1 number
-                  </p>
+                  <p>{passwordValidationFeedback.length ? "✔" : "✖"} At least 8 characters</p>
+                  <p>{passwordValidationFeedback.uppercase ? "✔" : "✖"} At least 1 uppercase letter</p>
+                  <p>{passwordValidationFeedback.special ? "✔" : "✖"} At least 1 special character</p>
+                  <p>{passwordValidationFeedback.number ? "✔" : "✖"} At least 1 number</p>
                 </div>
                 <div className="w-full bg-gray-300 h-2 rounded-lg mt-3">
                   <div
-                    className={`h-full ${
-                      passwordStrength < 50
-                        ? "bg-red-500"
-                        : passwordStrength < 80
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
-                    }`}
+                    className={`h-full ${passwordStrength < 50 ? "bg-red-500" : passwordStrength < 80 ? "bg-yellow-500" : "bg-green-500"}`}
                     style={{ width: `${passwordStrength}%` }}
                   ></div>
                 </div>
                 <p className="text-center mt-2 font-semibold">
-                  {passwordStrength < 50
-                    ? "Weak"
-                    : passwordStrength < 80
-                    ? "Moderate"
-                    : "Strong"}
+                  {passwordStrength < 50 ? "Weak" : passwordStrength < 80 ? "Moderate" : "Strong"}
                 </p>
               </>
             )}
@@ -301,9 +268,7 @@ const InstructorSignupPage = () => {
             )}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Why do you want to become an Instructor? *
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Why do you want to become an Instructor? *</label>
             <textarea
               placeholder="Describe your teaching experience, expertise, and motivation for becoming an Instructor..."
               value={description}
@@ -314,10 +279,7 @@ const InstructorSignupPage = () => {
             />
           </div>
 
-          <button
-            onClick={handleSignup}
-            className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600"
-          >
+          <button onClick={handleSignup} className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
             Submit Application
           </button>
         </div>
