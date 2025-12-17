@@ -43,6 +43,7 @@ import type { NoteStateType, NoteHandlersType } from "./note_state";
 
 import { newNote, Note } from "@/app/types"; // make sure types are imported
 import { useNotesStore } from "../../stores/notesStore";
+import { useShallow } from "zustand/react/shallow";
 import CommentSidebar from "../comments/CommentSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,14 +55,14 @@ const user = User.getInstance();
 const normalizeNoteId = (id: string | undefined | null): string | null => {
   if (!id) return null;
   // If it's a URL, extract the ID from it
-  if (id.startsWith('http://') || id.startsWith('https://')) {
+  if (id.startsWith("http://") || id.startsWith("https://")) {
     // Extract ID from RERUM URL format: .../v1/id/{id} or .../id/{id}
     const match = id.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
     if (match && match[1]) {
       return match[1];
     }
     // Fallback: get the last part of the URL
-    const parts = id.split('/');
+    const parts = id.split("/");
     return parts[parts.length - 1] || id;
   }
   return id;
@@ -83,55 +84,27 @@ type NoteEditorProps = {
 
 export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
+
+  // Use individual selectors for actions (stable references, no re-renders)
   const updateNote = useNotesStore((state) => state.updateNote);
   const addNote = useNotesStore((state) => state.addNote);
-  
+
   // Get current note ID - try noteState first, then initialNote as fallback
-  const currentNoteId = noteState.note?.id || (noteState.note as any)?.["@id"] || ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"];
-  
-  // Subscribe to notes array - this will trigger re-renders when notes change
+  const currentNoteId =
+    noteState.note?.id ||
+    (noteState.note as any)?.["@id"] ||
+    (initialNote && "id" in initialNote ? initialNote.id : undefined) ||
+    (initialNote as any)?.["@id"];
+
+  // Subscribe to notes array only (not computed values in selector)
   const notes = useNotesStore((state) => state.notes);
-  
-  // Subscribe to the specific note in the store to force re-renders when it changes
-  // Use a selector that will trigger re-renders when the notes array or the specific note changes
-  // We compute a hash of the note's content to ensure re-renders when content changes
-  // IMPORTANT: This selector depends on state.notes, so it will re-run whenever notes change
-  const currentNoteContentHash = useNotesStore((state) => {
-    // Get currentNoteId from the closure - this is computed from local state
-    // But the selector will re-run whenever state.notes changes
-    const noteId = noteState.note?.id || (noteState.note as any)?.["@id"] || 
-                   ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || 
-                   (initialNote as any)?.["@id"];
-    if (!noteId) return null;
-    
-    const foundNote = state.notes.find((n) => {
-      const noteId1 = n.id;
-      const noteId2 = (n as any)["@id"];
-      return noteId1 === noteId || noteId2 === noteId || 
-             noteIdsMatch(noteId, noteId1) || noteIdsMatch(noteId, noteId2);
-    });
-    if (!foundNote) return null;
-    // Return a hash of the note's content - this will change when the note changes
-    return JSON.stringify({
-      id: foundNote.id || (foundNote as any)?.["@id"],
-      text: foundNote.text || (foundNote as any)?.BodyText,
-      title: foundNote.title,
-      published: foundNote.published,
-      approvalRequested: foundNote.approvalRequested,
-      tags: foundNote.tags,
-      comments: foundNote.comments?.length || 0,
-    });
-  });
-  
-  // Use useMemo to find the current note from the store - this is reactive to both notes and currentNoteId
+
+  // Use useMemo for finding the current note - much more efficient than selector
   const currentNoteFromStore = useMemo(() => {
     if (!currentNoteId) return undefined;
-    
-    const normalizedCurrentId = normalizeNoteId(currentNoteId);
-    
-    // Find note by comparing normalized IDs - check both id and @id fields
-    // Also do direct string comparison first (fastest and most reliable)
-    const found = notes.find((n) => {
+
+    // Find note by comparing IDs - check both id and @id fields
+    return notes.find((n) => {
       const noteId1 = n.id;
       const noteId2 = (n as any)["@id"];
       // Direct match first (fastest)
@@ -139,46 +112,21 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       // Then normalized match
       return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
     });
-    
-    // Debug logging
-    if (!found && notes.length > 0) {
-      const firstNote = notes[0];
-      const firstNoteId1 = firstNote?.id;
-      const firstNoteId2 = (firstNote as any)?.["@id"];
-      console.log("🔍 useMemo: Note not found", {
-        currentNoteId,
-        normalizedCurrentId,
-        noteStateNoteId: noteState.note?.id || (noteState.note as any)?.["@id"],
-        initialNoteId: ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"],
-        storeNotesCount: notes.length,
-        firstStoreNote: {
-          id: firstNoteId1,
-          "@id": firstNoteId2,
-          normalizedId1: normalizeNoteId(firstNoteId1),
-          normalizedId2: normalizeNoteId(firstNoteId2),
-          directMatchId: firstNoteId1 === currentNoteId,
-          directMatchAtId: firstNoteId2 === currentNoteId,
-          normalizedMatchId: noteIdsMatch(currentNoteId, firstNoteId1),
-          normalizedMatchAtId: noteIdsMatch(currentNoteId, firstNoteId2),
-        },
-        allStoreNoteIds: notes.slice(0, 3).map(n => ({
-          id: n.id,
-          "@id": (n as any)["@id"],
-          normalizedId: normalizeNoteId(n.id || (n as any)["@id"]),
-          directMatch: (n.id === currentNoteId) || ((n as any)["@id"] === currentNoteId),
-        })),
-      });
-    } else if (found) {
-      console.log("✅ useMemo: Note found in store", {
-        currentNoteId,
-        normalizedCurrentId,
-        foundNoteId: found.id || (found as any)["@id"],
-        foundNoteNormalized: normalizeNoteId(found.id || (found as any)["@id"]),
-      });
-    }
-    
-    return found;
-  }, [notes, currentNoteId, noteState.note?.id, (initialNote && 'id' in initialNote) ? initialNote.id : undefined]);
+  }, [notes, currentNoteId]);
+
+  // Derive content hash from memoized note (replaces expensive selector)
+  const currentNoteContentHash = useMemo(() => {
+    if (!currentNoteFromStore) return null;
+    return JSON.stringify({
+      id: currentNoteFromStore.id || (currentNoteFromStore as any)?.["@id"],
+      text: currentNoteFromStore.text || (currentNoteFromStore as any)?.BodyText,
+      title: currentNoteFromStore.title,
+      published: currentNoteFromStore.published,
+      approvalRequested: currentNoteFromStore.approvalRequested,
+      tags: currentNoteFromStore.tags,
+      comments: currentNoteFromStore.comments?.length || 0,
+    });
+  }, [currentNoteFromStore]);
   const rteRef = useRef<RichTextEditorRef>(null);
 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
@@ -186,14 +134,22 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Auto-save state (from main)
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedSnapshotRef = useRef<{ title: string; text: string; tags: any[]; published: boolean; approvalRequested?: boolean; latitude?: string; longitude?: string } | null>(null);
+  const lastSavedSnapshotRef = useRef<{
+    title: string;
+    text: string;
+    tags: any[];
+    published: boolean;
+    approvalRequested?: boolean;
+    latitude?: string;
+    longitude?: string;
+  } | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(isNewNote);
   // Teacher-student state (from december-sprint)
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState<boolean>(false);
   const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  
+
   // Check if instructor is viewing a student's note (not their own)
   const isViewingStudentNote = useMemo(() => {
     const result = !!(isInstructorUser && userId && noteState.note?.creator && noteState.note.creator !== userId);
@@ -202,7 +158,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       userId,
       noteCreator: noteState.note?.creator,
       result,
-      areEqual: noteState.note?.creator === userId
+      areEqual: noteState.note?.creator === userId,
     });
     return result;
   }, [isInstructorUser, userId, noteState.note?.creator]);
@@ -215,7 +171,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       userId,
       noteCreator: noteState.note?.creator,
       result,
-      areEqual: noteState.note?.creator === userId
+      areEqual: noteState.note?.creator === userId,
     });
     return result;
   }, [isStudent, userId, noteState.note?.creator]);
@@ -253,21 +209,21 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   });
 
   const getCookie = (name: string) => {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
     return match ? match[2] : null;
   };
 
   // Helper function to set a cookie
   const setCookie = (name: string, value: string, days: number) => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const date = new Date();
     date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
     document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}`;
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip SSR
+    if (typeof window === "undefined") return; // Skip SSR
 
     const observer = new MutationObserver(async () => {
       const addNote = document.getElementById("add-note-button");
@@ -380,12 +336,12 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       const roles = await user.getRoles();
       const fetchedUserId = await user.getId();
       console.log("🔍 fetchUserDetails: Got userId and roles", { fetchedUserId, roles });
-      
+
       if (!fetchedUserId) {
         console.log("⚠️ fetchUserDetails: No userId, returning early");
         return;
       }
-      
+
       // Fetch userData to check isInstructor flag
       let userData = null;
       try {
@@ -394,35 +350,31 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       } catch (error) {
         console.error("❌ Error fetching user data:", error);
       }
-      
+
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
       // Allow commenting for administrators even if isInstructor flag isn't set
       const isInstr = !!roles?.administrator || !!userData?.isInstructor;
       setIsInstructorUser(isInstr);
       const isStudentRole = !!roles?.contributor && !roles?.administrator;
-      
+
       // Check if student is part of teacher-student relationship
       let isStudentInTeacherStudentModel = false;
       if (isStudentRole && userData) {
         // Student must have parentInstructorId to be part of teacher-student model
         isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
       }
-      
+
       setIsStudent(isStudentInTeacherStudentModel);
       setUserId(fetchedUserId);
       // Set instructorId from userData if available, otherwise use fetchedUserId if instructor
       setInstructorId(isInstr ? fetchedUserId : null);
-      
+
       // Determine if user can comment/view comments:
       // - Administrators OR instructors with isInstructor flag (can comment on student notes)
       // - Students viewing their own notes (can view instructor comments/feedback)
-      const canCommentValue = !!fetchedUserId && (
-        !!roles?.administrator || 
-        !!userData?.isInstructor || 
-        isStudentInTeacherStudentModel
-      );
+      const canCommentValue = !!fetchedUserId && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel);
       setCanComment(canCommentValue);
-      
+
       // Debug logging
       console.log("✅ Comment button debug:", {
         fetchedUserId,
@@ -434,7 +386,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         noteId: noteState.note?.id,
         isAdministrator: !!roles?.administrator,
         hasIsInstructorFlag: !!userData?.isInstructor,
-        noteCreator: noteState.note?.creator
+        noteCreator: noteState.note?.creator,
       });
     };
     fetchUserDetails();
@@ -469,7 +421,11 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Also watch initialNote prop for changes (important for instructor review mode)
   useEffect(() => {
     // Only sync if we have a note ID (not a new note)
-    const currentNoteId = noteState.note?.id || (noteState.note as any)?.["@id"] || ((initialNote && 'id' in initialNote) ? initialNote.id : undefined) || (initialNote as any)?.["@id"];
+    const currentNoteId =
+      noteState.note?.id ||
+      (noteState.note as any)?.["@id"] ||
+      (initialNote && "id" in initialNote ? initialNote.id : undefined) ||
+      (initialNote as any)?.["@id"];
     if (!currentNoteId) {
       lastSyncedNoteRef.current = "";
       return;
@@ -477,7 +433,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
     // First, check if initialNote has changed (important for instructor review mode where notes come from localNotes)
     let sourceNote: Note | undefined = undefined;
-    if (initialNote && 'id' in initialNote) {
+    if (initialNote && "id" in initialNote) {
       const initialNoteId = initialNote.id || (initialNote as any)?.["@id"];
       if (initialNoteId && (initialNoteId === currentNoteId || noteIdsMatch(initialNoteId, currentNoteId))) {
         sourceNote = initialNote as Note;
@@ -504,7 +460,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           normalizedCurrentId: normalizeNoteId(currentNoteId),
           storeNotesCount: notes.length,
           hasInitialNote: !!initialNote,
-          initialNoteId: initialNote && 'id' in initialNote ? (initialNote.id || (initialNote as any)?.["@id"]) : undefined,
+          initialNoteId: initialNote && "id" in initialNote ? initialNote.id || (initialNote as any)?.["@id"] : undefined,
         });
       }
       return;
@@ -624,7 +580,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     if (currentEditorContent !== stateContent) {
       // Check if user hasn't edited recently (within last 2 seconds)
       const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
-      
+
       // Only update if it's been more than 2 seconds since last edit
       // This prevents overwriting active user edits
       if (timeSinceLastEdit > 2000) {
@@ -633,7 +589,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           stateContent: stateContent.substring(0, 50),
           timeSinceLastEdit,
         });
-        
+
         // Update the editor content
         editor.commands.setContent(stateContent);
       }
@@ -677,29 +633,29 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           const { $anchor, $head } = editor.state.selection;
           const startPos = Math.min($anchor.pos, $head.pos);
           const endPos = Math.max($anchor.pos, $head.pos);
-          
+
           // Get DOM coordinates
           const startDom = editor.view.domAtPos(startPos);
           const endDom = editor.view.domAtPos(endPos);
-          
+
           const startNode = startDom.node as HTMLElement;
           const endNode = endDom.node as HTMLElement;
-          
+
           if (startNode && endNode) {
             // Get the range for the selection
             const selection = window.getSelection();
             if (selection && selection.rangeCount > 0) {
               const range = selection.getRangeAt(0);
               const rect = range.getBoundingClientRect();
-              const editorContainer = editor.view.dom.closest('.ProseMirror')?.getBoundingClientRect();
-              
+              const editorContainer = editor.view.dom.closest(".ProseMirror")?.getBoundingClientRect();
+
               if (editorContainer && rect.width > 0 && rect.height > 0) {
                 // Position bubble above the selection, slightly to the right
                 // Use absolute positioning relative to the editor container
                 // The bubble is inside a relative container, so it will scroll with content
                 const top = rect.top - editorContainer.top - 45; // 45px above selection
                 const left = rect.right - editorContainer.left + 10; // 10px to the right
-                
+
                 setCommentBubblePosition({ top, left });
                 setShowCommentBubble(true);
               }
@@ -719,41 +675,42 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       // Small delay to ensure DOM is updated
       setTimeout(updateBubblePosition, 10);
     };
-    
+
     // Also listen to scroll events to update bubble position
     const handleScroll = () => {
       if (showCommentBubble) {
         updateBubblePosition();
       }
     };
-    
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    
+
+    editor.on("selectionUpdate", handleSelectionUpdate);
+
     // Also listen to mouseup to catch selection changes
     const handleMouseUp = () => {
       setTimeout(updateBubblePosition, 10);
     };
-    
+
     const editorElement = editor.view.dom;
-    const scrollContainer = editorElement.closest('[data-radix-scroll-area-viewport]') || 
-                           editorElement.closest('.overflow-auto') ||
-                           editorElement.closest('.ScrollArea') ||
-                           editorElement.parentElement;
-    
-    editorElement.addEventListener('mouseup', handleMouseUp);
-    editorElement.addEventListener('keyup', handleSelectionUpdate);
-    
+    const scrollContainer =
+      editorElement.closest("[data-radix-scroll-area-viewport]") ||
+      editorElement.closest(".overflow-auto") ||
+      editorElement.closest(".ScrollArea") ||
+      editorElement.parentElement;
+
+    editorElement.addEventListener("mouseup", handleMouseUp);
+    editorElement.addEventListener("keyup", handleSelectionUpdate);
+
     // Listen to scroll events on the scroll container
     if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     }
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-      editorElement.removeEventListener('mouseup', handleMouseUp);
-      editorElement.removeEventListener('keyup', handleSelectionUpdate);
+      editor.off("selectionUpdate", handleSelectionUpdate);
+      editorElement.removeEventListener("mouseup", handleMouseUp);
+      editorElement.removeEventListener("keyup", handleSelectionUpdate);
       if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+        scrollContainer.removeEventListener("scroll", handleScroll);
       }
     };
   }, [canComment, isViewingStudentNote, isStudentViewingOwnNote, showCommentBubble]);
@@ -762,20 +719,20 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   useEffect(() => {
     const checkForOpenPopups = () => {
       // Check for location map overlay (fixed inset-0 with z-50 or z-40)
-      const locationMapOverlay = document.querySelector('.fixed.inset-0.z-50, .fixed.inset-0.z-40');
-      
+      const locationMapOverlay = document.querySelector(".fixed.inset-0.z-50, .fixed.inset-0.z-40");
+
       // Check for open PopoverContent elements (Radix UI popovers) - shadcn/ui uses data-state="open"
       const openPopovers = document.querySelectorAll('[data-state="open"]');
-      
+
       // Check for AlertDialog (which uses data-state="open")
       const openDialogs = document.querySelectorAll('[role="alertdialog"][data-state="open"]');
-      
+
       // Check if any popup is open
       const hasOpenPopup = !!(locationMapOverlay || openPopovers.length > 0 || openDialogs.length > 0);
-      
+
       // Update popup state
       setIsAnyPopupOpen(hasOpenPopup);
-      
+
       // If any popup is open, close the comment bubble
       if (hasOpenPopup && showCommentBubble) {
         setShowCommentBubble(false);
@@ -795,7 +752,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-state', 'class', 'role'],
+      attributeFilter: ["data-state", "class", "role"],
     });
 
     // Also check periodically as a fallback (every 200ms)
@@ -991,7 +948,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const handleRequestApprovalClick = async () => {
     try {
       const updatedApprovalStatus = !noteState.approvalRequested;
-  
+
       const updatedNote: any = {
         ...noteState.note,
         text: noteState.editorContent,
@@ -1008,10 +965,10 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         instructorId: instructorId || null,
         published: false, // Student notes are never published directly
       };
-  
+
       // 1. First update the main note
       const response = await ApiService.overwriteNote(updatedNote);
-  
+
       if (response.ok) {
         if (updatedApprovalStatus && instructorId) {
           // 2. Also send approval request to instructor's Firestore document
@@ -1031,21 +988,16 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             approvalRequested: true,
           });
         }
-  
+
         // 3. Update local frontend state
         noteHandlers.setApprovalRequested(updatedApprovalStatus);
-  
-        toast(
-          updatedApprovalStatus
-            ? "Approval Requested"
-            : "Approval Request Canceled",
-          {
-            description: updatedApprovalStatus
-              ? "Your note has been submitted for instructor approval."
-              : "Your approval request has been canceled.",
-            duration: 4000,
-          }
-        );
+
+        toast(updatedApprovalStatus ? "Approval Requested" : "Approval Request Canceled", {
+          description: updatedApprovalStatus
+            ? "Your note has been submitted for instructor approval."
+            : "Your approval request has been canceled.",
+          duration: 4000,
+        });
       } else {
         throw new Error("Failed to update approval status in backend.");
       }
@@ -1061,7 +1013,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     const creatorId = noteState.note?.creator || (await user.getId());
     const roles = await user.getRoles();
     const isStudentRole = !!roles?.contributor && !roles?.administrator;
-    
+
     const updatedNote: any = {
       ...noteState.note,
       text: noteState.editorContent,
@@ -1246,7 +1198,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
         // Find the current note in the store
         const storeNote = notes.find((n) => n.id === noteState.note?.id);
-        
+
         if (!storeNote) {
           return; // Note not found in store, might have been deleted
         }
@@ -1259,7 +1211,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
         if (shouldUpdate) {
           // Check if any important fields have changed
-          const hasChanges = 
+          const hasChanges =
             storeNote.title !== noteState.title ||
             storeNote.text !== noteState.editorContent ||
             storeNote.published !== noteState.isPublished ||
@@ -1271,7 +1223,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             // Update the note state with the latest from store
             // Only update non-editable fields to avoid disrupting user's current edits
             noteHandlers.setNote(storeNote);
-            
+
             // Update fields that might have changed externally (comments, approval status, etc.)
             // but preserve the user's current title and text if they're actively editing
             if (storeNote.title !== noteState.title && timeSinceLastEdit > 5000) {
@@ -1280,7 +1232,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
             if (storeNote.text !== noteState.editorContent && timeSinceLastEdit > 5000) {
               noteHandlers.setEditorContent(storeNote.text || "");
             }
-            
+
             // Always update these as they're less likely to conflict with user edits
             noteHandlers.setIsPublished(storeNote.published || false);
             noteHandlers.setApprovalRequested(storeNote.approvalRequested || false);
@@ -1300,393 +1252,419 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
         pollingIntervalRef.current = null;
       }
     };
-  }, [noteState.note?.id, notes, noteState.title, noteState.editorContent, noteState.isPublished, noteState.approvalRequested, noteState.tags, noteHandlers]);
+  }, [
+    noteState.note?.id,
+    notes,
+    noteState.title,
+    noteState.editorContent,
+    noteState.isPublished,
+    noteState.approvalRequested,
+    noteState.tags,
+    noteHandlers,
+  ]);
 
   // Create a unique key for the panel group based on whether comment sidebar is open
   // This forces a remount when the structure changes, preventing layout restoration errors
-  const panelGroupKey = `${noteState.note?.id || 'new'}-${canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) ? 'open' : 'closed'}`;
+  const panelGroupKey = `${noteState.note?.id || "new"}-${
+    canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) ? "open" : "closed"
+  }`;
 
   return (
     <>
-    <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
-      <ResizablePanelGroup 
-        key={panelGroupKey}
-        direction="horizontal" 
-        className="w-full h-full"
-      >
-        <ResizablePanel
-          defaultSize={canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 70 : 100}
-          minSize={45}
-          maxSize={canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 85 : 100}
-          className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
-        >
-          <ScrollArea className="flex flex-col w-full h-full min-h-0">
-        <div aria-label="Top Bar" className="w-full flex flex-col px-8 pt-8">
-          <Input
-            id="note-title-input"
-            value={noteState.title}
-            onChange={(e) => {
-              lastEditTimeRef.current = Date.now();
-              handleTitleChange(noteHandlers.setTitle, e);
-            }}
-            placeholder="Untitled"
-            disabled={isViewingStudentNote}
-            readOnly={isViewingStudentNote}
-            className={`border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out ${
-              isViewingStudentNote ? "cursor-default opacity-90" : ""
-            }`}
-            ref={titleRef}
-          />
-          <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
-            {/* Auto-save indicator */}
-            <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-              {isSaving ? (
-                <>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="w-12">Saving...</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="w-12">Saved</span>
-                </>
-              )}
-            </div>
+      <div className="relative h-full w-full min-h-0 bg-white transition-all duration-300 ease-in-out">
+        <ResizablePanelGroup key={panelGroupKey} direction="horizontal" className="w-full h-full">
+          <ResizablePanel
+            defaultSize={
+              canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 70 : 100
+            }
+            minSize={45}
+            maxSize={
+              canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && noteState.note?.id ? 85 : 100
+            }
+            className="flex flex-col min-w-[420px] transition-[flex-basis] duration-200 ease-out"
+          >
+            <ScrollArea className="flex flex-col w-full h-full min-h-0">
+              <div aria-label="Top Bar" className="w-full flex flex-col px-8 pt-8">
+                <Input
+                  id="note-title-input"
+                  value={noteState.title}
+                  onChange={(e) => {
+                    lastEditTimeRef.current = Date.now();
+                    handleTitleChange(noteHandlers.setTitle, e);
+                  }}
+                  placeholder="Untitled"
+                  disabled={isViewingStudentNote}
+                  readOnly={isViewingStudentNote}
+                  className={`border-0 p-0 font-bold text-3xl bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 transition-all duration-200 ease-in-out ${
+                    isViewingStudentNote ? "cursor-default opacity-90" : ""
+                  }`}
+                  ref={titleRef}
+                />
+                <div className="flex flex-row items-center gap-4 mt-6 pb-4 border-b border-gray-200">
+                  {/* Auto-save indicator */}
+                  <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                    {isSaving ? (
+                      <>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span className="w-12">Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="w-12">Saved</span>
+                      </>
+                    )}
+                  </div>
 
-            <PublishToggle
-              id="publish-toggle-button"
-              isPublished={Boolean(noteState.isPublished)}
-              isApprovalRequested={noteState.approvalRequested || false}
-              noteId={noteState.note?.id || ""}
-              userId={userId}
-              instructorId={instructorId}
-              onPublishClick={() => handlePublishChange(noteState, noteHandlers)}
-              onRequestApprovalClick={handleRequestApprovalClick}
-              isInstructorReview={isViewingStudentNote}
-            />
+                  <PublishToggle
+                    id="publish-toggle-button"
+                    isPublished={Boolean(noteState.isPublished)}
+                    isApprovalRequested={noteState.approvalRequested || false}
+                    noteId={noteState.note?.id || ""}
+                    userId={userId}
+                    instructorId={instructorId}
+                    onPublishClick={() => handlePublishChange(noteState, noteHandlers)}
+                    onRequestApprovalClick={handleRequestApprovalClick}
+                    isInstructorReview={isViewingStudentNote}
+                  />
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button
-                  disabled={!noteState.note?.id || isSaving || isViewingStudentNote}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={isViewingStudentNote ? "Cannot delete student notes" : (!noteState.note?.id ? "Please wait for note to save before deleting" : "Delete this note")}
-                  ref={deleteRef}
-                >
-                  <FileX2 className="w-4 h-4" />
-                  <span>Delete</span>
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>This action cannot be undone. This will permanently delete this note.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async () => {
-                      const success = await handleDeleteNote(noteState, user, noteHandlers);
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        disabled={!noteState.note?.id || isSaving || isViewingStudentNote}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={
+                          isViewingStudentNote
+                            ? "Cannot delete student notes"
+                            : !noteState.note?.id
+                            ? "Please wait for note to save before deleting"
+                            : "Delete this note"
+                        }
+                        ref={deleteRef}
+                      >
+                        <FileX2 className="w-4 h-4" />
+                        <span>Delete</span>
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete this note.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            const success = await handleDeleteNote(noteState, user, noteHandlers);
 
-                      if (success && onNoteDeleted) {
-                        onNoteDeleted();
+                            if (success && onNoteDeleted) {
+                              onNoteDeleted();
+                            }
+                          }}
+                        >
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <div className="flex items-center gap-4 ml-auto">
+                    <div ref={dateRef}>
+                      <TimePicker
+                        initialDate={noteState.time || new Date()}
+                        onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
+                        disabled={isViewingStudentNote}
+                        // Allow viewing time even when disabled (read-only mode for instructors)
+                      />
+                    </div>
+                    <div ref={locationRef}>
+                      <LocationPicker
+                        long={noteState.longitude}
+                        lat={noteState.latitude}
+                        onLocationChange={(newLong, newLat) => {
+                          handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat);
+                          // Autosave will be triggered automatically by the useEffect that watches noteState changes
+                          lastEditTimeRef.current = Date.now();
+                        }}
+                        disabled={isViewingStudentNote}
+                        // Allow viewing location even when disabled (read-only mode for instructors)
+                      />
+                    </div>
+                    <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
+                          aria-label="Download note"
+                          // Download is always enabled - instructors can download student notes
+                        >
+                          <Download aria-label="download" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
+                          <span>Download</span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2" align="end">
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={async () => {
+                              setIsDownloadPopoverOpen(false);
+                              await handleDownload("pdf");
+                            }}
+                            className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                          >
+                            Download as PDF
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setIsDownloadPopoverOpen(false);
+                              await handleDownload("docx");
+                            }}
+                            className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                          >
+                            Download as DOCX
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <TagManager
+                    inputTags={noteState.tags}
+                    suggestedTags={suggestedTags}
+                    onTagsChange={(newTags) => {
+                      lastEditTimeRef.current = Date.now();
+                      handleTagsChange(noteHandlers.setTags, newTags);
+                    }}
+                    fetchSuggestedTags={fetchSuggestedTags}
+                    disabled={isViewingStudentNote}
+                  />
+                </div>
+
+                {loadingTags && <p>Loading suggested tags...</p>}
+              </div>
+              <div
+                className="w-full px-8 pb-8 transition-opacity duration-200 ease-in-out"
+                onMouseDown={(e) => {
+                  const editor = rteRef.current?.editor;
+                  if (!editor) return;
+                  const target = e.target as HTMLElement;
+                  // If the click is NOT inside the ProseMirror content, focus the editor at the start
+                  if (!target.closest(".ProseMirror")) {
+                    e.preventDefault();
+                    editor.chain().focus("start").run();
+                  }
+                }}
+                onKeyDown={(e) => {
+                  const editor = rteRef.current?.editor;
+                  if (!editor) return;
+                  // When the editor is empty, allow ArrowDown to create a new paragraph so users can "go down"
+                  if (e.key === "ArrowDown" && editor.isEmpty) {
+                    e.preventDefault();
+                    editor.chain().focus().insertContent("<p><br/></p>").run();
+                  }
+                }}
+              >
+                <div className="bg-white w-full relative">
+                  {/* Comment Bubble - Shows when text is selected (only when instructor is viewing student notes) */}
+                  {showCommentBubble && commentBubblePosition && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
+                    <CommentBubble
+                      onClick={() => {
+                        // Open comment sidebar and focus on adding a comment
+                        setIsCommentSidebarOpen(true);
+                        setShowCommentBubble(false);
+                        // The CommentSidebar will use getCurrentSelection to get the selected text
+                      }}
+                      top={commentBubblePosition.top}
+                      left={commentBubblePosition.left}
+                    />
+                  )}
+                  <RichTextEditor
+                    key={`${noteState.note?.id ?? "new"}-${noteState.title}-${noteState.counter}`}
+                    ref={rteRef}
+                    className="min-h-[400px] prose prose-lg max-w-none"
+                    extensions={extensions}
+                    content={noteState.editorContent}
+                    immediatelyRender={false}
+                    editable={!isViewingStudentNote}
+                    onUpdate={({ editor }) => {
+                      if (!isViewingStudentNote) {
+                        lastEditTimeRef.current = Date.now();
+                        handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
                       }
                     }}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    renderControls={() =>
+                      isViewingStudentNote ? null : (
+                        <EditorMenuControls
+                          onMediaUpload={(media) => {
+                            if (media.type === "image") {
+                              const defaultWidth = 100; // or "100%" or any px value you want
+                              const defaultHeight: number | undefined = undefined; // or set a fixed height like 480
 
-            <div className="flex items-center gap-4 ml-auto">
-              <div ref={dateRef}>
-                <TimePicker
-                  initialDate={noteState.time || new Date()}
-                  onTimeChange={(newDate) => handleTimeChange(noteHandlers.setTime, newDate)}
-                  disabled={isViewingStudentNote}
-                  // Allow viewing time even when disabled (read-only mode for instructors)
-                />
-              </div>
-              <div ref={locationRef}>
-                <LocationPicker
-                  long={noteState.longitude}
-                  lat={noteState.latitude}
-                  onLocationChange={(newLong, newLat) => {
-                    handleLocationChange(noteHandlers.setLongitude, noteHandlers.setLatitude, newLong, newLat);
-                    // Autosave will be triggered automatically by the useEffect that watches noteState changes
-                    lastEditTimeRef.current = Date.now();
-                  }}
-                  disabled={isViewingStudentNote}
-                  // Allow viewing location even when disabled (read-only mode for instructors)
-                />
-              </div>
-              <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group"
-                    aria-label="Download note"
-                    // Download is always enabled - instructors can download student notes
-                  >
-                    <Download aria-label="download" className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
-                    <span>Download</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2" align="end">
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={async () => {
-                        setIsDownloadPopoverOpen(false);
-                        await handleDownload("pdf");
-                      }}
-                      className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                    >
-                      Download as PDF
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setIsDownloadPopoverOpen(false);
-                        await handleDownload("docx");
-                      }}
-                      className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                    >
-                      Download as DOCX
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="mt-2">
-            <TagManager
-              inputTags={noteState.tags}
-              suggestedTags={suggestedTags}
-              onTagsChange={
-                (newTags) => {
-                  lastEditTimeRef.current = Date.now();
-                  handleTagsChange(noteHandlers.setTags, newTags);
-                }
-              }
-              fetchSuggestedTags={fetchSuggestedTags}
-              disabled={isViewingStudentNote}
-            />
-          </div>
+                              const newImage = {
+                                type: "image",
+                                attrs: {
+                                  src: media.uri,
+                                  alt: "Image description",
+                                  loading: "lazy",
+                                  width: defaultWidth,
+                                  height: defaultHeight,
+                                },
+                              };
 
-          {loadingTags && <p>Loading suggested tags...</p>}
-        </div>
-        <div
-          className="w-full px-8 pb-8 transition-opacity duration-200 ease-in-out"
-          onMouseDown={(e) => {
-            const editor = rteRef.current?.editor;
-            if (!editor) return;
-            const target = e.target as HTMLElement;
-            // If the click is NOT inside the ProseMirror content, focus the editor at the start
-            if (!target.closest(".ProseMirror")) {
-              e.preventDefault();
-              editor.chain().focus("start").run();
-            }
-          }}
-          onKeyDown={(e) => {
-            const editor = rteRef.current?.editor;
-            if (!editor) return;
-            // When the editor is empty, allow ArrowDown to create a new paragraph so users can "go down"
-            if (e.key === "ArrowDown" && editor.isEmpty) {
-              e.preventDefault();
-              editor.chain().focus().insertContent("<p><br/></p>").run();
-            }
-          }}
-        >
-          <div className="bg-white w-full relative">
-            {/* Comment Bubble - Shows when text is selected (only when instructor is viewing student notes) */}
-            {showCommentBubble && commentBubblePosition && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
-              <CommentBubble
-                onClick={() => {
-                  // Open comment sidebar and focus on adding a comment
-                  setIsCommentSidebarOpen(true);
-                  setShowCommentBubble(false);
-                  // The CommentSidebar will use getCurrentSelection to get the selected text
-                }}
-                top={commentBubblePosition.top}
-                left={commentBubblePosition.left}
-              />
-            )}
-            <RichTextEditor
-              key={`${noteState.note?.id ?? "new"}-${noteState.title}-${noteState.counter}`}
-              ref={rteRef}
-              className="min-h-[400px] prose prose-lg max-w-none"
-              extensions={extensions}
-              content={noteState.editorContent}
-              immediatelyRender={false}
-              editable={!isViewingStudentNote}
-              onUpdate={({ editor }) => {
-                if (!isViewingStudentNote) {
-                  lastEditTimeRef.current = Date.now();
-                  handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
-                }
-              }}
-              renderControls={() => isViewingStudentNote ? null : (
-                <EditorMenuControls
-                  onMediaUpload={(media) => {
-                    if (media.type === "image") {
-                      const defaultWidth = 100; // or "100%" or any px value you want
-                      const defaultHeight: number | undefined = undefined; // or set a fixed height like 480
+                              const editor = rteRef.current?.editor;
+                              if (editor) {
+                                editor.chain().focus().setImage(newImage.attrs).run();
+                              }
 
-                      const newImage = {
-                        type: "image",
-                        attrs: {
-                          src: media.uri,
-                          alt: "Image description",
-                          loading: "lazy",
-                          width: defaultWidth,
-                          height: defaultHeight,
-                        },
-                      };
+                              noteHandlers.setImages((prevImages) => [
+                                ...prevImages,
+                                new PhotoType({
+                                  uuid: uuidv4(),
+                                  uri: media.uri,
+                                  type: "image",
+                                }),
+                              ]);
+                            } else if (media.type === "video") {
+                              const newVideo = new VideoType({
+                                uuid: uuidv4(),
+                                uri: media.uri,
+                                type: "video",
+                                thumbnail: "",
+                                duration: "0:00",
+                              });
 
-                      const editor = rteRef.current?.editor;
-                      if (editor) {
-                        editor.chain().focus().setImage(newImage.attrs).run();
-                      }
+                              noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
 
-                      noteHandlers.setImages((prevImages) => [
-                        ...prevImages,
-                        new PhotoType({
-                          uuid: uuidv4(),
-                          uri: media.uri,
-                          type: "image",
-                        }),
-                      ]);
-                    } else if (media.type === "video") {
-                      const newVideo = new VideoType({
-                        uuid: uuidv4(),
-                        uri: media.uri,
-                        type: "video",
-                        thumbnail: "",
-                        duration: "0:00",
-                      });
+                              const editor = rteRef.current?.editor;
+                              if (editor) {
+                                const videoLink = `Video ${noteState.videos.length + 1}`;
+                                editor
+                                  .chain()
+                                  .focus()
+                                  .command(({ tr, dispatch }) => {
+                                    if (dispatch) {
+                                      const endPos = tr.doc.content.size;
+                                      const paragraphNodeForNewLine = editor.schema.node("paragraph");
+                                      const textNode = editor.schema.text(videoLink, [
+                                        editor.schema.marks.link.create({ href: media.uri }),
+                                      ]);
+                                      const paragraphNodeForLink = editor.schema.node("paragraph", null, [textNode]);
 
-                      noteHandlers.setVideos((prevVideos) => [...prevVideos, newVideo]);
+                                      const transaction = tr
+                                        .insert(endPos, paragraphNodeForNewLine)
+                                        .insert(endPos + 1, paragraphNodeForLink);
+                                      dispatch(transaction);
+                                    }
+                                    return true;
+                                  })
+                                  .run();
+                              }
+                            } else if (media.type === "audio") {
+                              const newAudio = new AudioType({
+                                uuid: uuidv4(),
+                                uri: media.uri,
+                                type: "audio", // Explicitly set the type
+                                duration: "0:00", // Default duration
+                                name: `Audio Note ${noteState.audio.length + 1}`,
+                                isPlaying: false, // Default play status
+                              });
 
-                      const editor = rteRef.current?.editor;
-                      if (editor) {
-                        const videoLink = `Video ${noteState.videos.length + 1}`;
-                        editor
-                          .chain()
-                          .focus()
-                          .command(({ tr, dispatch }) => {
-                            if (dispatch) {
-                              const endPos = tr.doc.content.size;
-                              const paragraphNodeForNewLine = editor.schema.node("paragraph");
-                              const textNode = editor.schema.text(videoLink, [editor.schema.marks.link.create({ href: media.uri })]);
-                              const paragraphNodeForLink = editor.schema.node("paragraph", null, [textNode]);
-
-                              const transaction = tr.insert(endPos, paragraphNodeForNewLine).insert(endPos + 1, paragraphNodeForLink);
-                              dispatch(transaction);
+                              noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
                             }
-                            return true;
-                          })
-                          .run();
-                      }
-                    } else if (media.type === "audio") {
-                      const newAudio = new AudioType({
-                        uuid: uuidv4(),
-                        uri: media.uri,
-                        type: "audio", // Explicitly set the type
-                        duration: "0:00", // Default duration
-                        name: `Audio Note ${noteState.audio.length + 1}`,
-                        isPlaying: false, // Default play status
-                      });
-
-                      noteHandlers.setAudio((prevAudio) => [...prevAudio, newAudio]);
+                          }}
+                        />
+                      )
                     }
+                    children={(editor) => {
+                      if (!editor) return null;
+                      return <LinkBubbleMenu />;
+                    }}
+                  />
+                </div>
+              </div>
+            </ScrollArea>
+          </ResizablePanel>
+          {!!noteState.note?.id && canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && (
+            <>
+              <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
+              <ResizablePanel
+                defaultSize={30}
+                minSize={20}
+                maxSize={40}
+                className="md:border-l min-w-[280px] md:min-w-[300px] lg:min-w-[340px] transition-[flex-basis] duration-200 ease-out"
+              >
+                <CommentSidebar
+                  noteId={noteState.note.id as string}
+                  getCurrentSelection={() => {
+                    const editor = rteRef.current?.editor;
+                    if (!editor) return null;
+                    const { from, to } = editor.state.selection;
+                    if (from === to) return null; // require a non-empty selection
+                    return { from, to };
                   }}
                 />
-              )}
-              children={(editor) => {
-                if (!editor) return null;
-                return <LinkBubbleMenu />;
-              }}
-            />
-          </div>
-        </div>
-      </ScrollArea>
-        </ResizablePanel>
-        {!!noteState.note?.id && canComment && isCommentSidebarOpen && (isViewingStudentNote || isStudentViewingOwnNote) && (
-          <>
-            <ResizableHandle withHandle className="bg-gray-200 hover:bg-gray-300 cursor-col-resize w-[6px]" />
-            <ResizablePanel
-              defaultSize={30}
-              minSize={20}
-              maxSize={40}
-              className="md:border-l min-w-[280px] md:min-w-[300px] lg:min-w-[340px] transition-[flex-basis] duration-200 ease-out"
-            >
-              <CommentSidebar
-                noteId={noteState.note.id as string}
-                getCurrentSelection={() => {
-                  const editor = rteRef.current?.editor;
-                  if (!editor) return null;
-                  const { from, to } = editor.state.selection;
-                  if (from === to) return null; // require a non-empty selection
-                  return { from, to };
-                }}
-              />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
-    </div>
-    {/* Sticky Comment Toggle Button - Rendered via portal to ensure it's above all relative containers */}
-    {(() => {
-      // Show comment button when:
-      // 1. Instructor viewing a student's note (to give feedback), OR
-      // 2. Student viewing their own note (to see instructor feedback)
-      // 3. AND no popups are currently open (location map, time picker, etc.)
-      const shouldShow = typeof window !== 'undefined' && 
-                        !!noteState.note?.id && 
-                        canComment && 
-                        (isViewingStudentNote || isStudentViewingOwnNote) &&
-                        !isAnyPopupOpen;
-      if (shouldShow) {
-        console.log("✅ Rendering comment button via portal", { 
-          noteId: noteState.note?.id, 
-          canComment,
-          isViewingStudentNote,
-          isStudentViewingOwnNote
-        });
-      } else {
-        console.log("❌ Comment button NOT showing:", {
-          isClient: typeof window !== 'undefined',
-          hasNoteId: !!noteState.note?.id,
-          canComment,
-          isViewingStudentNote,
-          isStudentViewingOwnNote,
-          noteId: noteState.note?.id,
-          noteCreator: noteState.note?.creator,
-          userId: userId,
-          isInstructorUser: isInstructorUser,
-          isStudent: isStudent
-        });
-      }
-      return shouldShow ? createPortal(
-        <button
-          onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
-          className="fixed top-20 right-4 z-[9999] bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-          aria-label={isCommentSidebarOpen ? "Close comments" : "Open comments"}
-        >
-          {isCommentSidebarOpen ? (
-            <>
-              <X className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">Close</span>
-            </>
-          ) : (
-            <>
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">Comments</span>
+              </ResizablePanel>
             </>
           )}
-        </button>,
-        document.body
-      ) : null;
-    })()}
+        </ResizablePanelGroup>
+      </div>
+      {/* Sticky Comment Toggle Button - Rendered via portal to ensure it's above all relative containers */}
+      {(() => {
+        // Show comment button when:
+        // 1. Instructor viewing a student's note (to give feedback), OR
+        // 2. Student viewing their own note (to see instructor feedback)
+        // 3. AND no popups are currently open (location map, time picker, etc.)
+        const shouldShow =
+          typeof window !== "undefined" &&
+          !!noteState.note?.id &&
+          canComment &&
+          (isViewingStudentNote || isStudentViewingOwnNote) &&
+          !isAnyPopupOpen;
+        if (shouldShow) {
+          console.log("✅ Rendering comment button via portal", {
+            noteId: noteState.note?.id,
+            canComment,
+            isViewingStudentNote,
+            isStudentViewingOwnNote,
+          });
+        } else {
+          console.log("❌ Comment button NOT showing:", {
+            isClient: typeof window !== "undefined",
+            hasNoteId: !!noteState.note?.id,
+            canComment,
+            isViewingStudentNote,
+            isStudentViewingOwnNote,
+            noteId: noteState.note?.id,
+            noteCreator: noteState.note?.creator,
+            userId: userId,
+            isInstructorUser: isInstructorUser,
+            isStudent: isStudent,
+          });
+        }
+        return shouldShow
+          ? createPortal(
+              <button
+                onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
+                className="fixed top-20 right-4 z-[9999] bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                aria-label={isCommentSidebarOpen ? "Close comments" : "Open comments"}
+              >
+                {isCommentSidebarOpen ? (
+                  <>
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline text-sm">Close</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden sm:inline text-sm">Comments</span>
+                  </>
+                )}
+              </button>,
+              document.body
+            )
+          : null;
+      })()}
     </>
   );
 }

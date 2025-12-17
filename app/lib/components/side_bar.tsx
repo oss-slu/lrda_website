@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -8,6 +8,7 @@ import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
 import "intro.js/introjs.css";
 import { useNotesStore } from "../stores/notesStore";
+import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
@@ -20,7 +21,13 @@ type SidebarProps = {
 const user = User.getInstance();
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, viewMode } = useNotesStore();
+  const { notes, fetchNotes, viewMode } = useNotesStore(
+    useShallow((state) => ({
+      notes: state.notes,
+      fetchNotes: state.fetchNotes,
+      viewMode: state.viewMode,
+    }))
+  );
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [showPublished, setShowPublished] = useState(false); // Default to Unpublished tab
   const [isSearching, setIsSearching] = useState(false);
@@ -61,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const initRoleFlags = async () => {
       const roles = await user.getRoles();
       const userId = await user.getId();
-      
+
       // Fetch userData to check isInstructor flag
       let userData = null;
       if (userId) {
@@ -71,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           console.error("Error fetching user data:", error);
         }
       }
-      
+
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
       // Allow toggle for administrators even if isInstructor flag isn't set
       const isInstr = !!roles?.administrator || !!userData?.isInstructor;
@@ -101,24 +108,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           setFilteredNotes([]);
           return;
         }
-        
+
         const studentUids = instructorData.students || [];
         console.log("📝 Student UIDs from instructor data:", studentUids);
-        
+
         if (studentUids.length === 0) {
           console.warn("No students found for instructor");
           setLocalNotes([]);
           setFilteredNotes([]);
           return;
         }
-        
+
         // Fetch all notes from students
         const allNotes = await ApiService.fetchNotesByStudents(studentUids);
         console.log("📋 All student notes fetched:", allNotes.length);
         const converted = DataConversion.convertMediaTypes(allNotes).reverse();
         const unarchived = converted.filter((n) => !n.isArchived);
         console.log("📋 Total unarchived notes:", unarchived.length);
-        
+
         setLocalNotes(unarchived);
         // Default to showing "Unreviewed" (awaiting approval)
         const awaitingApproval = unarchived.filter((n) => n.approvalRequested && !n.published);
@@ -190,11 +197,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         // Find the updated note in localNotes
         const updatedNote = localNotes.find((n) => {
           const noteId = n.id || (n as any)?.["@id"];
-          return noteId === selectedNoteId || 
-                 (typeof selectedNoteId === 'string' && noteId && noteId.includes(selectedNoteId)) ||
-                 (typeof noteId === 'string' && selectedNoteId && selectedNoteId.includes(noteId));
+          return (
+            noteId === selectedNoteId ||
+            (typeof selectedNoteId === "string" && noteId && noteId.includes(selectedNoteId)) ||
+            (typeof noteId === "string" && selectedNoteId && selectedNoteId.includes(noteId))
+          );
         });
-        
+
         // If found and it's different from what was last selected, update it
         if (updatedNote) {
           // Only update if the note content has actually changed
@@ -243,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const noteList = notesToFilter || (viewMode === "review" ? localNotes : notes);
     setIsSearching(false);
     let filtered: Note[] = [];
-    
+
     if (viewMode === "review") {
       // Review mode: Unreviewed vs Reviewed
       if (showPublished) {
@@ -257,7 +266,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       // My Notes mode: Published vs Unpublished
       filtered = noteList.filter((note) => !note.isArchived).filter((note) => (showPublished ? note.published : !note.published));
     }
-    
+
     setFilteredNotes(filtered);
   };
 
@@ -293,9 +302,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           </div>
         </div>
         <div>
-          <NoteListView 
-            notes={filteredNotes} 
-            onNoteSelect={(note) => onNoteSelect(note, false)} 
+          <NoteListView
+            notes={filteredNotes}
+            onNoteSelect={(note) => onNoteSelect(note, false)}
             isSearching={isSearching}
             viewMode={viewMode}
             isInstructor={isInstructor}

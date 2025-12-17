@@ -6,6 +6,7 @@ import { User } from "../models/user_class";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotesStore } from "../stores/notesStore";
+import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -17,7 +18,12 @@ export default function Navbar() {
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { viewMode, setViewMode } = useNotesStore();
+  const { viewMode, setViewMode } = useNotesStore(
+    useShallow((state) => ({
+      viewMode: state.viewMode,
+      setViewMode: state.setViewMode,
+    }))
+  );
 
   const handleLogout = async () => {
     try {
@@ -75,7 +81,7 @@ export default function Navbar() {
       try {
         const roles = await user.getRoles();
         const userId = await user.getId();
-        
+
         if (userId) {
           const userData = await ApiService.fetchUserData(userId);
           // Check if user is an instructor (has administrator role OR isInstructor flag)
@@ -118,62 +124,59 @@ export default function Navbar() {
       <div className="flex items-center">
         {navItems.map(
           (item) =>
-            (!item.authRequired || name) && (
-              item.href === "/lib/pages/notes" && isInstructor ? (
-                <div key={item.href} className="mr-6">
-                  <Select
-                    value={viewMode}
-                    open={selectOpen}
-                    onOpenChange={(open) => {
-                      // If trying to open from another page, navigate first without opening dropdown
-                      if (open && !pathname.startsWith("/lib/pages/notes")) {
-                        // Navigate directly - viewMode is already persisted in localStorage
-                        router.push("/lib/pages/notes");
-                        setSelectOpen(false); // Don't open the dropdown
-                        return;
-                      }
-                      setSelectOpen(open);
-                    }}
-                    onValueChange={(value) => {
-                      setViewMode(value as "my" | "review");
-                      setSelectOpen(false);
-                      // Navigate to notes page if not already there
-                      if (!pathname.startsWith("/lib/pages/notes")) {
-                        router.push("/lib/pages/notes");
-                      }
-                    }}
-                  >
-                    <SelectTrigger 
-                      className={cn(
-                        "text-xl font-bold transition duration-300 ease-in-out border-none bg-transparent text-blue-300 hover:text-blue-500 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-0 w-auto shadow-none cursor-pointer",
-                        pathname.startsWith(item.href) ? "text-blue-500" : ""
-                      )}
-                    >
-                      <SelectValue>
-                        <span className={cn(
-                          pathname.startsWith(item.href) ? "text-blue-500" : "text-blue-300 hover:text-blue-500"
-                        )}>
-                          {item.label}
-                        </span>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="my">My Notes</SelectItem>
-                      <SelectItem value="review">Students Notes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={linkClass(item.href)}
-                  aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+            (!item.authRequired || name) &&
+            (item.href === "/lib/pages/notes" && isInstructor ? (
+              <div key={item.href} className="mr-6">
+                <Select
+                  value={viewMode}
+                  open={selectOpen}
+                  onOpenChange={(open) => {
+                    // If trying to open from another page, navigate first without opening dropdown
+                    if (open && !pathname.startsWith("/lib/pages/notes")) {
+                      // Navigate directly - viewMode is already persisted in localStorage
+                      router.push("/lib/pages/notes");
+                      setSelectOpen(false); // Don't open the dropdown
+                      return;
+                    }
+                    setSelectOpen(open);
+                  }}
+                  onValueChange={(value) => {
+                    setViewMode(value as "my" | "review");
+                    setSelectOpen(false);
+                    // Navigate to notes page if not already there
+                    if (!pathname.startsWith("/lib/pages/notes")) {
+                      router.push("/lib/pages/notes");
+                    }
+                  }}
                 >
-                  {item.label}
-                </Link>
-              )
-            )
+                  <SelectTrigger
+                    className={cn(
+                      "text-xl font-bold transition duration-300 ease-in-out border-none bg-transparent text-blue-300 hover:text-blue-500 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-0 w-auto shadow-none cursor-pointer",
+                      pathname.startsWith(item.href) ? "text-blue-500" : ""
+                    )}
+                  >
+                    <SelectValue>
+                      <span className={cn(pathname.startsWith(item.href) ? "text-blue-500" : "text-blue-300 hover:text-blue-500")}>
+                        {item.label}
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="my">My Notes</SelectItem>
+                    <SelectItem value="review">Students Notes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={linkClass(item.href)}
+                aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            ))
         )}
       </div>
 

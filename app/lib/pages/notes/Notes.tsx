@@ -6,9 +6,15 @@ import { Note, newNote } from "../../../types";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { User } from "../../models/user_class";
 import { useNotesStore } from "../../stores/notesStore";
+import { useShallow } from "zustand/react/shallow";
 
 export default function Notes() {
-  const { fetchNotes, setSelectedNoteId } = useNotesStore();
+  const { fetchNotes, setSelectedNoteId } = useNotesStore(
+    useShallow((state) => ({
+      fetchNotes: state.fetchNotes,
+      setSelectedNoteId: state.setSelectedNoteId,
+    }))
+  );
 
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
