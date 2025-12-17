@@ -24,9 +24,17 @@ jest.mock("app/lib/components/click_note_card", () => ({
   default: ({ note }: any) => <div data-testid="note-card">{note.title || note.id}</div>,
 }));
 
-// Mock User to avoid Firebase auth wiring
-jest.mock("app/lib/models/user_class", () => ({
-  User: { getInstance: () => ({ getId: async () => null }) },
+// Mock useAuthStore instead of User class
+jest.mock("app/lib/stores/authStore", () => ({
+  useAuthStore: jest.fn((selector) => {
+    const mockState = {
+      user: null,
+      isLoggedIn: false,
+      isLoading: false,
+      isInitialized: true,
+    };
+    return selector ? selector(mockState) : mockState;
+  }),
 }));
 
 // Provide a stable IntersectionObserver mock

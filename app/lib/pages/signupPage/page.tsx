@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { auth, db } from "../../config/firebase"; // Ensure you import Firestore as well
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { validateEmail, validatePassword, validateFirstName, validateLastName } from "../../utils/validation";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
 import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
@@ -30,22 +30,22 @@ const SignupPage = () => {
     const fetchInstructors = async () => {
       try {
         console.log("Fetching instructors...");
-  
+
         if (!db) {
           throw new Error("Firestore is not initialized");
         }
-  
+
         // Query the 'users' collection to get instructors
         const instructorsRef = collection(db, "users");
         const instructorsQuery = query(instructorsRef, where("isInstructor", "==", true));
         const querySnapshot = await getDocs(instructorsQuery);
-  
+
         // Map the results into the format required for react-select
         const instructorsList = querySnapshot.docs.map((doc) => ({
           value: doc.id, // Store the instructor's user ID
           label: doc.data().name || doc.data().email || "Unknown Instructor", // Display the instructor's name
         }));
-  
+
         console.log("Instructors fetched:", instructorsList);
         setInstructors(instructorsList);
       } catch (error) {
@@ -53,7 +53,7 @@ const SignupPage = () => {
         toast.error("Failed to fetch instructors. Please try again.");
       }
     };
-  
+
     if (workingUnderInstructor === "yes") {
       fetchInstructors();
     }
@@ -88,45 +88,43 @@ const SignupPage = () => {
       // Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
+
       // Combine firstName and lastName for the name field
       const fullName = `${firstName} ${lastName}`;
-  
+
       // Prepare user data for Firestore
       const userData: any = {
         uid: user.uid,
         email,
         name: fullName,
         institution,
-        roles: workingUnderInstructor === "yes"
-          ? { contributor: true } // Contributor if under an instructor
-          : { administrator: true, contributor: true }, // Full roles for independent users
+        roles:
+          workingUnderInstructor === "yes"
+            ? { contributor: true } // Contributor if under an instructor
+            : { administrator: true, contributor: true }, // Full roles for independent users
         createdAt: Timestamp.now(),
         ...(workingUnderInstructor === "yes" && selectedInstructor
           ? { parentInstructorId: selectedInstructor.value, instructorName: selectedInstructor.label } // Add instructor relationship
           : {}),
       };
-  
+
       // Store the user data in Firestore under the "users" collection
       if (!db) throw new Error("Firestore is not initialized");
       await setDoc(doc(db, "users", user.uid), userData);
-  
+
       // If working under an instructor, update the instructor's students array
       if (workingUnderInstructor === "yes" && selectedInstructor) {
         const instructorRef = doc(db, "users", selectedInstructor.value);
-  
+
         // Use arrayUnion to add the student ID to the instructor's students array
-        await updateDoc(
-          instructorRef,
-          { students: arrayUnion(user.uid) }
-        );
-  
+        await updateDoc(instructorRef, { students: arrayUnion(user.uid) });
+
         console.log(`Added student (${user.uid}) to instructor (${selectedInstructor.value})`);
       }
-  
+
       // Set the user as logged in
-      const userInstance = User.getInstance();
-      await userInstance.login(email, password);
+      const { login } = useAuthStore.getState();
+      await login(email, password);
 
       // Optional delay to ensure everything is set up
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -141,18 +139,11 @@ const SignupPage = () => {
   return (
     <div className="flex flex-col items-center justify-center bg-[#F4DFCD]">
       <div className="flex items-center justify-center">
-        <Image
-          src="/splash.png"
-          alt="Background Image"
-          width="2080"
-          height="300"
-        />
+        <Image src="/splash.png" alt="Background Image" width="2080" height="300" />
       </div>
       <div className="absolute inset-10 flex flex-col items-center justify-center">
         <div className="w-3/4 bg-white p-8 rounded-lg shadow-lg">
-          <h1 className="text-black-500 font-bold mb-20 text-center text-3xl">
-           User Sign Up
-          </h1>
+          <h1 className="text-black-500 font-bold mb-20 text-center text-3xl">User Sign Up</h1>
           <div className="mb-4">
             <input
               type="text"
@@ -188,10 +179,7 @@ const SignupPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
-            <StrengthIndicator 
-              password={password} 
-              onUnmet={(unmetRequirements) => setPasswordRequirements(unmetRequirements)}
-            />
+            <StrengthIndicator password={password} onUnmet={(unmetRequirements) => setPasswordRequirements(unmetRequirements)} />
           </div>
           <div className="mb-4">
             <input
@@ -203,9 +191,7 @@ const SignupPage = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Will you be working under an Instructor?
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Will you be working under an Instructor?</label>
             <div className="flex space-x-4">
               <label>
                 <input
@@ -231,9 +217,7 @@ const SignupPage = () => {
           </div>
           {workingUnderInstructor === "yes" && (
             <div className="mb-4">
-              <label className="block text-gray-700 font-medium mb-2">
-                Select an Instructor
-              </label>
+              <label className="block text-gray-700 font-medium mb-2">Select an Instructor</label>
               <Select
                 options={instructors}
                 value={selectedInstructor}
@@ -244,22 +228,15 @@ const SignupPage = () => {
             </div>
           )}
           <div className="flex flex-col sm:flex-row items-center justify-center">
-            <button
-              onClick={handleSignup}
-              className="w-full bg-blue-500 text-white p-3 rounded-lg"
-            >
+            <button onClick={handleSignup} className="w-full bg-blue-500 text-white p-3 rounded-lg">
               Sign Up
             </button>
           </div>
           <div className="mt-4 text-center">
-            <Link 
-              href="/lib/pages/InstructorSignupPage" 
-              className="text-blue-600 hover:text-blue-800 underline text-sm"
-            >
+            <Link href="/lib/pages/InstructorSignupPage" className="text-blue-600 hover:text-blue-800 underline text-sm">
               Want to sign up as an Instructor?
             </Link>
           </div>
-
         </div>
       </div>
     </div>

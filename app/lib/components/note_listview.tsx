@@ -3,6 +3,7 @@ import { Note } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
 import { FileText, Search } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
+import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
 
 type NoteListViewProps = {
@@ -22,7 +23,12 @@ const extractTextFromHtml = (htmlString: string) => {
 };
 
 const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false, viewMode = "my", isInstructor = false }) => {
-  const { selectedNoteId, setSelectedNoteId } = useNotesStore();
+  const { selectedNoteId, setSelectedNoteId } = useNotesStore(
+    useShallow((state) => ({
+      selectedNoteId: state.selectedNoteId,
+      setSelectedNoteId: state.setSelectedNoteId,
+    }))
+  );
   const [fresh, setFresh] = useState(true);
   const [visibleCount, setVisibleCount] = useState(batch_size);
   const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
@@ -40,8 +46,8 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
     const fetchCreatorNames = async () => {
       if (viewMode === "review" && isInstructor) {
         const names: Record<string, string> = {};
-        const uniqueCreators = Array.from(new Set(notes.map(note => note.creator).filter(Boolean) as string[]));
-        
+        const uniqueCreators = Array.from(new Set(notes.map((note) => note.creator).filter(Boolean) as string[]));
+
         await Promise.all(
           uniqueCreators.map(async (creatorId) => {
             try {
@@ -53,13 +59,13 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
             }
           })
         );
-        
+
         setCreatorNames(names);
       } else {
         setCreatorNames({});
       }
     };
-    
+
     fetchCreatorNames();
   }, [notes, viewMode, isInstructor]);
 
@@ -139,9 +145,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
                 <span className="text-xs text-gray-500 flex-shrink-0">{handleGetTime(note.time)}</span>
               </div>
               {viewMode === "review" && isInstructor && note.creator && (
-                <p className="text-xs text-gray-500 font-medium">
-                  By: {creatorNames[note.creator] || "Loading..."}
-                </p>
+                <p className="text-xs text-gray-500 font-medium">By: {creatorNames[note.creator] || "Loading..."}</p>
               )}
               <p className="text-xs text-gray-600 truncate leading-relaxed">{noteTextContent}</p>
             </div>

@@ -2,14 +2,9 @@ import React from "react";
 import { Note, Tag } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import { toast } from "sonner";
-import { User } from "../../models/user_class";
 import type { NoteStateType, NoteHandlersType } from "./note_state";
 
-
-export const handleTitleChange = (
-  setTitle: React.Dispatch<React.SetStateAction<string>>,
-  event: React.ChangeEvent<HTMLInputElement>
-) => {
+export const handleTitleChange = (setTitle: React.Dispatch<React.SetStateAction<string>>, event: React.ChangeEvent<HTMLInputElement>) => {
   setTitle(event.target.value);
 };
 
@@ -23,23 +18,16 @@ export const handleLocationChange = (
   setLongitude(newLongitude.toString());
 };
 
-export const handleTimeChange = (
-  setTime: React.Dispatch<React.SetStateAction<Date>>,
-  newDate: Date
-) => {
+export const handleTimeChange = (setTime: React.Dispatch<React.SetStateAction<Date>>, newDate: Date) => {
   setTime(newDate);
 };
 
-export const handlePublishChange = async (
-  noteState: NoteStateType,
-  noteHandlers: NoteHandlersType
-) => {
+export const handlePublishChange = async (noteState: NoteStateType, noteHandlers: NoteHandlersType) => {
   if (!noteState.note) {
     console.error("No note found.");
     return;
   }
 
-  const creatorId = noteState.note?.creator || await User.getInstance().getId();
   const updatedNote = {
     ...noteState.note,
     text: noteState.editorContent,
@@ -51,7 +39,6 @@ export const handlePublishChange = async (
     tags: noteState.tags,
     audio: noteState.audio,
     id: noteState.note?.id || "",
-    // creator: creatorId,
     published: !noteState.isPublished,
   };
 
@@ -61,9 +48,7 @@ export const handlePublishChange = async (
     noteHandlers.setNote(updatedNote);
 
     toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
-      description: updatedNote.published
-        ? "Your note has been published successfully."
-        : "Your note has been unpublished successfully.",
+      description: updatedNote.published ? "Your note has been published successfully." : "Your note has been unpublished successfully.",
       duration: 4000,
     });
 
@@ -77,13 +62,7 @@ export const handlePublishChange = async (
   }
 };
 
-
-
-
-export const handleTagsChange = (
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>, 
-  newTags: (Tag | string)[]
-) => {
+export const handleTagsChange = (setTags: React.Dispatch<React.SetStateAction<Tag[]>>, newTags: (Tag | string)[]) => {
   const formattedTags = newTags.map((tag) =>
     typeof tag === "string"
       ? { label: tag, origin: "user" as const } // Ensure origin is correctly typed
@@ -92,16 +71,13 @@ export const handleTagsChange = (
   setTags(formattedTags);
 };
 
-export const handleEditorChange = (
-  setEditorContent: React.Dispatch<React.SetStateAction<string>>,
-  content: string
-) => {
+export const handleEditorChange = (setEditorContent: React.Dispatch<React.SetStateAction<string>>, content: string) => {
   setEditorContent(content);
 };
 
-export const handleDeleteNote = async ( //supposed to be archive but named as delete
+export const handleDeleteNote = async (
+  //supposed to be archive but named as delete
   note: Note | undefined,
-  user: User,
   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
 ) => {
   // Check if note exists and has an ID
@@ -123,8 +99,6 @@ export const handleDeleteNote = async ( //supposed to be archive but named as de
   }
 
   try {
-    const userId = await user.getId();
-
     // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
     const updatedNote = {
       ...note,

@@ -5,7 +5,8 @@ import SearchBarMap from "../../components/search_bar_map";
 import { Note, newNote } from "@/app/types";
 import ApiService from "../../utils/api_service";
 import DataConversion from "../../utils/data_conversion";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 import ClickableNote from "../../components/click_note_card";
 import { Skeleton } from "@/components/ui/skeleton";
 // intro.js will be loaded dynamically to avoid SSR issues
@@ -81,7 +82,12 @@ const Page = () => {
     }
   }, [isPanelOpen]);
 
-  const user = User.getInstance();
+  const { user: authUser, isLoggedIn: authIsLoggedIn } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isLoggedIn: state.isLoggedIn,
+    }))
+  );
   const { isMapsApiLoaded } = useGoogleMaps();
 
   const startPopupCloseTimer = () => {
@@ -106,7 +112,7 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Skip SSR
+    if (typeof window === "undefined") return; // Skip SSR
     const observer = new MutationObserver(async () => {
       const navbarCreateNoteButton = document.getElementById("navbar-create-note");
       const navbarLogoutButton = document.getElementById("navbar-logout");
@@ -578,7 +584,7 @@ const Page = () => {
 
   const fetchNotes = async () => {
     try {
-      const userId = await user.getId();
+      const userId = authUser?.uid;
 
       let personalNotes: Note[] = [];
       let globalNotes: Note[] = [];
@@ -610,7 +616,7 @@ const Page = () => {
 
   const fetchNotes1 = async () => {
     try {
-      const userId = await user.getId();
+      const userId = authUser?.uid;
 
       let personalNotes: Note[] = [];
       let globalNotes: Note[] = [];
@@ -847,10 +853,10 @@ const Page = () => {
         </div>
       </div>
 
-      <div 
+      <div
         className="h-full transition-all duration-300 ease-in-out"
         style={{
-          width: isPanelOpen ? 'calc(100% - 34rem)' : '100%',
+          width: isPanelOpen ? "calc(100% - 34rem)" : "100%",
         }}
       >
         {isMapsApiLoaded && (

@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { User } from "../models/user_class";
+import { useAuthStore } from "../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 
 // Utility functions
 const formatDate = (date: string | number | Date) =>
@@ -36,19 +37,25 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<Comment[]>(note.comments || []);
   const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState<string>("");
   const [isStudent, setIsStudent] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
   const [sanitizedBodyHtml, setSanitizedBodyHtml] = useState<string>("");
 
+  // Use auth store for user data
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
+
   // Determine real ID and body text fields
-  const noteId =(note as any).id || (note as any)._id || (note as any)["@id"] || "";
-    const bodyHtml = (note as any).BodyText || note.text || "";
+  const noteId = (note as any).id || (note as any)._id || (note as any)["@id"] || "";
+  const bodyHtml = (note as any).BodyText || note.text || "";
 
   // Load DOMPurify only on client side to avoid SSR issues
   useEffect(() => {
-    if (typeof window !== 'undefined' && bodyHtml) {
-      import('dompurify').then((DOMPurify) => {
+    if (typeof window !== "undefined" && bodyHtml) {
+      import("dompurify").then((DOMPurify) => {
         setSanitizedBodyHtml(DOMPurify.default.sanitize(bodyHtml));
       });
     }
@@ -60,16 +67,12 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     console.log("🃏 [EnhancedNoteCard] bodyHtml:", bodyHtml);
   }, [noteId, bodyHtml]);
 
+  // Set user roles from auth store
   useEffect(() => {
-    (async () => {
-      const roles = await User.getInstance().getRoles();
-      setIsStudent(!!roles?.contributor && !roles?.administrator);
-      setIsInstructor(!!roles?.administrator);
-      const name = await User.getInstance().getName();
-      setUserName(name ?? "");   // coalesce null → empty string
-    })();
-  }, []);
-  
+    const roles = authUser?.roles;
+    setIsStudent(!!roles?.contributor && !roles?.administrator);
+    setIsInstructor(!!roles?.administrator);
+  }, [authUser]);
 
   // Fetch creator name and location
   useEffect(() => {
@@ -82,7 +85,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
       if (note.latitude && note.longitude && MAPS_API_KEY) {
         const lat = parseFloat(note.latitude.toString());
         const lng = parseFloat(note.longitude.toString());
-        
+
         // Use the shared location cache utility
         const location = await getCachedLocation(lat, lng, MAPS_API_KEY);
         setLocation(location || "Unknown Location");
@@ -100,8 +103,9 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
     setLoading(true);
     try {
-      const userId = await User.getInstance().getId();
-      
+      const userId = authUser?.uid;
+      const userName = authUser?.name ?? "";
+
       const newComment: Comment = {
         id: uuidv4(),
         text: commentText.trim(),
@@ -111,7 +115,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         createdAt: new Date().toISOString(),
         authorName: undefined,
         noteId: "",
-        uid: ""
+        uid: "",
       };
 
       const updatedComments = [...comments, newComment];
@@ -171,8 +175,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
               <UserCircle size={16} className="mr-1" /> {creatorName}
             </div>
             <div className="text-sm text-gray-500 mb-2 flex items-center">
-              <CalendarDays size={16} className="mr-1" />{" "}
-              {formatDate(note.time)}
+              <CalendarDays size={16} className="mr-1" /> {formatDate(note.time)}
             </div>
             <div className="text-sm text-gray-500 mb-2 flex items-center">
               <Clock3 size={16} className="mr-1" /> {formatTime(note.time)}
@@ -184,10 +187,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             )}
 
             {/* ← Here we render the actual HTML snippet, limited in height */}
-            <div
-              className="text-sm text-gray-700 overflow-hidden max-h-[80px]"
-              dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }}
-            />
+            <div className="text-sm text-gray-700 overflow-hidden max-h-[80px]" dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }} />
           </div>
         </div>
       </DialogTrigger>
@@ -205,7 +205,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         )}
 
         <ScrollArea className="border p-4 mb-4 max-h-[300px] bg-white">
-        <div dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }} />
         </ScrollArea>
 
         <div className="border-t pt-4">
@@ -218,9 +218,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 <div key={c.id} className="border p-2 rounded bg-gray-100">
                   <div className="font-semibold">{c.author}</div>
                   <div>{c.text}</div>
-                  <div className="text-xs text-gray-500">
-                    {new Date(c.createdAt).toLocaleString()}
-                  </div>
+                  <div className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</div>
                 </div>
               ))
             ) : (
@@ -236,10 +234,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
               disabled={loading}
               rows={3}
             />
-            <Button
-              onClick={handleSubmitComment}
-              disabled={loading || !commentText.trim()}
-            >
+            <Button onClick={handleSubmitComment} disabled={loading || !commentText.trim()}>
               {loading ? "Submitting…" : "Submit Comment"}
             </Button>
           </div>

@@ -4,42 +4,41 @@ import Sidebar from "../../components/side_bar";
 import NoteEditor from "../../components/noteElements/note_component";
 import { Note, newNote } from "../../../types";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { User } from "../../models/user_class";
 import { useNotesStore } from "../../stores/notesStore";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 
 export default function Notes() {
-  const { fetchNotes, setSelectedNoteId } = useNotesStore();
+  const { fetchNotes, setSelectedNoteId } = useNotesStore(
+    useShallow((state) => ({
+      fetchNotes: state.fetchNotes,
+      setSelectedNoteId: state.setSelectedNoteId,
+    }))
+  );
+
+  const { user, isLoggedIn } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isLoggedIn: state.isLoggedIn,
+    }))
+  );
 
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
 
   console.log("Notes page render");
-  useEffect(() => {
-    const user = User.getInstance();
-    // Add a slight delay before checking the login state
-    setTimeout(() => {
-      user.setLoginCallback((isLoggedIn) => {
-        setIsUserLoggedIn(isLoggedIn);
-      });
-      // Manually check the initial login state
-      setIsUserLoggedIn(user !== null);
-    }, 100); // Adjust the delay as needed
-  }, []);
 
-  // Fetch notes on mount
+  // Fetch notes when user logs in
   useEffect(() => {
-    const user = User.getInstance();
     const loadNotes = async () => {
-      const userId = await user.getId();
+      const userId = user?.uid;
       if (userId) {
         await fetchNotes(userId);
       }
     };
     loadNotes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [user?.uid, fetchNotes]);
 
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
@@ -63,7 +62,7 @@ export default function Notes() {
       <ResizablePanel defaultSize={80}>
         {/* Main content area */}
         <div className="h-full flex flex-col relative min-h-0">
-          {isUserLoggedIn ? (
+          {isLoggedIn ? (
             selectedNote ? (
               <div className="h-full w-full min-h-0 flex flex-col">
                 <NoteEditor note={selectedNote} isNewNote={isNewNote} onNoteDeleted={handleNoteDeleted} />

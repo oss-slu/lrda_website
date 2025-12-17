@@ -159,8 +159,15 @@ function parseDocumentID(atID) {
   if (typeof atID !== "string") {
     throw new Error("Unable to parse this type.");
   }
+  // Handle URLs without protocol (e.g., "localhost:3001/v1/id/...")
+  // by extracting the last segment which should be the ID
   if (!/^https?/.test(atID)) {
-    throw new Error(`Designed for parsing URL strings. Please check: ${atID}`);
+    // Check if it looks like a URL path with an ID at the end
+    if (atID.includes("/")) {
+      return atID.split("/").pop();
+    }
+    // If it's just an ID string, return it as-is
+    return atID;
   }
   return atID.split("/").pop();
 }

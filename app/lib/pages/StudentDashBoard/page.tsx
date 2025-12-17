@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "@/app/types";
 import ApiService from "../../utils/api_service";
-import { User } from "../../models/user_class";
+import { useAuthStore } from "../../stores/authStore";
+import { useShallow } from "zustand/react/shallow";
 import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,18 @@ const StudentDashboardPage: React.FC = () => {
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Use auth store for user data
+  const { user: authUser } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+    }))
+  );
+
   useEffect(() => {
     const fetchPendingFeedback = async () => {
       try {
-        const userInstance = User.getInstance();
-        const userId = await userInstance.getId();
+        const userId = authUser?.uid;
+        if (!userId) return;
 
         // Fetch notes created by this student, still unpublished, with at least one comment
         const queryObj = {
@@ -27,15 +35,10 @@ const StudentDashboardPage: React.FC = () => {
           published: false,
           creator: userId,
           approvalRequested: true,
-          $or: [
-            { isArchived: { $exists: false } },
-            { isArchived: false },
-          ],
+          $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
         };
         const fetched = await ApiService.getPagedQuery(150, 0, queryObj);
-        const withComments = (fetched as Note[]).filter(
-          (note) => (note.comments || []).length > 0
-        );
+        const withComments = (fetched as Note[]).filter((note) => (note.comments || []).length > 0);
         setNotes(withComments);
         setFilteredNotes(withComments);
       } catch (error) {
@@ -47,7 +50,7 @@ const StudentDashboardPage: React.FC = () => {
     };
 
     fetchPendingFeedback();
-  }, []);
+  }, [authUser?.uid]);
 
   const handleSearch = (query: string) => {
     const lower = query.toLowerCase();
@@ -56,9 +59,7 @@ const StudentDashboardPage: React.FC = () => {
       return;
     }
     const filtered = notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(lower) ||
-        (note.comments || []).some((c) => c.text.toLowerCase().includes(lower))
+      (note) => note.title.toLowerCase().includes(lower) || (note.comments || []).some((c) => c.text.toLowerCase().includes(lower))
     );
     setFilteredNotes(filtered);
   };
@@ -81,18 +82,11 @@ const StudentDashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-screen-lg">
           {isLoading ? (
             [...Array(6)].map((_, idx) => (
-              <Skeleton
-                key={`skeleton-${idx}`}
-                className="w-full h-[400px] rounded-sm border border-gray-300"
-              />
+              <Skeleton key={`skeleton-${idx}`} className="w-full h-[400px] rounded-sm border border-gray-300" />
             ))
           ) : filteredNotes.length > 0 ? (
             filteredNotes.map((note) => {
-              const noteId =
-                (note as any).id ||
-                (note as any)._id ||
-                (note as any)["@id"] ||
-                note.title;
+              const noteId = (note as any).id || (note as any)._id || (note as any)["@id"] || note.title;
               const latestComments = (note.comments || []).slice(-2);
 
               return (
@@ -105,21 +99,15 @@ const StudentDashboardPage: React.FC = () => {
                     <h4 className="text-sm font-semibold mb-2">Recent Feedback:</h4>
                     {latestComments.map((c) => (
                       <div key={c.id} className="text-xs text-gray-700 mb-1">
-                        <span className="font-medium">{c.author}:</span>{" "}
-                        {c.text.length > 100
-                          ? c.text.slice(0, 100) + "..."
-                          : c.text}
+                        <span className="font-medium">{c.author}:</span> {c.text.length > 100 ? c.text.slice(0, 100) + "..." : c.text}
                       </div>
                     ))}
                   </div>
-
                 </div>
               );
             })
           ) : (
-            <div className="col-span-full text-center text-gray-600">
-              No feedback to review at the moment.
-            </div>
+            <div className="col-span-full text-center text-gray-600">No feedback to review at the moment.</div>
           )}
         </div>
       </div>

@@ -254,7 +254,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install Netlify Next.js plugin
-        run: pnpm add -D @netlify/plugin-nextjs
+        run: pnpm add -D -w @netlify/plugin-nextjs
 
       - name: Build the application
         run: pnpm build
@@ -379,4 +379,3 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
