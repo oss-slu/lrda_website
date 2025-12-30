@@ -1584,7 +1584,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                         />
                       )
                     }
-                    children={(editor) => {
+                    children={(editor: Editor | null) => {
                       if (!editor) return null;
                       return <LinkBubbleMenu />;
                     }}
