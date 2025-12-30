@@ -85,7 +85,6 @@
     "@tiptap/starter-kit": "^3.10.2",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
-    "appDir": "link:tss-react/next/appDir",
     "axios": "^1.13.2",
     "babel-loader": "^10.0.0",
     "class-variance-authority": "^0.7.1",
@@ -121,7 +120,6 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "tooltip": "link:@/components/ui/tooltip",
     "tss-react": "^4.9.19",
     "uuid": "^13.0.0",
     "zustand": "^5.0.8"
