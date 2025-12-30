@@ -19,11 +19,14 @@ type SidebarProps = {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, viewMode } = useNotesStore(
+  const { notes, fetchNotes, viewMode, draftNote, setDraftNote, setSelectedNoteId } = useNotesStore(
     useShallow((state) => ({
       notes: state.notes,
       fetchNotes: state.fetchNotes,
       viewMode: state.viewMode,
+      draftNote: state.draftNote,
+      setDraftNote: state.setDraftNote,
+      setSelectedNoteId: state.setSelectedNoteId,
     }))
   );
   const { user } = useAuthStore(
@@ -45,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const userId = user?.uid;
     if (userId) {
       // Create a local-only draft note (not saved to DB yet)
-      const draftNote: newNote = {
+      const newDraftNote: newNote = {
         title: "",
         text: "",
         time: new Date(),
@@ -59,8 +62,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         isArchived: false,
       };
 
+      // Add draft to store so it appears in sidebar immediately
+      setDraftNote(newDraftNote);
+
+      // Set selectedNoteId to "draft" to clear any existing active note and mark draft as active
+      setSelectedNoteId("draft");
+
       // Open for editing immediately; will save when user types
-      onNoteSelect(draftNote, true);
+      onNoteSelect(newDraftNote, true);
     } else {
       console.error("User ID is null - cannot create a new note");
     }
@@ -307,6 +316,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             isSearching={isSearching}
             viewMode={viewMode}
             isInstructor={isInstructor}
+            draftNote={!showPublished ? draftNote : null}
+            onDraftSelect={() => {
+              if (draftNote) {
+                setSelectedNoteId("draft"); // Set special ID to indicate draft is active
+                onNoteSelect(draftNote, true);
+              }
+            }}
           />
         </div>
       </div>

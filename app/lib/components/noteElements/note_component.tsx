@@ -93,6 +93,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Use individual selectors for actions (stable references, no re-renders)
   const updateNote = useNotesStore((state) => state.updateNote);
   const addNote = useNotesStore((state) => state.addNote);
+  const clearDraftNote = useNotesStore((state) => state.clearDraftNote);
 
   // Get current note ID - try noteState first, then initialNote as fallback
   const currentNoteId =
@@ -822,6 +823,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           // Update local state and store
           noteHandlers.setNote(savedNote as Note);
           addNote(savedNote as Note);
+          clearDraftNote(); // Remove draft from sidebar now that it's saved
           setIsCreatingNew(false);
           lastSavedSnapshotRef.current = {
             title: noteState.title,

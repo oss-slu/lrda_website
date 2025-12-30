@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Note } from "../../types";
+import { Note, newNote } from "../../types";
 import { format12hourTime } from "../utils/data_conversion";
-import { FileText, Search } from "lucide-react";
+import { FileText, Search, FileEdit } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
 import { useShallow } from "zustand/react/shallow";
 import ApiService from "../utils/api_service";
@@ -12,6 +12,8 @@ type NoteListViewProps = {
   isSearching?: boolean;
   viewMode?: "my" | "review";
   isInstructor?: boolean;
+  draftNote?: newNote | null;
+  onDraftSelect?: () => void;
 };
 
 const batch_size = 15; //can change batch loading here
@@ -22,11 +24,12 @@ const extractTextFromHtml = (htmlString: string) => {
   return tempDivElement.textContent || tempDivElement.innerText || "";
 };
 
-const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false, viewMode = "my", isInstructor = false }) => {
-  const { selectedNoteId, setSelectedNoteId } = useNotesStore(
+const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSearching = false, viewMode = "my", isInstructor = false, draftNote = null, onDraftSelect }) => {
+  const { selectedNoteId, setSelectedNoteId, clearDraftNote } = useNotesStore(
     useShallow((state) => ({
       selectedNoteId: state.selectedNoteId,
       setSelectedNoteId: state.setSelectedNoteId,
+      clearDraftNote: state.clearDraftNote,
     }))
   );
   const [fresh, setFresh] = useState(true);
@@ -70,8 +73,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
   }, [notes, viewMode, isInstructor]);
 
   const handleLoadText = (note: Note) => {
+    clearDraftNote(); // Clear draft when clicking on an existing note
     onNoteSelect(note, false);
     setSelectedNoteId(note.id);
+  };
+
+  const handleDraftSelect = () => {
+    setSelectedNoteId("draft"); // Set special ID to indicate draft is active
+    if (onDraftSelect) {
+      onDraftSelect();
+    }
   };
 
   const handleGetTime = (inputDate: Date) => {
@@ -123,6 +134,32 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
 
   return (
     <div id="notes-list" className="my-4 flex flex-col">
+      {/* Draft note - shown at top when present */}
+      {draftNote && (
+        <div
+          className={`p-2.5 mb-1.5 z-10 rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${
+            selectedNoteId === "draft"
+              ? "bg-blue-50 border-2 border-blue-300 text-blue-900 shadow-md"
+              : "bg-amber-50 border-2 border-dashed border-amber-300 text-amber-900 hover:bg-amber-100 hover:shadow-md"
+          }`}
+          onClick={handleDraftSelect}
+        >
+          <div className="flex flex-col space-y-1">
+            <div className="flex flex-row items-start justify-between">
+              <h3 className="text-sm font-semibold truncate flex-1 mr-2">
+                {draftNote.title || "Untitled"}
+              </h3>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
+                <FileEdit className="w-3 h-3" />
+                Draft
+              </span>
+            </div>
+            <p className="text-xs text-amber-700 truncate leading-relaxed">
+              {draftNote.text ? extractTextFromHtml(draftNote.text) : "Start typing to save..."}
+            </p>
+          </div>
+        </div>
+      )}
       {notes.slice(0, visibleCount).map((note) => {
         let noteTextContent = extractTextFromHtml(note.text);
         if (noteTextContent === undefined || noteTextContent === null || noteTextContent === "" || noteTextContent === "undefined") {
