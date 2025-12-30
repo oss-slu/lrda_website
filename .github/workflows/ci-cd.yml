@@ -49,7 +49,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Authenticate GitHub CLI
         if: github.event_name == 'push'
         run: |
@@ -57,7 +57,7 @@ jobs:
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Check if branch has open PR
         id: check
         if: github.event_name == 'push'
@@ -75,7 +75,7 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Set default for pull_request events
         id: default
         if: github.event_name == 'pull_request'
@@ -161,16 +161,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+            packages/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('packages/web/**/*.js', 'packages/web/**/*.jsx', 'packages/web/**/*.ts', 'packages/web/**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm --filter web exec playwright install --with-deps
 
       - name: Build the application
-        run: pnpm build
+        run: pnpm --filter web build
         env:
           CI: true
           NEXT_PUBLIC_FIREBASE_API_KEY: "ci-mock-key"
@@ -185,12 +185,12 @@ jobs:
 
       - name: Start the application
         run: |
-          pnpm start &
+          pnpm --filter web start &
           sleep 10
           timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
 
       - name: Run Playwright tests
-        run: pnpm exec playwright test --project=chromium
+        run: pnpm --filter web exec playwright test --project=chromium
         env:
           CI: true
 
@@ -248,8 +248,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+            packages/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('packages/web/**/*.js', 'packages/web/**/*.jsx', 'packages/web/**/*.ts', 'packages/web/**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
@@ -257,7 +257,7 @@ jobs:
         run: pnpm add -D -w @netlify/plugin-nextjs
 
       - name: Build the application
-        run: pnpm build
+        run: pnpm --filter web build
         env:
           CI: true
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
@@ -349,8 +349,9 @@ jobs:
             echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
             # Deploy the built .next directory (already built in previous step)
-            # The netlify.toml config will ensure proper Next.js routing
-            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --filter lrda_website --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
+            # Change to packages/web to avoid project detection issues
+            cd packages/web
+            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
             echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
             if [ -s deploy_url.txt ]; then
               PREVIEW_URL=$(cat deploy_url.txt)
@@ -368,11 +369,11 @@ jobs:
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --filter lrda_website --message="Production deploy from main - ${{ github.sha }}" --json
+            cd packages/web && netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --filter lrda_website --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+            cd packages/web && netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
           # For main branch: uses environment secrets from 'production' environment

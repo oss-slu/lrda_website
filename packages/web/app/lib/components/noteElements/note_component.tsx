@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import TimePicker from "./time_picker";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
+import type { Editor } from "@tiptap/core";
 import TagManager from "./tag_manager";
 import LocationPicker from "./location_component";
 import EditorMenuControls from "../editor_menu_controls";
@@ -1494,7 +1495,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                     content={noteState.editorContent}
                     immediatelyRender={false}
                     editable={!isViewingStudentNote}
-                    onUpdate={({ editor }) => {
+                    onUpdate={({ editor }: { editor: Editor }) => {
                       if (!isViewingStudentNote) {
                         lastEditTimeRef.current = Date.now();
                         handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
@@ -1583,7 +1584,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
                         />
                       )
                     }
-                    children={(editor) => {
+                    children={(editor: Editor | null) => {
                       if (!editor) return null;
                       return <LinkBubbleMenu />;
                     }}

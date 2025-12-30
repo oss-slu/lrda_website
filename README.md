@@ -10,6 +10,13 @@ Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)
 
 See the [Server README](packages/server/README.md) and [Contributing Guide](CONTRIBUTING.md#local-backend-setup) for details.
 
+## Project Structure
+
+This is a monorepo with the following packages:
+- `packages/web/` - Next.js web application
+- `packages/server/` - Express.js REST API server (located at `server/` root)
+- `packages/lrda-server-core/` - RERUM framework-based server core library
+
 ## We Are Using
 
 [Tiptap](https://tiptap.dev/) : A headless rich text editor framework, see [Tiptap Documentation](https://tiptap.dev/docs/).
