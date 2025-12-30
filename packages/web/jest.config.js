@@ -19,9 +19,10 @@ const customJestConfig = {
     "^react-player$": "<rootDir>/app/__mocks__/react-player.js",
     "^intro\\.js$": "<rootDir>/app/__mocks__/intro.js",
     "^intro\\.js/introjs\\.css$": "<rootDir>/app/__mocks__/styleMock.js",
+    "^react-resizable-panels$": "<rootDir>/__mocks__/react-resizable-panels.tsx",
   },
-  // Exclude Playwright E2E tests and server packages from Jest runs
-  testPathIgnorePatterns: ["<rootDir>/app/__e2e__/", "<rootDir>/app/__tests__/utils/", "<rootDir>/node_modules/", "<rootDir>/packages/"],
+  // Exclude Playwright E2E tests from Jest runs
+  testPathIgnorePatterns: ["<rootDir>/app/__e2e__/", "<rootDir>/app/__tests__/utils/", "<rootDir>/node_modules/"],
 };
 
 module.exports = createJestConfig({

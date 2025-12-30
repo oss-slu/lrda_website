@@ -55,17 +55,27 @@ git clone https://github.com/YOUR_USERNAME/lrda_website.git
 cd lrda_website
 pnpm install
 
-
+# Start the Next.js development server
 pnpm dev
 ```
 
+The root `pnpm dev` command will run the web package. You can also use `pnpm --filter web dev` directly.
+
 ### 2. Set Up Environment Variables
 
+**Web Package (Next.js):**
 ```bash
-cp .env.example .env.local
+cp packages/web/.env.example packages/web/.env.local
 ```
 
-Edit `.env.local` with your configuration (see [Environment Setup](#environment-setup) below).
+Edit `packages/web/.env.local` with your configuration (see [Environment Setup](#environment-setup) below).
+
+**Server Package (Express API):**
+```bash
+cp packages/server/.env.example packages/server/.env
+```
+
+Edit `packages/server/.env` with your server configuration (see [Local Backend Setup](#local-backend-setup) below).
 
 ### 3. Start the Local Backend (Docker)
 
@@ -103,10 +113,10 @@ The easiest way to get started - no Firebase account needed! Firebase Emulators 
 **Step 1: Set up environment**
 
 ```bash
-cp .env.example .env.local
+cp packages/web/.env.example packages/web/.env.local
 ```
 
-The default `.env.example` already has `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` set.
+The default `packages/web/.env.example` already has `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` set.
 
 **Step 2: Start Firebase Emulators (Terminal 1)**
 
@@ -127,6 +137,10 @@ This starts:
 ```bash
 pnpm dev:emulators
 ```
+
+Or use the filter command: `pnpm --filter web dev:emulators`
+
+Or use the filter command: `pnpm --filter web dev:emulators`
 
 Open [http://localhost:3000](http://localhost:3000) - authentication and data storage will use local emulators!
 
@@ -149,7 +163,7 @@ pnpm firebase:emulators:import
 For UI work that doesn't require authentication, you can use mock values:
 
 ```env
-# .env.local - Mock mode for UI development
+# packages/web/.env.local - Mock mode for UI development
 NEXT_PUBLIC_FIREBASE_API_KEY=demo-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-project
@@ -209,12 +223,14 @@ In a separate terminal:
 
 ```bash
 cd packages/server
-cp .env.example .env  # If not already done
+cp .env.example .env  # If not already done (creates packages/server/.env)
 pnpm install
 pnpm start
 ```
 
 The API server runs on [http://localhost:3001](http://localhost:3001).
+
+> **Note:** The server package uses `packages/server/.env` (not `.env.local` like the web package). Copy `packages/server/.env.example` to `packages/server/.env` before starting the server.
 
 ### Stopping the Backend
 
@@ -231,9 +247,9 @@ docker compose down
 
 Your Firebase environment variables are missing or invalid. Check that:
 
-1. `.env.local` exists in the project root
+1. `packages/web/.env.local` exists in the web package directory
 2. All `NEXT_PUBLIC_FIREBASE_*` variables have values (or use emulators)
-3. You've restarted the dev server after changing `.env.local`
+3. You've restarted the dev server after changing `packages/web/.env.local`
 
 ### Firebase Emulator Issues
 
