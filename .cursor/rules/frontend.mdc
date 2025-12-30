@@ -1,0 +1,245 @@
+---
+alwaysApply: false
+description: "Frontend-specific patterns for Next.js App Router, React components, and UI libraries"
+globs: app/**, components/**
+---
+
+# Frontend Patterns
+
+> This file provides quick reference patterns for AI agents working with the Next.js frontend.
+
+## Next.js App Router
+
+### Server Components by Default
+
+- Server Components are the default in Next.js App Router
+- Only use `'use client'` directive when needed:
+  - Using React hooks (`useState`, `useEffect`, etc.)
+  - Event handlers (`onClick`, `onChange`, etc.)
+  - Browser APIs (`window`, `document`, etc.)
+  - Context providers that use hooks
+
+### Route Handlers
+
+API routes in `app/api/`:
+
+```typescript
+// app/api/example/route.ts
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  return NextResponse.json({ message: 'Example' })
+}
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  return NextResponse.json({ success: true, data: body })
+}
+```
+
+### Page Components
+
+Pages in `app/lib/pages/`:
+
+```typescript
+// app/lib/pages/ExamplePage/page.tsx
+export default function ExamplePage() {
+  return <div>Example Page</div>
+}
+```
+
+## Component Patterns
+
+### Component Structure
+
+```typescript
+'use client' // Only if needed
+
+import { Button } from '@/components/ui/button'
+import { useStore } from '@/app/lib/stores/exampleStore'
+import { LucideIcon } from 'lucide-react'
+
+interface ExampleProps {
+  title: string
+  onAction: () => void
+}
+
+export function ExampleComponent({ title, onAction }: ExampleProps) {
+  const { state } = useStore()
+
+  return (
+    <div className="container">
+      <Button onClick={onAction}>{title}</Button>
+    </div>
+  )
+}
+```
+
+### UI Component Libraries
+
+#### shadcn/ui (Primary)
+
+- Import from `@/components/ui/`
+- Components are customizable with Tailwind classes
+- Example: `import { Button } from '@/components/ui/button'`
+
+#### MUI (Secondary - Use Sparingly)
+
+- Only use for rich text editor integration
+- Avoid MUI components elsewhere
+- Use mui-tiptap for editor
+
+## State Management
+
+### Zustand Stores
+
+Stores in `app/lib/stores/`:
+
+```typescript
+import { create } from 'zustand'
+
+interface StoreState {
+  value: string
+  setValue: (value: string) => void
+}
+
+export const useExampleStore = create<StoreState>((set) => ({
+  value: '',
+  setValue: (value) => set({ value }),
+}))
+```
+
+### React Query
+
+Data fetching with TanStack React Query:
+
+```typescript
+import { useQuery } from '@tanstack/react-query'
+
+export function useExampleData() {
+  return useQuery({
+    queryKey: ['example'],
+    queryFn: async () => {
+      const response = await fetch('/api/example')
+      return response.json()
+    },
+  })
+}
+```
+
+### Local State
+
+Use React `useState` for component-specific state:
+
+```typescript
+const [count, setCount] = useState(0)
+```
+
+## Styling
+
+### Tailwind CSS
+
+- Use Tailwind utility classes
+- Color palette: blues and whites
+- Mobile-first responsive design
+- Breakpoints: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+
+### Component Styling
+
+```typescript
+<div className="container mx-auto p-4 bg-blue-50 text-blue-900">
+  <h1 className="text-2xl font-bold mb-4">Title</h1>
+</div>
+```
+
+## Icons
+
+- **Primary**: Lucide React (`lucide-react`)
+- **Secondary**: MUI icons (`@mui/icons-material`)
+- **Never**: Use emojis as icons
+
+```typescript
+import { Search, User, Settings } from 'lucide-react'
+import { Search as SearchIcon } from '@mui/icons-material'
+```
+
+## Firebase Integration
+
+### Client-Side Firebase
+
+```typescript
+import { initializeApp } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+
+// Use config from app/lib/config/firebase.ts
+const app = initializeApp(firebaseConfig)
+const auth = getAuth(app)
+const db = getFirestore(app)
+```
+
+### Authentication State
+
+Use Zustand store: `app/lib/stores/authStore.ts`
+
+## Google Maps
+
+### Configuration
+
+Use context from `app/lib/utils/GoogleMapsContext.tsx`
+
+### Map Components
+
+```typescript
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api'
+
+const { isLoaded } = useLoadScript({
+  googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+})
+```
+
+## Rich Text Editor (Tiptap)
+
+- Use mui-tiptap for rich text editing
+- Extensions in `app/lib/utils/use_extensions.ts`
+- Handle media uploads through S3 proxy (`app/lib/utils/s3_proxy.ts`)
+
+## File Organization
+
+### Components
+- Custom: `app/lib/components/`
+- shadcn/ui: `components/ui/`
+
+### Utilities
+- `app/lib/utils/`
+
+### Hooks
+- Custom hooks: `app/lib/hooks/`
+- React Query hooks: `app/lib/hooks/queries/`
+
+### Stores
+- Zustand stores: `app/lib/stores/`
+
+### Pages
+- Page components: `app/lib/pages/`
+
+## Best Practices
+
+### DO
+
+- Use Server Components by default
+- Only add `'use client'` when necessary
+- Use TypeScript interfaces for props
+- Use `@/` alias for imports
+- Prefer shadcn/ui components
+- Use Tailwind for styling
+- Keep components focused and small
+
+### DON'T
+
+- Don't use `'use client'` unnecessarily
+- Don't use MUI outside of rich text editor
+- Don't use emojis anywhere
+- Don't use inline styles
+- Don't use deep relative imports (`../../../`)
+- Don't write tests unless asked

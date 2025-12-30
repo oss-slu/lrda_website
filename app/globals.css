@@ -511,13 +511,7 @@ body {
   pointer-events: none; /* This ensures the shadow doesn't interfere with clicking or scrolling */
 }
 
-/* Adjusts the position and size of the 'Skip' label */
-.introjs-skipbutton {
-  font-size: 1em;
-  left: auto;
-  right: 10px;
-  color: #555;
-}
+/* Intro.js custom styles are imported from introjs-custom.css */
 
 @keyframes pulse-subtle {
   0%,
@@ -585,15 +579,14 @@ body {
 
 /* Hover effect */
 .custom-marker:hover .marker-body {
-  fill: #2563EB; /* Change to blue when hovering */
+  fill: #2563eb; /* Change to blue when hovering */
 }
 
 /* Adds spacing to all img tags for note content */
 .note-content img {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  border-radius: 0.5rem; 
+  border-radius: 0.5rem;
   max-width: 100%;
   height: auto;
 }
-

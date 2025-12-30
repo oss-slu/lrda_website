@@ -83,18 +83,6 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
         intro.onexit(setIntroShownCookie);
 
         intro.start();
-
-        // Style the skip button after rendering
-        setTimeout(() => {
-          const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
-          if (skipButton) {
-            skipButton.style.position = "absolute";
-            skipButton.style.top = "2px";
-            skipButton.style.right = "20px";
-            skipButton.style.fontSize = "18px";
-            skipButton.style.padding = "4px 10px";
-          }
-        }, 100);
       }
     });
 

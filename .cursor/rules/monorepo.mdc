@@ -1,0 +1,240 @@
+---
+alwaysApply: false
+description: "Monorepo workspace patterns, package management, and cross-package dependencies"
+globs: pnpm-workspace.yaml, package.json, packages/**
+---
+
+# Monorepo Patterns
+
+> This file provides quick reference for working with the pnpm monorepo workspace structure.
+
+## Workspace Structure
+
+```
+lrda_website/                    # Root workspace
+├── package.json                 # Root package (web app)
+├── pnpm-workspace.yaml          # Workspace configuration
+├── app/                         # Next.js app
+├── server/                      # Express server package
+└── packages/
+    └── lrda-server-core/        # Shared server core library
+```
+
+## Package Names
+
+- **web**: Root package (Next.js app) - path: `.`
+- **server**: Express server - path: `server/`
+- **lrda-server-core**: RERUM framework library - path: `packages/lrda-server-core/`
+
+## Package Management
+
+### pnpm Workspaces
+
+- Package manager: `pnpm@10.20.0`
+- Node version: `>=24.9.0`
+- Workspace file: `pnpm-workspace.yaml`
+
+### Installing Dependencies
+
+```bash
+# Install all workspace dependencies
+pnpm install
+
+# Install in specific package
+pnpm --filter server add express
+pnpm --filter . add next
+pnpm --filter lrda-server-core add mongodb
+```
+
+### Running Commands
+
+**Always use `--filter` for package-scoped commands:**
+
+```bash
+# Run in root/web package
+pnpm --filter . dev
+pnpm --filter . build
+pnpm --filter . test
+
+# Run in server package
+pnpm --filter server dev
+pnpm --filter server start
+pnpm --filter server test
+
+# Run in lrda-server-core package
+pnpm --filter lrda-server-core start
+pnpm --filter lrda-server-core test
+pnpm --filter lrda-server-core db
+```
+
+## Common Workflows
+
+### Development
+
+```bash
+# Start all services (full stack)
+pnpm --filter lrda-server-core start  # Start core first
+pnpm --filter server dev               # Start Express server
+pnpm dev                               # Start Next.js app (root)
+```
+
+### Testing
+
+```bash
+# Test all packages
+pnpm --filter . test                  # Web package tests
+pnpm --filter server test             # Server tests
+pnpm --filter lrda-server-core test   # Core package tests
+```
+
+### Building
+
+```bash
+# Build web package (Next.js)
+pnpm build
+
+# Build server (if applicable)
+pnpm --filter server build
+```
+
+## Cross-Package Dependencies
+
+### Server Using Core Package
+
+The `server` package depends on `lrda-server-core`:
+
+```javascript
+// server/package.json
+{
+  "dependencies": {
+    "lrda-server-core": "workspace:*"
+  }
+}
+
+// server/app.js
+const rerum = require('lrda-server-core')
+```
+
+### Workspace Protocol
+
+Use `workspace:*` for internal package dependencies:
+
+```json
+{
+  "dependencies": {
+    "lrda-server-core": "workspace:*"
+  }
+}
+```
+
+## Package Scripts
+
+### Root Package (Web)
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
+    "test:unit": "jest --no-watchman",
+    "test:e2e": "playwright test",
+    "lint": "eslint ."
+  }
+}
+```
+
+### Server Package
+
+```json
+{
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "jest"
+  }
+}
+```
+
+### lrda-server-core Package
+
+```json
+{
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest",
+    "db": "docker-compose up -d"
+  }
+}
+```
+
+## Best Practices
+
+### DO
+
+- Always use `pnpm --filter <package-name>` for package-scoped commands
+- Use `workspace:*` for internal package dependencies
+- Install dependencies at root level when possible
+- Use package-specific commands for development/test
+- Run commands in the correct order (core → server → web)
+
+### DON'T
+
+- Don't use `npm` or `yarn` - use `pnpm` only
+- Don't run commands without `--filter` when targeting specific packages
+- Don't hardcode package paths in code
+- Don't commit `pnpm-lock.yaml` modifications unless dependencies changed
+
+## Workspace Configuration
+
+### pnpm-workspace.yaml
+
+```yaml
+packages:
+  - '.'
+  - 'server'
+  - 'packages/*'
+```
+
+## Environment Setup
+
+Each package may have its own environment variables:
+
+- Root (web): `.env.local` - Next.js environment variables
+- Server: `server/.env` - Server-specific variables
+- Core: `packages/lrda-server-core/.env` - RERUM configuration
+
+## Dependency Management
+
+### Shared Dependencies
+
+Dependencies used across packages should be:
+- Installed at root level if version-compatible
+- Installed per-package if versions differ
+
+### Peer Dependencies
+
+Be aware of peer dependency requirements, especially for:
+- React (shared between Next.js app and some packages)
+- Node.js built-ins
+
+## Troubleshooting
+
+### Clear Cache
+
+```bash
+# Clear pnpm cache
+pnpm store prune
+
+# Reinstall all dependencies
+rm -rf node_modules packages/*/node_modules server/node_modules
+pnpm install
+```
+
+### Link Issues
+
+If internal package imports fail:
+1. Ensure `pnpm install` has been run
+2. Check `workspace:*` protocol in package.json
+3. Verify package names match exactly

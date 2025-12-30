@@ -1,0 +1,311 @@
+---
+alwaysApply: false
+description: "Server-side patterns for Express server and RERUM framework (lrda-server-core)"
+globs: server/**, packages/lrda-server-core/**
+---
+
+# Server-Side Patterns
+
+> This file provides quick reference patterns for AI agents working with the Express server and RERUM framework.
+
+## Express Server (`server/`)
+
+### Server Structure
+
+```
+server/
+├── app.js              # Express app setup
+├── auth.js             # Authentication middleware
+├── routes/             # API route handlers
+└── index.js            # Server entry point
+```
+
+### Routes
+
+Routes in `server/routes/`:
+
+```javascript
+// server/routes/example.js
+const express = require('express')
+const router = express.Router()
+
+router.get('/example', async (req, res) => {
+  try {
+    // GET requests are public (read-only)
+    const data = await getData()
+    res.json(data)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.post('/example', async (req, res) => {
+  try {
+    // POST requests require authentication
+    const data = req.body
+    const result = await createData(data)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+module.exports = router
+```
+
+### Authentication
+
+Selective authentication pattern:
+- **Public (no auth)**: GET requests and read-only operations
+- **Protected (auth required)**: POST, PUT, PATCH, DELETE requests
+
+Authentication middleware in `server/auth.js` uses Firebase Admin SDK.
+
+### Development Mode
+
+Set `DISABLE_AUTH=true` in `.env` to bypass authentication:
+
+```javascript
+// server/auth.js
+if (process.env.DISABLE_AUTH === 'true') {
+  // Bypass authentication for development
+}
+```
+
+## RERUM Framework (lrda-server-core)
+
+### Overview
+
+RERUM is a NodeJS web service for interaction with the RERUM digital object repository. It stores structured JSON-LD objects with versioning and attribution.
+
+### Core Principles
+
+1. **RESTful**: Accept and respond to a broad range of requests
+2. **Standards Compliant**: Use JSON-LD, Web Annotation, Open Annotation standards
+3. **Metadata in `__rerum`**: Server-managed metadata property
+4. **Trust the Application**: Application-level authentication
+5. **Open and Free**: Public read access
+6. **Attributed and Versioned**: Ownership and transaction metadata
+
+### Controllers
+
+Controllers in `packages/lrda-server-core/controllers/`:
+
+```javascript
+// packages/lrda-server-core/controllers/exampleController.js
+async function createObject(data) {
+  // Create object with RERUM metadata
+  const object = {
+    ...data,
+    __rerum: {
+      createdAt: new Date(),
+      generatedBy: req.user.agent,
+      // ... other RERUM metadata
+    }
+  }
+  return await db.save(object)
+}
+```
+
+### RERUM Metadata (`__rerum`)
+
+The `__rerum` property is automatically added by the server:
+
+```javascript
+{
+  "@context": "RERUM_API_JSON-LD_CONTEXT",
+  "alpha": boolean,
+  "APIversion": "version_string",
+  "createdAt": "ISO_date_string",
+  "generatedBy": "agent_id",
+  "isOverwritten": "ISO_date_string_or_null",
+  "isReleased": boolean,
+  "releases": {
+    "mostRecentAncestor": "version_id",
+    "mostRecentDescendant": "version_id"
+  },
+  "history": {
+    "first": "version_id",
+    "previous": "version_id",
+    "immediateDerivative": "version_id"
+  }
+}
+```
+
+### Database
+
+MongoDB connection in `packages/lrda-server-core/database/index.js`
+
+### Commands
+
+```bash
+# Development
+pnpm --filter server dev
+
+# Production
+pnpm --filter server start
+
+# Run core package
+pnpm --filter lrda-server-core start
+
+# Database operations
+pnpm --filter lrda-server-core db
+```
+
+## Environment Variables
+
+### Server Environment
+
+```bash
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/dbname
+
+# Server
+PORT=3001
+DISABLE_AUTH=false  # Set to true for development
+
+# Firebase Admin (for authentication)
+# Service account JSON file path or credentials
+```
+
+### RERUM Configuration
+
+```bash
+RERUM_API_VERSION=1.0.0
+RERUM_BASE=https://your-deployment-url
+RERUM_PREFIX=https://your-deployment-url/v1/
+RERUM_ID_PREFIX=https://your-deployment-url/v1/id/
+RERUM_AGENT_CLAIM=https://your-deployment-url/agent
+RERUM_CONTEXT=https://your-deployment-url/v1/context.json
+RERUM_API_DOC=https://your-deployment-url/v1/API.html
+MONGO_CONNECTION_STRING=mongodb://...
+MONGODBNAME=dbname
+MONGODBCOLLECTION=collectionname
+DOWN=false
+READONLY=false
+```
+
+## API Patterns
+
+### RESTful Endpoints
+
+```javascript
+// GET - Public, read-only
+router.get('/objects/:id', async (req, res) => {
+  const object = await getObject(req.params.id)
+  res.json(object)
+})
+
+// POST - Protected, requires auth
+router.post('/objects', authMiddleware, async (req, res) => {
+  const object = await createObject(req.body)
+  res.json(object)
+})
+
+// PUT - Protected, requires auth
+router.put('/objects/:id', authMiddleware, async (req, res) => {
+  const object = await updateObject(req.params.id, req.body)
+  res.json(object)
+})
+
+// DELETE - Protected, requires auth
+router.delete('/objects/:id', authMiddleware, async (req, res) => {
+  await deleteObject(req.params.id)
+  res.status(204).send()
+})
+```
+
+### Error Handling
+
+```javascript
+try {
+  const result = await someOperation()
+  res.json(result)
+} catch (error) {
+  console.error('Error:', error)
+  res.status(500).json({
+    error: error.message,
+    code: error.code
+  })
+}
+```
+
+## JSON-LD Objects
+
+### Object Structure
+
+```javascript
+{
+  "@context": "https://example.com/context.json",
+  "@type": "WebAnnotation",
+  "body": {
+    "type": "TextualBody",
+    "value": "Annotation text"
+  },
+  "target": {
+    "source": "https://example.com/target"
+  },
+  "__rerum": {
+    // Automatically added by server
+  }
+}
+```
+
+## MongoDB Patterns
+
+### Database Operations
+
+```javascript
+// packages/lrda-server-core/database/index.js
+const { MongoClient } = require('mongodb')
+
+async function saveObject(object) {
+  const db = await getDatabase()
+  const collection = db.collection('objects')
+  return await collection.insertOne(object)
+}
+
+async function getObject(id) {
+  const db = await getDatabase()
+  const collection = db.collection('objects')
+  return await collection.findOne({ _id: id })
+}
+```
+
+## Docker & MongoDB
+
+### MongoDB Setup
+
+```bash
+# Start MongoDB container
+pnpm docker:up
+
+# Stop MongoDB container
+pnpm docker:down
+```
+
+MongoDB runs on port `27017`, Mongo Express UI on port `8081`.
+
+## Best Practices
+
+### DO
+
+- Use selective authentication (public GET, protected POST/PUT/DELETE)
+- Store metadata in `__rerum` property (server-managed)
+- Follow RESTful conventions
+- Use proper error handling
+- Use Firebase Admin SDK for authentication
+- Version and attribute all objects
+
+### DON'T
+
+- Don't manually edit `__rerum` property
+- Don't bypass authentication in production
+- Don't commit service account keys
+- Don't hardcode database credentials
+- Don't ignore error handling
+
+## API Documentation
+
+- Interactive docs: `http://localhost:3001/reference` (Scalar)
+- OpenAPI spec: `http://localhost:3001/openapi.json`

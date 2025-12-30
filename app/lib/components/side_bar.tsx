@@ -5,7 +5,6 @@ import { Plus } from "lucide-react";
 import SearchBarNote from "./search_bar_note";
 import NoteListView from "./note_listview";
 import { Note, newNote } from "@/app/types";
-import "intro.js/introjs.css";
 import { useNotesStore } from "../stores/notesStore";
 import { useAuthStore } from "../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
