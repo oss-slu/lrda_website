@@ -11,7 +11,7 @@ import ApiService from "../../utils/api_service";
 import { Timestamp, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
 import StrengthIndicator from "@/components/ui/strength-indicator";
-import Select from "react-select"; // Import react-select
+import Select, { type SingleValue } from "react-select"; // Import react-select
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -221,7 +221,7 @@ const SignupPage = () => {
               <Select
                 options={instructors}
                 value={selectedInstructor}
-                onChange={(selected) => setSelectedInstructor(selected)}
+                onChange={(selected: SingleValue<{ value: string; label: string }>) => setSelectedInstructor(selected)}
                 placeholder="Choose an Instructor"
                 isClearable
               />
