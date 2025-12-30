@@ -35,7 +35,8 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
   const [currentIdx, setCurrentIdx] = useState(0); // Current index of the selected audio
   const [curRec, setCurRec] = useState<string | undefined>(); // Current audio URI
   const [placeVal, setPlaceVal] = useState<string>("No Recordings"); // Placeholder text for the select dropdown
-  const audioPlayerRef = useRef<React.ElementRef<typeof AudioPlayer>>(null); // Reference to the audio player
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const audioPlayerRef = useRef<any>(null); // Reference to the audio player
 
   useEffect(() => {
     // Reset state when audioArray changes
