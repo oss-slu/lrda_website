@@ -8,7 +8,7 @@ Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)
 
 > **New Contributors:** See our detailed [Contributing Guide](CONTRIBUTING.md) for step-by-step setup instructions.
 
-See the [Server README](server/README.md) and [Contributing Guide](CONTRIBUTING.md#local-backend-setup) for details.
+See the [Server README](packages/server/README.md) and [Contributing Guide](CONTRIBUTING.md#local-backend-setup) for details.
 
 ## We Are Using
 
