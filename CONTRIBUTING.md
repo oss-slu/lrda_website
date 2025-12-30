@@ -70,7 +70,7 @@ Edit `.env.local` with your configuration (see [Environment Setup](#environment-
 ### 3. Start the Local Backend (Docker)
 
 ```bash
-cd server
+cd packages/server
 docker compose up -d
 ```
 
@@ -79,8 +79,15 @@ This starts MongoDB and the data store locally.
 ### 4. Run the Backend Development Server
 
 ```bash
- # From the server folder
+# From the packages/server folder
+cd packages/server
 pnpm dev
+```
+
+Or use the filter command from the root:
+
+```bash
+pnpm --filter server dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
@@ -169,7 +176,7 @@ The backend uses MongoDB, a custom RERUM-compatible API server, and LocalStack f
 ### Starting the Backend
 
 ```bash
-cd server
+cd packages/server
 docker compose up -d
 ```
 
@@ -201,7 +208,7 @@ Open [http://localhost:8081](http://localhost:8081) with:
 In a separate terminal:
 
 ```bash
-cd server
+cd packages/server
 cp .env.example .env  # If not already done
 pnpm install
 pnpm start
@@ -212,7 +219,7 @@ The API server runs on [http://localhost:3001](http://localhost:3001).
 ### Stopping the Backend
 
 ```bash
-cd server
+cd packages/server
 docker compose down
 ```
 
@@ -255,7 +262,7 @@ pnpm dev -- -p 3001
 
 ```bash
 # Reset Docker containers
-cd server
+cd packages/server
 docker compose down -v
 docker compose up -d
 ```

@@ -93,7 +93,7 @@ When enabled, you'll see `[Auth] Authentication bypassed (DISABLE_AUTH=true)` in
 
 1. Set `DISABLE_AUTH=false` in your `.env` file
 2. Obtain the `firebase-admin.json` service account file from your team lead
-3. Place it in the `server/` directory
+3. Place it in this directory (packages/server/)
 4. Configure the path in `.env`:
 
 ```env
@@ -107,7 +107,7 @@ The following routes require Firebase authentication when `DISABLE_AUTH=false`:
 
 - `POST /v1/create` - Create new objects
 - `POST /v1/bulkCreate` - Bulk create
-- `PUT /v1/bulkUpdate` - Bulk update  
+- `PUT /v1/bulkUpdate` - Bulk update
 - `PUT /v1/update` - Update objects
 - `PATCH /v1/patch` - Patch update
 - `PATCH /v1/set` - Set properties
@@ -222,6 +222,6 @@ node download-notes.js
 ### Firebase Setup Issues
 
 1. Request `firebase-admin.json` from your team lead
-2. Place file in `server/` directory
+2. Place file in this directory (packages/server/)
 3. Verify path in `.env` matches file location
 4. Check file contains valid JSON with service account credentials

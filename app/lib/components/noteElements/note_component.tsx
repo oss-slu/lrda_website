@@ -93,6 +93,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   // Use individual selectors for actions (stable references, no re-renders)
   const updateNote = useNotesStore((state) => state.updateNote);
   const addNote = useNotesStore((state) => state.addNote);
+  const clearDraftNote = useNotesStore((state) => state.clearDraftNote);
 
   // Get current note ID - try noteState first, then initialNote as fallback
   const currentNoteId =
@@ -200,6 +201,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLButtonElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
+  const introStartedRef = useRef(false);
 
   // Log render with current note info to track re-renders
   console.log("NoteEditor render", {
@@ -231,6 +233,9 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
     if (typeof window === "undefined") return; // Skip SSR
 
     const observer = new MutationObserver(async () => {
+      // Prevent multiple initializations
+      if (introStartedRef.current) return;
+
       const addNote = document.getElementById("add-note-button");
       const title = titleRef.current;
       const deleteButton = deleteRef.current;
@@ -239,65 +244,61 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
 
       // Check if all elements are present
       if (addNote && title && deleteButton && date && location) {
+        // Check if the intro has been shown before (from cookies)
+        const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
+
+        // If intro was already shown, just disconnect and return
+        if (hasAddNoteIntroBeenShown) {
+          observer.disconnect();
+          return;
+        }
+
+        // Mark as started immediately to prevent race conditions
+        introStartedRef.current = true;
+        observer.disconnect();
+
         // Dynamically import intro.js only on client side
         const introJs = (await import("intro.js")).default;
         const intro = introJs.tour();
-        const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
 
-        if (!hasAddNoteIntroBeenShown) {
-          intro.setOptions({
-            steps: [
-              {
-                element: addNote,
-                intro: "Click this button to add a note",
-              },
-              {
-                element: title,
-                intro: "You can name your note here!",
-              },
-              {
-                element: deleteButton,
-                intro: "If you don't like your note, you can delete it here.",
-              },
-              {
-                element: date,
-                intro: "We will automatically date and time your entry!",
-              },
-              {
-                element: location,
-                intro: "Make sure you specify the location of your note.",
-              },
-            ],
-            scrollToElement: false,
-            skipLabel: "Skip",
-          });
+        intro.setOptions({
+          steps: [
+            {
+              element: addNote,
+              intro: "Click this button to add a note",
+            },
+            {
+              element: title,
+              intro: "You can name your note here!",
+            },
+            {
+              element: deleteButton,
+              intro: "If you don't like your note, you can delete it here.",
+            },
+            {
+              element: date,
+              intro: "We will automatically date and time your entry!",
+            },
+            {
+              element: location,
+              intro: "Make sure you specify the location of your note.",
+            },
+          ],
+          scrollToElement: false,
+          skipLabel: "Skip",
+        });
 
-          intro.oncomplete(() => {
-            // After the intro is completed, set the cookie
-            setCookie("addNoteIntroShown", "true", 365);
-          });
+        intro.oncomplete(() => {
+          // After the intro is completed, set the cookie
+          setCookie("addNoteIntroShown", "true", 365);
+        });
 
-          intro.onexit(() => {
-            // Set the cookie if the user exits the intro
-            setCookie("addNoteIntroShown", "true", 365);
-          });
+        intro.onexit(() => {
+          // Set the cookie if the user exits the intro
+          setCookie("addNoteIntroShown", "true", 365);
+        });
 
-          intro.start();
-
-          // Apply inline styling to the skip button after a short delay to ensure it has rendered
-          setTimeout(() => {
-            const skipButton = document.querySelector(".introjs-skipbutton") as HTMLElement;
-            if (skipButton) {
-              skipButton.style.position = "absolute";
-              skipButton.style.top = "2px"; // Move it up by decreasing the top value
-              skipButton.style.right = "20px"; // Adjust positioning as needed
-              skipButton.style.fontSize = "18px"; // Adjust font size as needed
-              skipButton.style.padding = "4px 10px"; // Adjust padding as needed
-            }
-          }, 100); // 100ms delay to wait for rendering
-
-          observer.disconnect(); // Stop observing once the elements are found and the intro is set up
-        }
+        intro.start();
       }
     });
 
@@ -822,6 +823,7 @@ export default function NoteEditor({ note: initialNote, isNewNote, onNoteDeleted
           // Update local state and store
           noteHandlers.setNote(savedNote as Note);
           addNote(savedNote as Note);
+          clearDraftNote(); // Remove draft from sidebar now that it's saved
           setIsCreatingNew(false);
           lastSavedSnapshotRef.current = {
             title: noteState.title,

@@ -1,5 +1,7 @@
 // RootLayout.tsx
 import "./globals.css";
+import "./introjs-custom.css";
+import "intro.js/introjs.css";
 import { Inter } from "next/font/google";
 import Navbar from "./lib/components/navbar";
 import { NextAppDirEmotionCacheProvider } from "tss-react/next/appDir";

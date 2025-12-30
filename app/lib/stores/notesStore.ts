@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Note } from "@/app/types";
+import { Note, newNote } from "@/app/types";
 import ApiService from "../utils/api_service";
 import DataConversion from "../utils/data_conversion";
 
@@ -10,6 +10,7 @@ interface NotesState {
   error: string | null;
   selectedNoteId: string | null;
   viewMode: "my" | "review"; // Teacher-student view mode
+  draftNote: newNote | null; // Unsaved draft note for immediate visibility
 
   // Actions
   fetchNotes: (userId: string) => Promise<void>;
@@ -20,6 +21,8 @@ interface NotesState {
   clearNotes: () => void;
   setSelectedNoteId: (id: string | null) => void;
   setViewMode: (mode: "my" | "review") => void;
+  setDraftNote: (note: newNote | null) => void;
+  clearDraftNote: () => void;
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -30,6 +33,7 @@ export const useNotesStore = create<NotesState>()(
       error: null,
       selectedNoteId: null,
       viewMode: "my",
+      draftNote: null,
 
       fetchNotes: async (userId: string) => {
         set({ isLoading: true, error: null });
@@ -89,6 +93,14 @@ export const useNotesStore = create<NotesState>()(
 
       setViewMode: (mode: "my" | "review") => {
         set({ viewMode: mode });
+      },
+
+      setDraftNote: (note: newNote | null) => {
+        set({ draftNote: note });
+      },
+
+      clearDraftNote: () => {
+        set({ draftNote: null });
       },
     }),
     {
