@@ -19,7 +19,7 @@
 
 [build]
   base = "."
-  command = "pnpm add -D -w @netlify/plugin-nextjs && pnpm --filter web build"
+  command = "pnpm --filter web build"
   publish = "packages/web/.next"
 
 [[plugins]]
