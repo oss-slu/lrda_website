@@ -18,9 +18,9 @@
 # - NEXT_PUBLIC_ADMIN_PASKEY (optional)
 
 [build]
-  base = "."
+  base = "packages/web"
   command = "pnpm --filter web build"
-  publish = "packages/web/.next"
+  # Don't set publish when using @netlify/plugin-nextjs - the plugin handles it
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

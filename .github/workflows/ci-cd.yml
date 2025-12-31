@@ -256,20 +256,6 @@ jobs:
       - name: Install Netlify Next.js plugin
         run: pnpm add -D -w @netlify/plugin-nextjs
 
-      - name: Build the application
-        run: pnpm --filter web build
-        env:
-          CI: true
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
-          NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
-          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
-
       - name: Setup Netlify CLI
         run: npm install -g netlify-cli
 
@@ -348,10 +334,10 @@ jobs:
             PR_BRANCH="${{ github.event.pull_request.head.ref }}"
             echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
-            # Deploy the built .next directory (already built in previous step)
-            # Change to packages/web to avoid project detection issues
-            cd packages/web
-            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
+            # Use netlify build to ensure the Next.js plugin runs and handles assets correctly
+            # Run from root so it finds netlify.toml
+            netlify build
+            DEPLOY_OUTPUT=$(netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
             echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
             if [ -s deploy_url.txt ]; then
               PREVIEW_URL=$(cat deploy_url.txt)
@@ -369,11 +355,13 @@ jobs:
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            cd packages/web && netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
+            netlify build
+            netlify deploy --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            cd packages/web && netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+            netlify build
+            netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
           # For main branch: uses environment secrets from 'production' environment
@@ -381,3 +369,14 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Next.js build environment variables
+          CI: "true"
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
+          NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
+          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
