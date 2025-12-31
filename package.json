@@ -40,6 +40,15 @@
       "js-yaml@<4.1.1": ">=4.1.1",
       "brace-expansion@<2.0.2": ">=2.0.2",
       "glob@>=10.3.7 <=11.0.3": ">=11.1.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "core-js",
+      "esbuild",
+      "protobufjs",
+      "re2",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }

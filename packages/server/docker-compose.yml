@@ -34,19 +34,5 @@ services:
     volumes:
       - localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
-
-  # server:
-  #   build:
-  #     context: ../..
-  #     dockerfile: packages/server/Dockerfile
-  #   restart: always
-  #   ports:
-  #     - 3001:3001
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - mongo
-  #   volumes:
-  #     - ./server:/app/server
 volumes:
   localstack-data:
