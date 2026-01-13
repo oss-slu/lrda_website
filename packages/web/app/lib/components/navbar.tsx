@@ -65,10 +65,10 @@ export default function Navbar() {
   // Define nav items
   const navItems = [
     { href: "/", label: "Home" },
-    { href: "/lib/pages/notes", label: "Notes", authRequired: true },
-    { href: "/lib/pages/map", label: "Map" },
-    { href: "/lib/pages/StoriesPage", label: "Stories" },
-    { href: "/lib/pages/ResourcesPage", label: "Resources" },
+    { href: "/notes", label: "Notes", authRequired: true },
+    { href: "/map", label: "Map" },
+    { href: "/stories", label: "Stories" },
+    { href: "/resources", label: "Resources" },
   ];
 
   // Active link styling
@@ -92,16 +92,16 @@ export default function Navbar() {
         {navItems.map(
           (item) =>
             (!item.authRequired || name) &&
-            (item.href === "/lib/pages/notes" && isInstructor ? (
+            (item.href === "/notes" && isInstructor ? (
               <div key={item.href} className="mr-6">
                 <Select
                   value={viewMode}
                   open={selectOpen}
                   onOpenChange={(open) => {
                     // If trying to open from another page, navigate first without opening dropdown
-                    if (open && !pathname.startsWith("/lib/pages/notes")) {
+                    if (open && !pathname.startsWith("/notes")) {
                       // Navigate directly - viewMode is already persisted in localStorage
-                      router.push("/lib/pages/notes");
+                      router.push("/notes");
                       setSelectOpen(false); // Don't open the dropdown
                       return;
                     }
@@ -111,8 +111,8 @@ export default function Navbar() {
                     setViewMode(value as "my" | "review");
                     setSelectOpen(false);
                     // Navigate to notes page if not already there
-                    if (!pathname.startsWith("/lib/pages/notes")) {
-                      router.push("/lib/pages/notes");
+                    if (!pathname.startsWith("/notes")) {
+                      router.push("/notes");
                     }
                   }}
                 >
@@ -164,10 +164,10 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="default" onClick={() => (window.location.href = "/lib/pages/loginPage")} className="whitespace-nowrap">
+            <Button variant="default" onClick={() => (window.location.href = "/login")} className="whitespace-nowrap">
               Login
             </Button>
-            <Button variant="outline" onClick={() => (window.location.href = "/lib/pages/signupPage")} className="whitespace-nowrap">
+            <Button variant="outline" onClick={() => (window.location.href = "/signup")} className="whitespace-nowrap">
               Sign Up
             </Button>
           </div>

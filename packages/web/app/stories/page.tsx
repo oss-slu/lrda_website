@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { Note } from "@/app/types";
-import EnhancedClickableNote from "../../components/stories_card";
+import EnhancedClickableNote from "../lib/components/stories_card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInfinitePublishedNotes } from "../../hooks/queries/useNotes";
-import { useCreatorName } from "../../hooks/queries/useUsers";
+import { useInfinitePublishedNotes } from "../lib/hooks/queries/useNotes";
+import { useCreatorName } from "../lib/hooks/queries/useUsers";
 
 // Component to display user name with caching via TanStack Query
 const UserOption = ({ uid }: { uid: string }) => {

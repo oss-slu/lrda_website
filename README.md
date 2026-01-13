@@ -6,13 +6,27 @@ Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)
 
 ## Getting Started
 
-> **New Contributors:** See our detailed [Contributing Guide](CONTRIBUTING.md) for step-by-step setup instructions.
+```bash
+# Clone and install
+git clone https://github.com/oss-slu/lrda_website.git
+cd lrda_website
+pnpm install
 
-See the [Server README](packages/server/README.md) and [Contributing Guide](CONTRIBUTING.md#local-backend-setup) for details.
+# Set up environment files
+pnpm setup
+
+# Start everything (Docker, Firebase emulators, backend, frontend)
+pnpm dev:full
+```
+
+Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
+
+> **New Contributors:** See our detailed [Contributing Guide](CONTRIBUTING.md) for more options and troubleshooting.
 
 ## Project Structure
 
 This is a monorepo with the following packages:
+
 - `packages/web/` - Next.js web application
 - `packages/server/` - Express.js REST API server (located at `server/` root)
 - `packages/lrda-server-core/` - RERUM framework-based server core library

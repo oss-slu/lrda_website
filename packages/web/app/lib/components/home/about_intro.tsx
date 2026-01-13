@@ -121,7 +121,7 @@ export default function AboutIntro() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
               <Link
-                href="/lib/pages/wheres-religion"
+                href="/wheres-religion"
                 className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50 overflow-hidden"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -138,7 +138,7 @@ export default function AboutIntro() {
                 </span>
               </Link>
               <Link
-                href="/lib/pages/wheres-religion#faqs"
+                href="/wheres-religion#faqs"
                 className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-blue-300 text-blue-700 font-semibold rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
               >
                 FAQs

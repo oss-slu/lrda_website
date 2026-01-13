@@ -1,7 +1,7 @@
 import React from "react";
 import { render, waitFor, act, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import Page from "../lib/pages/map/page"; // Importing the Page component that will be tested
+import Page from "../map/page"; // Importing the Page component that will be tested
 import { createTestWrapper } from "./utils/testQueryClient";
 
 // Mock Firebase Auth and API services

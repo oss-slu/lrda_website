@@ -3,20 +3,20 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import { Note } from "@/app/types";
-import { useAuthStore } from "../../stores/authStore";
-import { useMapStore } from "../../stores/mapStore";
+import { useAuthStore } from "../lib/stores/authStore";
+import { useMapStore } from "../lib/stores/mapStore";
 import { useShallow } from "zustand/react/shallow";
-import ClickableNote from "../../components/click_note_card";
-import { MapControls, MapNotesPanel } from "../../components/map";
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../../hooks/useInfiniteNotes";
-import { useGoogleMaps } from "../../utils/GoogleMapsContext";
+import ClickableNote from "../lib/components/click_note_card";
+import { MapControls, MapNotesPanel } from "../lib/components/map";
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../lib/hooks/useInfiniteNotes";
+import { useGoogleMaps } from "../lib/utils/GoogleMapsContext";
 import { Dialog } from "@/components/ui/dialog";
-import { useGlobalMapNotes, usePersonalMapNotes } from "../../hooks/queries/useNotes";
-import { useMapLocation } from "../../hooks/useMapLocation";
-import { useMapMarkers } from "../../hooks/useMapMarkers";
-import { useMapIntro } from "../../hooks/useMapIntro";
-import { filterNotesByMapBounds, filterNotesByQuery, filterNotesByTitleAndTags, Location } from "../../utils/mapUtils";
-import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from "../../constants/mapConstants";
+import { useGlobalMapNotes, usePersonalMapNotes } from "../lib/hooks/queries/useNotes";
+import { useMapLocation } from "../lib/hooks/useMapLocation";
+import { useMapMarkers } from "../lib/hooks/useMapMarkers";
+import { useMapIntro } from "../lib/hooks/useMapIntro";
+import { filterNotesByMapBounds, filterNotesByQuery, filterNotesByTitleAndTags, Location } from "../lib/utils/mapUtils";
+import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from "../lib/constants/mapConstants";
 
 interface Refs {
   [key: string]: HTMLElement | undefined;

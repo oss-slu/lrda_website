@@ -22,7 +22,7 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
 
   return (
     <div>
-      <Link href="/lib/pages/signupPage" passHref>
+      <Link href="/signup" passHref>
         <Button
           onClick={handleClick}
           className={` ${

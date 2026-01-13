@@ -66,7 +66,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup successfully', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -108,7 +108,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup data correctly', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -150,7 +150,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should show correct success messaging', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -192,7 +192,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup and redirection appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -234,7 +234,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup form submission appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -276,7 +276,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup with auto-login appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -318,7 +318,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should validate required description field', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Fill all fields except description
     await page.locator('input[placeholder="First Name"]').fill('Eva');
@@ -339,7 +339,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should show password strength validation', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Focus on password field to trigger validation display
     const passwordField = page.locator('input[placeholder="Password"]');
@@ -353,7 +353,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle email validation appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -402,7 +402,7 @@ test.describe('Instructor Signup Popup and Approval Flow', () => {
   });
 
   test('should handle instructor signup submission appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/InstructorSignupPage');
+    await page.goto('/instructor-signup');
     
     // Wait for page to load
     await page.waitForTimeout(3000);

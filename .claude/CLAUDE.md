@@ -260,4 +260,3 @@ pnpm docker:down                      # Stop MongoDB container
 - Match existing formatting and TypeScript settings
 - Avoid changing Node/TS configs unless necessary
 - Use pnpm workspaces; prefer `--filter` for package-scoped commands
-w

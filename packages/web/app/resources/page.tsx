@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { formatCitation } from "../../utils/citation_formatter";
+import { formatCitation } from "../lib/utils/citation_formatter";
 
 type OnlineResource = {
   title: string;

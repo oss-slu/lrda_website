@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryHistory } from "history"; // Allows us to mock the browser's history object
 import { MemoryRouter, Route, Routes } from "react-router-dom"; // Allows us to test components that use React Router
-import MapPage from "../lib/pages/map/page"; // Import the MapPage component
-import NotePage from "../lib/pages/notes/page";
+import MapPage from "../map/page"; // Import the MapPage component
+import NotePage from "../notes/page";
 import introJs from "intro.js"; // Mock intro.js
 import { createTestWrapper } from "./utils/testQueryClient";
 jest.mock("firebase/auth"); // Mock Firebase Auth

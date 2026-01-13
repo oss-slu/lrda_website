@@ -54,51 +54,59 @@ See [Environment Setup](#environment-setup) for configuring local auth
 git clone https://github.com/YOUR_USERNAME/lrda_website.git
 cd lrda_website
 pnpm install
-
-# Start the Next.js development server
-pnpm dev
 ```
-
-The root `pnpm dev` command will run the web package. You can also use `pnpm --filter web dev` directly.
 
 ### 2. Set Up Environment Variables
 
-**Web Package (Next.js):**
 ```bash
-cp packages/web/.env.example packages/web/.env.local
+pnpm setup
 ```
 
-Edit `packages/web/.env.local` with your configuration (see [Environment Setup](#environment-setup) below).
+This creates `packages/web/.env.local` and `packages/server/.env` with sensible defaults.
 
-**Server Package (Express API):**
-```bash
-cp packages/server/.env.example packages/server/.env
-```
-
-Edit `packages/server/.env` with your server configuration (see [Local Backend Setup](#local-backend-setup) below).
-
-### 3. Start the Local Backend (Docker)
+### 3. Start Everything
 
 ```bash
-cd packages/server
-docker compose up -d
+pnpm dev:full
 ```
 
-This starts MongoDB and the data store locally.
+This single command starts:
 
-### 4. Run the Backend Development Server
+- **Docker services** (MongoDB, LocalStack S3)
+- **Firebase Emulators** (Auth, Firestore, Storage)
+- **Backend API server** on port 3001
+- **Next.js frontend** on port 3000
+
+Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
+
+> **Tip:** Use `Ctrl+C` to stop all services at once.
+
+### Alternative: Minimal Setup (Frontend Only)
+
+If you only need the frontend with Firebase emulators (no backend/S3):
 
 ```bash
-# From the packages/server folder
-cd packages/server
-pnpm dev
+# Terminal 1: Start Firebase emulators
+pnpm firebase:emulators
+
+# Terminal 2: Start frontend
+pnpm dev:emulators
 ```
 
-Or use the filter command from the root:
+---
 
-```bash
-pnpm --filter server dev
-```
+## Available Commands
+
+| Command                   | Description                                              |
+| ------------------------- | -------------------------------------------------------- |
+| `pnpm dev:full`           | Start everything (Docker, Firebase, server, frontend)    |
+| `pnpm dev:backend`        | Start Docker services + backend server only              |
+| `pnpm dev:emulators`      | Start frontend with Firebase emulators                   |
+| `pnpm dev`                | Start frontend only (requires separate Firebase/backend) |
+| `pnpm services:up`        | Start Docker services (MongoDB, LocalStack)              |
+| `pnpm services:down`      | Stop Docker services                                     |
+| `pnpm firebase:emulators` | Start Firebase emulators                                 |
+| `pnpm setup`              | Create .env files from examples                          |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 
@@ -187,22 +195,29 @@ For full access to the development environment, contact the team lead at yashkam
 
 The backend uses MongoDB, a custom RERUM-compatible API server, and LocalStack for S3 emulation.
 
-### Starting the Backend
+### Starting Services Manually
+
+If you prefer to start services individually instead of using `pnpm dev:full`:
 
 ```bash
-cd packages/server
-docker compose up -d
+# Start Docker services
+pnpm services:up
+
+# Start the API server (in a separate terminal)
+pnpm --filter server dev
 ```
 
-This starts:
+Docker starts:
 
 - **MongoDB** on port 27017
 - **Mongo Express** (DB admin UI) on port 8081
 - **LocalStack** (S3 emulator) on port 4566
 
-### Initialize LocalStack S3 (First time only)
+### Initialize LocalStack S3 (Only needed for manual setup)
 
-After starting Docker, run this to create the S3 bucket:
+When using `pnpm dev:full` or `pnpm services:up`, the S3 bucket is created automatically.
+
+For manual setup, after starting Docker, run:
 
 > **Note:** You need the AWS CLI installed. Install with: `brew install awscli`
 
@@ -219,24 +234,21 @@ Open [http://localhost:8081](http://localhost:8081) with:
 
 ### Running the API Server
 
-In a separate terminal:
+When using `pnpm dev:full`, the server starts automatically. For manual setup:
 
 ```bash
-cd packages/server
-cp .env.example .env  # If not already done (creates packages/server/.env)
-pnpm install
-pnpm start
+pnpm --filter server dev
 ```
 
 The API server runs on [http://localhost:3001](http://localhost:3001).
 
-> **Note:** The server package uses `packages/server/.env` (not `.env.local` like the web package). Copy `packages/server/.env.example` to `packages/server/.env` before starting the server.
+> **Note:** The server uses `packages/server/.env`. Run `pnpm setup` to create it from the example.
 
-### Stopping the Backend
+### Stopping Services
 
 ```bash
-cd packages/server
-docker compose down
+# Stop everything (if using pnpm dev:full, just Ctrl+C)
+pnpm services:down
 ```
 
 ---

@@ -36,13 +36,13 @@ function WelcomeHero() {
         {/* CTA Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/lib/pages/signupPage"
+            href="/signup"
             className="px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg shadow-lg transition"
           >
             Get Started
           </a>
           <a
-            href="/lib/pages/map"
+            href="/map"
             className="px-8 py-3 rounded-full bg-white/90 hover:bg-white text-blue-700 font-semibold text-lg shadow-lg transition border border-blue-100"
           >
             Explore the Map

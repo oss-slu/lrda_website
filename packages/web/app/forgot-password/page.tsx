@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../../../lib/config/firebase"; // path might differ based on your structure
+import { auth } from "../lib/config/firebase";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -59,7 +59,7 @@ const ForgotPasswordPage = () => {
             Send Reset Email
           </button>
           <div className="mt-4 text-center">
-            <Link href="/lib/pages/loginPage" className="text-blue-500 hover:underline">
+            <Link href="/login" className="text-blue-500 hover:underline">
               Back to Login
             </Link>
           </div>

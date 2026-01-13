@@ -52,7 +52,7 @@ export default function NotFound() {
               Go Home
             </Button>
           </Link>
-          <Link href="/lib/pages/map" aria-label="Go to map page">
+          <Link href="/map" aria-label="Go to map page">
             <Button
               variant="outline"
               className="px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white border-white/30 font-semibold text-lg shadow-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm"
