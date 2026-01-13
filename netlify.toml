@@ -1,4 +1,4 @@
-# Netlify Configuration
+# Netlify Configuration for Monorepo
 # IMPORTANT: Set all environment variables in Netlify Dashboard:
 # Site settings > Build & deploy > Environment > Environment variables
 # Required variables:
@@ -18,9 +18,11 @@
 # - NEXT_PUBLIC_ADMIN_PASKEY (optional)
 
 [build]
-  base = "packages/web"
+  # Base directory: root (default) - installs dependencies from root for pnpm workspace
+  # Package directory is set in Netlify UI to "packages/web"
   command = "pnpm --filter web build"
-  # Don't set publish when using @netlify/plugin-nextjs - the plugin handles it
+  # Publish directory relative to root
+  publish = "packages/web/.next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

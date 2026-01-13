@@ -252,9 +252,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-      - name: Install Netlify Next.js plugin
-        run: pnpm add -D -w @netlify/plugin-nextjs
-
       - name: Setup Netlify CLI
         run: npm install -g netlify-cli
 
@@ -314,61 +311,9 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-      - name: Deploy to Netlify
-        id: netlify-deploy
-        run: |
-          # Create state file at repo root to pre-link the site and skip project detection
-          mkdir -p .netlify
-          cat > .netlify/state.json << EOF
-          {
-            "siteId": "$NETLIFY_SITE_ID"
-          }
-          EOF
-
-          # Run from repo root - netlify.toml has base = "packages/web" which handles the path
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Pull requests always get preview deployments (works for all PRs, including from forks)
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
-            echo "Branch: ${PR_BRANCH}"
-            # Use netlify build to ensure the Next.js plugin runs and handles assets correctly
-            netlify build
-            DEPLOY_OUTPUT=$(netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
-            echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
-            if [ -s deploy_url.txt ]; then
-              PREVIEW_URL=$(cat deploy_url.txt)
-              echo "Preview deployment ready: ${PREVIEW_URL}"
-              # Optionally comment on PR (requires permissions: pull-requests: write)
-              # Note: May not work for PRs from forks due to token restrictions
-              if [ -n "$PREVIEW_URL" ]; then
-                echo "::notice::Preview URL: ${PREVIEW_URL}"
-                # Try to comment on PR (may fail for fork PRs, which is okay)
-                # Use $'...' syntax to properly interpret escape sequences
-                COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
-                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
-              fi
-            fi
-          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            # Push to main = production deployment
-            echo "Deploying to production..."
-            netlify build
-            netlify deploy --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
-          else
-            # Push to other branches = preview deployment
-            echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify build
-            netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
-          fi
+      - name: Build Next.js application
+        run: pnpm --filter web build
         env:
-          # For main branch: uses environment secrets from 'production' environment
-          # For PRs: uses repository secrets (create these in Settings > Secrets and variables > Actions)
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Next.js build environment variables
           CI: "true"
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
@@ -378,4 +323,44 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
           NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
+          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
+
+      - name: Deploy to Netlify
+        id: netlify-deploy
+        run: |
+          # Create state file to pre-link the site and skip project detection
+          mkdir -p .netlify
+          cat > .netlify/state.json << EOF
+          {
+            "siteId": "$NETLIFY_SITE_ID"
+          }
+          EOF
+
+          # Deploy the pre-built .next directory directly (skip netlify build to avoid monorepo issues)
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
+            echo "Branch: ${PR_BRANCH}"
+            DEPLOY_OUTPUT=$(netlify deploy --dir=packages/web/.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
+            PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty')
+            if [ -n "$PREVIEW_URL" ]; then
+              echo "Preview deployment ready: ${PREVIEW_URL}"
+              echo "::notice::Preview URL: ${PREVIEW_URL}"
+              COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
+              gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
+            fi
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Deploying to production..."
+            netlify deploy --dir=packages/web/.next --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
+          else
+            echo "Deploying preview for branch: ${{ github.ref_name }}"
+            netlify deploy --dir=packages/web/.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+          fi
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
