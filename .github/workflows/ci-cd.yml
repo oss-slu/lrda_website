@@ -328,15 +328,11 @@ jobs:
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
-          # Create state file to pre-link the site and skip project detection
-          mkdir -p .netlify
-          cat > .netlify/state.json << EOF
-          {
-            "siteId": "$NETLIFY_SITE_ID"
-          }
-          EOF
+          # Link to site using filter flag to specify the web package in this monorepo
+          cd packages/web
+          netlify link --filter web --id "$NETLIFY_SITE_ID"
 
-          # Deploy the pre-built .next directory directly (skip netlify build to avoid monorepo issues)
+          # Deploy the pre-built .next directory
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
             PR_AUTHOR="${{ github.event.pull_request.user.login }}"
@@ -344,7 +340,7 @@ jobs:
             PR_BRANCH="${{ github.event.pull_request.head.ref }}"
             echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
-            DEPLOY_OUTPUT=$(netlify deploy --dir=packages/web/.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
+            DEPLOY_OUTPUT=$(netlify deploy --filter web --dir=.next --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
             PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty')
             if [ -n "$PREVIEW_URL" ]; then
               echo "Preview deployment ready: ${PREVIEW_URL}"
@@ -354,10 +350,10 @@ jobs:
             fi
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production..."
-            netlify deploy --dir=packages/web/.next --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
+            netlify deploy --filter web --dir=.next --prod --message="Production deploy from main - ${{ github.sha }}" --json
           else
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify deploy --dir=packages/web/.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+            netlify deploy --filter web --dir=.next --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
