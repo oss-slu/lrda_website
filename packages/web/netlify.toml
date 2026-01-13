@@ -1,0 +1,13 @@
+# Netlify Configuration for packages/web
+# Used when deploying from within this directory via GitHub Actions
+
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "24"
+  CI = "true"

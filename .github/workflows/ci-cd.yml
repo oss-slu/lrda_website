@@ -311,9 +311,52 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-      - name: Build Next.js application
-        run: pnpm --filter web build
+      - name: Install Netlify Next.js plugin
+        run: pnpm add -D @netlify/plugin-nextjs
+        working-directory: packages/web
+
+      - name: Deploy to Netlify
+        id: netlify-deploy
+        working-directory: packages/web
+        run: |
+          # Pre-create .netlify directory with state to skip project detection
+          mkdir -p .netlify
+          cat > .netlify/state.json << EOF
+          {
+            "siteId": "$NETLIFY_SITE_ID"
+          }
+          EOF
+
+          # Build with Netlify (runs Next.js plugin) and deploy
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+            echo "Building and deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
+            echo "Branch: ${PR_BRANCH}"
+            netlify build
+            DEPLOY_OUTPUT=$(netlify deploy --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
+            PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty')
+            if [ -n "$PREVIEW_URL" ]; then
+              echo "Preview deployment ready: ${PREVIEW_URL}"
+              echo "::notice::Preview URL: ${PREVIEW_URL}"
+              COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
+              gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
+            fi
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Building and deploying to production..."
+            netlify build
+            netlify deploy --prod --message="Production deploy from main - ${{ github.sha }}" --json
+          else
+            echo "Building and deploying preview for branch: ${{ github.ref_name }}"
+            netlify build
+            netlify deploy --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+          fi
         env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CI: "true"
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
@@ -323,40 +366,4 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
           NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
-          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
-
-      - name: Deploy to Netlify
-        id: netlify-deploy
-        run: |
-          # Link to site using filter flag to specify the web package in this monorepo
-          cd packages/web
-          netlify link --filter web --id "$NETLIFY_SITE_ID"
-
-          # Deploy the pre-built .next directory
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
-            echo "Branch: ${PR_BRANCH}"
-            DEPLOY_OUTPUT=$(netlify deploy --filter web --dir=.next --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
-            PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty')
-            if [ -n "$PREVIEW_URL" ]; then
-              echo "Preview deployment ready: ${PREVIEW_URL}"
-              echo "::notice::Preview URL: ${PREVIEW_URL}"
-              COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
-              gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
-            fi
-          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "Deploying to production..."
-            netlify deploy --filter web --dir=.next --prod --message="Production deploy from main - ${{ github.sha }}" --json
-          else
-            echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify deploy --filter web --dir=.next --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
-          fi
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
