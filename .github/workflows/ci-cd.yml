@@ -318,13 +318,16 @@ jobs:
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
-          # Create state file to pre-link the site and skip project detection
-          mkdir -p .netlify
-          cat > .netlify/state.json << EOF
+          # Create state file in the web package to pre-link the site and skip project detection
+          mkdir -p packages/web/.netlify
+          cat > packages/web/.netlify/state.json << EOF
           {
             "siteId": "$NETLIFY_SITE_ID"
           }
           EOF
+
+          # Change to the web package directory where netlify.toml base points
+          cd packages/web
 
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Pull requests always get preview deployments (works for all PRs, including from forks)
@@ -335,32 +338,31 @@ jobs:
             echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
             # Use netlify build to ensure the Next.js plugin runs and handles assets correctly
-            # Run from root so it finds netlify.toml
-            netlify build
+            netlify build --cwd .
             DEPLOY_OUTPUT=$(netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
             echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
             if [ -s deploy_url.txt ]; then
               PREVIEW_URL=$(cat deploy_url.txt)
-              echo "🚀 Preview deployment ready: ${PREVIEW_URL}"
+              echo "Preview deployment ready: ${PREVIEW_URL}"
               # Optionally comment on PR (requires permissions: pull-requests: write)
               # Note: May not work for PRs from forks due to token restrictions
               if [ -n "$PREVIEW_URL" ]; then
                 echo "::notice::Preview URL: ${PREVIEW_URL}"
                 # Try to comment on PR (may fail for fork PRs, which is okay)
                 # Use $'...' syntax to properly interpret escape sequences
-                COMMENT_BODY=$'🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** '"${PREVIEW_URL}"$'\n📝 **Branch:** `'"${PR_BRANCH}"$'`\n👤 **Author:** @'"${PR_AUTHOR}"
+                COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
                 gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
               fi
             fi
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            netlify build
+            netlify build --cwd .
             netlify deploy --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify build
+            netlify build --cwd .
             netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
