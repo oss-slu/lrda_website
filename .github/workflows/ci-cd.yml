@@ -34,7 +34,7 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  deployments: write      # Required for Netlify deployment status
+  deployments: write # Required for Netlify deployment status
 
 jobs:
   # Check if push event is from a PR branch (to skip it in favor of pull_request event)
@@ -105,8 +105,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'pnpm'
+          node-version: "20.x"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -138,7 +138,6 @@ jobs:
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
     timeout-minutes: 60
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -151,8 +150,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'pnpm'
+          node-version: "20.x"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -221,7 +220,7 @@ jobs:
     # Allow workflow to run from forks (needed for PRs from external contributors)
     permissions:
       contents: read
-      pull-requests: write  # Needed to comment on PRs with preview URL
+      pull-requests: write # Needed to comment on PRs with preview URL
     # Use environment context only for main branch (production deployments)
     # For PRs, we need repository-level secrets since environment is restricted to main branch
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
@@ -238,8 +237,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'pnpm'
+          node-version: "20.x"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -318,17 +317,15 @@ jobs:
       - name: Deploy to Netlify
         id: netlify-deploy
         run: |
-          # Create state file in the web package to pre-link the site and skip project detection
-          mkdir -p packages/web/.netlify
-          cat > packages/web/.netlify/state.json << EOF
+          # Create state file at repo root to pre-link the site and skip project detection
+          mkdir -p .netlify
+          cat > .netlify/state.json << EOF
           {
             "siteId": "$NETLIFY_SITE_ID"
           }
           EOF
 
-          # Change to the web package directory where netlify.toml base points
-          cd packages/web
-
+          # Run from repo root - netlify.toml has base = "packages/web" which handles the path
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Pull requests always get preview deployments (works for all PRs, including from forks)
             PR_NUMBER="${{ github.event.pull_request.number }}"
@@ -338,7 +335,7 @@ jobs:
             echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
             # Use netlify build to ensure the Next.js plugin runs and handles assets correctly
-            netlify build --cwd .
+            netlify build
             DEPLOY_OUTPUT=$(netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
             echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
             if [ -s deploy_url.txt ]; then
@@ -357,12 +354,12 @@ jobs:
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             # Push to main = production deployment
             echo "Deploying to production..."
-            netlify build --cwd .
+            netlify build
             netlify deploy --prod --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
             # Push to other branches = preview deployment
             echo "Deploying preview for branch: ${{ github.ref_name }}"
-            netlify build --cwd .
+            netlify build
             netlify deploy --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
