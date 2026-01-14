@@ -44,7 +44,8 @@
       "dompurify@<3.2.4": ">=3.2.4",
       "js-yaml@<4.1.1": ">=4.1.1",
       "brace-expansion@<2.0.2": ">=2.0.2",
-      "glob@>=10.3.7 <=11.0.3": ">=11.1.0"
+      "glob@>=10.3.7 <=11.0.3": ">=11.1.0",
+      "baseline-browser-mapping": "^2.9.0"
     },
     "onlyBuiltDependencies": [
       "@firebase/util",

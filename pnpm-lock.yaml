@@ -15,6 +15,7 @@ overrides:
   js-yaml@<4.1.1: '>=4.1.1'
   brace-expansion@<2.0.2: '>=2.0.2'
   glob@>=10.3.7 <=11.0.3: '>=11.1.0'
+  baseline-browser-mapping: ^2.9.0
 
 importers:
 
@@ -4050,8 +4051,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  baseline-browser-mapping@2.8.21:
-    resolution: {integrity: sha512-JU0h5APyQNsHOlAM7HnQnPToSDQoEBZqzu/YBlqDnEeymPnZDREeXJA3KBMQee+dKteAxZ2AtvQEvVYdZf241Q==}
+  baseline-browser-mapping@2.9.14:
+    resolution: {integrity: sha512-B0xUquLkiGLgHhpPBqvl7GWegWBUNuujQ6kXd/r1U38ElPT6Ok8KZ8e+FpUGEc2ZoRQUzq/aUnaKFc/svWUGSg==}
     hasBin: true
 
   basic-auth-connect@1.1.0:
@@ -12769,7 +12770,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  baseline-browser-mapping@2.8.21: {}
+  baseline-browser-mapping@2.9.14: {}
 
   basic-auth-connect@1.1.0:
     dependencies:
@@ -12881,7 +12882,7 @@ snapshots:
 
   browserslist@4.27.0:
     dependencies:
-      baseline-browser-mapping: 2.8.21
+      baseline-browser-mapping: 2.9.14
       caniuse-lite: 1.0.30001760
       electron-to-chromium: 1.5.243
       node-releases: 2.0.27
