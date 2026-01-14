@@ -3,7 +3,7 @@ import { VideoType } from '@/app/lib/models/media_class';
 import { uploadMedia } from '@/app/lib/utils/s3_proxy';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { getVideoThumbnail, getVideoDuration } from '@/app/lib/utils/api_service';
+import { mediaService } from '@/app/lib/services';
 
 type VideoPickerProps = {
   videoArray: VideoType[];
@@ -29,11 +29,11 @@ const VideoComponent: React.FC<VideoPickerProps> = ({ videoArray, setVideo }) =>
       if (location === 'error') throw new Error('Video upload failed.');
 
       // Generate thumbnail for the video
-      const thumbnailBlob = await getVideoThumbnail(file);
+      const thumbnailBlob = await mediaService.getVideoThumbnail(file);
       const thumbnailLocation = await uploadMedia(thumbnailBlob as File, 'thumbnail');
 
       // Get the video's duration
-      const duration = await getVideoDuration(file);
+      const duration = await mediaService.getVideoDuration(file);
 
       // Handle failed thumbnail upload
       if (thumbnailLocation === 'error') throw new Error('Thumbnail upload failed.');

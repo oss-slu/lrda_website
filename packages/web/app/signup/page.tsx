@@ -12,7 +12,6 @@ import {
   validateLastName,
 } from '../lib/utils/validation';
 import { useAuthStore } from '../lib/stores/authStore';
-import ApiService from '../lib/utils/api_service';
 import {
   Timestamp,
   doc,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, MutableRefObject, useCallback } from 'react';
 import { toast } from 'sonner';
-import ApiService from '@/app/lib/utils/api_service';
+import { notesService } from '@/app/lib/services';
 import { useNotesStore } from '@/app/lib/stores/notesStore';
 import { Note } from '@/app/types';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
@@ -117,17 +117,14 @@ export const useAutoSave = ({
             isArchived: false,
           };
 
-          const response = await ApiService.writeNewNote(newNoteData);
-          if (!response.ok) throw new Error('Failed to create note');
-
-          const data = await response.json();
-          const newNoteId = data['@id'] || data.id;
+          const data = await notesService.create(newNoteData);
+          const newNoteId = data['@id'] || (data as any).id;
           if (!newNoteId) throw new Error('No ID returned');
 
           const savedNote = {
             ...newNoteData,
             id: newNoteId,
-            uid: data.uid || newNoteId,
+            uid: (data as any).uid || newNoteId,
           };
 
           noteHandlersRef.current.setNote(savedNote as Note);
@@ -202,7 +199,7 @@ export const useAutoSave = ({
 
       try {
         console.log('Auto-saving note...', updatedNote);
-        await ApiService.overwriteNote(updatedNote);
+        await notesService.update(updatedNote);
 
         updateNote(noteId, {
           ...updatedNote,

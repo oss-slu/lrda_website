@@ -168,6 +168,14 @@ class NotesService {
   }
 
   /**
+   * Query notes with a custom query object.
+   * Useful for complex queries that can't be handled by other methods.
+   */
+  async query(queryObj: object, limit = 150, skip = 0): Promise<Note[]> {
+    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+  }
+
+  /**
    * Fetch messages with pagination support (legacy API compatibility).
    */
   async fetchMessages(

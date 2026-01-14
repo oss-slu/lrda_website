@@ -5,7 +5,7 @@ import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
-import ApiService from '../lib/utils/api_service';
+import { notesService } from '../lib/services';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -33,7 +33,7 @@ const StudentDashboardPage: React.FC = () => {
         approvalRequested: true,
         $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
       };
-      const fetched = await ApiService.getPagedQuery(150, 0, queryObj);
+      const fetched = await notesService.query(queryObj, 150, 0);
       return (fetched as Note[]).filter(note => (note.comments || []).length > 0);
     },
     enabled: !!authUser?.uid,
