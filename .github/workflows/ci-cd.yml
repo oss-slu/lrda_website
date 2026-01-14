@@ -34,7 +34,7 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  deployments: write      # Required for Netlify deployment status
+  deployments: write # Required for Netlify deployment status
 
 jobs:
   # Check if push event is from a PR branch (to skip it in favor of pull_request event)
@@ -114,18 +114,18 @@ jobs:
       - name: Run unit tests
         run: pnpm test:unit --silent --no-coverage
         env:
-          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
-          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
-          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
-          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
-          CI: "true"
+          NEXT_PUBLIC_FIREBASE_API_KEY: 'mock-api-key-for-ci'
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'mock-domain.firebaseapp.com'
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'mock-project-id'
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'mock-project.appspot.com'
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+          NEXT_PUBLIC_FIREBASE_APP_ID: '1:123456789:web:abcdef'
+          NEXT_PUBLIC_RERUM_PREFIX: 'https://store.rerum.io/v1'
+          NEXT_PUBLIC_OPENAI_API_KEY: 'mock-openai-key'
+          NEXT_PUBLIC_OPENAI_API_URL: 'https://api.openai.com/v1'
+          CI: 'true'
           # Suppress console output in CI
-          SUPPRESS_CONSOLE: "true"
+          SUPPRESS_CONSOLE: 'true'
 
   # Job 2: E2E Tests (includes build)
   e2e-tests:
@@ -138,7 +138,6 @@ jobs:
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
     timeout-minutes: 60
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -173,15 +172,15 @@ jobs:
         run: pnpm --filter web build
         env:
           CI: true
-          NEXT_PUBLIC_FIREBASE_API_KEY: "ci-mock-key"
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "ci-mock-domain"
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "ci-mock-project"
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "ci-mock-bucket"
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          NEXT_PUBLIC_FIREBASE_APP_ID: "ci-mock-app-id"
-          NEXT_PUBLIC_RERUM_PREFIX: "ci-mock-prefix"
-          NEXT_PUBLIC_OPENAI_API_KEY: "ci-mock-openai-key"
-          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1/chat/completions"
+          NEXT_PUBLIC_FIREBASE_API_KEY: 'ci-mock-key'
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'ci-mock-domain'
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'ci-mock-project'
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'ci-mock-bucket'
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+          NEXT_PUBLIC_FIREBASE_APP_ID: 'ci-mock-app-id'
+          NEXT_PUBLIC_RERUM_PREFIX: 'ci-mock-prefix'
+          NEXT_PUBLIC_OPENAI_API_KEY: 'ci-mock-openai-key'
+          NEXT_PUBLIC_OPENAI_API_URL: 'https://api.openai.com/v1/chat/completions'
 
       - name: Start the application
         run: |
@@ -221,7 +220,7 @@ jobs:
     # Allow workflow to run from forks (needed for PRs from external contributors)
     permissions:
       contents: read
-      pull-requests: write  # Needed to comment on PRs with preview URL
+      pull-requests: write # Needed to comment on PRs with preview URL
     # Use environment context only for main branch (production deployments)
     # For PRs, we need repository-level secrets since environment is restricted to main branch
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}

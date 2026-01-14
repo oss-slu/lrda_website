@@ -1,12 +1,15 @@
 # Admin to Instructor Application System
 
 ## Overview
+
 This system allows existing admin users to apply to become instructors while preserving their admin privileges and existing data.
 
 ## How It Works
 
 ### 1. **Data Model Transition**
+
 **From Admin User:**
+
 ```json
 {
   "createdAt": "August 15, 2025 at 2:38:51 PM UTC-5",
@@ -21,6 +24,7 @@ This system allows existing admin users to apply to become instructors while pre
 ```
 
 **To Instructor User:**
+
 ```json
 {
   "createdAt": "August 22, 2025 at 9:19:01 AM UTC-5",
@@ -41,18 +45,21 @@ This system allows existing admin users to apply to become instructors while pre
 ### 2. **Key Features**
 
 #### **Pre-populated Fields** (from admin data):
+
 - ✅ `createdAt` - Updated to current timestamp
 - ✅ `email` - Preserved from admin
-- ✅ `name` - Preserved from admin  
+- ✅ `name` - Preserved from admin
 - ✅ `uid` - Preserved from admin
 - ✅ `roles` - Extended with `instructor: true`
 
 #### **New Fields** (user must provide):
+
 - 📝 `description` - Teaching experience and expertise
 - 🎯 `isInstructor` - Set to `true`
 - 👥 `students` - Empty array initially
 
 #### **Preserved Admin Privileges**:
+
 - 🔐 Administrator access maintained
 - 🔐 Contributor access maintained
 - 🆕 Instructor privileges added
@@ -81,12 +88,14 @@ This system allows existing admin users to apply to become instructors while pre
 ### 4. **Security & Validation**
 
 #### **Access Control:**
+
 - ✅ Only authenticated users can access
 - ✅ Only administrators can apply
 - ✅ Cannot apply if already an instructor
 - ✅ Cannot apply if not an admin
 
 #### **Data Integrity:**
+
 - ✅ Existing admin data preserved
 - ✅ New instructor fields properly initialized
 - ✅ Timestamp updated for audit trail
@@ -95,11 +104,13 @@ This system allows existing admin users to apply to become instructors while pre
 ### 5. **Technical Implementation**
 
 #### **Files Created:**
+
 - `app/lib/pages/AdminToInstructorApplication/page.tsx` - Main application page
 - `app/lib/utils/adminToInstructor.ts` - Utility functions
 - Updated `app/lib/components/navbar.tsx` - Navigation integration
 
 #### **Key Functions:**
+
 ```typescript
 // Check eligibility
 canApplyForInstructor(uid: string)
@@ -112,6 +123,7 @@ getInstructorFieldRequirements()
 ```
 
 #### **Navigation Integration:**
+
 - Green "Apply for Instructor" link appears in navbar
 - Only visible to eligible admin users
 - Automatically hidden after becoming instructor
@@ -119,6 +131,7 @@ getInstructorFieldRequirements()
 ### 6. **Usage Examples**
 
 #### **For Admin Users:**
+
 1. Navigate to "Apply for Instructor" link
 2. Review pre-filled admin information
 3. Write instructor description
@@ -126,6 +139,7 @@ getInstructorFieldRequirements()
 5. Gain immediate instructor access
 
 #### **For Developers:**
+
 ```typescript
 // Check if user can apply
 const eligibility = await canApplyForInstructor(userId);
@@ -140,12 +154,14 @@ await convertAdminToInstructor(userId, description);
 ### 7. **Benefits**
 
 #### **For Users:**
+
 - 🚀 Seamless transition from admin to instructor
 - 🔒 No loss of existing privileges
 - ⚡ Immediate access to instructor features
 - 📝 Simple application process
 
 #### **For System:**
+
 - 🛡️ Maintains data integrity
 - 🔐 Preserves security model
 - 📊 Clear audit trail
@@ -154,6 +170,7 @@ await convertAdminToInstructor(userId, description);
 ### 8. **Future Enhancements**
 
 #### **Potential Additions:**
+
 - 📋 Application review workflow
 - 📧 Email notifications
 - 📊 Application analytics
@@ -161,6 +178,7 @@ await convertAdminToInstructor(userId, description);
 - 📝 Application history tracking
 
 #### **Advanced Features:**
+
 - 🎓 Instructor certification levels
 - 📚 Teaching specialization fields
 - 👥 Student capacity limits

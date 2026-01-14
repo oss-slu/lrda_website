@@ -4,7 +4,7 @@
 
 @layer utilities {
   .card-container {
-    @apply aspect-w-1 aspect-h-1 bg-white rounded-xl shadow-md overflow-hidden m-4;
+    @apply aspect-w-1 aspect-h-1 m-4 overflow-hidden rounded-xl bg-white shadow-md;
   }
 
   /* Mobile-friendly utilities */
@@ -427,7 +427,9 @@
 }
 
 .clickable-note {
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
   background-color: #e2e2e2;
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
 }
@@ -482,7 +484,7 @@ body {
 }
 
 .popup-bubble-anchor::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -501,7 +503,7 @@ body {
 
 /* Add this to your global stylesheet */
 .scroll-shadow::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   right: 0;

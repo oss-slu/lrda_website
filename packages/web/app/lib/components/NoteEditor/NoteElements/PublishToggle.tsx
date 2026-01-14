@@ -1,9 +1,9 @@
-"use client";
-import React from "react";
-import { UploadIcon } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
-import { useAuthStore } from "../../../stores/authStore";
-import { useShallow } from "zustand/react/shallow";
+'use client';
+import React from 'react';
+import { UploadIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip';
+import { useAuthStore } from '../../../stores/authStore';
+import { useShallow } from 'zustand/react/shallow';
 
 interface PublishToggleProps {
   id?: string;
@@ -27,9 +27,9 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
 }) => {
   // Use auth store for user roles
   const { user: authUser } = useAuthStore(
-    useShallow((state) => ({
+    useShallow(state => ({
       user: state.user,
-    }))
+    })),
   );
 
   // Compute isStudent directly from authUser roles (no need for useState)
@@ -55,42 +55,48 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
 
   if (isStudent) {
     if (isPublished) {
-      iconClass = "text-green-500";
-      labelText = "Published";
-      tooltipText = "Click to unpublish.";
+      iconClass = 'text-green-500';
+      labelText = 'Published';
+      tooltipText = 'Click to unpublish.';
     } else if (isApprovalRequested) {
-      iconClass = "text-yellow-500";
-      labelText = "Cancel Approval Request";
-      tooltipText = "Cancel your approval request.";
+      iconClass = 'text-yellow-500';
+      labelText = 'Cancel Approval Request';
+      tooltipText = 'Cancel your approval request.';
     } else {
-      iconClass = "text-blue-500";
-      labelText = "Request Approval";
-      tooltipText = "Request instructor approval to publish.";
+      iconClass = 'text-blue-500';
+      labelText = 'Request Approval';
+      tooltipText = 'Request instructor approval to publish.';
     }
   } else {
     if (isPublished) {
-      iconClass = "text-green-500";
-      labelText = "Unpublish";
-      tooltipText = "Unpublish this note.";
+      iconClass = 'text-green-500';
+      labelText = 'Unpublish';
+      tooltipText = 'Unpublish this note.';
     } else {
-      iconClass = "text-black group-hover:text-green-500";
-      labelText = isInstructorReview ? "Approve" : "Publish";
-      tooltipText = isInstructorReview ? "Approve and publish this note." : "Publish this note.";
+      iconClass = 'text-black group-hover:text-green-500';
+      labelText = isInstructorReview ? 'Approve' : 'Publish';
+      tooltipText = isInstructorReview ? 'Approve and publish this note.' : 'Publish this note.';
     }
   }
 
   return (
-    <div className="relative">
+    <div className='relative'>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               id={id}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors group"
+              className='group inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
               onClick={handlePublishClick}
             >
-              <UploadIcon className={`h-4 w-4 ${isPublished ? "text-green-500" : "text-gray-700 group-hover:text-green-500"}`} />
-              <span className={`${isPublished ? "text-green-600" : "text-gray-700 group-hover:text-green-600"}`}>{labelText}</span>
+              <UploadIcon
+                className={`h-4 w-4 ${isPublished ? 'text-green-500' : 'text-gray-700 group-hover:text-green-500'}`}
+              />
+              <span
+                className={`${isPublished ? 'text-green-600' : 'text-gray-700 group-hover:text-green-600'}`}
+              >
+                {labelText}
+              </span>
             </button>
           </TooltipTrigger>
           <TooltipContent>{tooltipText}</TooltipContent>

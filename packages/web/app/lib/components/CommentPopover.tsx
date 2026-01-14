@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 type CommentPopoverProps = {
   onSubmit: (text: string) => void;
@@ -9,7 +9,12 @@ type CommentPopoverProps = {
   onTextChange?: (text: string) => void;
 };
 
-export default function CommentPopover({ onSubmit, onClose, initialValue = "", onTextChange }: CommentPopoverProps) {
+export default function CommentPopover({
+  onSubmit,
+  onClose,
+  initialValue = '',
+  onTextChange,
+}: CommentPopoverProps) {
   const [commentText, setCommentText] = useState(initialValue);
 
   // Update internal state when initialValue changes
@@ -25,22 +30,24 @@ export default function CommentPopover({ onSubmit, onClose, initialValue = "", o
   };
 
   return (
-    <div className="relative z-50 bg-white border shadow-lg rounded-lg p-4 w-full">
+    <div className='relative z-50 w-full rounded-lg border bg-white p-4 shadow-lg'>
       <Textarea
         value={commentText}
-        onChange={(e) => handleTextChange(e.target.value)}
-        placeholder="Write your comment..."
-        className="w-full min-h-24 mb-3 resize-y"
+        onChange={e => handleTextChange(e.target.value)}
+        placeholder='Write your comment...'
+        className='mb-3 min-h-24 w-full resize-y'
         rows={4}
       />
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+      <div className='flex justify-end gap-2'>
+        <Button variant='outline' size='sm' onClick={onClose}>
+          Cancel
+        </Button>
         <Button
-          size="sm"
+          size='sm'
           onClick={() => {
             if (commentText.trim()) {
               onSubmit(commentText.trim());
-              handleTextChange("");
+              handleTextChange('');
             }
           }}
         >

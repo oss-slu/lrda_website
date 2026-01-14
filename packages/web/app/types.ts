@@ -1,9 +1,9 @@
-import { Key, ReactNode } from "react";
-import { Media, PhotoType, VideoType, AudioType } from "./lib/models/media_class";
+import { Key, ReactNode } from 'react';
+import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
 
 export interface Tag {
   label: string;
-  origin: "user" | "ai";
+  origin: 'user' | 'ai';
 }
 
 export type MediaData = {
@@ -20,7 +20,7 @@ export type Comment = {
   text: string;
   author: string; // Display name
   authorId: string; // UID of the commenter
-  role: "instructor" | "student"; // For styling or permissions
+  role: 'instructor' | 'student'; // For styling or permissions
   createdAt: string; // ISO date
   position?: { from: number; to: number } | null; // Anchor to selected range
   threadId?: string | null; // Thread grouping id
@@ -59,7 +59,9 @@ export type Note = {
   comments?: Comment[];
 };
 
-export type CombinedResult = (google.maps.places.AutocompletePrediction & { type: "suggestion" }) | (Note & { type: "note" });
+export type CombinedResult =
+  | (google.maps.places.AutocompletePrediction & { type: 'suggestion' })
+  | (Note & { type: 'note' });
 
 export type newNote = {
   title: string;

@@ -3,13 +3,13 @@ export const mockFirebaseAuth = {
   currentUser: {
     uid: 'mock-user-uid-123',
     email: 'mock@test.com',
-    displayName: 'Mock User'
+    displayName: 'Mock User',
   },
   onAuthStateChanged: (callback: any) => {
     callback({
       uid: 'mock-user-uid-123',
       email: 'mock@test.com',
-      displayName: 'Mock User'
+      displayName: 'Mock User',
     });
     return () => {};
   },
@@ -17,17 +17,17 @@ export const mockFirebaseAuth = {
     user: {
       uid: 'mock-user-uid-123',
       email,
-      displayName: 'Mock User'
-    }
+      displayName: 'Mock User',
+    },
   }),
   createUserWithEmailAndPassword: async (email: string, password: string) => ({
     user: {
       uid: 'mock-user-uid-456',
       email,
-      displayName: 'Mock User'
-    }
+      displayName: 'Mock User',
+    },
   }),
-  signOut: async () => Promise.resolve()
+  signOut: async () => Promise.resolve(),
 };
 
 export const mockFirestore = {
@@ -41,28 +41,30 @@ export const mockFirestore = {
           name: 'Mock User',
           roles: { administrator: true, contributor: true },
           isInstructor: false,
-          createdAt: new Date('2025-01-01')
-        })
+          createdAt: new Date('2025-01-01'),
+        }),
       }),
       set: async (data: any) => Promise.resolve(),
       update: async (data: any) => Promise.resolve(),
-      delete: async () => Promise.resolve()
+      delete: async () => Promise.resolve(),
     }),
     add: async (data: any) => Promise.resolve({ id: 'mock-doc-id' }),
     where: (field: string, operator: string, value: any) => ({
       get: async () => ({
-        docs: [{
-          id: 'mock-doc-id',
-          data: () => ({
-            uid: 'mock-user-uid-123',
-            email: 'mock@test.com',
-            name: 'Mock User',
-            roles: { administrator: true, contributor: true },
-            isInstructor: false
-          })
-        }]
-      })
-    })
+        docs: [
+          {
+            id: 'mock-doc-id',
+            data: () => ({
+              uid: 'mock-user-uid-123',
+              email: 'mock@test.com',
+              name: 'Mock User',
+              roles: { administrator: true, contributor: true },
+              isInstructor: false,
+            }),
+          },
+        ],
+      }),
+    }),
   }),
   doc: (collectionName: string, docId: string) => ({
     get: async () => ({
@@ -73,12 +75,12 @@ export const mockFirestore = {
         name: 'Mock User',
         roles: { administrator: true, contributor: true },
         isInstructor: false,
-        createdAt: new Date('2025-01-01')
-      })
+        createdAt: new Date('2025-01-01'),
+      }),
     }),
     set: async (data: any) => Promise.resolve(),
     update: async (data: any) => Promise.resolve(),
-    delete: async () => Promise.resolve()
+    delete: async () => Promise.resolve(),
   }),
   getDoc: async (docRef: any) => ({
     exists: true,
@@ -88,40 +90,44 @@ export const mockFirestore = {
       name: 'Mock User',
       roles: { administrator: true, contributor: true },
       isInstructor: false,
-      createdAt: new Date('2025-01-01')
-    })
+      createdAt: new Date('2025-01-01'),
+    }),
   }),
   updateDoc: async (docRef: any, data: any) => Promise.resolve(),
   setDoc: async (docRef: any, data: any) => Promise.resolve(),
   deleteDoc: async (docRef: any) => Promise.resolve(),
   query: (collectionRef: any, ...constraints: any[]) => ({
     get: async () => ({
-      docs: [{
-        id: 'mock-doc-id',
-        data: () => ({
-          uid: 'mock-user-uid-123',
-          email: 'mock@test.com',
-          name: 'Mock User',
-          roles: { administrator: true, contributor: true },
-          isInstructor: false
-        })
-      }]
-    })
+      docs: [
+        {
+          id: 'mock-doc-id',
+          data: () => ({
+            uid: 'mock-user-uid-123',
+            email: 'mock@test.com',
+            name: 'Mock User',
+            roles: { administrator: true, contributor: true },
+            isInstructor: false,
+          }),
+        },
+      ],
+    }),
   }),
   where: (field: string, operator: string, value: any) => ({
     get: async () => ({
-      docs: [{
-        id: 'mock-doc-id',
-        data: () => ({
-          uid: 'mock-user-uid-123',
-          email: 'mock@test.com',
-          name: 'Mock User',
-          roles: { administrator: true, contributor: true },
-          isInstructor: false
-        })
-      }]
-    })
-  })
+      docs: [
+        {
+          id: 'mock-doc-id',
+          data: () => ({
+            uid: 'mock-user-uid-123',
+            email: 'mock@test.com',
+            name: 'Mock User',
+            roles: { administrator: true, contributor: true },
+            isInstructor: false,
+          }),
+        },
+      ],
+    }),
+  }),
 };
 
 export const mockUserClass = {
@@ -131,7 +137,7 @@ export const mockUserClass = {
     getCurrentUser: () => ({
       uid: 'mock-user-uid-123',
       email: 'mock@test.com',
-      name: 'Mock User'
+      name: 'Mock User',
     }),
     isLoggedIn: () => true,
     getUserData: async () => ({
@@ -139,9 +145,9 @@ export const mockUserClass = {
       email: 'mock@test.com',
       name: 'Mock User',
       roles: { administrator: true, contributor: true },
-      isInstructor: false
-    })
-  })
+      isInstructor: false,
+    }),
+  }),
 };
 
 export const mockApiService = {
@@ -152,10 +158,10 @@ export const mockApiService = {
     roles: { administrator: true, contributor: true },
     isInstructor: false,
     students: [],
-    parentInstructorId: null
+    parentInstructorId: null,
   }),
   updateUserData: async (uid: string, data: any) => Promise.resolve(true),
-  createUser: async (userData: any) => Promise.resolve(true)
+  createUser: async (userData: any) => Promise.resolve(true),
 };
 
 // Mock data constants
@@ -166,7 +172,7 @@ export const mockUsers = {
     name: 'Mock Admin User',
     roles: { administrator: true, contributor: true },
     isInstructor: false,
-    createdAt: new Date('2025-01-01')
+    createdAt: new Date('2025-01-01'),
   },
   instructor: {
     uid: 'mock-instructor-uid-456',
@@ -176,7 +182,7 @@ export const mockUsers = {
     isInstructor: true,
     description: 'Test instructor description',
     students: [],
-    createdAt: new Date('2025-01-01')
+    createdAt: new Date('2025-01-01'),
   },
   student: {
     uid: 'mock-student-uid-789',
@@ -185,8 +191,8 @@ export const mockUsers = {
     roles: { contributor: true },
     isInstructor: false,
     parentInstructorId: 'mock-instructor-uid-456',
-    createdAt: new Date('2025-01-01')
-  }
+    createdAt: new Date('2025-01-01'),
+  },
 };
 
 // Helper function to setup Firebase mocks
@@ -195,7 +201,7 @@ export const setupFirebaseMocks = async (page: any, customMocks: any = {}) => {
     // Mock Firebase
     (window as any).firebase = {
       auth: () => mocks.auth || mockFirebaseAuth,
-      firestore: () => mocks.firestore || mockFirestore
+      firestore: () => mocks.firestore || mockFirestore,
     };
 
     // Mock Firestore functions
@@ -217,7 +223,7 @@ export const setupFirebaseMocks = async (page: any, customMocks: any = {}) => {
       ...console,
       log: () => {},
       error: () => {},
-      warn: () => {}
+      warn: () => {},
     };
   }, customMocks);
 };
@@ -228,7 +234,7 @@ export const mockApiRoute = async (page: any, pattern: string, response: any) =>
     await route.fulfill({
       status: response.status || 200,
       contentType: 'application/json',
-      body: JSON.stringify(response.body || {})
+      body: JSON.stringify(response.body || {}),
     });
   });
 };
@@ -241,13 +247,18 @@ export const mockNetworkError = async (page: any, pattern: string) => {
 };
 
 // Helper function to mock slow responses
-export const mockSlowResponse = async (page: any, pattern: string, delay: number, response: any) => {
+export const mockSlowResponse = async (
+  page: any,
+  pattern: string,
+  delay: number,
+  response: any,
+) => {
   await page.route(pattern, async (route: any) => {
     await new Promise(resolve => setTimeout(resolve, delay));
     await route.fulfill({
       status: response.status || 200,
       contentType: 'application/json',
-      body: JSON.stringify(response.body || {})
+      body: JSON.stringify(response.body || {}),
     });
   });
 };

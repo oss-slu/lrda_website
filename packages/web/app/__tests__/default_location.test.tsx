@@ -1,10 +1,10 @@
 // app/__tests__/default_location.test.tsx
-import React from "react";
-import { render, fireEvent, screen, waitFor } from "@testing-library/react";
-import LocationPicker from "../lib/components/NoteEditor/NoteElements/LocationPicker";
+import React from 'react';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
+import LocationPicker from '../lib/components/NoteEditor/NoteElements/LocationPicker';
 
 // ✅ Mock Google Maps API-related components
-jest.mock("@react-google-maps/api", () => ({
+jest.mock('@react-google-maps/api', () => ({
   GoogleMap: ({ children }: any) => <div>{children}</div>,
   MarkerF: () => <div>Marker</div>,
   Autocomplete: ({ children, onLoad }: any) => {
@@ -16,7 +16,7 @@ jest.mock("@react-google-maps/api", () => ({
 }));
 
 // ✅ Mock useGoogleMaps hook
-jest.mock("../lib/utils/GoogleMapsContext", () => ({
+jest.mock('../lib/utils/GoogleMapsContext', () => ({
   useGoogleMaps: () => true,
 }));
 
@@ -27,17 +27,17 @@ const mockGeolocation = {
 
 global.navigator.geolocation = mockGeolocation as any;
 
-describe("LocationPicker Component", () => {
+describe('LocationPicker Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  
-  it("renders the location button", () => {
+
+  it('renders the location button', () => {
     render(<LocationPicker onLocationChange={() => {}} />);
-    expect(screen.getByRole("button", { name: /toggle map visibility/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /toggle map visibility/i })).toBeInTheDocument();
   });
 
-  it("calls geolocation and updates location when map is opened", async () => {
+  it('calls geolocation and updates location when map is opened', async () => {
     const onLocationChangeMock = jest.fn();
 
     const fakePosition = {
@@ -47,14 +47,12 @@ describe("LocationPicker Component", () => {
       },
     };
 
-    mockGeolocation.getCurrentPosition.mockImplementationOnce((success) =>
-      success(fakePosition)
-    );
+    mockGeolocation.getCurrentPosition.mockImplementationOnce(success => success(fakePosition));
 
     render(<LocationPicker onLocationChange={onLocationChangeMock} />);
 
     // Click the button to open the map
-    fireEvent.click(screen.getByRole("button", { name: /toggle map visibility/i }));
+    fireEvent.click(screen.getByRole('button', { name: /toggle map visibility/i }));
 
     // Check that onLocationChange was called with the mocked coordinates
     await waitFor(() => {

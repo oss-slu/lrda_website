@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Comment } from "@/app/types";
-import ApiService from "../../utils/api_service";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Comment } from '@/app/types';
+import ApiService from '../../utils/api_service';
 
 // Query key factory for comments
 export const commentsKeys = {
-  all: ["comments"] as const,
+  all: ['comments'] as const,
   forNote: (noteId: string) => [...commentsKeys.all, noteId] as const,
 };
 
@@ -14,10 +14,10 @@ export const commentsKeys = {
  */
 async function enrichCommentsWithAuthorNames(comments: Comment[]): Promise<Comment[]> {
   return Promise.all(
-    comments.map(async (comment) => {
+    comments.map(async comment => {
       const needsName =
         !comment.authorName ||
-        (typeof comment.authorName === "string" && (comment.authorName as string).includes("@"));
+        (typeof comment.authorName === 'string' && (comment.authorName as string).includes('@'));
 
       if (needsName && comment.authorId) {
         try {
@@ -28,7 +28,7 @@ async function enrichCommentsWithAuthorNames(comments: Comment[]): Promise<Comme
         }
       }
       return comment;
-    })
+    }),
   );
 }
 
@@ -38,7 +38,7 @@ async function enrichCommentsWithAuthorNames(comments: Comment[]): Promise<Comme
  */
 export function useComments(noteId: string | null) {
   return useQuery({
-    queryKey: commentsKeys.forNote(noteId ?? ""),
+    queryKey: commentsKeys.forNote(noteId ?? ''),
     queryFn: async (): Promise<Comment[]> => {
       if (!noteId) return [];
       const raw = await ApiService.fetchCommentsForNote(noteId);
@@ -75,7 +75,7 @@ export function useCommentMutations(noteId: string) {
       await ApiService.resolveThread(threadId);
       return threadId;
     },
-    onMutate: async (threadId) => {
+    onMutate: async threadId => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: commentsKeys.forNote(noteId) });
 
@@ -83,8 +83,8 @@ export function useCommentMutations(noteId: string) {
       const previousComments = queryClient.getQueryData<Comment[]>(commentsKeys.forNote(noteId));
 
       // Optimistically update
-      queryClient.setQueryData<Comment[]>(commentsKeys.forNote(noteId), (old) =>
-        old?.map((c) => (c.threadId === threadId ? { ...c, resolved: true } : c))
+      queryClient.setQueryData<Comment[]>(commentsKeys.forNote(noteId), old =>
+        old?.map(c => (c.threadId === threadId ? { ...c, resolved: true } : c)),
       );
 
       return { previousComments };
@@ -105,14 +105,14 @@ export function useCommentMutations(noteId: string) {
       await ApiService.archiveComment(commentId);
       return commentId;
     },
-    onMutate: async (commentId) => {
+    onMutate: async commentId => {
       await queryClient.cancelQueries({ queryKey: commentsKeys.forNote(noteId) });
 
       const previousComments = queryClient.getQueryData<Comment[]>(commentsKeys.forNote(noteId));
 
       // Optimistically remove the comment
-      queryClient.setQueryData<Comment[]>(commentsKeys.forNote(noteId), (old) =>
-        old?.filter((c) => String(c.id) !== commentId)
+      queryClient.setQueryData<Comment[]>(commentsKeys.forNote(noteId), old =>
+        old?.filter(c => String(c.id) !== commentId),
       );
 
       return { previousComments };

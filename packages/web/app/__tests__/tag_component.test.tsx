@@ -21,7 +21,13 @@ describe('TagManager', () => {
   it('adds a new valid tag', () => {
     const mockOnTagsChange = jest.fn(); // Mock function to capture tag changes
     // Render the TagManager with initial tags and the mock function
-    render(<TagManager inputTags={initialTags} onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    render(
+      <TagManager
+        inputTags={initialTags}
+        onTagsChange={mockOnTagsChange}
+        fetchSuggestedTags={jest.fn()}
+      />,
+    );
 
     // Get the input field for adding tags
     const input = screen.getByPlaceholderText('Add tags...');
@@ -34,7 +40,7 @@ describe('TagManager', () => {
     // Assert that the mock function was called with the expected updated tags array
     expect(mockOnTagsChange).toHaveBeenCalledWith([
       ...initialTags,
-      { label: 'NewTag', origin: 'user' } // Updated expected format to match TagManager's structure
+      { label: 'NewTag', origin: 'user' }, // Updated expected format to match TagManager's structure
     ]);
   });
 
@@ -62,14 +68,18 @@ describe('TagManager', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     // Assert that the tag is added (min is 1)
-    expect(mockOnTagsChange).toHaveBeenCalledWith([
-      { label: 'a', origin: 'user' }
-    ]);
+    expect(mockOnTagsChange).toHaveBeenCalledWith([{ label: 'a', origin: 'user' }]);
   });
 
   it('does not add duplicate tags', () => {
     const mockOnTagsChange = jest.fn();
-    render(<TagManager inputTags={initialTags} onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    render(
+      <TagManager
+        inputTags={initialTags}
+        onTagsChange={mockOnTagsChange}
+        fetchSuggestedTags={jest.fn()}
+      />,
+    );
 
     const input = screen.getByPlaceholderText('Add tags...');
     // Simulate user trying to add an existing tag
@@ -79,7 +89,7 @@ describe('TagManager', () => {
     // Assert that the callback was not called with duplicate tags
     expect(mockOnTagsChange).not.toHaveBeenCalledWith([
       { label: 'ExampleTag', origin: 'user' },
-      { label: 'ExampleTag', origin: 'user' }
+      { label: 'ExampleTag', origin: 'user' },
     ]);
   });
 
@@ -108,9 +118,9 @@ describe('TagManager', () => {
 
     // Assert that the callback was called with the new tag
     expect(mockOnTagsChange).toHaveBeenCalledWith([
-      { label: 'ValidTagWith28Characters', origin: 'user' }
+      { label: 'ValidTagWith28Characters', origin: 'user' },
     ]);
-    
+
     // The tag should be in the document (check for the tag text in the rendered output)
     // Note: The tag is rendered in a div with the tag label, so we check for it
     const tagElement = screen.queryByText('ValidTagWith28Characters');
@@ -127,12 +137,12 @@ describe('TagManager', () => {
     const mockOnTagsChange = jest.fn();
     const mockFetchSuggestedTags = jest.fn();
     render(
-      <TagManager 
-        inputTags={initialTags} 
+      <TagManager
+        inputTags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={mockFetchSuggestedTags}
         disabled={true}
-      />
+      />,
     );
 
     const input = screen.getByPlaceholderText('Add tags...');
@@ -160,16 +170,16 @@ describe('TagManager', () => {
   it('allows editing when disabled prop is false', () => {
     const mockOnTagsChange = jest.fn();
     render(
-      <TagManager 
-        inputTags={initialTags} 
+      <TagManager
+        inputTags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={jest.fn()}
         disabled={false}
-      />
+      />,
     );
 
     const input = screen.getByPlaceholderText('Add tags...');
-    
+
     // Assert that input is not disabled
     expect(input).not.toBeDisabled();
 

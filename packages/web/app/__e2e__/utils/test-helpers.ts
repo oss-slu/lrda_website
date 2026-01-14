@@ -1,6 +1,6 @@
 /**
  * Test Helper Functions for Playwright E2E Tests
- * 
+ *
  * This file contains minimal, reusable helper functions for common test operations.
  * Keep these functions simple and focused to maintain test reliability.
  */

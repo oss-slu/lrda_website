@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { createPortal } from "react-dom";
-import { useTheme } from "@mui/material";
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTheme } from '@mui/material';
 import {
   MenuButtonAddTable,
   MenuButtonBlockquote,
@@ -31,8 +31,8 @@ import {
   MenuSelectHeading,
   MenuSelectTextAlign,
   isTouchDevice,
-} from "mui-tiptap";
-import { uploadMedia } from "../utils/s3_proxy";
+} from 'mui-tiptap';
+import { uploadMedia } from '../utils/s3_proxy';
 
 type EditorMenuControlsProps = {
   onMediaUpload: (media: { type: string; uri: string }) => void;
@@ -46,12 +46,12 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
   // Unified upload handler
   async function handleFileUpload(file: File) {
     const fileType = file.type;
-    let mediaType = "image";
+    let mediaType = 'image';
 
-    if (fileType.startsWith("video/")) {
-      mediaType = "video";
-    } else if (fileType.startsWith("audio/")) {
-      mediaType = "audio";
+    if (fileType.startsWith('video/')) {
+      mediaType = 'video';
+    } else if (fileType.startsWith('audio/')) {
+      mediaType = 'audio';
     }
 
     try {
@@ -59,7 +59,7 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
 
       let processedFile = file;
 
-      if (mediaType === "image" && fileType !== "image/jpeg") {
+      if (mediaType === 'image' && fileType !== 'image/jpeg') {
         // Convert to JPEG
         processedFile = await convertToJpeg(file);
       }
@@ -69,7 +69,7 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
 
       return { type: mediaType, uri };
     } catch (error) {
-      console.error("Media upload failed:", error);
+      console.error('Media upload failed:', error);
       setUploading(false);
       throw error;
     }
@@ -79,35 +79,35 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = (event) => {
+      reader.onload = event => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement("canvas");
+          const canvas = document.createElement('canvas');
           canvas.width = img.width;
           canvas.height = img.height;
 
-          const ctx = canvas.getContext("2d");
+          const ctx = canvas.getContext('2d');
           if (!ctx) {
-            return reject(new Error("Failed to get canvas context"));
+            return reject(new Error('Failed to get canvas context'));
           }
 
           ctx.drawImage(img, 0, 0);
-          canvas.toBlob((blob) => {
+          canvas.toBlob(blob => {
             if (!blob) {
-              return reject(new Error("Failed to convert image to JPEG"));
+              return reject(new Error('Failed to convert image to JPEG'));
             }
 
-            const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
-              type: "image/jpeg",
+            const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+              type: 'image/jpeg',
             });
 
             resolve(jpegFile);
-          }, "image/jpeg");
+          }, 'image/jpeg');
         };
         img.src = event.target?.result as string;
       };
 
-      reader.onerror = (err) => {
+      reader.onerror = err => {
         reject(err);
       };
 
@@ -124,29 +124,29 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
 
         {/* Upload Media Button */}
         <button
-          className="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-blue-50 transition-colors duration-200 border border-blue-200 bg-blue-50 cursor-pointer text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm"
+          className='inline-flex cursor-pointer items-center gap-2 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-blue-600 transition-colors duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm'
           onClick={() => setIsPopupOpen(true)}
-          title="Upload Media (Images, Videos, Audio)"
+          title='Upload Media (Images, Videos, Audio)'
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              strokeLinecap='round'
+              strokeLinejoin='round'
               strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
             />
           </svg>
-          <span className="text-sm font-medium">Upload</span>
+          <span className='text-sm font-medium'>Upload</span>
         </button>
 
         <MenuDivider />
 
         <MenuSelectFontFamily
           options={[
-            { label: "Comic Sans", value: "Comic Sans MS, Comic Sans" },
-            { label: "Cursive", value: "cursive" },
-            { label: "Monospace", value: "monospace" },
-            { label: "Serif", value: "serif" },
+            { label: 'Comic Sans', value: 'Comic Sans MS, Comic Sans' },
+            { label: 'Cursive', value: 'cursive' },
+            { label: 'Monospace', value: 'monospace' },
+            { label: 'Serif', value: 'serif' },
           ]}
         />
 
@@ -172,27 +172,27 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
         <MenuButtonTextColor
           defaultTextColor={theme.palette.text.primary}
           swatchColors={[
-            { value: "#000000", label: "Black" },
-            { value: "#ffffff", label: "White" },
-            { value: "#888888", label: "Grey" },
-            { value: "#ff0000", label: "Red" },
-            { value: "#ff9900", label: "Orange" },
-            { value: "#ffff00", label: "Yellow" },
-            { value: "#00d000", label: "Green" },
-            { value: "#0000ff", label: "Blue" },
+            { value: '#000000', label: 'Black' },
+            { value: '#ffffff', label: 'White' },
+            { value: '#888888', label: 'Grey' },
+            { value: '#ff0000', label: 'Red' },
+            { value: '#ff9900', label: 'Orange' },
+            { value: '#ffff00', label: 'Yellow' },
+            { value: '#00d000', label: 'Green' },
+            { value: '#0000ff', label: 'Blue' },
           ]}
         />
 
         <MenuButtonHighlightColor
           swatchColors={[
-            { value: "#595959", label: "Dark grey" },
-            { value: "#dddddd", label: "Light grey" },
-            { value: "#ffa6a6", label: "Light red" },
-            { value: "#ffd699", label: "Light orange" },
-            { value: "#ffff00", label: "Yellow" },
-            { value: "#99cc99", label: "Light green" },
-            { value: "#90c6ff", label: "Light blue" },
-            { value: "#8085e9", label: "Light purple" },
+            { value: '#595959', label: 'Dark grey' },
+            { value: '#dddddd', label: 'Light grey' },
+            { value: '#ffa6a6', label: 'Light red' },
+            { value: '#ffd699', label: 'Light orange' },
+            { value: '#ffff00', label: 'Yellow' },
+            { value: '#99cc99', label: 'Light green' },
+            { value: '#90c6ff', label: 'Light blue' },
+            { value: '#8085e9', label: 'Light purple' },
           ]}
         />
 
@@ -233,38 +233,40 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
       {isPopupOpen &&
         createPortal(
           <>
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-40 backdrop-blur-sm" onClick={() => setIsPopupOpen(false)} />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-xl shadow-2xl border border-gray-200 z-50 min-w-96">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div
+              className='fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm'
+              onClick={() => setIsPopupOpen(false)}
+            />
+            <div className='fixed left-1/2 top-1/2 z-50 min-w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white p-8 shadow-2xl'>
+              <div className='mb-6 flex items-center gap-3'>
+                <div className='rounded-lg bg-blue-100 p-2'>
+                  <svg
+                    className='h-6 w-6 text-blue-600'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
                     <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
                       strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Upload Media</h3>
+                <h3 className='text-xl font-semibold text-gray-900'>Upload Media</h3>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">Choose an image, video, or audio file to add to your note</p>
+              <p className='mb-4 text-sm text-gray-600'>
+                Choose an image, video, or audio file to add to your note
+              </p>
 
-              <div className="mb-6">
+              <div className='mb-6'>
                 <input
-                  type="file"
-                  accept="image/*,video/*,audio/*"
-                  className="block w-full text-sm text-gray-500 
-                  file:mr-4 file:py-3 file:px-6 
-                  file:rounded-lg file:border-0 
-                  file:text-sm file:font-semibold
-                  file:bg-blue-600 file:text-white 
-                  hover:file:bg-blue-700 
-                  file:cursor-pointer
-                  transition-colors duration-200
-                  cursor-pointer"
-                  onChange={async (e) => {
+                  type='file'
+                  accept='image/*,video/*,audio/*'
+                  className='block w-full cursor-pointer text-sm text-gray-500 transition-colors duration-200 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-6 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700'
+                  onChange={async e => {
                     const file = e.target.files?.[0];
                     if (file) {
                       try {
@@ -272,21 +274,21 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
                         onMediaUpload(uploadedMedia); // Pass media back to parent
                         setIsPopupOpen(false); // Close popup on success
                       } catch (error) {
-                        console.error("Error uploading media:", error);
+                        console.error('Error uploading media:', error);
                       }
                     }
                   }}
                 />
               </div>
               {uploading && (
-                <div className="flex items-center mb-4 text-blue-600 bg-blue-50 p-3 rounded-lg">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-                  <span className="text-sm font-medium">Uploading your file...</span>
+                <div className='mb-4 flex items-center rounded-lg bg-blue-50 p-3 text-blue-600'>
+                  <div className='mr-3 h-5 w-5 animate-spin rounded-full border-b-2 border-blue-600'></div>
+                  <span className='text-sm font-medium'>Uploading your file...</span>
                 </div>
               )}
-              <div className="flex justify-end gap-3">
+              <div className='flex justify-end gap-3'>
                 <button
-                  className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200"
+                  className='rounded-lg bg-gray-100 px-5 py-2 font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-200'
                   onClick={() => setIsPopupOpen(false)}
                 >
                   Cancel
@@ -294,7 +296,7 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
               </div>
             </div>
           </>,
-          document.body
+          document.body,
         )}
     </>
   );

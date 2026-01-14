@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { forwardRef } from "react";
-import { UserIcon, Plus, Minus, Users } from "lucide-react";
-import SearchBarMap from "../search_bar_map";
-import { Note } from "@/app/types";
-import { PANEL_WIDTH } from "../../constants/mapConstants";
+import React, { forwardRef } from 'react';
+import { UserIcon, Plus, Minus, Users } from 'lucide-react';
+import SearchBarMap from '../search_bar_map';
+import { Note } from '@/app/types';
+import { PANEL_WIDTH } from '../../constants/mapConstants';
 
 interface MapControlsProps {
   // Search
@@ -46,80 +46,83 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
       onLocate,
       isPanelOpen,
     },
-    searchBarRef
+    searchBarRef,
   ) => {
     return (
-      <div className="absolute flex flex-row mt-4 w-full h-10 justify-between z-40 pointer-events-none">
+      <div className='pointer-events-none absolute z-40 mt-4 flex h-10 w-full flex-row justify-between'>
         {/* Left side - Search and view toggle */}
-        <div className="flex flex-row w-[30vw] left-0 z-40 m-5 align-center items-center pointer-events-auto">
-          <div className="min-w-[80px] mr-3" ref={searchBarRef}>
-            <SearchBarMap onSearch={onSearch} onNotesSearch={onNotesSearch} isLoaded={isLoaded} filteredNotes={filteredNotes} />
+        <div className='align-center pointer-events-auto left-0 z-40 m-5 flex w-[30vw] flex-row items-center'>
+          <div className='mr-3 min-w-[80px]' ref={searchBarRef}>
+            <SearchBarMap
+              onSearch={onSearch}
+              onNotesSearch={onNotesSearch}
+              isLoaded={isLoaded}
+              filteredNotes={filteredNotes}
+            />
           </div>
-          {isLoggedIn ? (
+          {isLoggedIn ?
             <button
-              aria-label={isGlobalView ? "Show personal posts" : "Show global posts"}
+              aria-label={isGlobalView ? 'Show personal posts' : 'Show global posts'}
               onClick={onToggleView}
-              type="button"
-              className={`rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors p-2 md:p-3 xl:p-3.5 mx-2 ${
-                isGlobalView ? "text-blue-600" : "text-green-600"
+              type='button'
+              className={`mx-2 rounded-full bg-white p-2 shadow transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:p-3 xl:p-3.5 ${
+                isGlobalView ? 'text-blue-600' : 'text-green-600'
               }`}
             >
-              {isGlobalView ? (
-                <Users className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-              ) : (
-                <UserIcon className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
-              )}
+              {isGlobalView ?
+                <Users className='h-4 w-4 md:h-5 md:w-5 xl:h-6 xl:w-6' />
+              : <UserIcon className='h-4 w-4 md:h-5 md:w-5 xl:h-6 xl:w-6' />}
             </button>
-          ) : null}
+          : null}
         </div>
 
         {/* Right side - Zoom and location - stays at right edge on mobile since panel overlays */}
         <div
-          className="flex flex-row items-center gap-2 transition-all duration-300 ease-in-out pointer-events-auto mr-4 md:mr-0"
+          className='pointer-events-auto mr-4 flex flex-row items-center gap-2 transition-all duration-300 ease-in-out md:mr-0'
           style={{
             marginRight: isPanelOpen ? `calc(${PANEL_WIDTH} + 1rem)` : undefined,
           }}
         >
           {/* Zoom Out Button */}
           <button
-            aria-label="Zoom out"
-            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+            aria-label='Zoom out'
+            className='rounded-full bg-white p-2 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:p-3 xl:p-3.5'
             onClick={onZoomOut}
-            type="button"
+            type='button'
           >
-            <Minus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+            <Minus className='h-4 w-4 text-gray-700 md:h-5 md:w-5 xl:h-6 xl:w-6' />
           </button>
           {/* Zoom In Button */}
           <button
-            aria-label="Zoom in"
-            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 md:p-3 xl:p-3.5"
+            aria-label='Zoom in'
+            className='rounded-full bg-white p-2 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:p-3 xl:p-3.5'
             onClick={onZoomIn}
-            type="button"
+            type='button'
           >
-            <Plus className="text-gray-700 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6" />
+            <Plus className='h-4 w-4 text-gray-700 md:h-5 md:w-5 xl:h-6 xl:w-6' />
           </button>
           {/* Locate Button */}
           <button
-            aria-label="Find my location"
-            className="rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-4 p-2 md:p-3 xl:p-3 flex items-center justify-center"
+            aria-label='Find my location'
+            className='ml-4 flex items-center justify-center rounded-full bg-white p-2 shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:p-3 xl:p-3'
             onClick={onLocate}
-            type="button"
+            type='button'
           >
             <svg
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 md:w-5 md:h-5 xl:w-7 xl:h-7 text-gray-600"
+              fill='currentColor'
+              viewBox='0 0 24 24'
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-4 w-4 text-gray-600 md:h-5 md:w-5 xl:h-7 xl:w-7'
             >
-              <path d="M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z"></path>
+              <path d='M11.087 20.914c-.353 0-1.219-.146-1.668-1.496L8.21 15.791l-3.628-1.209c-1.244-.415-1.469-1.172-1.493-1.587s.114-1.193 1.302-1.747l11.375-5.309c1.031-.479 1.922-.309 2.348.362.224.351.396.97-.053 1.933l-5.309 11.375c-.529 1.135-1.272 1.305-1.665 1.305zm-5.39-8.068 4.094 1.363 1.365 4.093 4.775-10.233-10.234 4.777z'></path>
             </svg>
           </button>
         </div>
       </div>
     );
-  }
+  },
 );
 
-MapControls.displayName = "MapControls";
+MapControls.displayName = 'MapControls';
 
 export default MapControls;

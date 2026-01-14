@@ -1,22 +1,27 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { GoogleMap } from "@react-google-maps/api";
-import { Note } from "@/app/types";
-import { useAuthStore } from "../lib/stores/authStore";
-import { useMapStore } from "../lib/stores/mapStore";
-import { useShallow } from "zustand/react/shallow";
-import ClickableNote from "../lib/components/click_note_card";
-import { MapControls, MapNotesPanel } from "../lib/components/map";
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from "../lib/hooks/useInfiniteNotes";
-import { useGoogleMaps } from "../lib/utils/GoogleMapsContext";
-import { Dialog } from "@/components/ui/dialog";
-import { useGlobalMapNotes, usePersonalMapNotes } from "../lib/hooks/queries/useNotes";
-import { useMapLocation } from "../lib/hooks/useMapLocation";
-import { useMapMarkers } from "../lib/hooks/useMapMarkers";
-import { useMapIntro } from "../lib/hooks/useMapIntro";
-import { filterNotesByMapBounds, filterNotesByQuery, filterNotesByTitleAndTags, Location } from "../lib/utils/mapUtils";
-import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from "../lib/constants/mapConstants";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { GoogleMap } from '@react-google-maps/api';
+import { Note } from '@/app/types';
+import { useAuthStore } from '../lib/stores/authStore';
+import { useMapStore } from '../lib/stores/mapStore';
+import { useShallow } from 'zustand/react/shallow';
+import ClickableNote from '../lib/components/click_note_card';
+import { MapControls, MapNotesPanel } from '../lib/components/map';
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from '../lib/hooks/useInfiniteNotes';
+import { useGoogleMaps } from '../lib/utils/GoogleMapsContext';
+import { Dialog } from '@/components/ui/dialog';
+import { useGlobalMapNotes, usePersonalMapNotes } from '../lib/hooks/queries/useNotes';
+import { useMapLocation } from '../lib/hooks/useMapLocation';
+import { useMapMarkers } from '../lib/hooks/useMapMarkers';
+import { useMapIntro } from '../lib/hooks/useMapIntro';
+import {
+  filterNotesByMapBounds,
+  filterNotesByQuery,
+  filterNotesByTitleAndTags,
+  Location,
+} from '../lib/utils/mapUtils';
+import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from '../lib/constants/mapConstants';
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
@@ -47,7 +52,7 @@ const Page = () => {
     setIsNoteSelectedFromSearch,
     setIsGlobalView,
   } = useMapStore(
-    useShallow((state) => ({
+    useShallow(state => ({
       mapCenter: state.mapCenter,
       mapZoom: state.mapZoom,
       mapBounds: state.mapBounds,
@@ -69,21 +74,26 @@ const Page = () => {
       setModalNote: state.setModalNote,
       setIsNoteSelectedFromSearch: state.setIsNoteSelectedFromSearch,
       setIsGlobalView: state.setIsGlobalView,
-    }))
+    })),
   );
 
   // Auth store
   const { user: authUser, isLoggedIn: authIsLoggedIn } = useAuthStore(
-    useShallow((state) => ({
+    useShallow(state => ({
       user: state.user,
       isLoggedIn: state.isLoggedIn,
-    }))
+    })),
   );
 
   const { isMapsApiLoaded } = useGoogleMaps();
 
   // TanStack Query for notes data
-  const { data: globalNotes = [], isPending: isGlobalPending, isError: isGlobalError, error: globalError } = useGlobalMapNotes();
+  const {
+    data: globalNotes = [],
+    isPending: isGlobalPending,
+    isError: isGlobalError,
+    error: globalError,
+  } = useGlobalMapNotes();
   const {
     data: personalNotes = [],
     isPending: isPersonalPending,
@@ -130,7 +140,7 @@ const Page = () => {
   const scrollToNoteTile = useCallback((noteId: string) => {
     const noteTile = noteRefs.current[noteId];
     if (noteTile) {
-      noteTile.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      noteTile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, []);
 
@@ -168,7 +178,7 @@ const Page = () => {
     if (mapRef.current) {
       const timer = setTimeout(() => {
         if (mapRef.current) {
-          google.maps.event.trigger(mapRef.current, "resize");
+          google.maps.event.trigger(mapRef.current, 'resize');
         }
       }, 300);
       return () => clearTimeout(timer);
@@ -179,10 +189,10 @@ const Page = () => {
   useEffect(() => {
     const map = mapRef.current;
     if (map) {
-      const mapClickListener = map.addListener("click", () => {
+      const mapClickListener = map.addListener('click', () => {
         setActiveNote(null);
       });
-      const mapDragListener = map.addListener("dragstart", () => {
+      const mapDragListener = map.addListener('dragstart', () => {
         setActiveNote(null);
       });
       return () => {
@@ -201,30 +211,30 @@ const Page = () => {
         const lat = map.getCenter()?.lat();
         const lng = map.getCenter()?.lng();
 
-        if (typeof lat === "number" && typeof lng === "number") {
+        if (typeof lat === 'number' && typeof lng === 'number') {
           setMapCenter({ lat, lng });
           setMapBounds(map.getBounds() ?? null);
         } else {
-          console.warn("Map bounds update skipped: invalid center");
+          console.warn('Map bounds update skipped: invalid center');
         }
       };
 
       const updateZoom = () => {
         const zoom = map.getZoom();
-        if (typeof zoom === "number") {
+        if (typeof zoom === 'number') {
           setMapZoom(zoom);
         }
       };
 
-      map.addListener("dragend", updateBounds);
-      map.addListener("zoom_changed", () => {
+      map.addListener('dragend', updateBounds);
+      map.addListener('zoom_changed', () => {
         updateBounds();
         updateZoom();
       });
 
       setTimeout(updateBounds, 100);
     },
-    [setMapCenter, setMapBounds, setMapZoom]
+    [setMapCenter, setMapBounds, setMapZoom],
   );
 
   // Search handlers
@@ -244,7 +254,7 @@ const Page = () => {
         mapRef.current?.setZoom(10);
       }
     },
-    [notes, setIsNoteSelectedFromSearch]
+    [notes, setIsNoteSelectedFromSearch],
   );
 
   const handleNotesSearch = useCallback(
@@ -252,7 +262,7 @@ const Page = () => {
       const filtered = filterNotesByTitleAndTags(notes, searchText);
       setSearchFilteredNotes(filtered);
     },
-    [notes]
+    [notes],
   );
 
   // Toggle between global and personal view
@@ -264,7 +274,7 @@ const Page = () => {
   }, [isGlobalView, setIsGlobalView]);
 
   return (
-    <div className="w-screen h-full relative overflow-hidden">
+    <div className='relative h-full w-screen overflow-hidden'>
       {/* Map Controls - Search, zoom, location buttons */}
       <MapControls
         ref={searchBarRef}
@@ -290,14 +300,14 @@ const Page = () => {
 
       {/* Map Container - full width on mobile (panel overlays), adjusted on desktop */}
       <div
-        className="h-full w-full md:transition-all md:duration-300 md:ease-in-out"
+        className='h-full w-full md:transition-all md:duration-300 md:ease-in-out'
         style={{
-          width: isPanelOpen ? MAP_WIDTH_WITH_PANEL : "100%",
+          width: isPanelOpen ? MAP_WIDTH_WITH_PANEL : '100%',
         }}
       >
         {isMapsApiLoaded && (
           <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "100%" }}
+            mapContainerStyle={{ width: '100%', height: '100%' }}
             center={mapCenter}
             zoom={mapZoom}
             onLoad={onMapLoad}
@@ -335,7 +345,7 @@ const Page = () => {
       {/* Note Detail Modal */}
       <Dialog
         open={modalNote !== null}
-        onOpenChange={(isOpen) => {
+        onOpenChange={isOpen => {
           if (!isOpen) {
             setModalNote(null);
           }

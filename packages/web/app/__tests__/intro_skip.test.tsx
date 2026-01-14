@@ -6,7 +6,7 @@ import React from 'react';
 const TestComponent = () => {
   return (
     <button
-      className="introjs-skipbutton"
+      className='introjs-skipbutton'
       // Applying styles inline to ensure they are available during the test
       style={{
         fontSize: '1.0em',
@@ -24,13 +24,13 @@ const TestComponent = () => {
 test('renders .introjs-skipbutton with correct styles', () => {
   // Render the TestComponent
   const { getByText } = render(<TestComponent />);
-  
+
   // Select the button element by its text content
   const skipButton = getByText('Skip');
 
   // Assertions to verify that each style is applied as expected
   expect(skipButton).toHaveStyle('font-size: 1.0em'); // Check font size
-  expect(skipButton).toHaveStyle('left: auto');       // Check left alignment
-  expect(skipButton).toHaveStyle('right: 10px');      // Check right position
-  expect(skipButton).toHaveStyle('color: #555');      // Check text color
+  expect(skipButton).toHaveStyle('left: auto'); // Check left alignment
+  expect(skipButton).toHaveStyle('right: 10px'); // Check right position
+  expect(skipButton).toHaveStyle('color: #555'); // Check text color
 });

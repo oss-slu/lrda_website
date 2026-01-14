@@ -1,3 +1,3 @@
-import { auth} from "./firebase";
+import { auth } from './firebase';
 
-export { auth};
+export { auth };

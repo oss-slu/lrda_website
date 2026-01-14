@@ -1,15 +1,15 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Note, newNote } from "@/app/types";
-import ApiService from "../utils/api_service";
-import DataConversion from "../utils/data_conversion";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Note, newNote } from '@/app/types';
+import ApiService from '../utils/api_service';
+import DataConversion from '../utils/data_conversion';
 
 interface NotesState {
   notes: Note[];
   isLoading: boolean;
   error: string | null;
   selectedNoteId: string | null;
-  viewMode: "my" | "review"; // Teacher-student view mode
+  viewMode: 'my' | 'review'; // Teacher-student view mode
   draftNote: newNote | null; // Unsaved draft note for immediate visibility
 
   // Actions
@@ -20,7 +20,7 @@ interface NotesState {
   removeNote: (id: string) => void;
   clearNotes: () => void;
   setSelectedNoteId: (id: string | null) => void;
-  setViewMode: (mode: "my" | "review") => void;
+  setViewMode: (mode: 'my' | 'review') => void;
   setDraftNote: (note: newNote | null) => void;
   clearDraftNote: () => void;
 }
@@ -32,7 +32,7 @@ export const useNotesStore = create<NotesState>()(
       isLoading: false,
       error: null,
       selectedNoteId: null,
-      viewMode: "my",
+      viewMode: 'my',
       draftNote: null,
 
       fetchNotes: async (userId: string) => {
@@ -47,8 +47,8 @@ export const useNotesStore = create<NotesState>()(
 
           set({ notes: convertedNotes, isLoading: false });
         } catch (error) {
-          console.error("Error fetching notes:", error);
-          set({ error: "Failed to fetch notes", isLoading: false });
+          console.error('Error fetching notes:', error);
+          set({ error: 'Failed to fetch notes', isLoading: false });
         }
       },
 
@@ -58,28 +58,30 @@ export const useNotesStore = create<NotesState>()(
       },
 
       addNote: (note: Note) => {
-        set((state) => ({
+        set(state => ({
           notes: [note, ...state.notes],
         }));
       },
 
       updateNote: (id: string, updates: Partial<Note>) => {
-        set((state) => ({
-          notes: state.notes.map((note) => {
-            // Match by both id and @id to handle different note formats
-            const noteId = note.id || (note as any)["@id"];
-            const matchId = id || (updates as any)["@id"];
-            if (noteId === matchId || noteId === id) {
-              return { ...note, ...updates };
-            }
-            return note;
-          }).filter((note) => !note.isArchived), // Ensure archived notes are removed
+        set(state => ({
+          notes: state.notes
+            .map(note => {
+              // Match by both id and @id to handle different note formats
+              const noteId = note.id || (note as any)['@id'];
+              const matchId = id || (updates as any)['@id'];
+              if (noteId === matchId || noteId === id) {
+                return { ...note, ...updates };
+              }
+              return note;
+            })
+            .filter(note => !note.isArchived), // Ensure archived notes are removed
         }));
       },
 
       removeNote: (id: string) => {
-        set((state) => ({
-          notes: state.notes.filter((note) => note.id !== id),
+        set(state => ({
+          notes: state.notes.filter(note => note.id !== id),
         }));
       },
 
@@ -91,7 +93,7 @@ export const useNotesStore = create<NotesState>()(
         set({ selectedNoteId: id });
       },
 
-      setViewMode: (mode: "my" | "review") => {
+      setViewMode: (mode: 'my' | 'review') => {
         set({ viewMode: mode });
       },
 
@@ -104,11 +106,11 @@ export const useNotesStore = create<NotesState>()(
       },
     }),
     {
-      name: "notes-store", // unique name for localStorage key
-      partialize: (state) => ({
+      name: 'notes-store', // unique name for localStorage key
+      partialize: state => ({
         // Only persist viewMode, not the entire state (notes, etc. should not be persisted)
         viewMode: state.viewMode,
       }),
-    }
-  )
+    },
+  ),
 );

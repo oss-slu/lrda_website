@@ -1,17 +1,17 @@
-import fetch from "node-fetch";
-import fs from "fs";
+import fetch from 'node-fetch';
+import fs from 'fs';
 
-const RERUM_PREFIX = "https://lived-religion-dev.rerum.io/deer-lr/";
-const OUTPUT_FILE = "all_notes.json";
+const RERUM_PREFIX = 'https://lived-religion-dev.rerum.io/deer-lr/';
+const OUTPUT_FILE = 'all_notes.json';
 const LIMIT = 150; // Adjust as needed
 
 async function fetchAllNotes(limit = LIMIT, skip = 0, allResults = []) {
   const url = `${RERUM_PREFIX}query?limit=${limit}&skip=${skip}`;
-  const body = { type: "message" };
+  const body = { type: 'message' };
 
   const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
     // headers: { "Authorization": "Bearer YOUR_TOKEN", ... } // Uncomment if needed
   });
@@ -36,6 +36,6 @@ async function fetchAllNotes(limit = LIMIT, skip = 0, allResults = []) {
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(notes, null, 2));
     console.log(`Downloaded ${notes.length} notes to ${OUTPUT_FILE}`);
   } catch (err) {
-    console.error("Error downloading notes:", err);
+    console.error('Error downloading notes:', err);
   }
 })();

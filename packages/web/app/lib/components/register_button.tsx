@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,12 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
 
   return (
     <div>
-      <Link href="/signup" passHref>
+      <Link href='/signup' passHref>
         <Button
           onClick={handleClick}
           className={` ${
-            isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          } w-48 h-12 rounded-full flex justify-center items-center font-semibold text-base shadow-sm`}
+            isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+          } flex h-12 w-48 items-center justify-center rounded-full text-base font-semibold shadow-sm`}
           disabled={isLoading}
         >
           {isLoading ? 'Registering...' : 'Register'}

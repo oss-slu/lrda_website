@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
@@ -25,7 +25,7 @@ const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
 // Create the provider component
 export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
   const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
-  
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
     libraries: GOOGLE_MAPS_LIBRARIES,
@@ -38,8 +38,6 @@ export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children
   }, [isLoaded]);
 
   return (
-    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>
-      {children}
-    </GoogleMapsContext.Provider>
+    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>{children}</GoogleMapsContext.Provider>
   );
 };

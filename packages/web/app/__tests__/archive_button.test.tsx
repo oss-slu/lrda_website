@@ -1,28 +1,28 @@
-import { handleDeleteNote } from "../lib/components/NoteEditor/handlers/noteHandlers"; // Import the function to be tested
-import ApiService from "../lib/utils/api_service";
-import { toast } from "sonner";
+import { handleDeleteNote } from '../lib/components/NoteEditor/handlers/noteHandlers'; // Import the function to be tested
+import ApiService from '../lib/utils/api_service';
+import { toast } from 'sonner';
 
 // Mocking necessary modules
-jest.mock("firebase/auth");
-jest.mock("../lib/utils/api_service");
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/auth');
+jest.mock('../lib/utils/api_service');
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
-jest.useFakeTimers().setSystemTime(new Date("2024-11-12T07:43:02.627Z"));
-jest.mock("sonner", () => ({
+jest.useFakeTimers().setSystemTime(new Date('2024-11-12T07:43:02.627Z'));
+jest.mock('sonner', () => ({
   toast: jest.fn(),
 }));
 
-describe("Archive Note Functionality Tests", () => {
+describe('Archive Note Functionality Tests', () => {
   let mockSetNote;
   let mockNote;
 
   beforeEach(() => {
     mockSetNote = jest.fn();
     mockNote = {
-      id: "test-note-id",
-      title: "Test Note",
-      text: "This is a test note",
+      id: 'test-note-id',
+      title: 'Test Note',
+      text: 'This is a test note',
       isArchived: false,
       published: false,
     };
@@ -33,8 +33,8 @@ describe("Archive Note Functionality Tests", () => {
   });
 
   // unit tests for front end
-  describe("unit tests frontend)", () => {
-    test("successfully archives the note", async () => {
+  describe('unit tests frontend)', () => {
+    test('successfully archives the note', async () => {
       ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
@@ -48,8 +48,8 @@ describe("Archive Note Functionality Tests", () => {
       });
 
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
-      expect(toast).toHaveBeenCalledWith("Success", {
-        description: "Note successfully archived.",
+      expect(toast).toHaveBeenCalledWith('Success', {
+        description: 'Note successfully archived.',
         duration: 4000,
       });
       expect(result).toBe(true);
@@ -65,7 +65,7 @@ describe("Archive Note Functionality Tests", () => {
     //   expect(result).toBe(true);
     // });
 
-    test("reflects the archive state in UI", async () => {
+    test('reflects the archive state in UI', async () => {
       ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
 
       await handleDeleteNote(mockNote, mockSetNote);
@@ -75,8 +75,8 @@ describe("Archive Note Functionality Tests", () => {
   });
 
   // unit tests for backend
-  describe("unit tests backend", () => {
-    test("media file is archived from the database", async () => {
+  describe('unit tests backend', () => {
+    test('media file is archived from the database', async () => {
       ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
 
       const response = await ApiService.overwriteNote({
@@ -90,24 +90,24 @@ describe("Archive Note Functionality Tests", () => {
       expect(ApiService.overwriteNote).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
-        archivedAt: "2024-11-12T07:43:02.627Z", // Matches any string date format
+        archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
         published: false, // Consistently include this field
       });
     });
 
-    test("associated annotations are also archived", async () => {
+    test('associated annotations are also archived', async () => {
       const mockArchiveAnnotations = jest.fn().mockResolvedValue(true);
       ApiService.archiveAnnotations = mockArchiveAnnotations;
 
-      await ApiService.archiveAnnotations(mockNote.id, "user-id");
+      await ApiService.archiveAnnotations(mockNote.id, 'user-id');
 
-      expect(mockArchiveAnnotations).toHaveBeenCalledWith(mockNote.id, "user-id");
+      expect(mockArchiveAnnotations).toHaveBeenCalledWith(mockNote.id, 'user-id');
     });
   });
 
   // integration tests
-  describe("Integration Tests", () => {
-    test("complete flow of archiving a note", async () => {
+  describe('Integration Tests', () => {
+    test('complete flow of archiving a note', async () => {
       ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
@@ -116,27 +116,27 @@ describe("Archive Note Functionality Tests", () => {
       expect(ApiService.overwriteNote).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
-        archivedAt: "2024-11-12T07:43:02.627Z", // Matches any string date format
+        archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
         published: false, // Consistently include this field
       });
 
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
-      expect(toast).toHaveBeenCalledWith("Success", {
-        description: "Note successfully archived.",
+      expect(toast).toHaveBeenCalledWith('Success', {
+        description: 'Note successfully archived.',
         duration: 4000,
       });
       expect(result).toBe(true);
     });
 
-    test("UI consistency after archiving", async () => {
+    test('UI consistency after archiving', async () => {
       ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
 
       await handleDeleteNote(mockNote, mockSetNote);
 
       // Ensure that the note is not present in the UI anymore
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
-      expect(toast).toHaveBeenCalledWith("Success", {
-        description: "Note successfully archived.",
+      expect(toast).toHaveBeenCalledWith('Success', {
+        description: 'Note successfully archived.',
         duration: 4000,
       });
     });

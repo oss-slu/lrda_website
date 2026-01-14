@@ -23,11 +23,11 @@ test.describe('Map Page', () => {
     await page.waitForTimeout(3000);
 
     // Check that page loaded (not a 404 or error)
-    const hasContent = await page.locator('div').count() > 0;
+    const hasContent = (await page.locator('div').count()) > 0;
     expect(hasContent).toBeTruthy();
 
     // Verify page is interactive (has some elements)
-    const hasElements = await page.locator('*').count() > 10;
+    const hasElements = (await page.locator('*').count()) > 10;
     expect(hasElements).toBeTruthy();
 
     // Check for Google Map region (visible map element)
@@ -38,4 +38,4 @@ test.describe('Map Page', () => {
     const searchInput = page.getByPlaceholder('Search...');
     await expect(searchInput).toBeVisible();
   });
-}); 
+});

@@ -5,8 +5,10 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 ## 🧪 Test Files Overview
 
 ### 1. `admin-to-instructor.spec.ts`
+
 **Purpose**: Tests the complete admin-to-instructor application flow
-**Coverage**: 
+**Coverage**:
+
 - Application page display and navigation
 - Field requirements information
 - Form validation and submission
@@ -14,6 +16,7 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 - Utility function testing
 
 **Key Test Scenarios**:
+
 - ✅ Admin user access and eligibility
 - ✅ Field requirements display
 - ✅ Form validation (required fields)
@@ -30,8 +33,10 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 - ✅ Network error handling
 
 ### 2. `instructor-signup-popup.spec.ts`
+
 **Purpose**: Tests the instructor signup popup and approval messaging
 **Coverage**:
+
 - Approval popup display
 - Initial instructor status (false)
 - Auto-login and redirect flow
@@ -39,6 +44,7 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 - Error handling
 
 **Key Test Scenarios**:
+
 - ✅ Approval popup after signup
 - ✅ Initial `isInstructor: false` status
 - ✅ Correct popup messaging
@@ -51,8 +57,10 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 - ✅ Loading states
 
 ### 3. `utils/firebase-mocks.ts`
+
 **Purpose**: Reusable Firebase and API mocking utilities
 **Features**:
+
 - Complete Firebase Auth mocks
 - Firestore database mocks
 - User class mocks
@@ -62,6 +70,7 @@ This directory contains comprehensive end-to-end tests for the admin-to-instruct
 ## 🚀 Running the Tests
 
 ### Prerequisites
+
 ```bash
 # Install dependencies
 pnpm install
@@ -71,6 +80,7 @@ pnpm exec playwright install --with-deps
 ```
 
 ### Run All Tests
+
 ```bash
 # Run all E2E tests
 pnpm run test:e2e
@@ -86,6 +96,7 @@ pnpm exec playwright test admin-to-instructor.spec.ts
 ```
 
 ### Run Specific Test Suites
+
 ```bash
 # Run only admin-to-instructor tests
 pnpm exec playwright test admin-to-instructor.spec.ts
@@ -100,6 +111,7 @@ pnpm exec playwright test --project=chromium
 ## 🔧 Test Configuration
 
 ### Mock Data
+
 All tests use mock data to avoid requiring real Firebase accounts:
 
 ```typescript
@@ -109,11 +121,12 @@ const mockAdminUser = {
   name: 'Mock Admin User',
   roles: { administrator: true, contributor: true },
   isInstructor: false,
-  createdAt: new Date('2025-01-01')
+  createdAt: new Date('2025-01-01'),
 };
 ```
 
 ### Firebase Mocks
+
 Tests mock the entire Firebase ecosystem:
 
 - **Authentication**: Mock sign-in, sign-up, and auth state
@@ -122,6 +135,7 @@ Tests mock the entire Firebase ecosystem:
 - **API Service**: Mock external API calls
 
 ### Network Interception
+
 Tests use Playwright's route interception to mock API responses:
 
 ```typescript
@@ -130,7 +144,7 @@ await page.route('**/api/**', async route => {
   await route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ success: true })
+    body: JSON.stringify({ success: true }),
   });
 });
 ```
@@ -138,6 +152,7 @@ await page.route('**/api/**', async route => {
 ## 📋 Test Scenarios Covered
 
 ### Admin-to-Instructor Application Flow
+
 1. **Access Control**
    - ✅ Admin users can access the application page
    - ✅ Non-admin users are restricted
@@ -162,6 +177,7 @@ await page.route('**/api/**', async route => {
    - ✅ Duplicate applications
 
 ### Instructor Signup Approval Flow
+
 1. **Signup Process**
    - ✅ Form validation and submission
    - ✅ Initial instructor status (false)
@@ -183,7 +199,9 @@ await page.route('**/api/**', async route => {
 ## 🛠️ Customizing Tests
 
 ### Adding New Test Cases
+
 1. **Create test function**:
+
 ```typescript
 test('should handle new scenario', async ({ page }) => {
   // Test implementation
@@ -191,6 +209,7 @@ test('should handle new scenario', async ({ page }) => {
 ```
 
 2. **Use existing mocks**:
+
 ```typescript
 import { setupFirebaseMocks, mockApiRoute } from './utils/firebase-mocks';
 
@@ -200,14 +219,16 @@ test.beforeEach(async ({ page }) => {
 ```
 
 3. **Mock specific responses**:
+
 ```typescript
 await mockApiRoute(page, '**/api/users/**', {
   status: 200,
-  body: { success: true, userData: customUserData }
+  body: { success: true, userData: customUserData },
 });
 ```
 
 ### Modifying Mock Data
+
 Update the mock data in `firebase-mocks.ts`:
 
 ```typescript
@@ -216,18 +237,20 @@ export const mockUsers = {
     uid: 'custom-uid',
     email: 'custom@test.com',
     // ... other properties
-  }
+  },
 };
 ```
 
 ## 🐛 Debugging Tests
 
 ### Common Issues
+
 1. **Selector not found**: Check if the element exists in the actual page
 2. **Mock not working**: Verify the mock setup in `beforeEach`
 3. **Network errors**: Check route interception setup
 
 ### Debug Commands
+
 ```bash
 # Run with debug mode
 pnpm exec playwright test --debug
@@ -240,6 +263,7 @@ pnpm exec playwright test admin-to-instructor.spec.ts --debug
 ```
 
 ### Debugging Tips
+
 - Use `page.pause()` in tests to pause execution
 - Check browser console for errors
 - Verify mock data matches expected structure
@@ -248,6 +272,7 @@ pnpm exec playwright test admin-to-instructor.spec.ts --debug
 ## 📊 Test Coverage
 
 ### Current Coverage
+
 - **Admin-to-Instructor Application**: 100% of user flows
 - **Instructor Signup Popup**: 100% of approval messaging
 - **Form Validation**: 100% of required fields
@@ -255,6 +280,7 @@ pnpm exec playwright test admin-to-instructor.spec.ts --debug
 - **Navigation**: 100% of redirect flows
 
 ### Areas for Future Testing
+
 - Admin approval workflow (when admin panel is created)
 - Email notification system
 - Role-based access control edge cases
@@ -264,6 +290,7 @@ pnpm exec playwright test admin-to-instructor.spec.ts --debug
 ## 🔒 Security Testing
 
 Tests include security-related scenarios:
+
 - ✅ Non-admin user access restrictions
 - ✅ Role-based permission validation
 - ✅ Authentication state verification
@@ -272,6 +299,7 @@ Tests include security-related scenarios:
 ## 🚀 CI/CD Integration
 
 These tests are designed to run in CI/CD environments:
+
 - ✅ Use mocks instead of real Firebase
 - ✅ No external dependencies
 - ✅ Fast execution times
@@ -289,6 +317,7 @@ These tests are designed to run in CI/CD environments:
 ## 🤝 Contributing
 
 When adding new tests:
+
 1. Follow the existing naming conventions
 2. Use the provided mock utilities
 3. Add comprehensive test coverage
@@ -298,6 +327,7 @@ When adding new tests:
 ## 📞 Support
 
 For questions about these tests:
+
 1. Check the test file comments
 2. Review the mock utilities
 3. Run tests in debug mode

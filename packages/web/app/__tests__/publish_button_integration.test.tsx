@@ -1,8 +1,8 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import PublishToggle from "../lib/components/NoteEditor/NoteElements/PublishToggle";
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
 
@@ -34,17 +34,15 @@ jest.mock('firebase/auth', () => {
   };
 });
 
-
-describe("PublishToggle Integration Test", () => {
-  
-  it("toggles publish state when clicked", async () => {
+describe('PublishToggle Integration Test', () => {
+  it('toggles publish state when clicked', async () => {
     let isPublished = false;
     const onPublishClickMock = jest.fn(async () => {
       isPublished = !isPublished;
     });
 
     const { rerender } = render(
-      <PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />
+      <PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />,
     );
 
     const toggle = screen.getByText(/Publish/i);
@@ -57,7 +55,7 @@ describe("PublishToggle Integration Test", () => {
     expect(screen.getByText(/Unpublish/i)).toBeInTheDocument();
   });
 
-  it("does not crash when onPublishClick is not provided", () => {
+  it('does not crash when onPublishClick is not provided', () => {
     render(<PublishToggle isPublished={false} onPublishClick={async () => {}} />);
     const button = screen.getByText(/Publish/i);
     expect(button).toBeInTheDocument();

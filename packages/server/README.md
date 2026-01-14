@@ -200,16 +200,19 @@ node download-notes.js
 ### Authentication Errors
 
 **"No token provided" (401)**
+
 - You're trying to modify data (POST/PUT/PATCH/DELETE) without authentication
 - For development: Set `DISABLE_AUTH=true` in `.env`
 - For production: Include `Authorization: Bearer <token>` header
 
 **"Invalid token" (401)**
+
 - Firebase token is expired (tokens expire after 1 hour)
 - Firebase credentials not configured correctly
 - Ensure `firebase-admin.json` exists and `GOOGLE_APPLICATION_CREDENTIALS` is set
 
 **Authentication bypass not working**
+
 - Verify `DISABLE_AUTH=true` in `.env` (not `.env.example`)
 - Restart server after changing `.env`
 - Check for `[Auth] Authentication bypassed` in server logs

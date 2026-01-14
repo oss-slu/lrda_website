@@ -1,6 +1,6 @@
-import * as React from "react";
+import * as React from 'react';
 
-declare module "@react-google-maps/api" {
+declare module '@react-google-maps/api' {
   // Autocomplete component
   export interface AutocompleteProps {
     onLoad?: (autocomplete: google.maps.places.Autocomplete) => void;
@@ -107,17 +107,11 @@ declare module "@react-google-maps/api" {
     version?: string;
     language?: string;
     region?: string;
-    libraries?: (
-      | "drawing"
-      | "geometry"
-      | "localContext"
-      | "places"
-      | "visualization"
-    )[];
+    libraries?: ('drawing' | 'geometry' | 'localContext' | 'places' | 'visualization')[];
     preventGoogleFontsLoading?: boolean;
     channel?: string;
     mapIds?: string[];
-    authReferrerPolicy?: "origin";
+    authReferrerPolicy?: 'origin';
     onLoad?: () => void;
     onError?: (error: Error) => void;
     onUnmount?: () => void;
@@ -136,17 +130,11 @@ declare module "@react-google-maps/api" {
     version?: string;
     language?: string;
     region?: string;
-    libraries?: (
-      | "drawing"
-      | "geometry"
-      | "localContext"
-      | "places"
-      | "visualization"
-    )[];
+    libraries?: ('drawing' | 'geometry' | 'localContext' | 'places' | 'visualization')[];
     preventGoogleFontsLoading?: boolean;
     channel?: string;
     mapIds?: string[];
-    authReferrerPolicy?: "origin";
+    authReferrerPolicy?: 'origin';
     nonce?: string;
   }
 
@@ -158,9 +146,7 @@ declare module "@react-google-maps/api" {
   export function useLoadScript(options: UseLoadScriptOptions): LoadScriptStatus;
 
   // useJsApiLoader hook (alternative to useLoadScript)
-  export function useJsApiLoader(
-    options: UseLoadScriptOptions
-  ): LoadScriptStatus;
+  export function useJsApiLoader(options: UseLoadScriptOptions): LoadScriptStatus;
 
   // InfoWindow component
   export interface InfoWindowProps {
@@ -322,7 +308,7 @@ declare module "@react-google-maps/api" {
     bounds?: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral;
     getPixelPositionOffset?: (
       offsetWidth: number,
-      offsetHeight: number
+      offsetHeight: number,
     ) => { x: number; y: number };
     onLoad?: (overlayView: google.maps.OverlayView) => void;
     onUnmount?: (overlayView: google.maps.OverlayView) => void;
@@ -334,9 +320,7 @@ declare module "@react-google-maps/api" {
   // HeatmapLayer component
   export interface HeatmapLayerProps {
     data:
-      | google.maps.MVCArray<
-          google.maps.LatLng | google.maps.visualization.WeightedLocation
-        >
+      | google.maps.MVCArray<google.maps.LatLng | google.maps.visualization.WeightedLocation>
       | (google.maps.LatLng | google.maps.visualization.WeightedLocation)[];
     options?: google.maps.visualization.HeatmapLayerOptions;
     onLoad?: (heatmapLayer: google.maps.visualization.HeatmapLayer) => void;
@@ -398,7 +382,7 @@ declare module "@react-google-maps/api" {
     options: google.maps.DirectionsRequest;
     callback: (
       result: google.maps.DirectionsResult | null,
-      status: google.maps.DirectionsStatus
+      status: google.maps.DirectionsStatus,
     ) => void;
     onLoad?: (directionsService: google.maps.DirectionsService) => void;
     onUnmount?: (directionsService: google.maps.DirectionsService) => void;
@@ -411,12 +395,10 @@ declare module "@react-google-maps/api" {
     options: google.maps.DistanceMatrixRequest;
     callback: (
       response: google.maps.DistanceMatrixResponse | null,
-      status: google.maps.DistanceMatrixStatus
+      status: google.maps.DistanceMatrixStatus,
     ) => void;
     onLoad?: (distanceMatrixService: google.maps.DistanceMatrixService) => void;
-    onUnmount?: (
-      distanceMatrixService: google.maps.DistanceMatrixService
-    ) => void;
+    onUnmount?: (distanceMatrixService: google.maps.DistanceMatrixService) => void;
   }
 
   export const DistanceMatrixService: React.FC<DistanceMatrixServiceProps>;

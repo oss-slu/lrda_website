@@ -26,25 +26,25 @@ export function createPopupClass(refs: PopupRefs) {
       super();
       this.position = position;
       this.isClickPopup = isClickPopup;
-      content.classList.add("popup-bubble");
+      content.classList.add('popup-bubble');
 
-      const bubbleAnchor = document.createElement("div");
-      bubbleAnchor.classList.add("popup-bubble-anchor");
+      const bubbleAnchor = document.createElement('div');
+      bubbleAnchor.classList.add('popup-bubble-anchor');
       bubbleAnchor.appendChild(content);
 
-      this.containerDiv = document.createElement("div");
-      this.containerDiv.classList.add("popup-container");
+      this.containerDiv = document.createElement('div');
+      this.containerDiv.classList.add('popup-container');
       this.containerDiv.appendChild(bubbleAnchor);
 
       Popup.preventMapHitsAndGesturesFrom(this.containerDiv);
 
       // Add hover listeners to the popup itself
-      this.containerDiv.addEventListener("mouseenter", () => {
+      this.containerDiv.addEventListener('mouseenter', () => {
         popupHoveredRef.current = true;
         if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
       });
 
-      this.containerDiv.addEventListener("mouseleave", () => {
+      this.containerDiv.addEventListener('mouseleave', () => {
         popupHoveredRef.current = false;
         // Only auto-close if it was a HOVER popup
         if (!this.isClickPopup) {
@@ -65,12 +65,13 @@ export function createPopupClass(refs: PopupRefs) {
 
     draw() {
       const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
-      const display = Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? "block" : "none";
+      const display =
+        Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? 'block' : 'none';
 
-      if (display === "block") {
-        this.containerDiv.style.left = divPosition.x + "px";
-        this.containerDiv.style.top = divPosition.y + "px";
-        this.containerDiv.style.transform = "translate(-50%, calc(-100% - 10px))";
+      if (display === 'block') {
+        this.containerDiv.style.left = divPosition.x + 'px';
+        this.containerDiv.style.top = divPosition.y + 'px';
+        this.containerDiv.style.transform = 'translate(-50%, calc(-100% - 10px))';
       }
 
       if (this.containerDiv.style.display !== display) {

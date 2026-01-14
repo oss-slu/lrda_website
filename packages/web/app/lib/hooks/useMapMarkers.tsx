@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import * as ReactDOM from "react-dom/client";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { Note } from "@/app/types";
-import { createPopupClass, PopupInstance } from "../components/map/MapPopup";
-import NoteCard from "../components/note_card";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
+import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { Note } from '@/app/types';
+import { createPopupClass, PopupInstance } from '../components/map/MapPopup';
+import NoteCard from '../components/note_card';
 
 interface UseMapMarkersProps {
   mapRef: React.MutableRefObject<google.maps.Map | null>;
@@ -40,7 +40,9 @@ export function useMapMarkers({
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = useRef(false);
   const popupHoveredRef = useRef(false);
-  const [markers, setMarkers] = useState(new Map<string, google.maps.marker.AdvancedMarkerElement>());
+  const [markers, setMarkers] = useState(
+    new Map<string, google.maps.marker.AdvancedMarkerElement>(),
+  );
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -69,8 +71,8 @@ export function useMapMarkers({
 
   // Create marker icon element
   const createMarkerIcon = useCallback((): HTMLElement => {
-    const div = document.createElement("div");
-    div.classList.add("custom-marker");
+    const div = document.createElement('div');
+    div.classList.add('custom-marker');
     div.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" class="marker-svg">
         <path class="marker-body" fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -90,7 +92,7 @@ export function useMapMarkers({
     if (markerClustererRef.current) {
       markerClustererRef.current.clearMarkers();
     }
-    markers.forEach((marker) => {
+    markers.forEach(marker => {
       marker.map = null;
     });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional clear before recreating markers
@@ -109,7 +111,7 @@ export function useMapMarkers({
 
     const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
 
-    const mapClickListener = map.addListener("click", () => {
+    const mapClickListener = map.addListener('click', () => {
       if (currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
@@ -128,15 +130,19 @@ export function useMapMarkers({
         return;
       }
 
-      const popupContent = document.createElement("div");
+      const popupContent = document.createElement('div');
       const root = ReactDOM.createRoot(popupContent);
       root.render(
         <QueryClientProvider client={queryClient}>
           <NoteCard note={note} />
-        </QueryClientProvider>
+        </QueryClientProvider>,
       );
 
-      const popup = new Popup(new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)), popupContent, isClick);
+      const popup = new Popup(
+        new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+        popupContent,
+        isClick,
+      );
 
       currentPopupRef.current = popup;
       popup.setMap(map);
@@ -161,12 +167,12 @@ export function useMapMarkers({
     const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note) => {
       const iconNode = marker.content as HTMLElement;
 
-      iconNode.addEventListener("click", (e) => {
+      iconNode.addEventListener('click', e => {
         e.stopPropagation();
         handleMarkerClick(note);
       });
 
-      iconNode.addEventListener("mouseenter", () => {
+      iconNode.addEventListener('mouseenter', () => {
         if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
           return;
         }
@@ -182,14 +188,14 @@ export function useMapMarkers({
         setActiveNote(note);
       });
 
-      iconNode.addEventListener("mouseleave", () => {
+      iconNode.addEventListener('mouseleave', () => {
         markerHoveredRef.current = false;
         startPopupCloseTimer();
       });
     };
 
     // Create markers for each note
-    filteredNotes.forEach((note) => {
+    filteredNotes.forEach(note => {
       const lat = parseFloat(note.latitude);
       const lng = parseFloat(note.longitude);
 
@@ -204,7 +210,7 @@ export function useMapMarkers({
         position,
         map,
         content: iconNode,
-        title: note.title || "",
+        title: note.title || '',
       });
 
       attachMarkerEvents(marker, note);

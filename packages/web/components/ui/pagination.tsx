@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface PaginationProps {
   currentPage: number;
@@ -13,14 +13,14 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   }
 
   return (
-    <div className="flex justify-center py-4">
+    <div className='flex justify-center py-4'>
       <nav>
-        <ul className="flex list-none">
-          {pageNumbers.map((page) => (
+        <ul className='flex list-none'>
+          {pageNumbers.map(page => (
             <li key={page} className={`mx-1 ${page === currentPage ? 'font-bold' : ''}`}>
               <button
                 onClick={() => onPageChange(page)}
-                className="px-3 py-1 border rounded-md hover:bg-gray-200"
+                className='rounded-md border px-3 py-1 hover:bg-gray-200'
               >
                 {page}
               </button>

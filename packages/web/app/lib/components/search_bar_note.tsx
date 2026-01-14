@@ -1,5 +1,5 @@
-import React from "react";
-import SearchBarUI from "./search_bar_ui"; // Assuming SearchBarUI is in the same directory
+import React from 'react';
+import SearchBarUI from './search_bar_ui'; // Assuming SearchBarUI is in the same directory
 
 type SearchBarNotesProps = {
   onSearch: (query: string) => void;
@@ -9,14 +9,11 @@ type SearchBarNotesState = {
   searchText: string;
 };
 
-class SearchBarNotes extends React.Component<
-  SearchBarNotesProps,
-  SearchBarNotesState
-> {
+class SearchBarNotes extends React.Component<SearchBarNotesProps, SearchBarNotesState> {
   constructor(props: SearchBarNotesProps) {
     super(props);
     this.state = {
-      searchText: "",
+      searchText: '',
     };
   }
 
@@ -28,11 +25,11 @@ class SearchBarNotes extends React.Component<
   };
 
   handleFocus = () => {
-    console.log("Input focused!"); 
+    console.log('Input focused!');
   };
 
   handleBlur = () => {
-    console.log("input blurred");
+    console.log('input blurred');
   };
 
   render() {
