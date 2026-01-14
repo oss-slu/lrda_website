@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 // @ts-ignore
-import Page from "app/lib/pages/map/page";
+import Page from "app/map/page";
 import { createTestWrapper } from "./utils/testQueryClient";
 
 // Mock Firebase config to avoid real initialization

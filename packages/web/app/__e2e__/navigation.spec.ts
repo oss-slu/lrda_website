@@ -34,7 +34,7 @@ test.describe('Navigation', () => {
 
   test('should display Resources page with properly formatted citations', async ({ page }) => {
     // Navigate to Resources page
-    await page.goto('/lib/pages/ResourcesPage');
+    await page.goto('/resources');
     
     // Wait for page to load
     await page.waitForLoadState('networkidle');
@@ -80,7 +80,7 @@ test.describe('Navigation', () => {
 
   test('should navigate to correct URLs when clicking Online Resources links', async ({ page, context }) => {
     // Navigate to Resources page
-    await page.goto('/lib/pages/ResourcesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/resources', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');

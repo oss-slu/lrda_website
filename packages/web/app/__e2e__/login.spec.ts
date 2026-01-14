@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Login Page', () => {
   test('should display login form with validation', async ({ page }) => {
     // Navigate to login page
-    await page.goto('/lib/pages/loginPage');
+    await page.goto('/login');
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');

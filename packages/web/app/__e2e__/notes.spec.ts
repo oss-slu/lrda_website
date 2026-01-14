@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Notes Page', () => {
   test('should display notes page with basic content', async ({ page }) => {
     // Navigate to notes page
-    await page.goto('/lib/pages/notes', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/notes', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');

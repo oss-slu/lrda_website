@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from "@testing-library/react";
-import Page from "../lib/pages/loginPage/page";
+import Page from "../login/page";
 
 /**
  * Since `moxios` does not provide TypeScript types, we declare it as any to suppress type errors.

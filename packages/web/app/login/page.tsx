@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import LoginButton from "../../components/login_button";
-import RegisterButton from "../../components/register_button";
+import LoginButton from "../lib/components/login_button";
+import RegisterButton from "../lib/components/register_button";
 import { toast } from "sonner";
 
 const Page = () => {
@@ -45,7 +45,7 @@ const Page = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
-          <Link href="/lib/pages/ForgotPassword" className="mb-2 text-sm text-blue-500 hover:underline">
+          <Link href="/forgot-password" className="mb-2 text-sm text-blue-500 hover:underline">
   Forgot Password?
 </Link>
 

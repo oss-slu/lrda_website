@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo } from "react";
 import { Note } from "@/app/types";
-import { useAuthStore } from "../../stores/authStore";
+import { useAuthStore } from "../lib/stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 import { useQuery } from "@tanstack/react-query";
-import ApiService from "../../utils/api_service";
-import InstructorEnhancedNoteCard from "../../components/InstructorStoriesCard";
+import ApiService from "../lib/utils/api_service";
+import InstructorEnhancedNoteCard from "../lib/components/InstructorStoriesCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 

@@ -33,7 +33,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle admin-to-instructor application page access', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/admin-to-instructor', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to stabilize
     await page.waitForLoadState('domcontentloaded');
@@ -75,7 +75,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle field requirements display appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -112,7 +112,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle description field requirements appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -142,7 +142,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle application submission appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -175,7 +175,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle important information section appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -204,7 +204,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle cancel button functionality appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -234,7 +234,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle admin data display appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -269,7 +269,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle form submission appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -302,7 +302,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle error messages appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -345,7 +345,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle multiple applications appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -379,7 +379,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle non-admin users appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -413,7 +413,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle already approved instructors appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -447,7 +447,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle description field length validation appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -480,7 +480,7 @@ test.describe('Admin to Instructor Application Flow', () => {
   });
 
   test('should handle form state during navigation appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -497,7 +497,7 @@ test.describe('Admin to Instructor Application Flow', () => {
       
       // Navigate away and back
       await page.goto('/');
-      await page.goto('/lib/pages/AdminToInstructorApplication');
+      await page.goto('/admin-to-instructor');
       
       // Wait for page to reload
       await page.waitForTimeout(3000);
@@ -527,7 +527,7 @@ test.describe('Admin to Instructor Application Flow', () => {
 
 test.describe('Admin to Instructor Utility Functions', () => {
   test('should handle eligibility check appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -561,7 +561,7 @@ test.describe('Admin to Instructor Utility Functions', () => {
   });
 
   test('should handle network errors appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Wait for page to load
     await page.waitForTimeout(3000);
@@ -595,7 +595,7 @@ test.describe('Admin to Instructor Utility Functions', () => {
   });
 
   test('should handle loading states appropriately', async ({ page }) => {
-    await page.goto('/lib/pages/AdminToInstructorApplication');
+    await page.goto('/admin-to-instructor');
     
     // Check if loading state is shown initially - use a more specific selector
     const loadingText = page.locator('h1:has-text("Loading..."), .text-xl:has-text("Loading...")').first();
@@ -644,7 +644,7 @@ test.describe('Admin to Instructor Utility Functions', () => {
   // Test the actual application behavior for users with different access levels
   test.describe('Real Application Behavior', () => {
     test('should redirect unauthenticated users to login page', async ({ page }) => {
-      await page.goto('/lib/pages/AdminToInstructorApplication');
+      await page.goto('/admin-to-instructor');
       
       // Wait for page to load and check for various states
       await page.waitForTimeout(3000);
@@ -681,7 +681,7 @@ test.describe('Admin to Instructor Utility Functions', () => {
 
     test('should show appropriate content for authenticated users', async ({ page }) => {
       // Navigate to the page - it will handle authentication internally
-      await page.goto('/lib/pages/AdminToInstructorApplication');
+      await page.goto('/admin-to-instructor');
       
       // Wait for page to load completely
       await page.waitForLoadState('networkidle');
@@ -751,7 +751,7 @@ test.describe('Admin to Instructor Utility Functions', () => {
         await expect(applyButton).toBeVisible();
         
         // Check for the application form link
-        const applicationLink = page.locator('a[href="/lib/pages/AdminToInstructorApplication"]');
+        const applicationLink = page.locator('a[href="/admin-to-instructor"]');
         await expect(applicationLink).toBeVisible();
         
         // Verify the section content

@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Map Page', () => {
   test('should display map page with basic content', async ({ page }) => {
     // Navigate to map page
-    await page.goto('/lib/pages/map', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/map', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');

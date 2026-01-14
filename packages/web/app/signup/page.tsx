@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import RegisterButton from "../../components/register_button";
+import RegisterButton from "../lib/components/register_button";
 import { toast } from "sonner";
-import { auth, db } from "../../config/firebase"; // Ensure you import Firestore as well
+import { auth, db } from "../lib/config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { validateEmail, validatePassword, validateFirstName, validateLastName } from "../../utils/validation";
-import { useAuthStore } from "../../stores/authStore";
-import ApiService from "../../utils/api_service";
+import { validateEmail, validatePassword, validateFirstName, validateLastName } from "../lib/utils/validation";
+import { useAuthStore } from "../lib/stores/authStore";
+import ApiService from "../lib/utils/api_service";
 import { Timestamp, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from "firebase/firestore";
 import Link from "next/link"; // Import Link for routing
 import StrengthIndicator from "@/components/ui/strength-indicator";
@@ -233,7 +233,7 @@ const SignupPage = () => {
             </button>
           </div>
           <div className="mt-4 text-center">
-            <Link href="/lib/pages/InstructorSignupPage" className="text-blue-600 hover:text-blue-800 underline text-sm">
+            <Link href="/instructor-signup" className="text-blue-600 hover:text-blue-800 underline text-sm">
               Want to sign up as an Instructor?
             </Link>
           </div>

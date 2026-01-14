@@ -151,7 +151,7 @@ describe("Navbar Component", () => {
     mockAuthState.user = { name: "John Doe", uid: "test-uid", roles: { administrator: true, contributor: true } };
     mockAuthState.isLoggedIn = true;
 
-    mockedUsePathname.mockReturnValue("/lib/pages/notes");
+    mockedUsePathname.mockReturnValue("/notes");
     // Set up localStorage with auth token and user data
     window.localStorage.setItem("authToken", "mock-token");
     window.localStorage.setItem("userData", JSON.stringify({ name: "John Doe", uid: "test-uid" }));
@@ -178,8 +178,8 @@ describe("Navbar Component", () => {
     expect(homeLink).toHaveClass("text-blue-500");
   });
 
-  it("highlights Notes when pathname starts with '/lib/pages/notes'", async () => {
-    mockedUsePathname.mockReturnValue("/lib/pages/notes");
+  it("highlights Notes when pathname starts with '/notes'", async () => {
+    mockedUsePathname.mockReturnValue("/notes");
     // Set up auth state as logged in with roles
     mockAuthState.user = { name: "John Doe", uid: "test-uid", roles: { administrator: true, contributor: true } };
     mockAuthState.isLoggedIn = true;
@@ -198,8 +198,8 @@ describe("Navbar Component", () => {
     });
   });
 
-  it("does not highlight Home when pathname is '/lib/pages/map'", async () => {
-    mockedUsePathname.mockReturnValue("/lib/pages/map");
+  it("does not highlight Home when pathname is '/map'", async () => {
+    mockedUsePathname.mockReturnValue("/map");
 
     await act(async () => {
       render(<Navbar />);

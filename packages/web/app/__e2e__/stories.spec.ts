@@ -15,7 +15,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Stories Page', () => {
   test('should display stories page with basic content', async ({ page }) => {
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/stories', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
@@ -55,7 +55,7 @@ test.describe('Stories Page', () => {
     });
 
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/stories', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
@@ -79,7 +79,7 @@ test.describe('Stories Page', () => {
     });
 
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/stories', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
@@ -109,7 +109,7 @@ test.describe('Stories Page', () => {
 
   test('should handle story cards with problematic URLs in content', async ({ page }) => {
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/stories', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
@@ -128,7 +128,7 @@ test.describe('Stories Page', () => {
 
   test('should display search bar and filter controls', async ({ page }) => {
     // Navigate to stories page
-    await page.goto('/lib/pages/StoriesPage', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/stories', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');

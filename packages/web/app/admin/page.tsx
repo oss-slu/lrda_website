@@ -24,7 +24,7 @@ import {
   handleRemoveParameter,
   handleAddUid,
   handleUpdateCreatorUid,
-} from "../../utils/admin_utils";
+} from "../lib/utils/admin_utils";
 import { Progress } from "@/components/ui/progress";
 
 const RERUM_PREFIX = process.env.NEXT_PUBLIC_RERUM_PREFIX;

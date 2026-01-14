@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '../../config/firebase';
+import { auth } from '../lib/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { 
-  submitInstructorApplication, 
-  canApplyForInstructor, 
+import {
+  submitInstructorApplication,
+  canApplyForInstructor,
   AdminUser,
   AuthOnlyUser,
-  getInstructorFieldRequirements 
-} from '../../utils/adminToInstructor';
+  getInstructorFieldRequirements
+} from '../lib/utils/adminToInstructor';
 
 export default function AdminToInstructorApplication() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function AdminToInstructorApplication() {
         }));
         await fetchAdminData(currentUser.uid);
       } else {
-        router.push('/lib/pages/loginPage');
+        router.push('/login');
       }
     });
 

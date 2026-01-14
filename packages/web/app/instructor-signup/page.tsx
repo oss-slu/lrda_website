@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { auth, db } from "../../config/firebase";
+import { auth, db } from "../lib/config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "../../stores/authStore";
-import ApiService from "../../utils/api_service";
+import { useAuthStore } from "../lib/stores/authStore";
+import ApiService from "../lib/utils/api_service";
 
 const InstructorSignupPage = () => {
   const router = useRouter();
@@ -143,7 +143,7 @@ const InstructorSignupPage = () => {
         console.log("Instructor auto-logged in successfully");
 
         // Redirect to map page
-        router.push("/lib/pages/map");
+        router.push("/map");
       } catch (loginError) {
         console.error("Auto-login failed:", loginError);
         // Still show success message and reset form even if auto-login fails
