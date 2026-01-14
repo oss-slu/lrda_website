@@ -38,6 +38,7 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
     return result;
   }, [isInstructorUser, userId, note?.creator]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- note?.creator is the correct minimal dependency
   const isStudentViewingOwnNote = useMemo(() => {
     const result = !!(isStudent && userId && note?.creator && note.creator === userId);
     console.log("isStudentViewingOwnNote calculation:", {

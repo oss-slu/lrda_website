@@ -28,11 +28,11 @@ export default function CompactCarousel({
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize from carousel API
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 
     api.on("select", () => {
-      console.log("current");
       setCurrent(api.selectedScrollSnap() + 1);
     });
   }, [api]);

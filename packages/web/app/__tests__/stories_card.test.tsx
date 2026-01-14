@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, waitFor, within, fireEvent, cleanup, act } from "@testing-library/react";
-// @ts-ignore - moxios doesn't have types
+// @ts-expect-error -- moxios doesn't have type declarations
 import moxios from "moxios";
 import ApiService from "../lib/utils/api_service";
 import EnhancedNoteCard from "../lib/components/stories_card";

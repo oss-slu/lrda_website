@@ -78,6 +78,38 @@ export function usePersonalMapNotes(userId: string | null) {
 }
 
 /**
+ * Hook for instructors to fetch their students' notes with polling
+ * Used in review mode for the sidebar
+ */
+export function useStudentNotes(instructorId: string | null, isInstructor: boolean) {
+  return useQuery({
+    queryKey: notesKeys.pendingReview(instructorId ?? ""),
+    queryFn: async (): Promise<Note[]> => {
+      if (!instructorId) return [];
+
+      // Fetch instructor data to get student list
+      const instructorData = await ApiService.fetchUserData(instructorId);
+      if (!instructorData || !instructorData.isInstructor) {
+        return [];
+      }
+
+      const studentUids = instructorData.students || [];
+      if (studentUids.length === 0) {
+        return [];
+      }
+
+      // Fetch all notes from students
+      const allNotes = await ApiService.fetchNotesByStudents(studentUids);
+      const converted = DataConversion.convertMediaTypes(allNotes).reverse();
+      return converted.filter((n) => !n.isArchived);
+    },
+    enabled: !!instructorId && isInstructor,
+    refetchInterval: 15000, // Poll every 15 seconds
+    refetchIntervalInBackground: false, // Pause when tab is hidden
+  });
+}
+
+/**
  * Hook for infinite scroll of published notes (for StoriesPage)
  */
 export function useInfinitePublishedNotes(pageSize = 50) {

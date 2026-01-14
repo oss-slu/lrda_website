@@ -174,17 +174,6 @@ export const useAutoSave = ({
       last.longitude !== longitude ||
       JSON.stringify(last.tags) !== JSON.stringify(tags);
 
-    // Update store for instant UI updates
-    updateNote(noteId, {
-      title: title || "Untitled",
-      text: editorContent,
-      tags: tags,
-      published: isPublished,
-      time: time,
-      latitude: latitude,
-      longitude: longitude,
-    });
-
     if (!isDirty) {
       return;
     }

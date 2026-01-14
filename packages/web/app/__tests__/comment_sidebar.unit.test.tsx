@@ -2,6 +2,39 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import CommentSidebar from "../lib/components/comments/CommentSidebar";
 
+// Track comments for the mock
+const mockComments: any[] = [];
+
+// Mock TanStack Query hooks
+jest.mock("../lib/hooks/queries/useComments", () => ({
+  useComments: jest.fn(() => ({
+    data: mockComments,
+    refetch: jest.fn(),
+  })),
+  useCommentMutations: jest.fn(() => ({
+    createComment: {
+      mutateAsync: async (comment: any) => {
+        mockComments.push({
+          id: comment.id,
+          noteId: comment.noteId,
+          text: comment.text,
+          authorId: comment.authorId,
+          authorName: comment.author,
+          createdAt: comment.createdAt,
+          position: comment.position,
+          threadId: comment.threadId,
+          parentId: comment.parentId,
+          resolved: comment.resolved,
+          archived: false,
+        });
+        return {};
+      },
+    },
+    resolveThread: { mutateAsync: jest.fn() },
+    deleteComment: { mutateAsync: jest.fn() },
+  })),
+}));
+
 // Mock useAuthStore
 jest.mock("../lib/stores/authStore", () => ({
   useAuthStore: jest.fn((selector) => {
@@ -19,33 +52,11 @@ jest.mock("../lib/stores/authStore", () => ({
   }),
 }));
 
-// Track comments for the mock
-const mockComments: any[] = [];
-
 jest.mock("../lib/utils/api_service", () => ({
   __esModule: true,
   default: {
-    fetchCommentsForNote: async () => [...mockComments],
-    createComment: async (comment: any) => {
-      // Add the comment to the mock array
-      mockComments.push({
-        id: comment.id,
-        noteId: comment.noteId,
-        text: comment.text,
-        authorId: comment.authorId,
-        authorName: comment.author,
-        createdAt: comment.createdAt,
-        position: comment.position,
-        threadId: comment.threadId,
-        parentId: comment.parentId,
-        resolved: comment.resolved,
-        archived: false,
-      });
-      return {};
-    },
     fetchCreatorName: async () => "Student User",
     fetchUserData: async (uid: string) => {
-      // Mock student with parentInstructorId (part of teacher-student relationship)
       if (uid === "student-1") {
         return {
           uid: "student-1",
@@ -61,7 +72,6 @@ jest.mock("../lib/utils/api_service", () => ({
 
 describe("CommentSidebar - students can comment", () => {
   beforeEach(() => {
-    // Clear mock comments before each test
     mockComments.length = 0;
   });
 

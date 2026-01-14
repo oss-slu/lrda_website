@@ -27,9 +27,7 @@ function CaptionDropdowns(props: any) {
   const fromYear = 1200;
   const toYear = new Date().getFullYear();
 
-  const months = Array.from({ length: 12 }, (_, i) =>
-    new Date(0, i).toLocaleString("default", { month: "long" })
-  );
+  const months = Array.from({ length: 12 }, (_, i) => new Date(0, i).toLocaleString("default", { month: "long" }));
   const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
 
   const handleChange = (newMonth: number, newYear: number) => {
@@ -46,9 +44,7 @@ function CaptionDropdowns(props: any) {
       <select
         className="text-sm px-2 py-1 border rounded-md"
         value={displayMonth.getMonth()}
-        onChange={(e) =>
-          handleChange(parseInt(e.target.value), displayMonth.getFullYear())
-        }
+        onChange={(e) => handleChange(parseInt(e.target.value), displayMonth.getFullYear())}
       >
         {months.map((month, idx) => (
           <option key={idx} value={idx}>
@@ -59,9 +55,7 @@ function CaptionDropdowns(props: any) {
       <select
         className="text-sm px-2 py-1 border rounded-md"
         value={displayMonth.getFullYear()}
-        onChange={(e) =>
-          handleChange(displayMonth.getMonth(), parseInt(e.target.value))
-        }
+        onChange={(e) => handleChange(displayMonth.getMonth(), parseInt(e.target.value))}
       >
         {years.map((year) => (
           <option key={year} value={year}>
@@ -74,21 +68,21 @@ function CaptionDropdowns(props: any) {
 }
 
 export default function TimePicker({ initialDate, onTimeChange, disabled = false }: TimePickerProps) {
-  const now = new Date();
-  const [date, setDate] = useState(initialDate || now);
-  const [viewMonth, setViewMonth] = useState(initialDate || now);
+  // Use lazy initializer to set initial date from prop
+  const [date, setDate] = useState(() => initialDate || new Date());
+  const [viewMonth, setViewMonth] = useState(() => initialDate || new Date());
 
+  // Only sync when initialDate changes from parent (e.g., loading different note)
   useEffect(() => {
-    const fallbackDate = initialDate || new Date();
-    setDate(fallbackDate);
-    setViewMonth(fallbackDate);
-  }, [initialDate]);
+    if (initialDate) {
+      setDate(initialDate);
+      setViewMonth(initialDate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate?.getTime()]);
 
   const formatTimeForInput = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, "0")}:${date
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
+    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
   };
 
   const handleDayClick = (newDay: Date) => {
@@ -119,9 +113,7 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
           type="button"
         >
           <CalendarIcon className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
-          <span className="text-gray-700 group-hover:text-gray-900">
-            {formatDateTime(date)}
-          </span>
+          <span className="text-gray-700 group-hover:text-gray-900">{formatDateTime(date)}</span>
         </button>
       </PopoverTrigger>
 
@@ -133,23 +125,13 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
           month={viewMonth}
           onMonthChange={setViewMonth}
           initialFocus
-          components={{
-            Caption: (props: any) => (
-              <CaptionDropdowns
-                {...props}
-                onMonthChange={setViewMonth}
-                onDayClick={handleDayClick}
-              />
-            ),
-          } as any}
+          components={
+            {
+              Caption: (props: any) => <CaptionDropdowns {...props} onMonthChange={setViewMonth} onDayClick={handleDayClick} />,
+            } as any
+          }
         />
-        <Input
-          type="time"
-          value={formatTimeForInput(date)}
-          onChange={handleTimeChange}
-          disabled={disabled}
-          className="w-full"
-        />
+        <Input type="time" value={formatTimeForInput(date)} onChange={handleTimeChange} disabled={disabled} className="w-full" />
       </PopoverContent>
     </Popover>
   );

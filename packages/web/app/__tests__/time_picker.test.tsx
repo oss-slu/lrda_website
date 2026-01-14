@@ -1,7 +1,7 @@
 import React from "react";
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import TimePicker from "../lib/components/noteElements/time_picker";
+import TimePicker from "../lib/components/NoteEditor/NoteElements/TimePicker";
 
 describe("TimePicker", () => {
   const initialDate = new Date(2022, 5, 10, 15, 30); // June 10, 2022

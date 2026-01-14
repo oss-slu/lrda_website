@@ -40,9 +40,10 @@ const NoteListView: React.FC<NoteListViewProps> = ({ notes, onNoteSelect, isSear
     if (notes.length > 0 && fresh) {
       onNoteSelect(notes[0], false);
       setSelectedNoteId(notes[0].id);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mark as initialized after first note selection
       setFresh(false);
     }
-  }, [notes, onNoteSelect, fresh]);
+  }, [notes, onNoteSelect, fresh, setSelectedNoteId]);
 
   // Fetch creator names for instructors in review mode
   useEffect(() => {

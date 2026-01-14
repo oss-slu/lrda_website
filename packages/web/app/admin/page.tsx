@@ -138,19 +138,7 @@ export default function AdminPanel() {
     }
   }, [pasVal]);
 
-  async function fetchDataAndUpdateState() {
-    const data = await getTestNote();
-    if (data) {
-      const template = generateCustomTemplate(data);
-      setnoteTemplate(template);
-    }
-    setRefreshKey(refreshKey + 1);
-  }
-
-  useEffect(() => {
-    fetchDataAndUpdateState();
-  }, []);
-
+  // Move generateCustomTemplate before it's used in fetchDataAndUpdateState
   function generateCustomTemplate(dataArray: any[]): noteTemplate {
     const template: noteTemplate = {};
     if (dataArray && dataArray.length > 0) {
@@ -173,6 +161,20 @@ export default function AdminPanel() {
     }
     return template;
   }
+
+  async function fetchDataAndUpdateState() {
+    const data = await getTestNote();
+    if (data) {
+      const template = generateCustomTemplate(data);
+      setnoteTemplate(template);
+    }
+    setRefreshKey(refreshKey + 1);
+  }
+
+  useEffect(() => {
+    fetchDataAndUpdateState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (oldRerumId: string, newFirebaseId: string) => {
     try {

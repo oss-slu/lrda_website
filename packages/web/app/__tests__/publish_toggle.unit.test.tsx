@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import PublishToggle from '../lib/components/noteElements/publish_toggle';
+import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
 describe('PublishToggle', () => {
   test('shows Approve for instructor reviewing a student note', () => {

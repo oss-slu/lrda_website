@@ -1,10 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useRouter } from 'next/router';
-import Sidebar from '../lib/components/side_bar'; // Update the path to your Sidebar component accordingly
+import Sidebar from '../lib/components/Sidebar'; // Update the path to your Sidebar component accordingly
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
+}));
+
+// Mock TanStack Query hooks
+jest.mock('../lib/hooks/queries/useNotes', () => ({
+  useStudentNotes: jest.fn(() => ({
+    data: [],
+  })),
 }));
 
 jest.mock("firebase/database", () => ({

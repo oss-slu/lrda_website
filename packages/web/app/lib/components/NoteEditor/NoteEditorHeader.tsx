@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import PublishToggle from "../noteElements/publish_toggle";
+import PublishToggle from "./NoteElements/PublishToggle";
 import { handleTitleChange } from "./handlers/noteHandlers";
 import type { NoteStateType, NoteHandlersType } from "./hooks/useNoteState";
 
@@ -119,9 +119,7 @@ const NoteEditorHeader = forwardRef<HTMLDivElement, NoteEditorHeaderProps>(
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this note.
-                </AlertDialogDescription>
+                <AlertDialogDescription>This action cannot be undone. This will permanently delete this note.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>

@@ -31,20 +31,20 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
   useEffect(() => {
     const prevLength = prevItemsLengthRef.current;
     const currentLength = items.length;
-    
+
     // If length decreased or stayed same, it's a replacement - reset
     // If length increased, it's an append - don't reset, just update visible count if needed
     if (currentLength < prevLength || (currentLength === prevLength && prevLength > 0)) {
-      // Items were replaced, reset pagination
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when items replaced
       setVisibleCount(pageSize);
     } else if (currentLength > prevLength && prevLength > 0) {
       // Items were appended, don't reset but ensure visibleCount doesn't exceed items.length
       setVisibleCount((prev) => Math.min(prev, items.length));
     } else if (prevLength === 0 && currentLength > 0) {
       // Initial load
-    setVisibleCount(pageSize);
+      setVisibleCount(pageSize);
     }
-    
+
     prevItemsLengthRef.current = currentLength;
   }, [items.length, pageSize]);
 

@@ -10,25 +10,17 @@ interface Tag {
 
 // Define the props for the TagManager component
 interface TagManagerProps {
-  inputTags?: (Tag | string)[];// Tags passed to the component, can be either strings or Tag objects
-  suggestedTags?: string[];// Suggested tags provided by AI
-  onTagsChange: (tags: Tag[]) => void;// Callback to notify parent components of tag changes
-  fetchSuggestedTags: () => void;// Function to fetch suggested tags
-  disabled?: boolean;// Whether the tag manager is disabled (read-only)
+  inputTags?: (Tag | string)[]; // Tags passed to the component, can be either strings or Tag objects
+  suggestedTags?: string[]; // Suggested tags provided by AI
+  onTagsChange: (tags: Tag[]) => void; // Callback to notify parent components of tag changes
+  fetchSuggestedTags: () => void; // Function to fetch suggested tags
+  disabled?: boolean; // Whether the tag manager is disabled (read-only)
 }
 
-const TagManager: React.FC<TagManagerProps> = ({
-  inputTags = [],
-  suggestedTags,
-  onTagsChange,
-  fetchSuggestedTags,
-  disabled = false,
-}) => {
+const TagManager: React.FC<TagManagerProps> = ({ inputTags = [], suggestedTags, onTagsChange, fetchSuggestedTags, disabled = false }) => {
   const convertOldTags = useMemo(() => {
     return (tags: (Tag | string)[]): Tag[] => {
-      return tags.map(tag => 
-        typeof tag === "string" ? { label: tag, origin: "user" } : tag
-      );
+      return tags.map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag));
     };
   }, []);
 
@@ -38,7 +30,8 @@ const TagManager: React.FC<TagManagerProps> = ({
   useEffect(() => {
     const newTags = convertOldTags(inputTags);
     // Only update if the tags are different to prevent infinite loop
-    setTags(prevTags => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync pattern
+    setTags((prevTags) => {
       if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
         return newTags;
       }
@@ -137,7 +130,7 @@ const TagManager: React.FC<TagManagerProps> = ({
 
   return (
     <div>
-  <div className="flex flex-wrap items-center gap-1.5 mb-3">
+      <div className="flex flex-wrap items-center gap-1.5 mb-3">
         <div className="relative flex-1 min-w-[90px] max-w-[280px]">
           <Input
             value={tagInput}
@@ -147,21 +140,17 @@ const TagManager: React.FC<TagManagerProps> = ({
             maxLength={28}
             disabled={disabled}
             readOnly={disabled}
-            className={`bg-white pr-16 ${
-              disabled ? "cursor-default opacity-60" : ""
-            } ${
-              tagInput.length > 0 && !validation.valid 
-                ? "border-red-300 focus-visible:ring-red-500" 
-                  : tagInput.length >= 1 && tagInput.length <= 28 && validation.valid
+            className={`bg-white pr-16 ${disabled ? "cursor-default opacity-60" : ""} ${
+              tagInput.length > 0 && !validation.valid
+                ? "border-red-300 focus-visible:ring-red-500"
+                : tagInput.length >= 1 && tagInput.length <= 28 && validation.valid
                 ? "border-green-300 focus-visible:ring-green-500"
                 : ""
             }`}
           />
           {tagInput.length > 0 && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              <span className={`text-xs font-medium ${
-                validation.valid ? "text-green-600" : "text-red-600"
-              }`}>
+              <span className={`text-xs font-medium ${validation.valid ? "text-green-600" : "text-red-600"}`}>
                 {tagInput.length}
                 {validation.valid ? " ✓" : " ✗"}
               </span>
@@ -179,25 +168,16 @@ const TagManager: React.FC<TagManagerProps> = ({
           <Sparkles className="h-4 w-4" />
         </button>
         {tagInput.length > 0 && validation.message && (
-          <span className={`text-xs ${
-            validation.valid ? "text-green-600" : "text-red-600"
-          }`}>
-            {validation.message}
-          </span>
+          <span className={`text-xs ${validation.valid ? "text-green-600" : "text-red-600"}`}>{validation.message}</span>
         )}
         {tags
           .filter((tag) => tag.origin === "user")
           .map((tag, index) => (
-            <div
-              key={index}
-              className="flex text-xs items-center gap-2 bg-gray-200 px-2 py-1 rounded"
-            >
+            <div key={index} className="flex text-xs items-center gap-2 bg-gray-200 px-2 py-1 rounded">
               <button
                 onClick={() => removeTag(tag.label)}
                 disabled={disabled}
-                className={`text-gray-600 hover:text-gray-900 ${
-                  disabled ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`text-gray-600 hover:text-gray-900 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <XIcon className="h-3 w-3" />
               </button>
@@ -209,16 +189,11 @@ const TagManager: React.FC<TagManagerProps> = ({
         {tags
           .filter((tag) => tag.origin === "ai")
           .map((tag, index) => (
-            <div
-              key={index}
-              className="flex text-xs items-center gap-2 bg-purple-200 text-purple-800 px-2 py-1 rounded"
-            >
+            <div key={index} className="flex text-xs items-center gap-2 bg-purple-200 text-purple-800 px-2 py-1 rounded">
               <button
                 onClick={() => removeTag(tag.label)}
                 disabled={disabled}
-                className={`text-purple-600 hover:text-purple-900 ${
-                  disabled ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`text-purple-600 hover:text-purple-900 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <XIcon className="h-3 w-3" />
               </button>

@@ -4,7 +4,7 @@ import React, { useState, RefObject } from "react";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
 import type { Editor } from "@tiptap/core";
 import { v4 as uuidv4 } from "uuid";
-import TagManager from "../noteElements/tag_manager";
+import TagManager from "./NoteElements/TagManager";
 import EditorMenuControls from "../editor_menu_controls";
 import useExtensions from "@/app/lib/utils/use_extensions";
 import ApiService from "@/app/lib/utils/api_service";
@@ -115,14 +115,10 @@ export default function NoteEditorContent({
             if (dispatch) {
               const endPos = tr.doc.content.size;
               const paragraphNodeForNewLine = editor.schema.node("paragraph");
-              const textNode = editor.schema.text(videoLink, [
-                editor.schema.marks.link.create({ href: media.uri }),
-              ]);
+              const textNode = editor.schema.text(videoLink, [editor.schema.marks.link.create({ href: media.uri })]);
               const paragraphNodeForLink = editor.schema.node("paragraph", null, [textNode]);
 
-              const transaction = tr
-                .insert(endPos, paragraphNodeForNewLine)
-                .insert(endPos + 1, paragraphNodeForLink);
+              const transaction = tr.insert(endPos, paragraphNodeForNewLine).insert(endPos + 1, paragraphNodeForLink);
               dispatch(transaction);
             }
             return true;
@@ -182,11 +178,7 @@ export default function NoteEditorContent({
       >
         <div className="bg-white w-full relative">
           {showCommentBubble && commentBubblePosition && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
-            <CommentBubble
-              onClick={onCommentBubbleClick}
-              top={commentBubblePosition.top}
-              left={commentBubblePosition.left}
-            />
+            <CommentBubble onClick={onCommentBubbleClick} top={commentBubblePosition.top} left={commentBubblePosition.left} />
           )}
           <RichTextEditor
             key={editorSessionKey}
@@ -202,11 +194,7 @@ export default function NoteEditorContent({
                 handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
               }
             }}
-            renderControls={() =>
-              isViewingStudentNote ? null : (
-                <EditorMenuControls onMediaUpload={handleMediaUpload} />
-              )
-            }
+            renderControls={() => (isViewingStudentNote ? null : <EditorMenuControls onMediaUpload={handleMediaUpload} />)}
             children={(editor: Editor | null) => {
               if (!editor) return null;
               return <LinkBubbleMenu />;

@@ -215,6 +215,7 @@ describe("formatCitation function", () => {
   let formatCitation: (citation: string) => React.ReactNode;
   beforeAll(() => {
     // Dynamically import the function from the utility file
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @next/next/no-assign-module-variable
     const module = require("../lib/utils/citation_formatter");
     formatCitation = module.formatCitation;
   });

@@ -2,6 +2,49 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import CommentSidebar from "../lib/components/comments/CommentSidebar";
 
+// Mock comments data
+const mockCommentsData = [
+  {
+    id: "c1",
+    noteId: "n1",
+    text: "Root 1",
+    authorId: "inst-1",
+    authorName: "Instructor",
+    createdAt: new Date().toISOString(),
+    role: "instructor",
+    position: { from: 1, to: 2 },
+    threadId: "t1",
+    parentId: null,
+    resolved: false,
+  },
+  {
+    id: "c2",
+    noteId: "n1",
+    text: "Root 2",
+    authorId: "inst-1",
+    authorName: "Instructor",
+    createdAt: new Date().toISOString(),
+    role: "instructor",
+    position: { from: 3, to: 4 },
+    threadId: "t2",
+    parentId: null,
+    resolved: false,
+  },
+];
+
+// Mock TanStack Query hooks
+jest.mock("../lib/hooks/queries/useComments", () => ({
+  useComments: jest.fn(() => ({
+    data: mockCommentsData,
+    refetch: jest.fn(),
+  })),
+  useCommentMutations: jest.fn(() => ({
+    createComment: { mutateAsync: jest.fn() },
+    resolveThread: { mutateAsync: jest.fn() },
+    deleteComment: { mutateAsync: jest.fn() },
+  })),
+}));
+
 // Mock useAuthStore
 jest.mock("../lib/stores/authStore", () => ({
   useAuthStore: jest.fn((selector) => {
@@ -22,36 +65,13 @@ jest.mock("../lib/stores/authStore", () => ({
 jest.mock("../lib/utils/api_service", () => ({
   __esModule: true,
   default: {
-    fetchCommentsForNote: async () => [
-      {
-        id: "c1",
-        noteId: "n1",
-        text: "Root 1",
-        authorId: "inst-1",
-        authorName: "Instructor",
-        createdAt: new Date().toISOString(),
-        role: "instructor",
-        position: { from: 1, to: 2 },
-        threadId: "t1",
-        parentId: null,
-        resolved: false,
-      },
-      {
-        id: "c2",
-        noteId: "n1",
-        text: "Root 2",
-        authorId: "inst-1",
-        authorName: "Instructor",
-        createdAt: new Date().toISOString(),
-        role: "instructor",
-        position: { from: 3, to: 4 },
-        threadId: "t2",
-        parentId: null,
-        resolved: false,
-      },
-    ],
-    createComment: async () => ({}),
     fetchCreatorName: async () => "Instructor",
+    fetchUserData: async () => ({
+      uid: "inst-1",
+      name: "Instructor",
+      isInstructor: true,
+      roles: { contributor: false, administrator: true },
+    }),
   },
 }));
 

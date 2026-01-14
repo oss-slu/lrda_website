@@ -2,15 +2,25 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import CommentSidebar from "../lib/components/comments/CommentSidebar";
 
+// Mock TanStack Query hooks
+jest.mock("../lib/hooks/queries/useComments", () => ({
+  useComments: jest.fn(() => ({
+    data: [],
+    refetch: jest.fn(),
+  })),
+  useCommentMutations: jest.fn(() => ({
+    createComment: { mutateAsync: jest.fn() },
+    resolveThread: { mutateAsync: jest.fn() },
+    deleteComment: { mutateAsync: jest.fn() },
+  })),
+}));
+
 // API Service stable mock
 jest.mock("../lib/utils/api_service", () => ({
   __esModule: true,
   default: {
-    fetchCommentsForNote: async () => [],
-    createComment: async () => ({}),
     fetchCreatorName: async () => "User",
     fetchUserData: async (uid: string) => {
-      // Mock student with parentInstructorId (part of teacher-student relationship)
       if (uid === "student-1") {
         return {
           uid: "student-1",
@@ -19,7 +29,6 @@ jest.mock("../lib/utils/api_service", () => ({
           roles: { contributor: true, administrator: false },
         };
       }
-      // Mock instructor
       if (uid === "inst-1") {
         return {
           uid: "inst-1",

@@ -1,7 +1,7 @@
 // app/__tests__/default_location.test.tsx
 import React from "react";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
-import LocationPicker from "../lib/components/noteElements/location_component";
+import LocationPicker from "../lib/components/NoteEditor/NoteElements/LocationPicker";
 
 // ✅ Mock Google Maps API-related components
 jest.mock("@react-google-maps/api", () => ({
