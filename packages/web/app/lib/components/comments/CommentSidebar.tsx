@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { Key, ReactNode } from "react";
 import { Comment } from "@/app/types";
 import CommentPopover from "../CommentPopover";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "../../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 import { v4 as uuidv4 } from "uuid";
+import { useComments, useCommentMutations } from "../../hooks/queries/useComments";
 
 interface CommentSidebarProps {
   noteId: string;
@@ -17,14 +18,11 @@ interface CommentSidebarProps {
 }
 
 export default function CommentSidebar({ noteId, getCurrentSelection }: CommentSidebarProps) {
-  const [comments, setComments] = useState<Comment[]>([]);
   const [showPopover, setShowPopover] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
   const [canComment, setCanComment] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
-  const [commentDraft, setCommentDraft] = useState<string>(""); // Preserve draft comment text
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isPollingPausedRef = useRef<boolean>(false);
+  const [commentDraft, setCommentDraft] = useState<string>("");
 
   // Use auth store for user data
   const { user: authUser } = useAuthStore(
@@ -33,97 +31,11 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     }))
   );
 
-  // Function to load comments - memoized with useCallback
-  const loadComments = useCallback(async () => {
-    if (!noteId) {
-      console.log("CommentSidebar: No noteId provided");
-      return;
-    }
-    console.log("CommentSidebar: Loading comments for noteId:", noteId);
-    try {
-      const raw = await ApiService.fetchCommentsForNote(noteId);
-      console.log("CommentSidebar: Raw comments fetched:", raw.length, raw);
-      // Resolve proper display names when needed
-      const enriched = await Promise.all(
-        raw.map(async (c) => {
-          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-          if (needsName && c.authorId) {
-            try {
-              const display = await ApiService.fetchCreatorName(c.authorId);
-              return { ...c, authorName: display } as any;
-            } catch {
-              return c as any;
-            }
-          }
-          return c as any;
-        })
-      );
-      console.log("CommentSidebar: Enriched comments:", enriched.length, enriched);
-      setComments(enriched as any);
-    } catch (error) {
-      console.error("CommentSidebar: Error loading comments:", error);
-      setComments([]);
-    }
-  }, [noteId]);
+  // TanStack Query for comments with automatic polling
+  const { data: comments = [], refetch } = useComments(noteId);
+  const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
-  // Load existing comments whenever noteId changes and normalize author names
-  useEffect(() => {
-    loadComments();
-  }, [loadComments]);
-
-  // Polling effect: automatically refresh comments every 15 seconds
-  useEffect(() => {
-    if (!noteId) return;
-
-    const POLLING_INTERVAL = 15000; // 15 seconds
-
-    // Handle visibility change to pause/resume polling
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        isPollingPausedRef.current = true;
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      } else {
-        isPollingPausedRef.current = false;
-        // Restart polling when page becomes visible
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-        }
-        pollingIntervalRef.current = setInterval(() => {
-          if (!isPollingPausedRef.current) {
-            loadComments();
-          }
-        }, POLLING_INTERVAL);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Start polling
-    const startPolling = () => {
-      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = setInterval(() => {
-        if (!isPollingPausedRef.current) {
-          loadComments();
-        }
-      }, POLLING_INTERVAL);
-    };
-
-    startPolling();
-
-    // Cleanup on unmount
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    };
-  }, [loadComments]);
-
-  // Determine whether current user is an instructor or a student (part of teacher-student relationship only)
+  // Determine whether current user is an instructor or a student
   useEffect(() => {
     const checkInstructor = async () => {
       const uid = authUser?.uid;
@@ -140,46 +52,44 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       }
 
       // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
-      // Allow commenting for administrators even if isInstructor flag isn't set
       const flag = !!roles?.administrator || !!userData?.isInstructor;
       setIsInstructor(flag);
 
       // Check if user is a student (has contributor role but not administrator)
       const isStudentRole = !!roles?.contributor && !roles?.administrator;
 
-      // For students, verify they have a parentInstructorId (part of teacher-student relationship)
+      // For students, verify they have a parentInstructorId
       let isStudentInTeacherStudentModel = false;
       if (isStudentRole && userData) {
-        // Student must have parentInstructorId to be part of teacher-student model
         isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
       }
 
-      // Allow commenting for:
-      // 1. Administrators (roles?.administrator)
-      // 2. Instructors (userData?.isInstructor)
-      // 3. Students who are part of teacher-student relationship (have parentInstructorId)
+      // Allow commenting for administrators, instructors, or students in teacher-student relationship
       setCanComment(!!uid && (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel));
     };
     checkInstructor();
   }, [authUser]);
 
-  // Handler when instructor submits a new comment
+  // Helper to resolve author display name
+  const resolveAuthorName = async (authorId: string, fallback: string): Promise<string> => {
+    try {
+      if (authorId) {
+        const resolved = await ApiService.fetchCreatorName(authorId);
+        if (resolved && resolved !== "Unknown User") return resolved;
+      }
+    } catch {}
+    return fallback;
+  };
+
+  // Handler when user submits a new comment
   const handleSubmitComment = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    // Selection is optional; allow generic comments
     const selection = getCurrentSelection ? getCurrentSelection() : null;
-
     const authorId = authUser?.uid ?? "";
     const fallbackAuthor = authUser?.name ?? "";
-    let authorDisplay = fallbackAuthor;
-    try {
-      if (authorId) {
-        const resolved = await ApiService.fetchCreatorName(authorId);
-        if (resolved && resolved !== "Unknown User") authorDisplay = resolved;
-      }
-    } catch {}
+    const authorDisplay = await resolveAuthorName(authorId, fallbackAuthor);
 
     const threadId = uuidv4();
     const newComment: Comment = {
@@ -198,31 +108,8 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       resolved: false,
     };
 
-    await ApiService.createComment(newComment);
-    // Reload comments from API to ensure we have the latest data
-    try {
-      const reloaded = await ApiService.fetchCommentsForNote(noteId);
-      const enriched = await Promise.all(
-        reloaded.map(async (c) => {
-          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-          if (needsName && c.authorId) {
-            try {
-              const display = await ApiService.fetchCreatorName(c.authorId);
-              return { ...c, authorName: display } as any;
-            } catch {
-              return c as any;
-            }
-          }
-          return c as any;
-        })
-      );
-      setComments(enriched as any);
-    } catch (error) {
-      console.error("Error reloading comments after creation:", error);
-      // Fallback to adding locally
-      setComments((prev) => [...prev, newComment]);
-    }
-    setCommentDraft(""); // Clear draft on successful submit
+    await createComment.mutateAsync(newComment);
+    setCommentDraft("");
     setShowPopover(false);
 
     // Notify editor to refresh highlights
@@ -240,15 +127,10 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const handleReply = async (threadId: string) => {
     const trimmed = (replyDrafts[threadId] || "").trim();
     if (!trimmed) return;
+
     const authorId = authUser?.uid ?? "";
     const fallbackAuthor = authUser?.name ?? "";
-    let authorDisplay = fallbackAuthor;
-    try {
-      if (authorId) {
-        const resolved = await ApiService.fetchCreatorName(authorId);
-        if (resolved && resolved !== "Unknown User") authorDisplay = resolved;
-      }
-    } catch {}
+    const authorDisplay = await resolveAuthorName(authorId, fallbackAuthor);
 
     const reply: Comment = {
       id: uuidv4() as Key,
@@ -266,68 +148,40 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       resolved: false,
     };
 
-    await ApiService.createComment(reply);
-    // Reload comments from API to ensure we have the latest data
-    try {
-      const reloaded = await ApiService.fetchCommentsForNote(noteId);
-      const enriched = await Promise.all(
-        reloaded.map(async (c) => {
-          const needsName = !c.authorName || (typeof c.authorName === "string" && (c.authorName as string).includes("@"));
-          if (needsName && c.authorId) {
-            try {
-              const display = await ApiService.fetchCreatorName(c.authorId);
-              return { ...c, authorName: display } as any;
-            } catch {
-              return c as any;
-            }
-          }
-          return c as any;
-        })
-      );
-      setComments(enriched as any);
-    } catch (error) {
-      console.error("Error reloading comments after reply:", error);
-      // Fallback to adding locally
-      setComments((prev) => [...prev, reply]);
-    }
+    await createComment.mutateAsync(reply);
     setReplyDrafts((d) => ({ ...d, [threadId]: "" }));
   };
 
   const handleResolveThread = async (threadId: string) => {
-    try {
-      await ApiService.resolveThread(threadId);
-      setComments((prev) => prev.map((c) => (c.threadId === threadId ? { ...c, resolved: true } : c)));
-    } catch {}
+    await resolveThread.mutateAsync(threadId);
   };
 
   const handleDeleteComment = async (commentId?: Key | null | undefined) => {
     const id = String(commentId || "");
     if (!id) return;
-    try {
-      await ApiService.archiveComment(id);
-      setComments((prev) => prev.filter((c) => String(c.id) !== id));
-    } catch {}
+    await deleteComment.mutateAsync(id);
   };
+
+  // Group comments by thread
+  const threads = comments
+    .filter((c) => !c.parentId)
+    .map((root) => {
+      const tid = String(root.threadId || root.id);
+      return {
+        root: { ...root, threadId: tid },
+        replies: comments.filter((r) => String(r.parentId) === tid),
+      };
+    });
 
   return (
     <div className="bg-white w-full md:w-80 p-2.5 sm:p-3 border-t md:border-t-0 md:border-l h-full flex flex-col overflow-hidden">
       <h2 className="text-sm sm:text-base font-semibold mb-2.5 sm:mb-3 flex-shrink-0">Comments</h2>
 
       <ScrollArea className="flex-1 min-h-0 space-y-2.5 sm:space-y-3 pr-1 overflow-y-auto">
-        {(() => {
-          if (comments.length === 0) return <p className="text-gray-400">No comments yet.</p>;
-          // Group by threadId (top-level comments with parentId === null)
-          const threads = comments
-            .filter((c) => !c.parentId)
-            .map((root) => {
-              const tid = String(root.threadId || root.id);
-              return {
-                root: { ...root, threadId: tid },
-                replies: comments.filter((r) => String(r.parentId) === tid),
-              };
-            });
-
-          return threads.map(({ root, replies }) => (
+        {threads.length === 0 ? (
+          <p className="text-gray-400">No comments yet.</p>
+        ) : (
+          threads.map(({ root, replies }) => (
             <div key={String(root.id)} className="border border-gray-200 bg-gray-50 p-2 sm:p-2.5 rounded-md space-y-2">
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
@@ -390,8 +244,8 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
                 </div>
               )}
             </div>
-          ));
-        })()}
+          ))
+        )}
       </ScrollArea>
 
       {canComment && (

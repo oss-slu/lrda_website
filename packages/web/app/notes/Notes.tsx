@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Sidebar from "../lib/components/side_bar";
+import Sidebar from "../lib/components/Sidebar";
 import NoteEditor from "../lib/components/NoteEditor";
 import { Note, newNote } from "@/app/types";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
