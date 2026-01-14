@@ -3,7 +3,7 @@ name: lrda_desktop CI (DEPRECATED - Use ci-cd.yml instead)
 # DISABLED: This workflow is deprecated. Use .github/workflows/ci-cd.yml instead.
 # This workflow is kept for reference but will not run automatically.
 on:
-  workflow_dispatch:  # Only allows manual trigger, disabled from automatic runs
+  workflow_dispatch: # Only allows manual trigger, disabled from automatic runs
   # push:
   #   branches:
   #     - main
@@ -52,13 +52,13 @@ jobs:
         run: pnpm test
         env:
           # Mock environment variables for CI
-          NEXT_PUBLIC_FIREBASE_API_KEY: "mock-api-key-for-ci"
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mock-domain.firebaseapp.com"
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mock-project-id"
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "mock-project.appspot.com"
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
-          NEXT_PUBLIC_RERUM_PREFIX: "https://store.rerum.io/v1"
-          NEXT_PUBLIC_OPENAI_API_KEY: "mock-openai-key"
-          NEXT_PUBLIC_OPENAI_API_URL: "https://api.openai.com/v1"
-          CI: "true"
+          NEXT_PUBLIC_FIREBASE_API_KEY: 'mock-api-key-for-ci'
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'mock-domain.firebaseapp.com'
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'mock-project-id'
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'mock-project.appspot.com'
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+          NEXT_PUBLIC_FIREBASE_APP_ID: '1:123456789:web:abcdef'
+          NEXT_PUBLIC_RERUM_PREFIX: 'https://store.rerum.io/v1'
+          NEXT_PUBLIC_OPENAI_API_KEY: 'mock-openai-key'
+          NEXT_PUBLIC_OPENAI_API_URL: 'https://api.openai.com/v1'
+          CI: 'true'

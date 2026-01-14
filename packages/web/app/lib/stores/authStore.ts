@@ -1,10 +1,10 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { UserData } from "../../types";
-import { auth, db } from "../config/firebase";
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import ApiService from "../utils/api_service";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { UserData } from '../../types';
+import { auth, db } from '../config/firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import ApiService from '../utils/api_service';
 
 interface AuthState {
   // State
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (email: string, password: string): Promise<string> => {
-        if (!auth) throw new Error("Firebase auth is not initialized");
+        if (!auth) throw new Error('Firebase auth is not initialized');
 
         set({ isLoading: true });
 
@@ -67,14 +67,14 @@ export const useAuthStore = create<AuthState>()(
           const token = await firebaseUser.getIdToken();
 
           // Store token in localStorage and cookie
-          localStorage.setItem("authToken", token);
+          localStorage.setItem('authToken', token);
           document.cookie = `authToken=${token}; path=/`;
 
           // Fetch user data from API or Firestore
           let userData = await ApiService.fetchUserData(firebaseUser.uid);
 
           if (!userData && db) {
-            const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
             if (userDoc.exists()) {
               userData = userDoc.data() as UserData;
             }
@@ -86,10 +86,10 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false });
           }
 
-          return "success";
+          return 'success';
         } catch (error) {
           set({ isLoading: false });
-          console.error("Login error:", error);
+          console.error('Login error:', error);
           return Promise.reject(error);
         }
       },
@@ -101,13 +101,13 @@ export const useAuthStore = create<AuthState>()(
           await signOut(auth);
 
           // Clear storage
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("userData");
-          document.cookie = "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
           set({ user: null, isLoggedIn: false });
         } catch (error) {
-          console.error("Logout error:", error);
+          console.error('Logout error:', error);
         }
       },
 
@@ -120,13 +120,13 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Set up Firebase auth state listener
-        onAuthStateChanged(auth, async (firebaseUser) => {
+        onAuthStateChanged(auth, async firebaseUser => {
           if (firebaseUser) {
             // Try to fetch user data
             let userData = await ApiService.fetchUserData(firebaseUser.uid);
 
             if (!userData && db) {
-              const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+              const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
               if (userDoc.exists()) {
                 userData = userDoc.data() as UserData;
               }
@@ -150,18 +150,18 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "auth-store",
-      partialize: (state) => ({
+      name: 'auth-store',
+      partialize: state => ({
         // Only persist user data, not loading/initialized states
         user: state.user,
         isLoggedIn: state.isLoggedIn,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Initialize auth listener when module loads (client-side only)
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   // Delay initialization to ensure Firebase is ready
   setTimeout(() => {
     useAuthStore.getState().initialize();

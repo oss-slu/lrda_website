@@ -11,7 +11,12 @@ test.describe('Notes Review UI', () => {
   async function ensureNoteSelected(page: Page) {
     // Try to select an existing note; if none, create one via Add Note
     const listItem = page.locator('#notes-list > div');
-    if (await listItem.first().isVisible().catch(() => false)) {
+    if (
+      await listItem
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await listItem.first().click();
       return;
     }
@@ -27,7 +32,12 @@ test.describe('Notes Review UI', () => {
 
     // Fallback: wait for anything clickable in notes list
     await page.waitForSelector('#notes-list, [id="add-note-button"]', { timeout: 20000 });
-    if (await listItem.first().isVisible().catch(() => false)) {
+    if (
+      await listItem
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       await listItem.first().click();
     }
   }
@@ -38,7 +48,9 @@ test.describe('Notes Review UI', () => {
     await expect(outerHandle).toBeVisible();
   });
 
-  test('shows editor/comments split with visible inner handle after selecting a note', async ({ page }) => {
+  test('shows editor/comments split with visible inner handle after selecting a note', async ({
+    page,
+  }) => {
     await ensureNoteSelected(page);
     // If comments panel exists, inner handle should be visible; otherwise skip
     const commentsHeader = page.locator('text=Comments').first();
@@ -46,7 +58,10 @@ test.describe('Notes Review UI', () => {
       const innerHandle = page.locator('[role="separator"]').nth(1);
       await expect(innerHandle).toBeVisible();
     } else {
-      test.skip(true, 'Comments panel not present for unsaved note; skipping inner handle assertion');
+      test.skip(
+        true,
+        'Comments panel not present for unsaved note; skipping inner handle assertion',
+      );
     }
   });
 
@@ -60,23 +75,25 @@ test.describe('Notes Review UI', () => {
     }
   });
 
-  test('Review Notes shows Unreviewed/Reviewed tabs when instructor toggle is available', async ({ page }) => {
+  test('Review Notes shows Unreviewed/Reviewed tabs when instructor toggle is available', async ({
+    page,
+  }) => {
     // Hover over Notes link in navbar to show dropdown
     const notesLink = page.locator('a:has-text("Notes")').first();
     if (!(await notesLink.isVisible().catch(() => false))) {
       test.skip(true, 'Notes link not available in this environment');
     }
-    
+
     // Hover over Notes link to show dropdown
     await notesLink.hover();
     await page.waitForTimeout(500); // Wait for dropdown to appear
-    
+
     // Click on "Students Notes" option in the dropdown
     const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
     if (await studentsNotesOption.isVisible().catch(() => false)) {
       await studentsNotesOption.click();
       await page.waitForTimeout(1000); // Wait for mode switch
-      
+
       // Tabs should read Unreviewed / Reviewed in review mode
       await expect(page.locator('button:has-text("Unreviewed")').first()).toBeVisible();
       await expect(page.locator('button:has-text("Reviewed")').first()).toBeVisible();
@@ -85,13 +102,18 @@ test.describe('Notes Review UI', () => {
     }
   });
 
-  test('Approve label visible for instructor reviewing a student note when applicable', async ({ page }) => {
+  test('Approve label visible for instructor reviewing a student note when applicable', async ({
+    page,
+  }) => {
     await ensureNoteSelected(page);
     // Try id first, then fallback to toolbar label text
     const toggle = page.locator('#publish-toggle-button');
     if (await toggle.isVisible().catch(() => false)) {
       const text = await toggle.textContent();
-      expect(text && (text.includes('Approve') || text.includes('Publish') || text.includes('Unpublish'))).toBeTruthy();
+      expect(
+        text &&
+          (text.includes('Approve') || text.includes('Publish') || text.includes('Unpublish')),
+      ).toBeTruthy();
     } else {
       const anyLabel = page.locator('text=Approve, text=Publish, text=Unpublish').first();
       if (await anyLabel.isVisible().catch(() => false)) {
@@ -108,7 +130,7 @@ test.describe('Notes Review UI', () => {
     if (await notesLink.isVisible().catch(() => false)) {
       await notesLink.hover();
       await page.waitForTimeout(500); // Wait for dropdown to appear
-      
+
       const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
       if (await studentsNotesOption.isVisible().catch(() => false)) {
         await studentsNotesOption.click();
@@ -147,7 +169,7 @@ test.describe('Notes Review UI', () => {
     if (await notesLink.isVisible().catch(() => false)) {
       await notesLink.hover();
       await page.waitForTimeout(500); // Wait for dropdown to appear
-      
+
       const studentsNotesOption = page.locator('button:has-text("Students Notes")').first();
       if (await studentsNotesOption.isVisible().catch(() => false)) {
         await studentsNotesOption.click();
@@ -159,7 +181,9 @@ test.describe('Notes Review UI', () => {
     await page.waitForTimeout(1000);
 
     // Check if comment button/sidebar is available
-    const commentButton = page.locator('button:has-text("Comments"), button[aria-label*="comment" i]').first();
+    const commentButton = page
+      .locator('button:has-text("Comments"), button[aria-label*="comment" i]')
+      .first();
     if (await commentButton.isVisible().catch(() => false)) {
       await expect(commentButton).toBeVisible();
       // Comment functionality should be available even in read-only mode
@@ -175,5 +199,3 @@ test.describe('Notes Review UI', () => {
     }
   });
 });
-
-

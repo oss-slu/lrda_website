@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useCallback, useRef } from "react";
-import { toast } from "sonner";
-import { getItem, setItem } from "../utils/local_storage";
+import { useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
+import { getItem, setItem } from '../utils/local_storage';
 
 interface Location {
   lat: number;
@@ -23,38 +23,44 @@ interface UseMapLocationProps {
 /**
  * Hook to manage map location - fetching from storage, geolocation, and manual location setting.
  */
-export function useMapLocation({ mapRef, locationFound, setMapCenter, setMapZoom, setLocationFound }: UseMapLocationProps) {
+export function useMapLocation({
+  mapRef,
+  locationFound,
+  setMapCenter,
+  setMapZoom,
+  setLocationFound,
+}: UseMapLocationProps) {
   const isSubscribedRef = useRef(true);
 
   // Helper to trigger map resize
   const triggerMapResize = useCallback(() => {
     setTimeout(() => {
       if (mapRef.current) {
-        google.maps.event.trigger(mapRef.current, "resize");
+        google.maps.event.trigger(mapRef.current, 'resize');
       }
     }, 100);
   }, [mapRef]);
 
   // Get current geolocation
   const getLocation = useCallback((): Promise<Location> => {
-    toast("Fetching Location", {
-      description: "Getting your location. This can take a second.",
+    toast('Fetching Location', {
+      description: 'Getting your location. This can take a second.',
       duration: 3000,
     });
 
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           const newCenter: Location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
           resolve(newCenter);
         },
-        (error) => {
-          console.error("Error fetching location", error);
+        error => {
+          console.error('Error fetching location', error);
           reject(error);
-        }
+        },
       );
     });
   }, []);
@@ -64,16 +70,16 @@ export function useMapLocation({ mapRef, locationFound, setMapCenter, setMapZoom
     try {
       const newCenter = await getLocation();
 
-      if (newCenter && typeof newCenter.lat === "number" && typeof newCenter.lng === "number") {
+      if (newCenter && typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
         setMapCenter(newCenter);
         mapRef.current?.panTo(newCenter);
         mapRef.current?.setZoom(13);
         triggerMapResize();
       } else {
-        throw new Error("Failed to get valid coordinates from getLocation()");
+        throw new Error('Failed to get valid coordinates from getLocation()');
       }
     } catch (error) {
-      console.error("Failed to set location:", error);
+      console.error('Failed to set location:', error);
     }
   }, [getLocation, setMapCenter, mapRef, triggerMapResize]);
 
@@ -83,11 +89,15 @@ export function useMapLocation({ mapRef, locationFound, setMapCenter, setMapZoom
 
     const fetchLastLocation = async () => {
       try {
-        const lastLocationString = await getItem("LastLocation");
+        const lastLocationString = await getItem('LastLocation');
         const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
 
         if (isSubscribedRef.current) {
-          if (lastLocation && typeof lastLocation.lat === "number" && typeof lastLocation.lng === "number") {
+          if (
+            lastLocation &&
+            typeof lastLocation.lat === 'number' &&
+            typeof lastLocation.lng === 'number'
+          ) {
             setMapCenter(lastLocation);
             setMapZoom(DEFAULT_ZOOM);
             setLocationFound(true);
@@ -103,8 +113,8 @@ export function useMapLocation({ mapRef, locationFound, setMapCenter, setMapZoom
         setMapZoom(DEFAULT_ZOOM);
         setLocationFound(true);
 
-        if (error instanceof Error && !error.message.includes("Invalid or missing last location")) {
-          console.error("Failed to fetch the last location", error);
+        if (error instanceof Error && !error.message.includes('Invalid or missing last location')) {
+          console.error('Failed to fetch the last location', error);
         }
       }
     };
@@ -124,22 +134,26 @@ export function useMapLocation({ mapRef, locationFound, setMapCenter, setMapZoom
       try {
         const currentLocation = await getLocation();
 
-        if (currentLocation && typeof currentLocation.lat === "number" && typeof currentLocation.lng === "number") {
+        if (
+          currentLocation &&
+          typeof currentLocation.lat === 'number' &&
+          typeof currentLocation.lng === 'number'
+        ) {
           if (!locationFound && isComponentMounted) {
             setMapCenter(currentLocation);
             setMapZoom(DEFAULT_ZOOM);
             triggerMapResize();
           }
-          await setItem("LastLocation", JSON.stringify(currentLocation));
+          await setItem('LastLocation', JSON.stringify(currentLocation));
         } else {
-          throw new Error("Failed to get valid coordinates from getLocation()");
+          throw new Error('Failed to get valid coordinates from getLocation()');
         }
       } catch (error) {
         if (isComponentMounted) {
           setMapCenter(DEFAULT_LOCATION);
           setMapZoom(DEFAULT_ZOOM);
           setLocationFound(true);
-          console.log("Using default location due to error:", error);
+          console.log('Using default location due to error:', error);
         }
       }
     };

@@ -1,5 +1,5 @@
-import { useEffect, useRef, RefObject } from "react";
-import { getCookie, setCookie } from "../utils/noteHelpers";
+import { useEffect, useRef, RefObject } from 'react';
+import { getCookie, setCookie } from '../utils/noteHelpers';
 
 interface IntroTourRefs {
   titleRef: RefObject<HTMLInputElement | null>;
@@ -12,19 +12,19 @@ export const useIntroTour = (refs: IntroTourRefs) => {
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
 
     const observer = new MutationObserver(async () => {
       if (introStartedRef.current) return;
 
-      const addNote = document.getElementById("add-note-button");
+      const addNote = document.getElementById('add-note-button');
       const title = refs.titleRef.current;
       const deleteButton = refs.deleteRef.current;
       const date = refs.dateRef.current;
       const location = refs.locationRef.current;
 
       if (addNote && title && deleteButton && date && location) {
-        const hasAddNoteIntroBeenShown = getCookie("addNoteIntroShown");
+        const hasAddNoteIntroBeenShown = getCookie('addNoteIntroShown');
 
         if (hasAddNoteIntroBeenShown) {
           observer.disconnect();
@@ -34,18 +34,18 @@ export const useIntroTour = (refs: IntroTourRefs) => {
         introStartedRef.current = true;
         observer.disconnect();
 
-        const introJs = (await import("intro.js")).default;
+        const introJs = (await import('intro.js')).default;
         const intro = introJs.tour();
 
         intro.setOptions({
           steps: [
             {
               element: addNote,
-              intro: "Click this button to add a note",
+              intro: 'Click this button to add a note',
             },
             {
               element: title,
-              intro: "You can name your note here!",
+              intro: 'You can name your note here!',
             },
             {
               element: deleteButton,
@@ -53,23 +53,23 @@ export const useIntroTour = (refs: IntroTourRefs) => {
             },
             {
               element: date,
-              intro: "We will automatically date and time your entry!",
+              intro: 'We will automatically date and time your entry!',
             },
             {
               element: location,
-              intro: "Make sure you specify the location of your note.",
+              intro: 'Make sure you specify the location of your note.',
             },
           ],
           scrollToElement: false,
-          skipLabel: "Skip",
+          skipLabel: 'Skip',
         });
 
         intro.oncomplete(() => {
-          setCookie("addNoteIntroShown", "true", 365);
+          setCookie('addNoteIntroShown', 'true', 365);
         });
 
         intro.onexit(() => {
-          setCookie("addNoteIntroShown", "true", 365);
+          setCookie('addNoteIntroShown', 'true', 365);
         });
 
         intro.start();

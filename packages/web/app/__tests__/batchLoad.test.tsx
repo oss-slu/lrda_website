@@ -10,14 +10,12 @@ function MockBatchedNoteList({ notes }: { notes: any[] }) {
 
   return (
     <div>
-      {visibleNotes.map((note) => (
-        <div key={note.id} data-testid="note">{note.title}</div>
+      {visibleNotes.map(note => (
+        <div key={note.id} data-testid='note'>
+          {note.title}
+        </div>
       ))}
-      {canLoadMore && (
-        <button onClick={() => setVisibleCount(visibleCount + 15)}>
-          Load More
-        </button>
-      )}
+      {canLoadMore && <button onClick={() => setVisibleCount(visibleCount + 15)}>Load More</button>}
     </div>
   );
 }

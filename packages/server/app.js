@@ -1,7 +1,7 @@
-import express from "express";
-import { createCoreRouter } from "lrda-server-core";
-import { selectiveAuthMiddleware } from "./auth.js";
-import dotenv from "dotenv";
+import express from 'express';
+import { createCoreRouter } from 'lrda-server-core';
+import { selectiveAuthMiddleware } from './auth.js';
+import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
@@ -11,15 +11,15 @@ const app = express();
 app.use(selectiveAuthMiddleware);
 
 const coreApiRouter = await createCoreRouter({
-  auth: { 
+  auth: {
     disableAuth: true, // Disable auth in core router since we handle it at server level
-    authMiddleware: null, 
-    enableClientRoutes: false 
+    authMiddleware: null,
+    enableClientRoutes: false,
   },
   scalar: {
-    baseServerUrl: "/",
-    mountPath: "/reference",
-    openapiMountPath: "/openapi.json",
+    baseServerUrl: '/',
+    mountPath: '/reference',
+    openapiMountPath: '/openapi.json',
   },
   // RERUM configuration
   rerum: {
@@ -36,13 +36,12 @@ const coreApiRouter = await createCoreRouter({
   mongoUri: process.env.MONGO_CONNECTION_STRING,
   mongodbName: process.env.MONGO_DB,
   mongodbCollection: process.env.MONGO_COLLECTION,
-  connectOnStart: process.env.DOWN === "false",
-  trustProxy: process.env.TRUST_PROXY === "true",
+  connectOnStart: process.env.DOWN === 'false',
+  trustProxy: process.env.TRUST_PROXY === 'true',
 });
 
 // Mount core RERUM API
-app.use("/", coreApiRouter);
-
+app.use('/', coreApiRouter);
 
 // Add your custom LRDA/project-specific endpoints BELOW this line
 // Example:

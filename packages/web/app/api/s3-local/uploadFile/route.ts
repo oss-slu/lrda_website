@@ -1,21 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
 // LocalStack S3 endpoint for local development
-const LOCALSTACK_URL = process.env.LOCALSTACK_URL || "http://localhost:4566";
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || "livedreligion-local";
-const USE_LOCAL_S3 = process.env.NEXT_PUBLIC_USE_LOCAL_S3 === "true";
+const LOCALSTACK_URL = process.env.LOCALSTACK_URL || 'http://localhost:4566';
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'livedreligion-local';
+const USE_LOCAL_S3 = process.env.NEXT_PUBLIC_USE_LOCAL_S3 === 'true';
 
 export async function POST(request: NextRequest) {
   if (!USE_LOCAL_S3) {
-    return NextResponse.json({ error: "Local S3 not enabled. Set NEXT_PUBLIC_USE_LOCAL_S3=true" }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Local S3 not enabled. Set NEXT_PUBLIC_USE_LOCAL_S3=true' },
+      { status: 400 },
+    );
   }
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     const fileName = file.name || `media-${Date.now()}`;
@@ -26,18 +29,18 @@ export async function POST(request: NextRequest) {
     const s3Url = `${LOCALSTACK_URL}/${BUCKET_NAME}/${fileName}`;
 
     const uploadResponse = await fetch(s3Url, {
-      method: "PUT",
+      method: 'PUT',
       body: buffer,
       headers: {
-        "Content-Type": file.type || "application/octet-stream",
-        "Content-Length": buffer.length.toString(),
+        'Content-Type': file.type || 'application/octet-stream',
+        'Content-Length': buffer.length.toString(),
       },
     });
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
-      console.error("S3 upload failed:", errorText);
-      return NextResponse.json({ error: "Upload failed", details: errorText }, { status: 500 });
+      console.error('S3 upload failed:', errorText);
+      return NextResponse.json({ error: 'Upload failed', details: errorText }, { status: 500 });
     }
 
     // Return the public URL for the uploaded file
@@ -50,8 +53,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed", details: String(error) }, { status: 500 });
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: 'Upload failed', details: String(error) }, { status: 500 });
   }
 }
 
@@ -60,6 +63,6 @@ export async function GET() {
     enabled: USE_LOCAL_S3,
     endpoint: LOCALSTACK_URL,
     bucket: BUCKET_NAME,
-    uploadUrl: "/api/s3-local/uploadFile",
+    uploadUrl: '/api/s3-local/uploadFile',
   });
 }

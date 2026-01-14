@@ -6,7 +6,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   theme: {
     container: {
       center: true,
@@ -70,8 +70,8 @@ module.exports = {
           '100%': { opacity: 1 },
         },
         zoomIn: {
-          '0': { transform: 'scale(1)' },
-          '100%': { transform: 'scale(1.1)'},
+          0: { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)' },
         },
       },
       animation: {
@@ -83,4 +83,4 @@ module.exports = {
     },
   },
   plugins: [require('tailwindcss-animate')],
-}
+};

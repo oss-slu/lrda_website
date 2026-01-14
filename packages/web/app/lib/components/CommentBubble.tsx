@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle } from 'lucide-react';
 
 type CommentBubbleProps = {
   onClick: () => void;
@@ -10,12 +10,13 @@ type CommentBubbleProps = {
 
 export default function CommentBubble({ onClick, top, left, right, bottom }: CommentBubbleProps) {
   const positionStyle: React.CSSProperties = {};
-  
+
   if (top !== undefined) positionStyle.top = typeof top === 'number' ? `${top}px` : top;
   if (left !== undefined) positionStyle.left = typeof left === 'number' ? `${left}px` : left;
   if (right !== undefined) positionStyle.right = typeof right === 'number' ? `${right}px` : right;
-  if (bottom !== undefined) positionStyle.bottom = typeof bottom === 'number' ? `${bottom}px` : bottom;
-  
+  if (bottom !== undefined)
+    positionStyle.bottom = typeof bottom === 'number' ? `${bottom}px` : bottom;
+
   // Default to center if no position provided
   if (Object.keys(positionStyle).length === 0) {
     positionStyle.top = '50%';
@@ -24,13 +25,13 @@ export default function CommentBubble({ onClick, top, left, right, bottom }: Com
   }
 
   return (
-    <button 
-      onClick={onClick} 
-      className="absolute z-40 bg-white rounded-full p-1.5 shadow-lg border border-gray-300 hover:shadow-xl hover:bg-blue-50 transition-all pointer-events-auto"
+    <button
+      onClick={onClick}
+      className='pointer-events-auto absolute z-40 rounded-full border border-gray-300 bg-white p-1.5 shadow-lg transition-all hover:bg-blue-50 hover:shadow-xl'
       style={positionStyle}
-      aria-label="Comment on selected text"
+      aria-label='Comment on selected text'
     >
-      <MessageCircle className="text-blue-500 hover:text-blue-700 w-5 h-5" />
+      <MessageCircle className='h-5 w-5 text-blue-500 hover:text-blue-700' />
     </button>
   );
 }

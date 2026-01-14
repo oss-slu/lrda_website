@@ -1,25 +1,25 @@
-import { initializeApp, getApps } from "firebase/app";
-import type { FirebaseApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import type { Auth } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import type { Firestore } from "firebase/firestore";
-import { getDatabase, connectDatabaseEmulator } from "firebase/database";
-import type { Database } from "firebase/database";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
-import type { FirebaseStorage } from "firebase/storage";
+import { initializeApp, getApps } from 'firebase/app';
+import type { FirebaseApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import type { Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
+import type { Database } from 'firebase/database';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import type { FirebaseStorage } from 'firebase/storage';
 
 // Check if we should use Firebase emulators (local development)
-const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
+const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
 
 // Firebase configuration details
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "demo-api-key",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "demo-project.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "demo-project",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "demo-project.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123:web:abc",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-api-key',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo-project.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo-project.appspot.com',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123:web:abc',
 };
 
 // Only initialize Firebase if we have valid config (non-empty values)
@@ -33,17 +33,17 @@ const shouldInitializeFirebase = (): boolean => {
   // Check if we have all required environment variables with actual values (not empty strings)
   const hasValidConfig: boolean = !!(
     firebaseConfig.apiKey &&
-    firebaseConfig.apiKey.trim() !== "" &&
+    firebaseConfig.apiKey.trim() !== '' &&
     firebaseConfig.authDomain &&
-    firebaseConfig.authDomain.trim() !== "" &&
+    firebaseConfig.authDomain.trim() !== '' &&
     firebaseConfig.projectId &&
-    firebaseConfig.projectId.trim() !== "" &&
+    firebaseConfig.projectId.trim() !== '' &&
     firebaseConfig.storageBucket &&
-    firebaseConfig.storageBucket.trim() !== "" &&
+    firebaseConfig.storageBucket.trim() !== '' &&
     firebaseConfig.messagingSenderId &&
-    firebaseConfig.messagingSenderId.trim() !== "" &&
+    firebaseConfig.messagingSenderId.trim() !== '' &&
     firebaseConfig.appId &&
-    firebaseConfig.appId.trim() !== ""
+    firebaseConfig.appId.trim() !== ''
   );
 
   return hasValidConfig;
@@ -72,20 +72,25 @@ if (shouldInitializeFirebase()) {
     storage = getStorage(app);
 
     // Connect to emulators if enabled (only in browser, and only once)
-    if (useEmulators && typeof window !== "undefined") {
+    if (useEmulators && typeof window !== 'undefined') {
       // Use a flag to prevent multiple connections
-      const emulatorKey = "__FIREBASE_EMULATORS_CONNECTED__";
+      const emulatorKey = '__FIREBASE_EMULATORS_CONNECTED__';
       if (!(window as unknown as Record<string, unknown>)[emulatorKey]) {
         (window as unknown as Record<string, unknown>)[emulatorKey] = true;
 
         try {
-          connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-          connectFirestoreEmulator(db, "127.0.0.1", 8080);
-          connectDatabaseEmulator(realtimeDb, "127.0.0.1", 9000);
-          connectStorageEmulator(storage, "127.0.0.1", 9199);
-          console.log("Firebase Emulators connected - Auth:9099, Firestore:8080, Database:9000, Storage:9199");
+          connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+          connectFirestoreEmulator(db, '127.0.0.1', 8080);
+          connectDatabaseEmulator(realtimeDb, '127.0.0.1', 9000);
+          connectStorageEmulator(storage, '127.0.0.1', 9199);
+          console.log(
+            'Firebase Emulators connected - Auth:9099, Firestore:8080, Database:9000, Storage:9199',
+          );
         } catch (emulatorError) {
-          console.warn("Failed to connect to Firebase emulators. Make sure they are running with: pnpm firebase:emulators", emulatorError);
+          console.warn(
+            'Failed to connect to Firebase emulators. Make sure they are running with: pnpm firebase:emulators',
+            emulatorError,
+          );
           // Reset the flag so it can retry on next page load
           (window as unknown as Record<string, unknown>)[emulatorKey] = false;
         }
@@ -93,8 +98,8 @@ if (shouldInitializeFirebase()) {
     }
   } catch (error) {
     // If initialization fails, log error but don't crash during build
-    if (typeof window !== "undefined") {
-      console.error("Firebase initialization error:", error);
+    if (typeof window !== 'undefined') {
+      console.error('Firebase initialization error:', error);
     }
     // Set to null so imports don't fail, but usage will need to check
     app = null;

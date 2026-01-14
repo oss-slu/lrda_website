@@ -14,7 +14,7 @@ jest.mock('../lib/hooks/queries/useNotes', () => ({
   })),
 }));
 
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
 
@@ -51,7 +51,7 @@ describe('Sidebar Component', () => {
 
   beforeEach(() => {
     mockPush = jest.fn();
-    (useRouter).mockImplementation(() => ({
+    useRouter.mockImplementation(() => ({
       push: mockPush,
     }));
   });

@@ -1,10 +1,13 @@
-import React from "react";
-import { Note, Tag } from "@/app/types";
-import ApiService from "@/app/lib/utils/api_service";
-import { toast } from "sonner";
-import type { NoteStateType, NoteHandlersType } from "../hooks/useNoteState";
+import React from 'react';
+import { Note, Tag } from '@/app/types';
+import ApiService from '@/app/lib/utils/api_service';
+import { toast } from 'sonner';
+import type { NoteStateType, NoteHandlersType } from '../hooks/useNoteState';
 
-export const handleTitleChange = (setTitle: React.Dispatch<React.SetStateAction<string>>, event: React.ChangeEvent<HTMLInputElement>) => {
+export const handleTitleChange = (
+  setTitle: React.Dispatch<React.SetStateAction<string>>,
+  event: React.ChangeEvent<HTMLInputElement>,
+) => {
   setTitle(event.target.value);
 };
 
@@ -12,19 +15,25 @@ export const handleLocationChange = (
   setLongitude: React.Dispatch<React.SetStateAction<string>>,
   setLatitude: React.Dispatch<React.SetStateAction<string>>,
   newLongitude: number,
-  newLatitude: number
+  newLatitude: number,
 ) => {
   setLatitude(newLatitude.toString());
   setLongitude(newLongitude.toString());
 };
 
-export const handleTimeChange = (setTime: React.Dispatch<React.SetStateAction<Date>>, newDate: Date) => {
+export const handleTimeChange = (
+  setTime: React.Dispatch<React.SetStateAction<Date>>,
+  newDate: Date,
+) => {
   setTime(newDate);
 };
 
-export const handlePublishChange = async (noteState: NoteStateType, noteHandlers: NoteHandlersType) => {
+export const handlePublishChange = async (
+  noteState: NoteStateType,
+  noteHandlers: NoteHandlersType,
+) => {
   if (!noteState.note) {
-    console.error("No note found.");
+    console.error('No note found.');
     return;
   }
 
@@ -38,7 +47,7 @@ export const handlePublishChange = async (noteState: NoteStateType, noteHandlers
     latitude: noteState.latitude,
     tags: noteState.tags,
     audio: noteState.audio,
-    id: noteState.note?.id || "",
+    id: noteState.note?.id || '',
     published: !noteState.isPublished,
   };
 
@@ -47,49 +56,56 @@ export const handlePublishChange = async (noteState: NoteStateType, noteHandlers
     noteHandlers.setIsPublished(updatedNote.published);
     noteHandlers.setNote(updatedNote);
 
-    toast(updatedNote.published ? "Note Published" : "Note Unpublished", {
-      description: updatedNote.published ? "Your note has been published successfully." : "Your note has been unpublished successfully.",
+    toast(updatedNote.published ? 'Note Published' : 'Note Unpublished', {
+      description:
+        updatedNote.published ?
+          'Your note has been published successfully.'
+        : 'Your note has been unpublished successfully.',
       duration: 4000,
     });
 
-    noteHandlers.setCounter((prevCounter) => prevCounter + 1);
+    noteHandlers.setCounter(prevCounter => prevCounter + 1);
   } catch (error) {
-    console.error("Error updating publish state:", error);
-    toast("Error", {
-      description: "Failed to update publish state. Try again later.",
+    console.error('Error updating publish state:', error);
+    toast('Error', {
+      description: 'Failed to update publish state. Try again later.',
       duration: 4000,
     });
   }
 };
 
-export const handleTagsChange = (setTags: React.Dispatch<React.SetStateAction<Tag[]>>, newTags: (Tag | string)[]) => {
-  const formattedTags = newTags.map((tag) =>
-    typeof tag === "string"
-      ? { label: tag, origin: "user" as const }
-      : tag
+export const handleTagsChange = (
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
+  newTags: (Tag | string)[],
+) => {
+  const formattedTags = newTags.map(tag =>
+    typeof tag === 'string' ? { label: tag, origin: 'user' as const } : tag,
   );
   setTags(formattedTags);
 };
 
-export const handleEditorChange = (setEditorContent: React.Dispatch<React.SetStateAction<string>>, content: string) => {
+export const handleEditorChange = (
+  setEditorContent: React.Dispatch<React.SetStateAction<string>>,
+  content: string,
+) => {
   setEditorContent(content);
 };
 
 export const handleDeleteNote = async (
   note: Note | undefined,
-  setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
+  setNote: React.Dispatch<React.SetStateAction<Note | undefined>>,
 ) => {
   if (!note) {
-    toast("Error", {
-      description: "No note selected to archive.",
+    toast('Error', {
+      description: 'No note selected to archive.',
       duration: 4000,
     });
     return false;
   }
 
-  if (!note.id || note.id === "") {
-    console.log("Note ID is missing or empty:", note);
-    toast("Error", {
+  if (!note.id || note.id === '') {
+    console.log('Note ID is missing or empty:', note);
+    toast('Error', {
       description: "This note hasn't been saved yet. Please wait a moment and try again.",
       duration: 4000,
     });
@@ -107,23 +123,23 @@ export const handleDeleteNote = async (
     const response = await ApiService.overwriteNote(updatedNote);
 
     if (response.ok) {
-      toast("Success", {
-        description: "Note successfully archived.",
+      toast('Success', {
+        description: 'Note successfully archived.',
         duration: 4000,
       });
       setNote(undefined);
       return true;
     } else {
       const errorText = await response.text();
-      console.error("Archive API error:", response.status, errorText);
+      console.error('Archive API error:', response.status, errorText);
       throw new Error(`Archiving failed: ${response.status}`);
     }
   } catch (error) {
-    toast("Error", {
-      description: "Failed to archive note. Please try again.",
+    toast('Error', {
+      description: 'Failed to archive note. Please try again.',
       duration: 4000,
     });
-    console.error("Error archiving note:", error);
+    console.error('Error archiving note:', error);
     return false;
   }
 };

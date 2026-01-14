@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 interface UseMapIntroProps {
   searchBarRef: React.RefObject<HTMLDivElement | null>;
@@ -15,7 +15,7 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
 
     // Reset on mount to allow intro to run if conditions are met
     introStartedRef.current = false;
@@ -24,15 +24,15 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
       // Prevent multiple initializations
       if (introStartedRef.current) return;
 
-      const navbarCreateNoteButton = document.getElementById("navbar-create-note");
-      const navbarLogoutButton = document.getElementById("navbar-logout");
+      const navbarCreateNoteButton = document.getElementById('navbar-create-note');
+      const navbarLogoutButton = document.getElementById('navbar-logout');
 
       if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
         // Check if the intro has been shown before (from cookies)
         const introShown = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("introShown="))
-          ?.split("=")[1];
+          .split('; ')
+          .find(row => row.startsWith('introShown='))
+          ?.split('=')[1];
 
         // If intro was already shown, just disconnect and return
         if (introShown) {
@@ -45,7 +45,7 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
         observer.disconnect();
 
         // Dynamically import intro.js only on client side
-        const introJs = (await import("intro.js")).default;
+        const introJs = (await import('intro.js')).default;
         const intro = introJs.tour();
 
         intro.setOptions({
@@ -56,7 +56,8 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
             },
             {
               element: searchBarRef.current,
-              intro: "First, here's the search bar. You can use it to help you find locations on the map.",
+              intro:
+                "First, here's the search bar. You can use it to help you find locations on the map.",
             },
             {
               element: notesListRef.current,
@@ -64,19 +65,19 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
             },
             {
               element: navbarCreateNoteButton,
-              intro: "Click here to create your own note!",
+              intro: 'Click here to create your own note!',
             },
             {
               element: navbarLogoutButton,
-              intro: "Done for the day? Make sure to logout!",
+              intro: 'Done for the day? Make sure to logout!',
             },
           ],
           scrollToElement: true,
-          skipLabel: "Skip",
+          skipLabel: 'Skip',
         });
 
         const setIntroShownCookie = () => {
-          document.cookie = "introShown=true; path=/; max-age=31536000"; // 1 year expiry
+          document.cookie = 'introShown=true; path=/; max-age=31536000'; // 1 year expiry
         };
 
         intro.oncomplete(setIntroShownCookie);

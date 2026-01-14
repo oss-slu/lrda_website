@@ -49,21 +49,21 @@ export interface AuthOnlyUser {
  * @returns Promise<boolean> - Success status
  */
 export async function submitInstructorApplication(
-  uid: string, 
+  uid: string,
   description: string,
-  userData?: AuthOnlyUser
+  userData?: AuthOnlyUser,
 ): Promise<boolean> {
   if (!db) {
-    throw new Error("Firebase db is not initialized");
+    throw new Error('Firebase db is not initialized');
   }
   try {
     // Get current user data
     const userDoc = await getDoc(doc(db, 'users', uid));
-    
+
     if (userDoc.exists()) {
       // Existing user - update with instructor application
       const adminData = userDoc.data() as AdminUser;
-      
+
       // Verify user is an admin
       if (!adminData.roles?.administrator) {
         throw new Error('User must be an administrator to apply for instructor');
@@ -76,8 +76,8 @@ export async function submitInstructorApplication(
 
       // Update the user document to mark as pending instructor application
       await updateDoc(doc(db, 'users', uid), {
-        isInstructor: false,  // Initially false, will become true upon approval
-        pendingInstructorDescription: description  // Store description temporarily
+        isInstructor: false, // Initially false, will become true upon approval
+        pendingInstructorDescription: description, // Store description temporarily
       });
     } else {
       // New user with only authentication - create document with instructor application
@@ -92,14 +92,14 @@ export async function submitInstructorApplication(
         name: userData.name,
         createdAt: Timestamp.now(),
         roles: {
-          administrator: true,  // Assume they have admin privileges if they can access this
-          contributor: true
+          administrator: true, // Assume they have admin privileges if they can access this
+          contributor: true,
         },
-        isInstructor: false,  // Initially false, will become true upon approval
-        pendingInstructorDescription: description  // Store description temporarily
+        isInstructor: false, // Initially false, will become true upon approval
+        pendingInstructorDescription: description, // Store description temporarily
       });
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error submitting instructor application:', error);
@@ -119,43 +119,43 @@ export async function canApplyForInstructor(uid: string): Promise<{
   isNewUser?: boolean;
 }> {
   if (!db) {
-    throw new Error("Firebase db is not initialized");
+    throw new Error('Firebase db is not initialized');
   }
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
-    
+
     if (!userDoc.exists()) {
       // User exists in Firebase Auth but not in Firestore
       // They can apply if they have authentication
-      return { 
-        canApply: true, 
+      return {
+        canApply: true,
         reason: 'User has authentication but no profile data',
         currentData: null,
-        isNewUser: true
+        isNewUser: true,
       };
     }
 
     const userData = userDoc.data() as AdminUser;
-    
+
     // Check if already an instructor
     if (userData.isInstructor === true) {
       return { canApply: false, reason: 'User is already an instructor' };
     }
-    
+
     // Check if there's already a pending application
     if (userData.pendingInstructorDescription) {
       return { canApply: false, reason: 'You already have a pending application' };
     }
-    
+
     // Check if user is an admin
     if (!userData.roles?.administrator) {
       return { canApply: false, reason: 'Only administrators can apply to become instructors' };
     }
 
-    return { 
-      canApply: true, 
+    return {
+      canApply: true,
       currentData: userData,
-      isNewUser: false
+      isNewUser: false,
     };
   } catch (error) {
     console.error('Error checking instructor eligibility:', error);
@@ -169,21 +169,9 @@ export async function canApplyForInstructor(uid: string): Promise<{
  */
 export function getInstructorFieldRequirements() {
   return {
-    requiredFields: [
-      'description',
-      'isInstructor',
-      'students'
-    ],
-    optionalFields: [
-      'parentInstructorId'
-    ],
-    preservedFields: [
-      'createdAt',
-      'email', 
-      'name',
-      'uid',
-      'roles'
-    ]
+    requiredFields: ['description', 'isInstructor', 'students'],
+    optionalFields: ['parentInstructorId'],
+    preservedFields: ['createdAt', 'email', 'name', 'uid', 'roles'],
   };
 }
 
@@ -197,10 +185,10 @@ export function getInstructorFieldRequirements() {
 export async function approveInstructorApplication(
   userUid: string,
   adminUid: string,
-  adminName: string
+  adminName: string,
 ): Promise<boolean> {
   if (!db) {
-    throw new Error("Firebase db is not initialized");
+    throw new Error('Firebase db is not initialized');
   }
   try {
     // Get the user data
@@ -208,30 +196,30 @@ export async function approveInstructorApplication(
     if (!userDoc.exists()) {
       throw new Error('User not found');
     }
-    
+
     const userData = userDoc.data();
-    
+
     if (userData.isInstructor === true) {
       throw new Error('User is already an instructor');
     }
-    
+
     if (!userData.pendingInstructorDescription) {
       throw new Error('No pending instructor application found');
     }
-    
+
     // Transform the user to instructor structure (exactly as you specified)
     await updateDoc(doc(db, 'users', userUid), {
       // Set instructor fields
       isInstructor: true,
       description: userData.pendingInstructorDescription,
-      students: []
+      students: [],
     });
-    
+
     // Remove the temporary pending field
     await updateDoc(doc(db, 'users', userUid), {
-      pendingInstructorDescription: null
+      pendingInstructorDescription: null,
     });
-    
+
     return true;
   } catch (error) {
     console.error('Error approving instructor application:', error);
@@ -249,10 +237,10 @@ export async function approveInstructorApplication(
 export async function rejectInstructorApplication(
   userUid: string,
   adminUid: string,
-  reason: string
+  reason: string,
 ): Promise<boolean> {
   if (!db) {
-    throw new Error("Firebase db is not initialized");
+    throw new Error('Firebase db is not initialized');
   }
   try {
     // Get the user data
@@ -260,12 +248,12 @@ export async function rejectInstructorApplication(
     if (!userDoc.exists()) {
       throw new Error('User not found');
     }
-    
+
     // Just remove the pending description and keep isInstructor: false
     await updateDoc(doc(db, 'users', userUid), {
-      pendingInstructorDescription: null
+      pendingInstructorDescription: null,
     });
-    
+
     return true;
   } catch (error) {
     console.error('Error rejecting instructor application:', error);

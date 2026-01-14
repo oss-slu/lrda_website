@@ -15,4 +15,3 @@ const introJs = jest.fn(() => ({
 
 module.exports = introJs;
 module.exports.default = introJs;
-

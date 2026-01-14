@@ -1,5 +1,5 @@
-import { useState, useEffect, RefObject } from "react";
-import type { RichTextEditorRef } from "mui-tiptap";
+import { useState, useEffect, RefObject } from 'react';
+import type { RichTextEditorRef } from 'mui-tiptap';
 
 interface CommentBubblePosition {
   top: number;
@@ -26,7 +26,9 @@ export const useCommentBubble = ({
   isStudentViewingOwnNote,
 }: UseCommentBubbleOptions): UseCommentBubbleResult => {
   const [showCommentBubble, setShowCommentBubble] = useState<boolean>(false);
-  const [commentBubblePosition, setCommentBubblePosition] = useState<CommentBubblePosition | null>(null);
+  const [commentBubblePosition, setCommentBubblePosition] = useState<CommentBubblePosition | null>(
+    null,
+  );
 
   useEffect(() => {
     const editor = rteRef.current?.editor;
@@ -46,7 +48,9 @@ export const useCommentBubble = ({
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
-            const editorContainer = editor.view.dom.closest(".ProseMirror")?.getBoundingClientRect();
+            const editorContainer = editor.view.dom
+              .closest('.ProseMirror')
+              ?.getBoundingClientRect();
 
             if (editorContainer && rect.width > 0 && rect.height > 0) {
               const top = rect.top - editorContainer.top - 45;
@@ -57,7 +61,7 @@ export const useCommentBubble = ({
             }
           }
         } catch (error) {
-          console.error("Error calculating comment bubble position:", error);
+          console.error('Error calculating comment bubble position:', error);
           setShowCommentBubble(false);
         }
       } else {
@@ -75,7 +79,7 @@ export const useCommentBubble = ({
       }
     };
 
-    editor.on("selectionUpdate", handleSelectionUpdate);
+    editor.on('selectionUpdate', handleSelectionUpdate);
 
     const handleMouseUp = () => {
       setTimeout(updateBubblePosition, 10);
@@ -83,24 +87,24 @@ export const useCommentBubble = ({
 
     const editorElement = editor.view.dom;
     const scrollContainer =
-      editorElement.closest("[data-radix-scroll-area-viewport]") ||
-      editorElement.closest(".overflow-auto") ||
-      editorElement.closest(".ScrollArea") ||
+      editorElement.closest('[data-radix-scroll-area-viewport]') ||
+      editorElement.closest('.overflow-auto') ||
+      editorElement.closest('.ScrollArea') ||
       editorElement.parentElement;
 
-    editorElement.addEventListener("mouseup", handleMouseUp);
-    editorElement.addEventListener("keyup", handleSelectionUpdate);
+    editorElement.addEventListener('mouseup', handleMouseUp);
+    editorElement.addEventListener('keyup', handleSelectionUpdate);
 
     if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     }
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate);
-      editorElement.removeEventListener("mouseup", handleMouseUp);
-      editorElement.removeEventListener("keyup", handleSelectionUpdate);
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editorElement.removeEventListener('mouseup', handleMouseUp);
+      editorElement.removeEventListener('keyup', handleSelectionUpdate);
       if (scrollContainer) {
-        scrollContainer.removeEventListener("scroll", handleScroll);
+        scrollContainer.removeEventListener('scroll', handleScroll);
       }
     };
   }, [rteRef, canComment, isViewingStudentNote, isStudentViewingOwnNote, showCommentBubble]);

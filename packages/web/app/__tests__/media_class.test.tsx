@@ -11,31 +11,31 @@ describe('Media Classes', () => {
   });
 
   describe('AudioType', () => {
-    it('simulates data for an audio', (done) => {
+    it('simulates data for an audio', done => {
       const testData = {
         uuid: 'sample-uuid',
         uri: 'http://fake-url.com/audio.mp3',
         duration: '3:30',
         name: 'Sample Audio',
-        isPlaying: false
+        isPlaying: false,
       };
       const audioInstance = new AudioType(testData);
-      
+
       moxios.stubRequest(`/fake-api/audio/${testData.uuid}`, {
         status: 200,
-        response: testData
+        response: testData,
       });
 
       // Here's a fake fetch method, simulate the behavior
       const fakeFetch = () => {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           setTimeout(() => {
             resolve(testData);
           }, 1000);
         });
       };
 
-      fakeFetch().then((response) => {
+      fakeFetch().then(response => {
         expect(response).toEqual(testData);
         done();
       });
@@ -43,7 +43,7 @@ describe('Media Classes', () => {
   });
 
   describe('VideoType', () => {
-    it('simulates data for a video', (done) => {
+    it('simulates data for a video', done => {
       const testData = {
         uuid: 'sample-uuid',
         uri: 'http://fake-url.com/video.mp4',
@@ -51,21 +51,21 @@ describe('Media Classes', () => {
         duration: '10:30',
       };
       const videoInstance = new VideoType(testData);
-      
+
       moxios.stubRequest(`/fake-api/video/${testData.uuid}`, {
         status: 200,
-        response: testData
+        response: testData,
       });
 
       const fakeFetch = () => {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           setTimeout(() => {
             resolve(testData);
           }, 1000);
         });
       };
 
-      fakeFetch().then((response) => {
+      fakeFetch().then(response => {
         expect(response).toEqual(testData);
         done();
       });
@@ -73,27 +73,27 @@ describe('Media Classes', () => {
   });
 
   describe('PhotoType', () => {
-    it('simulates data for a photo', (done) => {
+    it('simulates data for a photo', done => {
       const testData = {
         uuid: 'sample-uuid',
         uri: 'http://fake-url.com/photo.jpg',
       };
       const photoInstance = new PhotoType(testData);
-      
+
       moxios.stubRequest(`/fake-api/photo/${testData.uuid}`, {
         status: 200,
-        response: testData
+        response: testData,
       });
 
       const fakeFetch = () => {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           setTimeout(() => {
             resolve(testData);
           }, 1000);
         });
       };
 
-      fakeFetch().then((response) => {
+      fakeFetch().then(response => {
         expect(response).toEqual(testData);
         done();
       });

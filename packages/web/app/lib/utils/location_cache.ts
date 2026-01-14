@@ -24,11 +24,11 @@ const getCacheKey = (lat: number, lng: number): string => {
 export const getCachedLocation = async (
   lat: number,
   lng: number,
-  apiKey: string
+  apiKey: string,
 ): Promise<string> => {
   // Validate coordinates
   if (isNaN(lat) || isNaN(lng)) {
-    return "";
+    return '';
   }
 
   // Check cache first
@@ -43,7 +43,7 @@ export const getCachedLocation = async (
   // Not in cache, fetch from API
   try {
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`,
     );
 
     const data = await response.json();
@@ -56,14 +56,14 @@ export const getCachedLocation = async (
       return loc;
     } else {
       // Cache "Location not found" to avoid repeated API calls for invalid coordinates
-      const notFound = "Location not found";
+      const notFound = 'Location not found';
       locationCache.set(cacheKey, notFound);
       return notFound;
     }
   } catch (error) {
     // Silently handle errors - location not found is expected for some coordinates
     // Cache "Location not found" to avoid repeated failed API calls
-    const notFound = "Location not found";
+    const notFound = 'Location not found';
     locationCache.set(cacheKey, notFound);
     return notFound;
   }
@@ -82,4 +82,3 @@ export const clearLocationCache = (): void => {
 export const getCacheSize = (): number => {
   return locationCache.size;
 };
-

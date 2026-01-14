@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { Note } from "@/app/types";
+import { create } from 'zustand';
+import { Note } from '@/app/types';
 
 interface Location {
   lat: number;
@@ -43,7 +43,11 @@ interface MapState {
 
   // Compound actions
   resetMapState: () => void;
-  updateMapViewport: (center: Location, zoom: number, bounds?: google.maps.LatLngBounds | null) => void;
+  updateMapViewport: (
+    center: Location,
+    zoom: number,
+    bounds?: google.maps.LatLngBounds | null,
+  ) => void;
 }
 
 const DEFAULT_CENTER: Location = { lat: 38.005984, lng: -24.334449 };
@@ -64,19 +68,19 @@ export const useMapStore = create<MapState>()((set, get) => ({
   isGlobalView: true,
 
   // Simple setters
-  setMapCenter: (center) => set({ mapCenter: center }),
-  setMapZoom: (zoom) => set({ mapZoom: zoom }),
-  setMapBounds: (bounds) => set({ mapBounds: bounds }),
-  setLocationFound: (found) => set({ locationFound: found }),
-  setIsPanelOpen: (open) => set({ isPanelOpen: open }),
-  togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
-  setIsLoading: (loading) => set({ isLoading: loading }),
-  setActiveNote: (note) => set({ activeNote: note }),
-  setHoveredNoteId: (id) => set({ hoveredNoteId: id }),
-  setModalNote: (note) => set({ modalNote: note }),
-  setIsNoteSelectedFromSearch: (selected) => set({ isNoteSelectedFromSearch: selected }),
-  setIsGlobalView: (global) => set({ isGlobalView: global }),
-  toggleGlobalView: () => set((state) => ({ isGlobalView: !state.isGlobalView })),
+  setMapCenter: center => set({ mapCenter: center }),
+  setMapZoom: zoom => set({ mapZoom: zoom }),
+  setMapBounds: bounds => set({ mapBounds: bounds }),
+  setLocationFound: found => set({ locationFound: found }),
+  setIsPanelOpen: open => set({ isPanelOpen: open }),
+  togglePanel: () => set(state => ({ isPanelOpen: !state.isPanelOpen })),
+  setIsLoading: loading => set({ isLoading: loading }),
+  setActiveNote: note => set({ activeNote: note }),
+  setHoveredNoteId: id => set({ hoveredNoteId: id }),
+  setModalNote: note => set({ modalNote: note }),
+  setIsNoteSelectedFromSearch: selected => set({ isNoteSelectedFromSearch: selected }),
+  setIsGlobalView: global => set({ isGlobalView: global }),
+  toggleGlobalView: () => set(state => ({ isGlobalView: !state.isGlobalView })),
 
   // Compound actions
   resetMapState: () =>

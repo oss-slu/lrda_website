@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export const NOTES_PAGE_SIZE = 16;
 
@@ -16,7 +16,10 @@ type UseInfiniteNotesReturn<T> = {
   reset: () => void;
 };
 
-export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseInfiniteNotesOptions<T>): UseInfiniteNotesReturn<T> {
+export function useInfiniteNotes<T>({
+  items,
+  pageSize = NOTES_PAGE_SIZE,
+}: UseInfiniteNotesOptions<T>): UseInfiniteNotesReturn<T> {
   const [visibleCount, setVisibleCount] = useState<number>(pageSize);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -39,7 +42,7 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
       setVisibleCount(pageSize);
     } else if (currentLength > prevLength && prevLength > 0) {
       // Items were appended, don't reset but ensure visibleCount doesn't exceed items.length
-      setVisibleCount((prev) => Math.min(prev, items.length));
+      setVisibleCount(prev => Math.min(prev, items.length));
     } else if (prevLength === 0 && currentLength > 0) {
       // Initial load
       setVisibleCount(pageSize);
@@ -54,7 +57,7 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
     // Simulate async fetch; in this app we slice from in-memory filtered items
     // Keep a micro-delay to allow spinner to render without causing layout shift
     setTimeout(() => {
-      setVisibleCount((prev) => Math.min(prev + pageSize, items.length));
+      setVisibleCount(prev => Math.min(prev + pageSize, items.length));
       setIsLoading(false);
     }, 75);
   }, [isLoading, hasMore, pageSize, items.length]);
@@ -69,18 +72,18 @@ export function useInfiniteNotes<T>({ items, pageSize = NOTES_PAGE_SIZE }: UseIn
       if (!node) return;
 
       observerRef.current = new IntersectionObserver(
-        (entries) => {
+        entries => {
           const entry = entries[0];
           if (entry && entry.isIntersecting) {
             loadNext();
           }
         },
-        { root: null, rootMargin: "200px 0px", threshold: 0 }
+        { root: null, rootMargin: '200px 0px', threshold: 0 },
       );
 
       observerRef.current.observe(node);
     },
-    [loadNext]
+    [loadNext],
   );
 
   // Clean up observer on unmount

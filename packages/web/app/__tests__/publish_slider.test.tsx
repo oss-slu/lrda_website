@@ -74,7 +74,7 @@ describe('Publish and Unpublish Notes Slider', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
     const publishedTab = screen.getByText('Published');
     const unpublishedTab = screen.getByText('Unpublished');
-    
+
     fireEvent.click(unpublishedTab);
     expect(unpublishedTab).toHaveFocus; // Unpublished tab should be enabled
     expect(publishedTab).not.toHaveFocus; // Published tab should be disabled
@@ -88,7 +88,7 @@ describe('Publish and Unpublish Notes Slider', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
     const publishedTab = screen.getByText('Published');
     const unpublishedTab = screen.getByText('Unpublished');
-    
+
     fireEvent.click(unpublishedTab);
     expect(unpublishedTab).toHaveFocus; // Unpublished tab should be enabled
     expect(publishedTab).not.toHaveFocus; // Published tab should be disabled
@@ -124,19 +124,19 @@ describe('Publish and Unpublish Notes Slider', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
     const publishedTab = screen.getByText('Published');
     const unpublishedTab = screen.getByText('Unpublished');
-  
+
     // Click the switch an odd number of times
     fireEvent.click(unpublishedTab); // unchecked
     fireEvent.click(publishedTab); // checked
     fireEvent.click(unpublishedTab); // unchecked
     fireEvent.click(publishedTab); // checked
     fireEvent.click(unpublishedTab); // unchecked
-  
+
     // Assert that the final state matches expectations (odd clicks = unchecked, even clicks = checked)
     expect(publishedTab).toHaveFocus; // Published tab should be enabled
     expect(unpublishedTab).not.toHaveFocus; // Unpublished tab should be disabled
   });
-  
+
   it('ensures the slider does not affect other UI components', () => {
     render(<Sidebar onNoteSelect={jest.fn()} />);
     const addButton = screen.getByTestId('add-note-button');

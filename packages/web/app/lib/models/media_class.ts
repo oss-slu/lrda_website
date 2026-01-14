@@ -1,4 +1,4 @@
-import { MediaData } from "../../types";
+import { MediaData } from '../../types';
 
 /**
  * Represents a media item.
@@ -80,7 +80,7 @@ export class AudioType extends Media {
     name,
     isPlaying,
   }: MediaData & { duration: string; name: string; isPlaying: boolean }) {
-    super({ uuid, type: "audio", uri });
+    super({ uuid, type: 'audio', uri });
     this.duration = duration;
     this.name = name;
     this.isPlaying = isPlaying || false;
@@ -126,7 +126,7 @@ export class VideoType extends Media {
     thumbnail,
     duration,
   }: MediaData & { thumbnail: string; duration: string }) {
-    super({ uuid, type: "video", uri });
+    super({ uuid, type: 'video', uri });
     this.thumbnail = thumbnail;
     this.duration = duration;
   }
@@ -157,6 +157,6 @@ export class PhotoType extends Media {
    * @param {MediaData} data - The data object containing the UUID and URI of the photo.
    */
   constructor({ uuid, uri }: MediaData) {
-    super({ uuid, type: "image", uri });
+    super({ uuid, type: 'image', uri });
   }
 }

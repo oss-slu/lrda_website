@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: "Core coding standards, architecture patterns, and conventions for LRDA Website monorepo"
+description: 'Core coding standards, architecture patterns, and conventions for LRDA Website monorepo'
 ---
 
 # LRDA Website - Core Rules

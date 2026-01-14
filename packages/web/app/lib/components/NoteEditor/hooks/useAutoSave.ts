@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, MutableRefObject, useCallback } from "react";
-import { toast } from "sonner";
-import ApiService from "@/app/lib/utils/api_service";
-import { useNotesStore } from "@/app/lib/stores/notesStore";
-import { Note } from "@/app/types";
-import type { NoteStateType, NoteHandlersType } from "./useNoteState";
+import { useState, useEffect, useRef, MutableRefObject, useCallback } from 'react';
+import { toast } from 'sonner';
+import ApiService from '@/app/lib/utils/api_service';
+import { useNotesStore } from '@/app/lib/stores/notesStore';
+import { Note } from '@/app/types';
+import type { NoteStateType, NoteHandlersType } from './useNoteState';
 
 interface LastSavedSnapshot {
   title: string;
@@ -53,9 +53,9 @@ export const useAutoSave = ({
   }, [isNewNote]);
 
   // Get stable references to store actions
-  const updateNote = useNotesStore((state) => state.updateNote);
-  const addNote = useNotesStore((state) => state.addNote);
-  const clearDraftNote = useNotesStore((state) => state.clearDraftNote);
+  const updateNote = useNotesStore(state => state.updateNote);
+  const addNote = useNotesStore(state => state.addNote);
+  const clearDraftNote = useNotesStore(state => state.clearDraftNote);
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
@@ -86,8 +86,8 @@ export const useAutoSave = ({
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    const titleTrim = (title || "").trim();
-    const textTrim = (editorContent || "").trim();
+    const titleTrim = (title || '').trim();
+    const textTrim = (editorContent || '').trim();
     const hasContent =
       titleTrim.length > 0 ||
       textTrim.length > 0 ||
@@ -103,7 +103,7 @@ export const useAutoSave = ({
         setIsSaving(true);
         try {
           const newNoteData: any = {
-            title: title || "Untitled",
+            title: title || 'Untitled',
             text: editorContent,
             time: time,
             media: [...images, ...videos],
@@ -118,11 +118,11 @@ export const useAutoSave = ({
           };
 
           const response = await ApiService.writeNewNote(newNoteData);
-          if (!response.ok) throw new Error("Failed to create note");
+          if (!response.ok) throw new Error('Failed to create note');
 
           const data = await response.json();
-          const newNoteId = data["@id"] || data.id;
-          if (!newNoteId) throw new Error("No ID returned");
+          const newNoteId = data['@id'] || data.id;
+          if (!newNoteId) throw new Error('No ID returned');
 
           const savedNote = {
             ...newNoteData,
@@ -144,10 +144,10 @@ export const useAutoSave = ({
             longitude: longitude,
           };
 
-          toast("Note Created", { description: "Your note has been saved.", duration: 2000 });
+          toast('Note Created', { description: 'Your note has been saved.', duration: 2000 });
         } catch (error) {
-          console.error("Error creating note:", error);
-          toast("Error", { description: "Failed to create note.", duration: 4000 });
+          console.error('Error creating note:', error);
+          toast('Error', { description: 'Failed to create note.', duration: 4000 });
         } finally {
           isSavingRef.current = false;
           setIsSaving(false);
@@ -187,7 +187,7 @@ export const useAutoSave = ({
       const updatedNote: any = {
         ...note,
         text: editorContent,
-        title: title || "Untitled",
+        title: title || 'Untitled',
         media: [...images, ...videos],
         published: isPublished,
         approvalRequested: approvalRequested || false,
@@ -201,7 +201,7 @@ export const useAutoSave = ({
       };
 
       try {
-        console.log("Auto-saving note...", updatedNote);
+        console.log('Auto-saving note...', updatedNote);
         await ApiService.overwriteNote(updatedNote);
 
         updateNote(noteId, {
@@ -220,7 +220,7 @@ export const useAutoSave = ({
           longitude: longitude,
         };
       } catch (error) {
-        console.error("Auto-save error:", error);
+        console.error('Auto-save error:', error);
       } finally {
         isSavingRef.current = false;
         setIsSaving(false);

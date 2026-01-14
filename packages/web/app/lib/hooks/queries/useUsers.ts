@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import ApiService from "../../utils/api_service";
-import { UserData } from "@/app/types";
+import { useQuery } from '@tanstack/react-query';
+import ApiService from '../../utils/api_service';
+import { UserData } from '@/app/types';
 
 // Query key factory for users
 export const userKeys = {
-  all: ["users"] as const,
+  all: ['users'] as const,
   detail: (id: string) => [...userKeys.all, id] as const,
 };
 
@@ -13,7 +13,7 @@ export const userKeys = {
  */
 export function useUserData(userId: string | null) {
   return useQuery({
-    queryKey: userKeys.detail(userId ?? ""),
+    queryKey: userKeys.detail(userId ?? ''),
     queryFn: async (): Promise<UserData | null> => {
       if (!userId) return null;
       return await ApiService.fetchUserData(userId);
@@ -29,9 +29,9 @@ export function useUserData(userId: string | null) {
  */
 export function useCreatorName(creatorId: string | null) {
   return useQuery({
-    queryKey: [...userKeys.detail(creatorId ?? ""), "name"],
+    queryKey: [...userKeys.detail(creatorId ?? ''), 'name'],
     queryFn: async (): Promise<string> => {
-      if (!creatorId) return "Unknown";
+      if (!creatorId) return 'Unknown';
       return await ApiService.fetchCreatorName(creatorId);
     },
     enabled: !!creatorId,

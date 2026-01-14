@@ -1,21 +1,21 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { createMemoryHistory } from "history"; // Allows us to mock the browser's history object
-import { MemoryRouter, Route, Routes } from "react-router-dom"; // Allows us to test components that use React Router
-import MapPage from "../map/page"; // Import the MapPage component
-import NotePage from "../notes/page";
-import introJs from "intro.js"; // Mock intro.js
-import { createTestWrapper } from "./utils/testQueryClient";
-jest.mock("firebase/auth"); // Mock Firebase Auth
-jest.mock("firebase/database", () => ({
+import { render, screen, waitFor } from '@testing-library/react';
+import { createMemoryHistory } from 'history'; // Allows us to mock the browser's history object
+import { MemoryRouter, Route, Routes } from 'react-router-dom'; // Allows us to test components that use React Router
+import MapPage from '../map/page'; // Import the MapPage component
+import NotePage from '../notes/page';
+import introJs from 'intro.js'; // Mock intro.js
+import { createTestWrapper } from './utils/testQueryClient';
+jest.mock('firebase/auth'); // Mock Firebase Auth
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
-jest.mock("../lib/utils/api_service");
-jest.mock("intro.js"); // Mock intro.js to control its behavior
+jest.mock('../lib/utils/api_service');
+jest.mock('intro.js'); // Mock intro.js to control its behavior
 
 const TestQueryWrapper = createTestWrapper();
 
-describe("MapPage Tour", () => {
-  it("does not start the tour or complete it", async () => {
+describe('MapPage Tour', () => {
+  it('does not start the tour or complete it', async () => {
     const history = createMemoryHistory(); // Create a mock history object for testing
     history.push = jest.fn(); // Mock the push method of the history object (this is used to simulate navigation)
     // Mock the introJs instance to simulate its behavior
@@ -28,13 +28,13 @@ describe("MapPage Tour", () => {
     // Render the MapPage component wrapped in Router to provide history
     render(
       <TestQueryWrapper>
-        <MemoryRouter initialEntries={["/map"]}>
+        <MemoryRouter initialEntries={['/map']}>
           <Routes>
-            <Route path="/map" element={<MapPage />} /> {/* Map page route */}
-            <Route path="/notes/page" element={<NotePage />} /> {/* Notes page route */}
+            <Route path='/map' element={<MapPage />} /> {/* Map page route */}
+            <Route path='/notes/page' element={<NotePage />} /> {/* Notes page route */}
           </Routes>
         </MemoryRouter>
-      </TestQueryWrapper>
+      </TestQueryWrapper>,
     );
     // Wait for any potential changes or effects
     await waitFor(() => {
@@ -42,6 +42,6 @@ describe("MapPage Tour", () => {
       expect(mockIntroJsInstance.oncomplete).not.toHaveBeenCalled(); // Ensure the oncomplete callback was not invoked
     });
     // Ensure the user is not redirected to the next page
-    expect(history.push).not.toHaveBeenCalledWith("/next-page"); // Check if navigation did not happen
+    expect(history.push).not.toHaveBeenCalledWith('/next-page'); // Check if navigation did not happen
   });
 });

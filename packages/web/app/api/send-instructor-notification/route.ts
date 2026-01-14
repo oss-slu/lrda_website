@@ -6,10 +6,7 @@ export async function POST(request: NextRequest) {
     const { email, name, description } = body;
 
     if (!email || !name || !description) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Email notification to yashkamal.bhatia@slu.edu
@@ -40,39 +37,39 @@ export async function POST(request: NextRequest) {
 
     // Option 1: Use Resend (recommended - easy setup at resend.com)
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    
+
     // Debug logging for environment variables
     console.log('🔍 Environment check:');
     console.log('  RESEND_API_KEY:', RESEND_API_KEY ? '✅ Set' : '❌ Missing');
     console.log('  RESEND_FROM_EMAIL:', process.env.RESEND_FROM_EMAIL || 'Not set');
     console.log('  SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set' : '❌ Missing');
-    
+
     if (RESEND_API_KEY) {
       try {
         // Resend email configuration:
         // Option 1: Use Resend's test email (no verification needed) - onboarding@resend.dev
         // Option 2: Use your verified domain - <anything>@<your-domain-id>.resend.app
         // Option 3: Use a custom verified domain
-        // 
+        //
         // To verify a domain:
         // 1. Go to Resend Dashboard → Domains
         // 2. Add and verify your domain
         // 3. Use format: noreply@your-verified-domain.com
-        // 
+        //
         // Set RESEND_FROM_EMAIL in .env.local to override this
         // For testing: RESEND_FROM_EMAIL=onboarding@resend.dev
         // For production: RESEND_FROM_EMAIL=noreply@your-verified-domain.com
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        
+
         console.log('📧 Attempting to send email via Resend...');
         console.log('From:', fromEmail);
         console.log('To:', notificationEmail.to);
-        
+
         const resendResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
             from: fromEmail,
@@ -81,9 +78,9 @@ export async function POST(request: NextRequest) {
             html: notificationEmail.html,
           }),
         });
-        
+
         const responseData = await resendResponse.json();
-        
+
         if (resendResponse.ok) {
           emailSent = true;
           console.log('✅ Email sent successfully via Resend');
@@ -92,10 +89,18 @@ export async function POST(request: NextRequest) {
           errorMessage = responseData.message || JSON.stringify(responseData);
           console.error('❌ Resend API error:', responseData);
           // Log helpful error message
-          if (responseData.message?.includes('domain') || responseData.message?.includes('from') || responseData.message?.includes('verified')) {
+          if (
+            responseData.message?.includes('domain') ||
+            responseData.message?.includes('from') ||
+            responseData.message?.includes('verified')
+          ) {
             console.error('💡 Tip: Domain verification issue detected.');
-            console.error('   Option 1 (Testing): Use onboarding@resend.dev (no verification needed)');
-            console.error('   Option 2 (Production): Verify your domain at https://resend.com/domains');
+            console.error(
+              '   Option 1 (Testing): Use onboarding@resend.dev (no verification needed)',
+            );
+            console.error(
+              '   Option 2 (Production): Verify your domain at https://resend.com/domains',
+            );
             console.error('   Set RESEND_FROM_EMAIL in .env.local to override the default');
           }
         }
@@ -114,7 +119,7 @@ export async function POST(request: NextRequest) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+              Authorization: `Bearer ${SENDGRID_API_KEY}`,
             },
             body: JSON.stringify({
               personalizations: [{ to: [{ email: notificationEmail.to }] }],
@@ -126,7 +131,7 @@ export async function POST(request: NextRequest) {
               ],
             }),
           });
-          
+
           if (sendgridResponse.ok) {
             emailSent = true;
           } else {
@@ -154,43 +159,42 @@ export async function POST(request: NextRequest) {
 
     // If no email service is configured, log a warning
     if (!emailSent && !RESEND_API_KEY && !process.env.SENDGRID_API_KEY) {
-      const warning = 'No email service configured. Please set RESEND_API_KEY or SENDGRID_API_KEY environment variable.';
+      const warning =
+        'No email service configured. Please set RESEND_API_KEY or SENDGRID_API_KEY environment variable.';
       console.warn(warning);
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: warning,
-          error: 'Email service not configured'
+          error: 'Email service not configured',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (emailSent) {
       return NextResponse.json(
         { success: true, message: 'Notification sent successfully' },
-        { status: 200 }
+        { status: 200 },
       );
     } else {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: 'Failed to send notification',
-          error: errorMessage || 'Unknown error'
+          error: errorMessage || 'Unknown error',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error: any) {
     console.error('Error sending instructor notification:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: error.message || 'Failed to send notification' 
+        error: error.message || 'Failed to send notification',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
-

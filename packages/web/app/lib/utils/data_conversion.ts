@@ -1,5 +1,5 @@
-import { Note, ImageNote } from "@/app/types";
-import { VideoType, AudioType, PhotoType } from "../models/media_class";
+import { Note, ImageNote } from '@/app/types';
+import { VideoType, AudioType, PhotoType } from '../models/media_class';
 
 /**
  * Utility class for converting media types in fetched data to the appropriate classes.
@@ -23,7 +23,7 @@ export default class DataConversion {
       }
 
       const mediaItems = message.media.map((item: any) => {
-        if (item.type === "video") {
+        if (item.type === 'video') {
           return new VideoType({
             uuid: item.uuid,
             type: item.type,
@@ -31,7 +31,7 @@ export default class DataConversion {
             thumbnail: item.thumbnail,
             duration: item.duration,
           });
-        } else if (item.type === "audio") {
+        } else if (item.type === 'audio') {
           return new AudioType({
             uuid: item.uuid,
             type: item.type,
@@ -62,11 +62,11 @@ export default class DataConversion {
 
       return {
         ...message,
-        id: message["@id"],
-        time: time || "",
+        id: message['@id'],
+        time: time || '',
         media: mediaItems || [],
         audio: audioItems || [],
-        text: message.BodyText || "",
+        text: message.BodyText || '',
       };
     });
 
@@ -81,17 +81,17 @@ export default class DataConversion {
    * @returns {ImageNote[]} The extracted images with corresponding note information.
    */
   static extractImages(fetchedNotes: Note[]): ImageNote[] {
-    const extractedImages: ImageNote[] = fetchedNotes.flatMap((note) => {
+    const extractedImages: ImageNote[] = fetchedNotes.flatMap(note => {
       return note.media.map((item: any) => {
-        if (item.type === "video") {
+        if (item.type === 'video') {
           return {
             image: item.thumbnail,
             note: {
               id: note.id,
-              title: note.title || "",
-              text: note.text || "",
+              title: note.title || '',
+              text: note.text || '',
               media: note.media.map((mediaItem: any) => {
-                if (mediaItem.type === "video") {
+                if (mediaItem.type === 'video') {
                   return new VideoType({
                     uuid: mediaItem.uuid,
                     type: mediaItem.type,
@@ -108,8 +108,8 @@ export default class DataConversion {
                 }
               }),
               audio: note.audio || [],
-              time: note.time || "",
-              creator: note.creator || "",
+              time: note.time || '',
+              creator: note.creator || '',
               latitude: note.latitude,
               longitude: note.longitude,
               published: note?.published || false,
@@ -122,10 +122,10 @@ export default class DataConversion {
             image: item.uri,
             note: {
               id: note.id,
-              title: note.title || "",
-              text: note.text || "",
+              title: note.title || '',
+              text: note.text || '',
               media: note.media.map((mediaItem: any) => {
-                if (mediaItem.type === "video") {
+                if (mediaItem.type === 'video') {
                   return new VideoType({
                     uuid: mediaItem.uuid,
                     type: mediaItem.type,
@@ -142,8 +142,8 @@ export default class DataConversion {
                 }
               }),
               audio: note.audio || [],
-              time: note.time || "",
-              creator: note.creator || "",
+              time: note.time || '',
+              creator: note.creator || '',
               latitude: note.latitude,
               longitude: note.longitude,
               published: note?.published || false,
@@ -162,28 +162,28 @@ export default class DataConversion {
 
 export function formatDateTime(date: any) {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return "Pick a date"; // Handle invalid dates
+    return 'Pick a date'; // Handle invalid dates
   }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? "AM" : "PM";
+  const ampm = hours < 12 ? 'AM' : 'PM';
 
   return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
 }
 
 export function format12hourTime(date: any) {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return "Pick a date"; // Handle invalid dates
+    return 'Pick a date'; // Handle invalid dates
   }
 
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? "AM" : "PM";
+  const ampm = hours < 12 ? 'AM' : 'PM';
 
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
 }

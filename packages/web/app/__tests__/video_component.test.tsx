@@ -5,16 +5,16 @@ import VideoComponent from '../lib/components/NoteEditor/NoteElements/VideoPicke
 import * as apiService from '../lib/utils/api_service';
 import { toast } from 'sonner';
 
-jest.mock("firebase/auth", () => ({
+jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(),
 }));
-jest.mock("firebase/firestore", () => ({
+jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(),
 }));
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(),
 }));
-jest.mock("firebase/storage", () => ({
+jest.mock('firebase/storage', () => ({
   getStorage: jest.fn(),
 }));
 describe('VideoComponent', () => {
@@ -28,5 +28,4 @@ describe('VideoComponent', () => {
     const setVideo = jest.fn();
     render(<VideoComponent videoArray={[]} setVideo={setVideo} />);
   });
-
 });

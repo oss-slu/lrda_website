@@ -1,6 +1,6 @@
-import { getAuth } from "firebase-admin/auth";
-import { initializeApp, applicationDefault } from "firebase-admin/app";
-import dotenv from "dotenv";
+import { getAuth } from 'firebase-admin/auth';
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import dotenv from 'dotenv';
 dotenv.config();
 
 // Initialize Firebase Admin SDK if not already initialized
@@ -23,18 +23,18 @@ export const firebaseAuthMiddleware = async (req, res, next) => {
   }
 
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token provided" });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No token provided' });
   }
-  
-  const idToken = authHeader.split(" ")[1];
+
+  const idToken = authHeader.split(' ')[1];
   try {
     const decodedToken = await getAuth().verifyIdToken(idToken);
     req.user = decodedToken;
     next();
   } catch (error) {
     console.error('[Auth] Token verification failed:', error.message);
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: 'Invalid token' });
   }
 };
 

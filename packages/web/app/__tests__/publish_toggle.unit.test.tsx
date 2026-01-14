@@ -6,16 +6,14 @@ describe('PublishToggle', () => {
   test('shows Approve for instructor reviewing a student note', () => {
     render(
       <PublishToggle
-        noteId="n1"
-        userId="u2"
+        noteId='n1'
+        userId='u2'
         isPublished={false}
         isApprovalRequested={true}
-        instructorId={"i1"}
+        instructorId={'i1'}
         isInstructorReview={true}
-      />
+      />,
     );
     expect(screen.getByText(/Approve|Publish/i)).toBeTruthy();
   });
 });
-
-

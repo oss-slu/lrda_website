@@ -1,17 +1,17 @@
-import React from "react";
-import { render, waitFor, act, cleanup, RenderResult } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import Page from "../map/page";
-import Page2 from "../lib/components/NoteEditor";
-import { createTestWrapper } from "./utils/testQueryClient";
+import React from 'react';
+import { render, waitFor, act, cleanup, RenderResult } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import Page from '../map/page';
+import Page2 from '../lib/components/NoteEditor';
+import { createTestWrapper } from './utils/testQueryClient';
 
-jest.mock("firebase/auth");
-jest.mock("../lib/utils/api_service");
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/auth');
+jest.mock('../lib/utils/api_service');
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(),
 }));
 
-jest.mock("intro.js", () => {
+jest.mock('intro.js', () => {
   const mockIntroInstance: any = {
     setOptions: jest.fn(function (this: any) {
       return this;
@@ -23,9 +23,9 @@ jest.mock("intro.js", () => {
       return this;
     }),
     start: jest.fn(() => {
-      const tooltip = document.createElement("div");
-      tooltip.className = "introjs-tooltip";
-      tooltip.textContent = "Welcome! Lets explore the website together.";
+      const tooltip = document.createElement('div');
+      tooltip.className = 'introjs-tooltip';
+      tooltip.textContent = 'Welcome! Lets explore the website together.';
       document.body.appendChild(tooltip);
     }),
   };
@@ -38,7 +38,7 @@ jest.mock("intro.js", () => {
   };
 });
 
-jest.mock("../lib/utils/data_conversion", () => ({
+jest.mock('../lib/utils/data_conversion', () => ({
   convertMediaTypes: jest.fn(() => []),
 }));
 
@@ -47,7 +47,7 @@ beforeEach(() => {
   jest.useFakeTimers();
 
   const mockGeolocation = {
-    getCurrentPosition: jest.fn().mockImplementation((success) => {
+    getCurrentPosition: jest.fn().mockImplementation(success => {
       success({
         coords: {
           latitude: 51.1,
@@ -59,7 +59,7 @@ beforeEach(() => {
     clearWatch: jest.fn(),
   };
 
-  Object.defineProperty(global.navigator, "geolocation", {
+  Object.defineProperty(global.navigator, 'geolocation', {
     value: mockGeolocation,
     writable: true,
   });
@@ -67,8 +67,8 @@ beforeEach(() => {
   // Mock window.location using delete and assignment
   delete (window as any).location;
   (window as any).location = {
-    href: "http://localhost/",
-    hash: "",
+    href: 'http://localhost/',
+    hash: '',
     assign: jest.fn(),
     reload: jest.fn(),
     replace: jest.fn(),
@@ -76,17 +76,17 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.querySelectorAll(".introjs-tooltip").forEach((tooltip) => tooltip.remove());
+  document.querySelectorAll('.introjs-tooltip').forEach(tooltip => tooltip.remove());
   jest.clearAllTimers();
   jest.useRealTimers();
-  window.location.href = "http://localhost/";
+  window.location.href = 'http://localhost/';
   navigator.geolocation.clearWatch(0);
   cleanup();
-  console.log("All mocks, timers, and global references have been cleared");
+  console.log('All mocks, timers, and global references have been cleared');
 });
 
-describe("Intro.js feature in Page component", () => {
-  it("renders the Page component without crashing", async () => {
+describe('Intro.js feature in Page component', () => {
+  it('renders the Page component without crashing', async () => {
     let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page />, { wrapper: createTestWrapper() });
@@ -94,13 +94,13 @@ describe("Intro.js feature in Page component", () => {
     component?.unmount();
   });
 
-  it("renders the Page2 component without crashing", async () => {
+  it('renders the Page2 component without crashing', async () => {
     await act(async () => {
       render(<Page2 isNewNote={false} />);
     });
   });
 
-  it("renders the Page2 component without crashing again", async () => {
+  it('renders the Page2 component without crashing again', async () => {
     let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page2 isNewNote={false} />);
@@ -108,23 +108,23 @@ describe("Intro.js feature in Page component", () => {
     component?.unmount();
   });
 
-  it("shows the popups on page load", async () => {
+  it('shows the popups on page load', async () => {
     const elements = [
-      { id: "search-bar" },
-      { id: "navbar-create-note", tag: "button" },
-      { id: "navbar-logout", tag: "button" },
-      { id: "notes-list" },
-      { id: "add-note" },
-      { id: "note-title" },
-      { id: "note-save" },
-      { id: "note-delete" },
-      { id: "note-date" },
-      { id: "note-location" },
+      { id: 'search-bar' },
+      { id: 'navbar-create-note', tag: 'button' },
+      { id: 'navbar-logout', tag: 'button' },
+      { id: 'notes-list' },
+      { id: 'add-note' },
+      { id: 'note-title' },
+      { id: 'note-save' },
+      { id: 'note-delete' },
+      { id: 'note-date' },
+      { id: 'note-location' },
     ];
 
-    elements.forEach(({ id, tag = "div" }) => {
+    elements.forEach(({ id, tag = 'div' }) => {
       const el = document.createElement(tag);
-      el.setAttribute("id", id);
+      el.setAttribute('id', id);
       document.body.appendChild(el);
     });
 
@@ -138,10 +138,10 @@ describe("Intro.js feature in Page component", () => {
     });
 
     await waitFor(() => {
-      expect(document.getElementById("search-bar")).toBeInTheDocument();
-      expect(document.getElementById("navbar-create-note")).toBeInTheDocument();
-      expect(document.getElementById("navbar-logout")).toBeInTheDocument();
-      expect(document.getElementById("notes-list")).toBeInTheDocument();
+      expect(document.getElementById('search-bar')).toBeInTheDocument();
+      expect(document.getElementById('navbar-create-note')).toBeInTheDocument();
+      expect(document.getElementById('navbar-logout')).toBeInTheDocument();
+      expect(document.getElementById('notes-list')).toBeInTheDocument();
     });
 
     // Note: intro.js auto-start was removed to prevent accidental blank note creation
@@ -150,8 +150,8 @@ describe("Intro.js feature in Page component", () => {
     component?.unmount();
   });
 
-  it("does not trigger introJs if elements are missing (Page)", async () => {
-    document.body.innerHTML = "";
+  it('does not trigger introJs if elements are missing (Page)', async () => {
+    document.body.innerHTML = '';
     let component: RenderResult | undefined;
     await act(async () => {
       component = render(<Page />, { wrapper: createTestWrapper() });
@@ -159,7 +159,7 @@ describe("Intro.js feature in Page component", () => {
     component?.unmount();
   });
 
-  it("does not trigger introJs if elements are missing (Page2)", async () => {
+  it('does not trigger introJs if elements are missing (Page2)', async () => {
     await act(async () => {
       render(<Page2 isNewNote={false} />);
     });

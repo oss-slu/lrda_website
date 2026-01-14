@@ -28,3 +28,6 @@ playwright-report/
 test-results/
 playwright/.cache/
 *.trace
+
+# Audit reports
+**/AUDIT_REPORT.md

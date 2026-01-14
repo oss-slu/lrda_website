@@ -5,4 +5,3 @@ module.exports = {
   validate: jest.fn(() => true),
   version: jest.fn(() => 4),
 };
-

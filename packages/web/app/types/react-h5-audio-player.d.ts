@@ -1,5 +1,5 @@
-declare module "react-h5-audio-player" {
-  import * as React from "react";
+declare module 'react-h5-audio-player' {
+  import * as React from 'react';
 
   export interface AudioPlayerProps {
     src?: string;
@@ -27,7 +27,7 @@ declare module "react-h5-audio-player" {
     hasDefaultKeyBindings?: boolean;
     header?: React.ReactNode;
     footer?: React.ReactNode;
-    layout?: "stacked" | "horizontal" | "stacked-reverse" | "horizontal-reverse";
+    layout?: 'stacked' | 'horizontal' | 'stacked-reverse' | 'horizontal-reverse';
     listenInterval?: number;
     loop?: boolean;
     muted?: boolean;
@@ -55,7 +55,7 @@ declare module "react-h5-audio-player" {
     onTimeUpdate?: (e: Event) => void;
     onVolumeChange?: (e: Event) => void;
     onWaiting?: (e: Event) => void;
-    preload?: "auto" | "metadata" | "none";
+    preload?: 'auto' | 'metadata' | 'none';
     progressJumpStep?: number;
     progressJumpSteps?: { backward?: number; forward?: number };
     progressUpdateInterval?: number;
@@ -66,12 +66,12 @@ declare module "react-h5-audio-player" {
     showLoopControl?: boolean;
     showSkipControls?: boolean;
     showVolumeControl?: boolean;
-    timeFormat?: "auto" | "mm:ss" | "hh:mm:ss";
+    timeFormat?: 'auto' | 'mm:ss' | 'hh:mm:ss';
     volume?: number;
     volumeJumpStep?: number;
     children?: React.ReactNode;
     style?: React.CSSProperties;
-    "data-testid"?: string;
+    'data-testid'?: string;
     [key: `data-${string}`]: string | undefined;
   }
 

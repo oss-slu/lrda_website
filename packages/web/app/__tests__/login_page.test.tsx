@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from "@testing-library/react";
-import Page from "../login/page";
+import { render, screen, fireEvent } from '@testing-library/react';
+import Page from '../login/page';
 
 /**
  * Since `moxios` does not provide TypeScript types, we declare it as any to suppress type errors.
@@ -9,7 +9,7 @@ import Page from "../login/page";
 // @ts-expect-error -- moxios doesn't have type declarations
 import moxios from 'moxios';
 
-jest.mock("firebase/database", () => ({
+jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
 
@@ -41,7 +41,7 @@ jest.mock('firebase/auth', () => {
   };
 });
 
-describe("Page Component", () => {
+describe('Page Component', () => {
   let originalError: any;
 
   beforeEach(() => {
@@ -55,13 +55,13 @@ describe("Page Component", () => {
     moxios.stubRequest(/.*/, {
       status: 200,
       response: {
-        "@id": "mockId123",
-        name: "JohnDoe",
+        '@id': 'mockId123',
+        name: 'JohnDoe',
         roles: {
           administrator: true,
           contributor: false,
         },
-        uid: "mockUserId",
+        uid: 'mockUserId',
       },
     });
   });
@@ -74,27 +74,27 @@ describe("Page Component", () => {
     moxios.uninstall();
   });
 
-  it("renders the page component without crashing", () => {
+  it('renders the page component without crashing', () => {
     render(<Page />);
   });
 
-  it("renders essential elements", () => {
+  it('renders essential elements', () => {
     render(<Page />);
-    expect(screen.getByPlaceholderText("Email...")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Password...")).toBeInTheDocument();
-    expect(screen.getByText("Forgot Password?")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Password...')).toBeInTheDocument();
+    expect(screen.getByText('Forgot Password?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
 
-  it("captures username input", () => {
+  it('captures username input', () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText("Email..."), { target: { value: 'testuser' } });
-    expect((screen.getByPlaceholderText("Email...") as HTMLInputElement).value).toBe('testuser');
+    fireEvent.change(screen.getByPlaceholderText('Email...'), { target: { value: 'testuser' } });
+    expect((screen.getByPlaceholderText('Email...') as HTMLInputElement).value).toBe('testuser');
   });
-  
-  it("captures password input", () => {
+
+  it('captures password input', () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText("Password..."), { target: { value: 'testpass' } });
-    expect((screen.getByPlaceholderText("Password...") as HTMLInputElement).value).toBe('testpass');
+    fireEvent.change(screen.getByPlaceholderText('Password...'), { target: { value: 'testpass' } });
+    expect((screen.getByPlaceholderText('Password...') as HTMLInputElement).value).toBe('testpass');
   });
 });

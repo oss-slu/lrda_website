@@ -1,10 +1,10 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { CaptionProps } from "react-day-picker";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { CaptionProps } from 'react-day-picker';
 
 interface TimePickerProps {
   initialDate?: Date; // Now optional — will fall back to today if not provided
@@ -13,7 +13,7 @@ interface TimePickerProps {
 }
 
 function formatDateTime(date: Date) {
-  if (!date) return "Pick a date";
+  if (!date) return 'Pick a date';
   return `${date.toDateString()}`;
 }
 
@@ -27,7 +27,9 @@ function CaptionDropdowns(props: any) {
   const fromYear = 1200;
   const toYear = new Date().getFullYear();
 
-  const months = Array.from({ length: 12 }, (_, i) => new Date(0, i).toLocaleString("default", { month: "long" }));
+  const months = Array.from({ length: 12 }, (_, i) =>
+    new Date(0, i).toLocaleString('default', { month: 'long' }),
+  );
   const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
 
   const handleChange = (newMonth: number, newYear: number) => {
@@ -40,11 +42,11 @@ function CaptionDropdowns(props: any) {
   };
 
   return (
-    <div className="flex space-x-2 px-3 py-2">
+    <div className='flex space-x-2 px-3 py-2'>
       <select
-        className="text-sm px-2 py-1 border rounded-md"
+        className='rounded-md border px-2 py-1 text-sm'
         value={displayMonth.getMonth()}
-        onChange={(e) => handleChange(parseInt(e.target.value), displayMonth.getFullYear())}
+        onChange={e => handleChange(parseInt(e.target.value), displayMonth.getFullYear())}
       >
         {months.map((month, idx) => (
           <option key={idx} value={idx}>
@@ -53,11 +55,11 @@ function CaptionDropdowns(props: any) {
         ))}
       </select>
       <select
-        className="text-sm px-2 py-1 border rounded-md"
+        className='rounded-md border px-2 py-1 text-sm'
         value={displayMonth.getFullYear()}
-        onChange={(e) => handleChange(displayMonth.getMonth(), parseInt(e.target.value))}
+        onChange={e => handleChange(displayMonth.getMonth(), parseInt(e.target.value))}
       >
-        {years.map((year) => (
+        {years.map(year => (
           <option key={year} value={year}>
             {year}
           </option>
@@ -67,7 +69,11 @@ function CaptionDropdowns(props: any) {
   );
 }
 
-export default function TimePicker({ initialDate, onTimeChange, disabled = false }: TimePickerProps) {
+export default function TimePicker({
+  initialDate,
+  onTimeChange,
+  disabled = false,
+}: TimePickerProps) {
   // Use lazy initializer to set initial date from prop
   const [date, setDate] = useState(() => initialDate || new Date());
   const [viewMonth, setViewMonth] = useState(() => initialDate || new Date());
@@ -82,7 +88,7 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
   }, [initialDate?.getTime()]);
 
   const formatTimeForInput = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
 
   const handleDayClick = (newDay: Date) => {
@@ -94,7 +100,7 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
   };
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const [hours, minutes] = event.target.value.split(":").map(Number);
+    const [hours, minutes] = event.target.value.split(':').map(Number);
     const updatedDate = new Date(date);
     updatedDate.setHours(hours, minutes);
     setDate(updatedDate);
@@ -106,20 +112,20 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
       <PopoverTrigger asChild disabled={disabled}>
         <button
           disabled={disabled}
-          className={`inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors group ${
-            disabled ? "opacity-50 cursor-not-allowed" : ""
+          className={`group inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            disabled ? 'cursor-not-allowed opacity-50' : ''
           }`}
-          aria-label="Open Calendar"
-          type="button"
+          aria-label='Open Calendar'
+          type='button'
         >
-          <CalendarIcon className="h-4 w-4 text-gray-700 group-hover:text-blue-600" />
-          <span className="text-gray-700 group-hover:text-gray-900">{formatDateTime(date)}</span>
+          <CalendarIcon className='h-4 w-4 text-gray-700 group-hover:text-blue-600' />
+          <span className='text-gray-700 group-hover:text-gray-900'>{formatDateTime(date)}</span>
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto">
+      <PopoverContent className='w-auto'>
         <Calendar
-          mode="single"
+          mode='single'
           selected={date}
           onDayClick={handleDayClick}
           month={viewMonth}
@@ -127,11 +133,23 @@ export default function TimePicker({ initialDate, onTimeChange, disabled = false
           initialFocus
           components={
             {
-              Caption: (props: any) => <CaptionDropdowns {...props} onMonthChange={setViewMonth} onDayClick={handleDayClick} />,
+              Caption: (props: any) => (
+                <CaptionDropdowns
+                  {...props}
+                  onMonthChange={setViewMonth}
+                  onDayClick={handleDayClick}
+                />
+              ),
             } as any
           }
         />
-        <Input type="time" value={formatTimeForInput(date)} onChange={handleTimeChange} disabled={disabled} className="w-full" />
+        <Input
+          type='time'
+          value={formatTimeForInput(date)}
+          onChange={handleTimeChange}
+          disabled={disabled}
+          className='w-full'
+        />
       </PopoverContent>
     </Popover>
   );
