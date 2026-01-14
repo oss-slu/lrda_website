@@ -2,7 +2,7 @@ import React from "react";
 import { render, waitFor, act, cleanup, RenderResult } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Page from "../map/page";
-import Page2 from "../lib/components/noteElements/note_component";
+import Page2 from "../lib/components/NoteEditor";
 import { createTestWrapper } from "./utils/testQueryClient";
 
 jest.mock("firebase/auth");

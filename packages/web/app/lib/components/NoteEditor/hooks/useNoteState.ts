@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Note, Tag } from "@/app/types";
-import { AudioType, VideoType, PhotoType } from "../../models/media_class";
+import { AudioType, VideoType, PhotoType } from "@/app/lib/models/media_class";
 
 const useNoteState = (initialNote: Note | undefined) => {
   const [note, setNote] = useState<Note | undefined>(initialNote);
@@ -13,7 +13,7 @@ const useNoteState = (initialNote: Note | undefined) => {
   const [audio, setAudio] = useState<AudioType[]>(initialNote?.audio || []);
   const [longitude, setLongitude] = useState<string>(initialNote?.longitude || "");
   const [latitude, setLatitude] = useState<string>(initialNote?.latitude || "");
-  const [tags, setTags] = useState<Tag[]>(initialNote?.tags || []); // Update to Tag[]
+  const [tags, setTags] = useState<Tag[]>(initialNote?.tags || []);
   const [isPublished, setIsPublished] = useState<boolean>(initialNote?.published || false);
   const [approvalRequested, setApprovalRequested] = useState<boolean>(initialNote?.approvalRequested || false);
   const [counter, setCounter] = useState<number>(0);
@@ -55,4 +55,3 @@ const useNoteState = (initialNote: Note | undefined) => {
 export default useNoteState;
 export type NoteStateType = ReturnType<typeof useNoteState>["noteState"];
 export type NoteHandlersType = ReturnType<typeof useNoteState>["noteHandlers"];
-

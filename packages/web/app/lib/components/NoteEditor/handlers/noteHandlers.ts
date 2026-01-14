@@ -1,8 +1,8 @@
 import React from "react";
 import { Note, Tag } from "@/app/types";
-import ApiService from "../../utils/api_service";
+import ApiService from "@/app/lib/utils/api_service";
 import { toast } from "sonner";
-import type { NoteStateType, NoteHandlersType } from "./note_state";
+import type { NoteStateType, NoteHandlersType } from "../hooks/useNoteState";
 
 export const handleTitleChange = (setTitle: React.Dispatch<React.SetStateAction<string>>, event: React.ChangeEvent<HTMLInputElement>) => {
   setTitle(event.target.value);
@@ -65,7 +65,7 @@ export const handlePublishChange = async (noteState: NoteStateType, noteHandlers
 export const handleTagsChange = (setTags: React.Dispatch<React.SetStateAction<Tag[]>>, newTags: (Tag | string)[]) => {
   const formattedTags = newTags.map((tag) =>
     typeof tag === "string"
-      ? { label: tag, origin: "user" as const } // Ensure origin is correctly typed
+      ? { label: tag, origin: "user" as const }
       : tag
   );
   setTags(formattedTags);
@@ -76,11 +76,9 @@ export const handleEditorChange = (setEditorContent: React.Dispatch<React.SetSta
 };
 
 export const handleDeleteNote = async (
-  //supposed to be archive but named as delete
   note: Note | undefined,
   setNote: React.Dispatch<React.SetStateAction<Note | undefined>>
 ) => {
-  // Check if note exists and has an ID
   if (!note) {
     toast("Error", {
       description: "No note selected to archive.",
@@ -99,15 +97,13 @@ export const handleDeleteNote = async (
   }
 
   try {
-    // Step 1: Add an `isArchived` flag and `archivedAt` timestamp to the note
     const updatedNote = {
       ...note,
-      isArchived: true, // Mark the note as archived; this IS happening
+      isArchived: true,
       published: false,
-      archivedAt: new Date().toISOString(), // Add a timestamp for archiving
+      archivedAt: new Date().toISOString(),
     };
 
-    // update the note
     const response = await ApiService.overwriteNote(updatedNote);
 
     if (response.ok) {
@@ -115,7 +111,7 @@ export const handleDeleteNote = async (
         description: "Note successfully archived.",
         duration: 4000,
       });
-      setNote(undefined); // Clear the note from the state after archiving
+      setNote(undefined);
       return true;
     } else {
       const errorText = await response.text();

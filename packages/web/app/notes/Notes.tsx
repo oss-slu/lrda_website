@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../lib/components/side_bar";
-import NoteEditor from "../lib/components/noteElements/note_component";
+import NoteEditor from "../lib/components/NoteEditor";
 import { Note, newNote } from "@/app/types";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useNotesStore } from "../lib/stores/notesStore";
