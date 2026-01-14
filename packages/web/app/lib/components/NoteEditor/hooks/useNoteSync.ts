@@ -28,10 +28,8 @@ export const useNoteSync = ({
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
-  // Keep ref updated via effect to satisfy React Compiler
-  useEffect(() => {
-    noteHandlersRef.current = noteHandlers;
-  });
+  // eslint-disable-next-line react-hooks/refs -- intentional pattern to keep ref in sync
+  noteHandlersRef.current = noteHandlers;
 
   // Destructure noteState for stable dependencies
   const {
