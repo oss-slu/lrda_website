@@ -1,34 +1,16 @@
-import React from "react"; //what if i just delete this file lol 
-import { VideoType } from "../../models/media_class";
-import { UploadIcon, VideoIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@radix-ui/react-popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { uploadMedia } from "../../utils/s3_proxy";
+import React from "react"; //what if i just delete this file lol
+import { VideoType } from "@/app/lib/models/media_class";
+import { uploadMedia } from "@/app/lib/utils/s3_proxy";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import MediaViewer from "../media_viewer";
-import { getVideoThumbnail, getVideoDuration } from "../../utils/api_service";
+import { getVideoThumbnail, getVideoDuration } from "@/app/lib/utils/api_service";
 
 type VideoPickerProps = {
   videoArray: VideoType[];
   setVideo?: React.Dispatch<React.SetStateAction<VideoType[]>>;
 };
 
-const VideoComponent: React.FC<VideoPickerProps> = ({
-  videoArray,
-  setVideo,
-}) => {
+const VideoComponent: React.FC<VideoPickerProps> = ({ videoArray, setVideo }) => {
   // Unified upload handler for video files
   async function handleUnifiedUpload(file: File) {
     const fileType = file.type;

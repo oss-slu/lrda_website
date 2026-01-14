@@ -4,29 +4,13 @@ import ApiService from "../utils/api_service";
 import { getCachedLocation } from "../utils/location_cache";
 import { Note, Tag } from "@/app/types";
 // DOMPurify will be loaded dynamically
-import {
-  CalendarDays,
-  UserCircle,
-  Tags,
-  Clock3,
-  FileAudio,
-  ImageIcon,
-  MapPin,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GoogleMap } from "@react-google-maps/api";
 import { useGoogleMaps } from "../utils/GoogleMapsContext";
-import AudioPicker from "./noteElements/audio_component";
+import AudioPicker from "@/app/lib/components/NoteEditor/NoteElements/audio_component";
 import MediaViewer from "./media_viewer";
 import NoteCard from "./note_card";
 
@@ -40,9 +24,9 @@ const isTrustedDomain = (url: string, allowedDomains: string[]): boolean => {
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
-    return allowedDomains.some(domain => {
+    return allowedDomains.some((domain) => {
       const domainLower = domain.toLowerCase();
-      return hostname === domainLower || hostname.endsWith('.' + domainLower);
+      return hostname === domainLower || hostname.endsWith("." + domainLower);
     });
   } catch {
     return false;
@@ -56,28 +40,28 @@ const isTrustedDomain = (url: string, allowedDomains: string[]): boolean => {
  * @returns {string} The extracted sentences as plain text.
  */
 const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
-  if (typeof document === 'undefined') return ''; // SSR guard
-  if (!bodyText || typeof bodyText !== 'string') return '';
-  
+  if (typeof document === "undefined") return ""; // SSR guard
+  if (!bodyText || typeof bodyText !== "string") return "";
+
   try {
     const tempDiv = document.createElement("div");
     // Clean up problematic URLs before setting innerHTML to prevent network errors
     let cleanedBodyText = bodyText;
-    
+
     // Remove or fix blob: and data: URLs in img src attributes
-    cleanedBodyText = cleanedBodyText.replace(/<img[^>]*src=["'](blob:|data:)[^"']*["'][^>]*>/gi, '');
-    
+    cleanedBodyText = cleanedBodyText.replace(/<img[^>]*src=["'](blob:|data:)[^"']*["'][^>]*>/gi, "");
+
     // Remove or fix any other problematic URL schemes in href attributes
-    cleanedBodyText = cleanedBodyText.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, '');
-    
+    cleanedBodyText = cleanedBodyText.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, "");
+
     tempDiv.innerHTML = cleanedBodyText;
     const plainText = tempDiv.textContent || tempDiv.innerText || "";
     const sentences = plainText.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s/);
     return sentences.slice(0, sentenceCount).join(" ");
   } catch (error) {
     // If there's any error processing the HTML, return empty string
-    console.warn('Error extracting body preview:', error);
-    return '';
+    console.warn("Error extracting body preview:", error);
+    return "";
   }
 };
 
@@ -106,11 +90,8 @@ function formatTime(date: string | number | Date) {
 // Convert old tags (strings) to the new format
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   if (!Array.isArray(tags)) return [];
-  return tags.map((tag) =>
-    typeof tag === "string" ? { label: tag, origin: "user" } : tag
-  );
+  return tags.map((tag) => (typeof tag === "string" ? { label: tag, origin: "user" } : tag));
 };
-
 
 const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [creator, setCreator] = useState<string>("Loading...");
@@ -130,138 +111,143 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
   // Load DOMPurify only on client side to avoid SSR issues
   useEffect(() => {
-    if (typeof window !== 'undefined' && noteText) {
-      import('dompurify').then((DOMPurify) => {
-        // Clean problematic URLs BEFORE sanitizing to prevent network errors
-        // Ensure cleanedText is always a string
-        let cleanedText = String(noteText || '');
-        
-        // Remove blob: and data: URLs from img src attributes before processing
-        // Use regex constructor to avoid parsing issues - matches img tags with blob: or data: URLs
-        const imgBlobDataRegex = new RegExp('<img[^>]*src\\s*=\\s*["\'](blob:|data:)[^"\']*["\'][^>]*>', 'gi');
-        cleanedText = cleanedText.replace(imgBlobDataRegex, '');
-        
-        // Remove problematic URL schemes from href attributes
-        const hrefBlobDataRegex = new RegExp('href=["\'](blob:|data:|javascript:)[^"\']*["\']', 'gi');
-        cleanedText = cleanedText.replace(hrefBlobDataRegex, '');
-        
-        let sanitized = DOMPurify.default.sanitize(cleanedText);
-        
-        // Process HTML content to handle images and videos
-        if (typeof document !== 'undefined') {
-          try {
-            const tempDiv = document.createElement('div');
-            // Additional safety: remove any remaining problematic URLs before setting innerHTML
-            sanitized = sanitized.replace(/src=["'](blob:|data:)[^"']*["']/gi, '');
-            sanitized = sanitized.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, '');
-            
-            tempDiv.innerHTML = sanitized;
-            
-            // Handle images
-            const images = tempDiv.querySelectorAll('img');
-            images.forEach((img) => {
-              const src = img.getAttribute('src');
-              if (src && (src.startsWith('blob:') || src.startsWith('data:'))) {
-                // Remove the src attribute or replace with placeholder
-                img.removeAttribute('src');
-                img.setAttribute('alt', 'Image not available');
-                img.style.display = 'none'; // Hide broken images
-              }
-            });
-          
-          // Handle video links - convert to video elements
-          const links = tempDiv.querySelectorAll('a');
-          links.forEach((link) => {
-            const href = link.getAttribute('href');
-            const linkText = link.textContent || '';
-            
-            // Check if this is a video link (contains video URL or "Video" text)
-            if (href && (
-              href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i) ||
-              linkText.toLowerCase().includes('video') ||
-              href.includes('video')
-            )) {
-              // Check if it's a valid video URL
-              const isDirectVideoFile = href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
-              const isTrustedVideoHost = href.startsWith('http') && isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com']);
-              const isVideoUrl = isDirectVideoFile || isTrustedVideoHost;
-              
-              if (isVideoUrl) {
-                // Create a video element to replace the link
-                const videoWrapper = document.createElement('div');
-                videoWrapper.className = 'video-wrapper my-4';
-                videoWrapper.style.cssText = 'width: 100%; max-width: 100%; margin: 1rem auto; display: block;';
-                
-                // Check if it's YouTube/Vimeo or direct video file
-                if (isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com'])) {
-                  const iframe = document.createElement('iframe');
-                  let embedUrl = href;
-                  try {
-                    const urlObj = new URL(href);
-                    const hostname = urlObj.hostname.toLowerCase();
-                    
-                    if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
-                      const videoId = urlObj.searchParams.get('v');
-                      if (videoId) {
-                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                      }
-                    } else if (hostname === 'youtu.be') {
-                      const videoId = urlObj.pathname.slice(1).split('?')[0];
-                      if (videoId) {
-                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                      }
-                    } else if (hostname === 'vimeo.com' || hostname === 'www.vimeo.com') {
-                      const videoId = urlObj.pathname.slice(1).split('?')[0];
-                      if (videoId) {
-                        embedUrl = `https://player.vimeo.com/video/${videoId}`;
-                      }
-                    }
-                  } catch {
-                    // If URL parsing fails, don't create iframe
-                    return;
-                  }
-                  iframe.src = embedUrl;
-                  iframe.frameBorder = '0';
-                  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                  iframe.allowFullscreen = true;
-                  iframe.style.cssText = 'width: 100%; max-width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; display: block;';
-                  videoWrapper.appendChild(iframe);
-                } else {
-                  const video = document.createElement('video');
-                  video.src = href;
-                  video.controls = true;
-                  video.style.cssText = 'width: 100%; max-width: 100%; height: auto; max-height: 500px; border-radius: 0.5rem; display: block; object-fit: contain;';
-                  video.className = 'w-full';
-                  videoWrapper.appendChild(video);
+    if (typeof window !== "undefined" && noteText) {
+      import("dompurify")
+        .then((DOMPurify) => {
+          // Clean problematic URLs BEFORE sanitizing to prevent network errors
+          // Ensure cleanedText is always a string
+          let cleanedText = String(noteText || "");
+
+          // Remove blob: and data: URLs from img src attributes before processing
+          // Use regex constructor to avoid parsing issues - matches img tags with blob: or data: URLs
+          const imgBlobDataRegex = new RegExp("<img[^>]*src\\s*=\\s*[\"'](blob:|data:)[^\"']*[\"'][^>]*>", "gi");
+          cleanedText = cleanedText.replace(imgBlobDataRegex, "");
+
+          // Remove problematic URL schemes from href attributes
+          const hrefBlobDataRegex = new RegExp("href=[\"'](blob:|data:|javascript:)[^\"']*[\"']", "gi");
+          cleanedText = cleanedText.replace(hrefBlobDataRegex, "");
+
+          let sanitized = DOMPurify.default.sanitize(cleanedText);
+
+          // Process HTML content to handle images and videos
+          if (typeof document !== "undefined") {
+            try {
+              const tempDiv = document.createElement("div");
+              // Additional safety: remove any remaining problematic URLs before setting innerHTML
+              sanitized = sanitized.replace(/src=["'](blob:|data:)[^"']*["']/gi, "");
+              sanitized = sanitized.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, "");
+
+              tempDiv.innerHTML = sanitized;
+
+              // Handle images
+              const images = tempDiv.querySelectorAll("img");
+              images.forEach((img) => {
+                const src = img.getAttribute("src");
+                if (src && (src.startsWith("blob:") || src.startsWith("data:"))) {
+                  // Remove the src attribute or replace with placeholder
+                  img.removeAttribute("src");
+                  img.setAttribute("alt", "Image not available");
+                  img.style.display = "none"; // Hide broken images
                 }
-                
-                link.parentNode?.replaceChild(videoWrapper, link);
-              }
+              });
+
+              // Handle video links - convert to video elements
+              const links = tempDiv.querySelectorAll("a");
+              links.forEach((link) => {
+                const href = link.getAttribute("href");
+                const linkText = link.textContent || "";
+
+                // Check if this is a video link (contains video URL or "Video" text)
+                if (
+                  href &&
+                  (href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i) ||
+                    linkText.toLowerCase().includes("video") ||
+                    href.includes("video"))
+                ) {
+                  // Check if it's a valid video URL
+                  const isDirectVideoFile = href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
+                  const isTrustedVideoHost =
+                    href.startsWith("http") &&
+                    isTrustedDomain(href, ["youtube.com", "www.youtube.com", "youtu.be", "vimeo.com", "player.vimeo.com"]);
+                  const isVideoUrl = isDirectVideoFile || isTrustedVideoHost;
+
+                  if (isVideoUrl) {
+                    // Create a video element to replace the link
+                    const videoWrapper = document.createElement("div");
+                    videoWrapper.className = "video-wrapper my-4";
+                    videoWrapper.style.cssText = "width: 100%; max-width: 100%; margin: 1rem auto; display: block;";
+
+                    // Check if it's YouTube/Vimeo or direct video file
+                    if (isTrustedDomain(href, ["youtube.com", "www.youtube.com", "youtu.be", "vimeo.com", "player.vimeo.com"])) {
+                      const iframe = document.createElement("iframe");
+                      let embedUrl = href;
+                      try {
+                        const urlObj = new URL(href);
+                        const hostname = urlObj.hostname.toLowerCase();
+
+                        if (hostname === "www.youtube.com" || hostname === "youtube.com") {
+                          const videoId = urlObj.searchParams.get("v");
+                          if (videoId) {
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                          }
+                        } else if (hostname === "youtu.be") {
+                          const videoId = urlObj.pathname.slice(1).split("?")[0];
+                          if (videoId) {
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                          }
+                        } else if (hostname === "vimeo.com" || hostname === "www.vimeo.com") {
+                          const videoId = urlObj.pathname.slice(1).split("?")[0];
+                          if (videoId) {
+                            embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                          }
+                        }
+                      } catch {
+                        // If URL parsing fails, don't create iframe
+                        return;
+                      }
+                      iframe.src = embedUrl;
+                      iframe.frameBorder = "0";
+                      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                      iframe.allowFullscreen = true;
+                      iframe.style.cssText = "width: 100%; max-width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; display: block;";
+                      videoWrapper.appendChild(iframe);
+                    } else {
+                      const video = document.createElement("video");
+                      video.src = href;
+                      video.controls = true;
+                      video.style.cssText =
+                        "width: 100%; max-width: 100%; height: auto; max-height: 500px; border-radius: 0.5rem; display: block; object-fit: contain;";
+                      video.className = "w-full";
+                      videoWrapper.appendChild(video);
+                    }
+
+                    link.parentNode?.replaceChild(videoWrapper, link);
+                  }
+                }
+              });
+
+              sanitized = tempDiv.innerHTML;
+            } catch (error) {
+              // If setting innerHTML fails due to network errors, use cleaned text without DOM manipulation
+              console.warn("Error processing HTML content, using cleaned text:", error);
+              sanitized = cleanedText;
             }
-          });
-          
-          sanitized = tempDiv.innerHTML;
-          } catch (error) {
-            // If setting innerHTML fails due to network errors, use cleaned text without DOM manipulation
-            console.warn('Error processing HTML content, using cleaned text:', error);
+          } else {
             sanitized = cleanedText;
           }
-        } else {
-          sanitized = cleanedText;
-        }
-        
-        setSanitizedText(sanitized);
-      }).catch((error) => {
-        console.error('Error loading DOMPurify:', error);
-        // Fallback: use noteText directly if DOMPurify fails
-        setSanitizedText(noteText);
-      });
+
+          setSanitizedText(sanitized);
+        })
+        .catch((error) => {
+          console.error("Error loading DOMPurify:", error);
+          // Fallback: use noteText directly if DOMPurify fails
+          setSanitizedText(noteText);
+        });
     } else if (noteText) {
       // Fallback for SSR or when window is undefined
       setSanitizedText(noteText);
     }
   }, [noteText]);
-
 
   // Fetch the creator's name based on the note's creator ID (same logic as map page)
   useEffect(() => {
@@ -276,124 +262,128 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   // Get the body text preview
   const bodyPreview = getBodyPreview(noteText, 2);
 
-        // Constrain images and process videos in the dialog content after render
-        useEffect(() => {
-          const processMedia = () => {
-            const contentDiv = document.getElementById('note-content');
-            if (contentDiv) {
-              // Handle images
-              const images = contentDiv.querySelectorAll('img');
-              images.forEach((img) => {
-                const src = img.getAttribute('src');
-                // Hide or remove images with blob URLs or data URIs
-                if (src && (src.startsWith('blob:') || src.startsWith('data:'))) {
-                  img.style.display = 'none';
-                  img.removeAttribute('src');
-                  return;
-                }
-                
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.style.objectFit = 'contain';
-                img.style.maxHeight = '500px';
-                img.style.width = 'auto';
-                img.style.display = 'block';
-                img.style.margin = '1rem auto';
-                img.style.borderRadius = '0.5rem';
-              });
-              
-              // Handle video links - convert to video players
-              const links = contentDiv.querySelectorAll('a');
-              links.forEach((link) => {
-                const href = link.getAttribute('href');
-                const linkText = link.textContent || '';
-                
-                // Check if this is a video link
-                const isDirectVideoFile = href && href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
-                const isTrustedVideoHost = href && href.startsWith('http') && isTrustedDomain(href, ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com']);
-                const isVideoLink = isDirectVideoFile || isTrustedVideoHost || (href && linkText.toLowerCase().includes('video'));
-                
-                if (isVideoLink) {
-                  // Check if already converted (has a video sibling or parent)
-                  if (link.parentElement?.querySelector('video') || link.parentElement?.querySelector('iframe')) {
-                    return;
-                  }
-                  
-                  // Create video wrapper
-                  const videoWrapper = document.createElement('div');
-                  videoWrapper.className = 'video-wrapper my-4';
-                  videoWrapper.style.cssText = 'width: 100%; max-width: 100%; margin: 1rem auto; display: block;';
-                  
-                  // Check if it's a YouTube or Vimeo URL
-                  if (isTrustedVideoHost) {
-                    // Create iframe for YouTube/Vimeo
-                    const iframe = document.createElement('iframe');
-                    let embedUrl = href;
-                    try {
-                      const urlObj = new URL(href);
-                      const hostname = urlObj.hostname.toLowerCase();
-                      
-                      if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
-                        const videoId = urlObj.searchParams.get('v');
-                        if (videoId) {
-                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                        }
-                      } else if (hostname === 'youtu.be') {
-                        const videoId = urlObj.pathname.slice(1).split('?')[0];
-                        if (videoId) {
-                          embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                        }
-                      } else if (hostname === 'vimeo.com' || hostname === 'www.vimeo.com') {
-                        const videoId = urlObj.pathname.slice(1).split('?')[0];
-                        if (videoId) {
-                          embedUrl = `https://player.vimeo.com/video/${videoId}`;
-                        }
-                      }
-                    } catch {
-                      // If URL parsing fails, don't create iframe
-                      return;
-                    }
-                    iframe.src = embedUrl;
-                    iframe.frameBorder = '0';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                    iframe.allowFullscreen = true;
-                    iframe.style.cssText = 'width: 100%; max-width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; display: block;';
-                    videoWrapper.appendChild(iframe);
-                  } else {
-                    // Direct video file
-                    const video = document.createElement('video');
-                    video.src = href;
-                    video.controls = true;
-                    video.style.cssText = 'width: 100%; max-width: 100%; height: auto; max-height: 500px; border-radius: 0.5rem; display: block; object-fit: contain;';
-                    video.className = 'w-full';
-                    videoWrapper.appendChild(video);
-                  }
-                  
-                  // Replace the link with the video
-                  link.parentNode?.replaceChild(videoWrapper, link);
-                }
-              });
+  // Constrain images and process videos in the dialog content after render
+  useEffect(() => {
+    const processMedia = () => {
+      const contentDiv = document.getElementById("note-content");
+      if (contentDiv) {
+        // Handle images
+        const images = contentDiv.querySelectorAll("img");
+        images.forEach((img) => {
+          const src = img.getAttribute("src");
+          // Hide or remove images with blob URLs or data URIs
+          if (src && (src.startsWith("blob:") || src.startsWith("data:"))) {
+            img.style.display = "none";
+            img.removeAttribute("src");
+            return;
+          }
+
+          img.style.maxWidth = "100%";
+          img.style.height = "auto";
+          img.style.objectFit = "contain";
+          img.style.maxHeight = "500px";
+          img.style.width = "auto";
+          img.style.display = "block";
+          img.style.margin = "1rem auto";
+          img.style.borderRadius = "0.5rem";
+        });
+
+        // Handle video links - convert to video players
+        const links = contentDiv.querySelectorAll("a");
+        links.forEach((link) => {
+          const href = link.getAttribute("href");
+          const linkText = link.textContent || "";
+
+          // Check if this is a video link
+          const isDirectVideoFile = href && href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i);
+          const isTrustedVideoHost =
+            href &&
+            href.startsWith("http") &&
+            isTrustedDomain(href, ["youtube.com", "www.youtube.com", "youtu.be", "vimeo.com", "player.vimeo.com"]);
+          const isVideoLink = isDirectVideoFile || isTrustedVideoHost || (href && linkText.toLowerCase().includes("video"));
+
+          if (isVideoLink) {
+            // Check if already converted (has a video sibling or parent)
+            if (link.parentElement?.querySelector("video") || link.parentElement?.querySelector("iframe")) {
+              return;
             }
-          };
+
+            // Create video wrapper
+            const videoWrapper = document.createElement("div");
+            videoWrapper.className = "video-wrapper my-4";
+            videoWrapper.style.cssText = "width: 100%; max-width: 100%; margin: 1rem auto; display: block;";
+
+            // Check if it's a YouTube or Vimeo URL
+            if (isTrustedVideoHost) {
+              // Create iframe for YouTube/Vimeo
+              const iframe = document.createElement("iframe");
+              let embedUrl = href;
+              try {
+                const urlObj = new URL(href);
+                const hostname = urlObj.hostname.toLowerCase();
+
+                if (hostname === "www.youtube.com" || hostname === "youtube.com") {
+                  const videoId = urlObj.searchParams.get("v");
+                  if (videoId) {
+                    embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                  }
+                } else if (hostname === "youtu.be") {
+                  const videoId = urlObj.pathname.slice(1).split("?")[0];
+                  if (videoId) {
+                    embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                  }
+                } else if (hostname === "vimeo.com" || hostname === "www.vimeo.com") {
+                  const videoId = urlObj.pathname.slice(1).split("?")[0];
+                  if (videoId) {
+                    embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                  }
+                }
+              } catch {
+                // If URL parsing fails, don't create iframe
+                return;
+              }
+              iframe.src = embedUrl;
+              iframe.frameBorder = "0";
+              iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+              iframe.allowFullscreen = true;
+              iframe.style.cssText = "width: 100%; max-width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; display: block;";
+              videoWrapper.appendChild(iframe);
+            } else {
+              // Direct video file
+              const video = document.createElement("video");
+              video.src = href;
+              video.controls = true;
+              video.style.cssText =
+                "width: 100%; max-width: 100%; height: auto; max-height: 500px; border-radius: 0.5rem; display: block; object-fit: contain;";
+              video.className = "w-full";
+              videoWrapper.appendChild(video);
+            }
+
+            // Replace the link with the video
+            link.parentNode?.replaceChild(videoWrapper, link);
+          }
+        });
+      }
+    };
 
     // Run after a short delay to ensure content is rendered
     const timeoutId = setTimeout(processMedia, 100);
-    
+
     // Also observe for dynamically loaded content
-    const contentDiv = document.getElementById('note-content');
+    const contentDiv = document.getElementById("note-content");
     let observer: MutationObserver | null = null;
-    
-    if (contentDiv && typeof window !== 'undefined') {
+
+    if (contentDiv && typeof window !== "undefined") {
       observer = new MutationObserver(() => {
         processMedia();
       });
-      
+
       observer.observe(contentDiv, {
         childList: true,
         subtree: true,
       });
     }
-    
+
     return () => {
       clearTimeout(timeoutId);
       if (observer) {
@@ -406,12 +396,12 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   useEffect(() => {
     const fetchLocation = async () => {
       const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
-      
+
       // Check if we have valid coordinates before fetching
       if (note.latitude && note.longitude && MAPS_API_KEY) {
         const lat = parseFloat(note.latitude.toString());
         const lng = parseFloat(note.longitude.toString());
-        
+
         // Use the shared location cache utility
         const location = await getCachedLocation(lat, lng, MAPS_API_KEY);
         setLocation(location);
@@ -426,14 +416,15 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
   // Get the first image from the note.media array
   const coverImage = note.media?.find((media) => media.type === "image")?.uri;
-  
+
   // Validate that coverImage is a valid URL string (exclude blob URLs and data URIs)
-  const isValidImageUrl = coverImage && 
-    typeof coverImage === 'string' && 
-    coverImage.trim() !== '' && 
-    !coverImage.startsWith('blob:') && // Exclude blob URLs
-    !coverImage.startsWith('data:') && // Exclude data URIs
-    (coverImage.startsWith('http://') || coverImage.startsWith('https://') || coverImage.startsWith('/'));
+  const isValidImageUrl =
+    coverImage &&
+    typeof coverImage === "string" &&
+    coverImage.trim() !== "" &&
+    !coverImage.startsWith("blob:") && // Exclude blob URLs
+    !coverImage.startsWith("data:") && // Exclude data URIs
+    (coverImage.startsWith("http://") || coverImage.startsWith("https://") || coverImage.startsWith("/"));
 
   // Get coordinates for the map
   const noteLat = note.latitude ? parseFloat(note.latitude.toString()) : null;
@@ -453,21 +444,21 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     }
 
     // Create new AdvancedMarkerElement
-    if (typeof window !== 'undefined' && (window as any).google?.maps?.marker) {
+    if (typeof window !== "undefined" && (window as any).google?.maps?.marker) {
       const google = (window as any).google;
       const position = new google.maps.LatLng(noteLat!, noteLng!);
-      
+
       // Create a simple pin icon
-      const pinElement = document.createElement('div');
+      const pinElement = document.createElement("div");
       pinElement.innerHTML = `
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M16 0C10.477 0 6 4.477 6 10c0 8 10 22 10 22s10-14 10-22c0-5.523-4.477-10-10-10z" fill="#EA4335"/>
           <circle cx="16" cy="10" r="4" fill="white"/>
         </svg>
       `;
-      pinElement.style.width = '32px';
-      pinElement.style.height = '32px';
-      pinElement.style.cursor = 'pointer';
+      pinElement.style.width = "32px";
+      pinElement.style.height = "32px";
+      pinElement.style.cursor = "pointer";
 
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position,
@@ -488,16 +479,17 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   }, [isMapsApiLoaded, mapInstance, hasValidCoordinates, noteLat, noteLng, location, isMapOpen]);
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={(open: boolean) => {
-      // Don't open dialog if map popover is being opened
-      if (!open || !isMapOpen) {
-        setIsDialogOpen(open);
-      }
-    }}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open: boolean) => {
+        // Don't open dialog if map popover is being opened
+        if (!open || !isMapOpen) {
+          setIsDialogOpen(open);
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <div 
-          className="cursor-pointer border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-300 w-full h-full flex flex-col overflow-hidden"
-        >
+        <div className="cursor-pointer border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-300 w-full h-full flex flex-col overflow-hidden">
           {/* Image at the Top with Spinner or Placeholder */}
           {isValidImageUrl ? (
             <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-72 flex-shrink-0">
@@ -511,9 +503,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                 alt="Note Cover"
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className={`object-cover ${
-                  isImageLoading ? "opacity-0" : "opacity-100 transition-opacity duration-300"
-                }`}
+                className={`object-cover ${isImageLoading ? "opacity-0" : "opacity-100 transition-opacity duration-300"}`}
                 priority
                 onLoad={() => setIsImageLoading(false)}
                 onError={() => setIsImageLoading(false)}
@@ -529,13 +519,13 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             <div className="text-lg sm:text-xl font-bold mb-3 line-clamp-2 text-gray-900 min-h-[3rem]">{note.title || "Untitled"}</div>
             {/* Creator */}
             <div className="text-sm text-gray-600 mb-3 flex items-center">
-              <UserCircle size={16} className="mr-2 flex-shrink-0" /> 
+              <UserCircle size={16} className="mr-2 flex-shrink-0" />
               <span className="truncate font-medium">{creator}</span>
             </div>
             {/* Date and Time - More compact */}
             <div className="text-xs sm:text-sm text-gray-500 mb-3 space-y-1.5">
               <div className="flex items-center gap-2">
-                <CalendarDays size={14} className="flex-shrink-0" /> 
+                <CalendarDays size={14} className="flex-shrink-0" />
                 <span className="truncate">{formatDate(note.time)}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -566,14 +556,14 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                       e.stopPropagation();
                     }}
                   >
-                    <MapPin size={14} className="mr-2 flex-shrink-0" /> 
+                    <MapPin size={14} className="mr-2 flex-shrink-0" />
                     <span className="truncate">{location}</span>
                   </button>
                 </PopoverTrigger>
-                <PopoverContent 
-                  className="w-[400px] h-[300px] p-0 !z-[9999]" 
+                <PopoverContent
+                  className="w-[400px] h-[300px] p-0 !z-[9999]"
                   style={{ zIndex: 9999 }}
-                  align="start" 
+                  align="start"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {isMapsApiLoaded && hasValidCoordinates ? (
@@ -591,7 +581,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                         fullscreenControl: false,
                         zoomControl: true,
                         mapId: process.env.NEXT_PUBLIC_MAP_ID,
-                        mapTypeId: 'satellite',
+                        mapTypeId: "satellite",
                       }}
                       onLoad={(map: any) => setMapInstance(map)}
                       onUnmount={() => {
@@ -612,14 +602,12 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             )}
             {location && location !== "Fetching location..." && !hasValidCoordinates && (
               <div className="text-xs sm:text-sm text-gray-500 mb-3 flex items-center">
-                <ImageIcon size={14} className="mr-2 flex-shrink-0" /> 
+                <ImageIcon size={14} className="mr-2 flex-shrink-0" />
                 <span className="truncate">{location}</span>
               </div>
             )}
             {/* Body Preview */}
-            {bodyPreview && (
-              <p className="text-sm text-gray-700 line-clamp-3 mt-auto leading-relaxed">{bodyPreview}</p>
-            )}
+            {bodyPreview && <p className="text-sm text-gray-700 line-clamp-3 mt-auto leading-relaxed">{bodyPreview}</p>}
           </div>
         </div>
       </DialogTrigger>
@@ -659,10 +647,10 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                     <MapPin size={16} /> {location}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent 
-                  className="w-[400px] h-[300px] p-0 !z-[9999]" 
+                <PopoverContent
+                  className="w-[400px] h-[300px] p-0 !z-[9999]"
                   style={{ zIndex: 9999 }}
-                  align="start" 
+                  align="start"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {isMapsApiLoaded && hasValidCoordinates ? (
@@ -680,7 +668,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
                         fullscreenControl: false,
                         zoomControl: true,
                         mapId: process.env.NEXT_PUBLIC_MAP_ID,
-                        mapTypeId: 'satellite',
+                        mapTypeId: "satellite",
                       }}
                       onLoad={(map: any) => setMapInstance(map)}
                       onUnmount={() => {
@@ -708,10 +696,7 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
             <div className="flex flex-wrap gap-2 mt-2">
               <Tags size={16} />
               {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 text-sm rounded"
-                >
+                <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 text-sm rounded">
                   {tag.label}
                 </span>
               ))}

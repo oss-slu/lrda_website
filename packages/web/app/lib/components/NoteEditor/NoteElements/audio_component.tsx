@@ -1,25 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import AudioPlayer from "react-h5-audio-player";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@radix-ui/react-popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { toast } from "sonner";
 import { FileUp } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AudioType } from "../../models/media_class";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AudioType } from "@/app/lib/models/media_class";
 import { Input } from "@/components/ui/input";
 import { v4 as uuidv4 } from "uuid";
-import { uploadAudio } from "../../utils/s3_proxy";
+import { uploadAudio } from "@/app/lib/utils/s3_proxy";
 
 type AudioPickerProps = {
   audioArray: AudioType[];
@@ -27,11 +15,7 @@ type AudioPickerProps = {
   editable?: boolean;
 };
 
-const AudioPicker: React.FC<AudioPickerProps> = ({
-  audioArray,
-  setAudio,
-  editable,
-}) => {
+const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
   const [currentIdx, setCurrentIdx] = useState(0); // Current index of the selected audio
   const [curRec, setCurRec] = useState<string | undefined>(); // Current audio URI
   const [placeVal, setPlaceVal] = useState<string>("No Recordings"); // Placeholder text for the select dropdown
@@ -55,9 +39,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
 
   // Handle the selection of an audio recording
   const handleSelectChange = (selectedURI: string) => {
-    const selectedIdx = audioArray.findIndex(
-      (audio) => audio.uri === selectedURI
-    );
+    const selectedIdx = audioArray.findIndex((audio) => audio.uri === selectedURI);
     if (selectedIdx >= 0) {
       setCurRec(selectedURI);
       setCurrentIdx(selectedIdx);
@@ -153,27 +135,15 @@ const AudioPicker: React.FC<AudioPickerProps> = ({
         ) : null}
 
         {/* Audio selection dropdown */}
-        <Select
-          data-testid="audio-select"
-          onValueChange={handleSelectChange}
-          key={currentUUID}
-          defaultValue={curRec}
-        >
+        <Select data-testid="audio-select" onValueChange={handleSelectChange} key={currentUUID} defaultValue={curRec}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue
-              placeholder={placeVal}
-              defaultValue={"SelectRecording"}
-            />
+            <SelectValue placeholder={placeVal} defaultValue={"SelectRecording"} />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {audioArray.length >= 1 ? (
                 audioArray.map((audio) => (
-                  <SelectItem
-                    key={audio.uuid}
-                    value={audio.uri}
-                    data-testid="audio-option"
-                  >
+                  <SelectItem key={audio.uuid} value={audio.uri} data-testid="audio-option">
                     {audio.name}
                   </SelectItem>
                 ))

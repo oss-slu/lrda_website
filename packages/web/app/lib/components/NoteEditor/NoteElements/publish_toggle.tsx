@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { UploadIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
-import { useAuthStore } from "../../stores/authStore";
+import { useAuthStore } from "../../../stores/authStore";
 import { useShallow } from "zustand/react/shallow";
 
 interface PublishToggleProps {
