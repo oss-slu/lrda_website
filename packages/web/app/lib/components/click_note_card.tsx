@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; // comment test
-import ApiService from '../utils/api_service';
+import { usersService } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 'lucide-react';
@@ -61,7 +61,8 @@ const ClickableNote: React.FC<{
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
+    usersService
+      .fetchCreatorName(note.creator)
       .then(name => setCreator(name))
       .catch(error => {
         console.error('Error fetching creator name:', error, note.creator);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Note, Tag } from '@/app/types';
-import ApiService from '@/app/lib/utils/api_service';
+import { notesService } from '@/app/lib/services';
 import { toast } from 'sonner';
 import type { NoteStateType, NoteHandlersType } from '../hooks/useNoteState';
 
@@ -52,7 +52,7 @@ export const handlePublishChange = async (
   };
 
   try {
-    await ApiService.overwriteNote(updatedNote);
+    await notesService.update(updatedNote);
     noteHandlers.setIsPublished(updatedNote.published);
     noteHandlers.setNote(updatedNote);
 
@@ -120,20 +120,14 @@ export const handleDeleteNote = async (
       archivedAt: new Date().toISOString(),
     };
 
-    const response = await ApiService.overwriteNote(updatedNote);
+    await notesService.update(updatedNote);
 
-    if (response.ok) {
-      toast('Success', {
-        description: 'Note successfully archived.',
-        duration: 4000,
-      });
-      setNote(undefined);
-      return true;
-    } else {
-      const errorText = await response.text();
-      console.error('Archive API error:', response.status, errorText);
-      throw new Error(`Archiving failed: ${response.status}`);
-    }
+    toast('Success', {
+      description: 'Note successfully archived.',
+      duration: 4000,
+    });
+    setNote(undefined);
+    return true;
   } catch (error) {
     toast('Error', {
       description: 'Failed to archive note. Please try again.',

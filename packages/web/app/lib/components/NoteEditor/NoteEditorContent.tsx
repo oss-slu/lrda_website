@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import TagManager from './NoteElements/TagManager';
 import EditorMenuControls from '../editor_menu_controls';
 import useExtensions from '@/app/lib/utils/use_extensions';
-import ApiService from '@/app/lib/utils/api_service';
+import { tagsService } from '@/app/lib/services';
 import { PhotoType, VideoType, AudioType } from '@/app/lib/models/media_class';
 import CommentBubble from '../CommentBubble';
 import { handleTagsChange, handleEditorChange } from './handlers/noteHandlers';
@@ -53,7 +53,7 @@ export default function NoteEditorContent({
       const editor = rteRef.current?.editor;
       if (editor) {
         const noteContent = editor.getHTML();
-        const tags = await ApiService.generateTags(noteContent);
+        const tags = await tagsService.generateTags(noteContent);
         setSuggestedTags(tags);
       } else {
         console.error('Editor instance is not available');

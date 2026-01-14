@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, waitFor, within, fireEvent, cleanup, act } from '@testing-library/react';
 // @ts-expect-error -- moxios doesn't have type declarations
 import moxios from 'moxios';
-import ApiService from '../lib/utils/api_service';
 import EnhancedNoteCard from '../lib/components/stories_card';
 import { Note, Tag } from '@/app/types';
 import { PhotoType, AudioType } from '../lib/models/media_class';
@@ -40,9 +39,12 @@ const mockNote: Note = {
   ],
 };
 
-// Mock the `fetchCreatorName` method of `ApiService`
-jest.mock('../lib/utils/api_service', () => ({
-  fetchCreatorName: jest.fn(),
+// Mock the usersService
+const mockFetchCreatorName = jest.fn();
+jest.mock('../lib/services', () => ({
+  usersService: {
+    fetchCreatorName: (...args: unknown[]) => mockFetchCreatorName(...args),
+  },
 }));
 
 // Mock DOMPurify
@@ -88,7 +90,7 @@ afterEach(async () => {
 
 describe('EnhancedNoteCard Component', () => {
   it('renders the note title and body preview', async () => {
-    (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+    mockFetchCreatorName.mockResolvedValue('Test Creator');
 
     render(<EnhancedNoteCard note={mockNote} />);
 
@@ -106,7 +108,7 @@ describe('EnhancedNoteCard Component', () => {
   });
 
   it('fetches and displays the creator name', async () => {
-    (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('John Doe');
+    mockFetchCreatorName.mockResolvedValue('John Doe');
 
     render(<EnhancedNoteCard note={mockNote} />);
 
@@ -118,7 +120,7 @@ describe('EnhancedNoteCard Component', () => {
 
   it("displays 'Location not found' when API key is not provided but coordinates exist", async () => {
     delete process.env.NEXT_PUBLIC_MAP_KEY;
-    (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+    mockFetchCreatorName.mockResolvedValue('Test Creator');
 
     render(<EnhancedNoteCard note={mockNote} />);
 
@@ -144,7 +146,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Test content</p><img src="blob:http://localhost:3000/abc123" alt="test" />',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithBlobUrl} />);
 
@@ -165,7 +167,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Test content</p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" alt="test" />',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithDataUrl} />);
 
@@ -185,7 +187,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Test content</p><a href="blob:http://localhost:3000/abc123">Link</a>',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithBlobHref} />);
 
@@ -205,7 +207,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Test content</p><a href="javascript:alert(\'xss\')">Link</a>',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithJSHref} />);
 
@@ -226,7 +228,7 @@ describe('EnhancedNoteCard Component', () => {
         text: null as any,
         BodyText: 12345 as any, // Non-string value
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithNonStringText} />);
 
@@ -246,7 +248,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: undefined as any,
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithUndefinedText} />);
 
@@ -266,7 +268,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithEmptyText} />);
 
@@ -286,7 +288,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Multiple URLs Test</p><img src="blob:http://localhost:3000/abc" /><img src="data:image/png;base64,test" /><a href="blob:http://localhost:3000/def">Link</a><a href="javascript:void(0)">JS Link</a>',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithMultipleUrls} />);
 
@@ -306,7 +308,7 @@ describe('EnhancedNoteCard Component', () => {
         ...mockNote,
         text: '<p>Valid URL Test</p><img src="https://example.com/image.jpg" alt="valid" /><a href="https://example.com">Valid Link</a>',
       };
-      (ApiService.fetchCreatorName as jest.Mock).mockResolvedValue('Test Creator');
+      mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithValidUrls} />);
 

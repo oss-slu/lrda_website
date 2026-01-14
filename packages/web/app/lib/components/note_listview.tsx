@@ -5,7 +5,7 @@ import { extractTextFromHtml } from '../utils/sanitize';
 import { FileText, Search, FileEdit } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import ApiService from '../utils/api_service';
+import { usersService } from '../services';
 
 type NoteListViewProps = {
   notes: Note[];
@@ -60,7 +60,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
         await Promise.all(
           uniqueCreators.map(async creatorId => {
             try {
-              const name = await ApiService.fetchCreatorName(creatorId);
+              const name = await usersService.fetchCreatorName(creatorId);
               names[creatorId] = name || 'Unknown User';
             } catch (error) {
               console.error(`Error fetching creator name for ${creatorId}:`, error);

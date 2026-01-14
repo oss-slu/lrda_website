@@ -52,11 +52,10 @@ jest.mock('../lib/stores/authStore', () => ({
   }),
 }));
 
-jest.mock('../lib/utils/api_service', () => ({
-  __esModule: true,
-  default: {
+jest.mock('../lib/services', () => ({
+  usersService: {
     fetchCreatorName: async () => 'Student User',
-    fetchUserData: async (uid: string) => {
+    fetchById: async (uid: string) => {
       if (uid === 'student-1') {
         return {
           uid: 'student-1',

@@ -1,10 +1,16 @@
 import { handleDeleteNote } from '../lib/components/NoteEditor/handlers/noteHandlers'; // Import the function to be tested
-import ApiService from '../lib/utils/api_service';
 import { toast } from 'sonner';
+
+// Mock notesService
+const mockNotesServiceUpdate = jest.fn();
+jest.mock('../lib/services', () => ({
+  notesService: {
+    update: (...args: unknown[]) => mockNotesServiceUpdate(...args),
+  },
+}));
 
 // Mocking necessary modules
 jest.mock('firebase/auth');
-jest.mock('../lib/utils/api_service');
 jest.mock('firebase/database', () => ({
   getDatabase: jest.fn(), // Mock Realtime Database
 }));
@@ -14,8 +20,14 @@ jest.mock('sonner', () => ({
 }));
 
 describe('Archive Note Functionality Tests', () => {
-  let mockSetNote;
-  let mockNote;
+  let mockSetNote: jest.Mock;
+  let mockNote: {
+    id: string;
+    title: string;
+    text: string;
+    isArchived: boolean;
+    published: boolean;
+  };
 
   beforeEach(() => {
     mockSetNote = jest.fn();
@@ -35,12 +47,12 @@ describe('Archive Note Functionality Tests', () => {
   // unit tests for front end
   describe('unit tests frontend)', () => {
     test('successfully archives the note', async () => {
-      ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
+      mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
 
       // Update across all relevant test cases to ensure consistent expectations
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+      expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
         archivedAt: expect.any(String), // Matches any string date format
@@ -66,7 +78,7 @@ describe('Archive Note Functionality Tests', () => {
     // });
 
     test('reflects the archive state in UI', async () => {
-      ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
+      mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
       await handleDeleteNote(mockNote, mockSetNote);
 
@@ -77,43 +89,34 @@ describe('Archive Note Functionality Tests', () => {
   // unit tests for backend
   describe('unit tests backend', () => {
     test('media file is archived from the database', async () => {
-      ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
+      mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
-      const response = await ApiService.overwriteNote({
+      const response = await mockNotesServiceUpdate({
         ...mockNote,
         isArchived: true,
         archivedAt: new Date().toISOString(),
       });
 
-      expect(response.ok).toBe(true);
+      // Service returns RerumNoteData with @id on success, not Response with .ok
+      expect(response['@id']).toBe('test-note-id');
       // Update across all relevant test cases to ensure consistent expectations
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+      expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
         archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
-        published: false, // Consistently include this field
       });
-    });
-
-    test('associated annotations are also archived', async () => {
-      const mockArchiveAnnotations = jest.fn().mockResolvedValue(true);
-      ApiService.archiveAnnotations = mockArchiveAnnotations;
-
-      await ApiService.archiveAnnotations(mockNote.id, 'user-id');
-
-      expect(mockArchiveAnnotations).toHaveBeenCalledWith(mockNote.id, 'user-id');
     });
   });
 
   // integration tests
   describe('Integration Tests', () => {
     test('complete flow of archiving a note', async () => {
-      ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
+      mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
 
       // Update across all relevant test cases to ensure consistent expectations
-      expect(ApiService.overwriteNote).toHaveBeenCalledWith({
+      expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
         archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
@@ -129,7 +132,7 @@ describe('Archive Note Functionality Tests', () => {
     });
 
     test('UI consistency after archiving', async () => {
-      ApiService.overwriteNote.mockResolvedValueOnce({ ok: true });
+      mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
       await handleDeleteNote(mockNote, mockSetNote);
 

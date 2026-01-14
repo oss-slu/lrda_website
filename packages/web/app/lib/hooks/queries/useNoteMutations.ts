@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import ApiService from '../../utils/api_service';
+import { notesService } from '../../services';
 import { Note } from '@/app/types';
 import { notesKeys } from './useNotes';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ export function useUpdateNote() {
 
   return useMutation({
     mutationFn: async (note: Note) => {
-      return await ApiService.overwriteNote(note);
+      return await notesService.update(note);
     },
     onSuccess: () => {
       // Invalidate all note queries to refetch fresh data
@@ -33,7 +33,7 @@ export function useCreateNote() {
 
   return useMutation({
     mutationFn: async (note: Note) => {
-      return await ApiService.writeNewNote(note);
+      return await notesService.create(note);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
@@ -55,7 +55,7 @@ export function usePublishNote() {
   return useMutation({
     mutationFn: async ({ note, publish }: { note: Note; publish: boolean }) => {
       const updatedNote = { ...note, published: publish };
-      return await ApiService.overwriteNote(updatedNote);
+      return await notesService.update(updatedNote);
     },
     onSuccess: (_, { publish }) => {
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
@@ -82,7 +82,7 @@ export function useArchiveNote() {
         published: false,
         archivedAt: new Date().toISOString(),
       };
-      return await ApiService.overwriteNote(updatedNote);
+      return await notesService.update(updatedNote);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
