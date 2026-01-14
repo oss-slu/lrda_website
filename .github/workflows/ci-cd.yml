@@ -34,7 +34,7 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  deployments: write # Required for Netlify deployment status
+  deployments: write      # Required for Netlify deployment status
 
 jobs:
   # Check if push event is from a PR branch (to skip it in favor of pull_request event)
@@ -105,8 +105,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-          cache: "pnpm"
+          node-version: '20.x'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -138,6 +138,7 @@ jobs:
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
     timeout-minutes: 60
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -150,8 +151,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-          cache: "pnpm"
+          node-version: '20.x'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -220,7 +221,7 @@ jobs:
     # Allow workflow to run from forks (needed for PRs from external contributors)
     permissions:
       contents: read
-      pull-requests: write # Needed to comment on PRs with preview URL
+      pull-requests: write  # Needed to comment on PRs with preview URL
     # Use environment context only for main branch (production deployments)
     # For PRs, we need repository-level secrets since environment is restricted to main branch
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
@@ -237,8 +238,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-          cache: "pnpm"
+          node-version: '20.x'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -251,6 +252,23 @@ jobs:
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('packages/web/**/*.js', 'packages/web/**/*.jsx', 'packages/web/**/*.ts', 'packages/web/**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+      - name: Install Netlify Next.js plugin
+        run: pnpm add -D -w @netlify/plugin-nextjs
+
+      - name: Build the application
+        run: pnpm --filter web build
+        env:
+          CI: true
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
+          NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
+          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
 
       - name: Setup Netlify CLI
         run: npm install -g netlify-cli
@@ -311,15 +329,10 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-      - name: Install Netlify Next.js plugin
-        run: pnpm add -D @netlify/plugin-nextjs
-        working-directory: packages/web
-
       - name: Deploy to Netlify
         id: netlify-deploy
-        working-directory: packages/web
         run: |
-          # Pre-create .netlify directory with state to skip project detection
+          # Create state file to pre-link the site and skip project detection
           mkdir -p .netlify
           cat > .netlify/state.json << EOF
           {
@@ -327,43 +340,44 @@ jobs:
           }
           EOF
 
-          # Build with Netlify (runs Next.js plugin) and deploy
           if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # Pull requests always get preview deployments (works for all PRs, including from forks)
             PR_NUMBER="${{ github.event.pull_request.number }}"
             PR_AUTHOR="${{ github.event.pull_request.user.login }}"
             PR_TITLE="${{ github.event.pull_request.title }}"
             PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-            echo "Building and deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
+            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
             echo "Branch: ${PR_BRANCH}"
-            netlify build
-            DEPLOY_OUTPUT=$(netlify deploy --message="Preview: PR #${PR_NUMBER} - ${PR_TITLE}" --json)
-            PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty')
-            if [ -n "$PREVIEW_URL" ]; then
-              echo "Preview deployment ready: ${PREVIEW_URL}"
-              echo "::notice::Preview URL: ${PREVIEW_URL}"
-              COMMENT_BODY=$'**Preview deployment ready!**\n\n**Preview URL:** '"${PREVIEW_URL}"$'\n**Branch:** `'"${PR_BRANCH}"$'`\n**Author:** @'"${PR_AUTHOR}"
-              gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
+            # Deploy the built .next directory (already built in previous step)
+            # Change to packages/web to avoid project detection issues
+            cd packages/web
+            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
+            echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
+            if [ -s deploy_url.txt ]; then
+              PREVIEW_URL=$(cat deploy_url.txt)
+              echo "🚀 Preview deployment ready: ${PREVIEW_URL}"
+              # Optionally comment on PR (requires permissions: pull-requests: write)
+              # Note: May not work for PRs from forks due to token restrictions
+              if [ -n "$PREVIEW_URL" ]; then
+                echo "::notice::Preview URL: ${PREVIEW_URL}"
+                # Try to comment on PR (may fail for fork PRs, which is okay)
+                # Use $'...' syntax to properly interpret escape sequences
+                COMMENT_BODY=$'🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** '"${PREVIEW_URL}"$'\n📝 **Branch:** `'"${PR_BRANCH}"$'`\n👤 **Author:** @'"${PR_AUTHOR}"
+                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
+              fi
             fi
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "Building and deploying to production..."
-            netlify build
-            netlify deploy --prod --message="Production deploy from main - ${{ github.sha }}" --json
+            # Push to main = production deployment
+            echo "Deploying to production..."
+            cd packages/web && netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
           else
-            echo "Building and deploying preview for branch: ${{ github.ref_name }}"
-            netlify build
-            netlify deploy --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
+            # Push to other branches = preview deployment
+            echo "Deploying preview for branch: ${{ github.ref_name }}"
+            cd packages/web && netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
           fi
         env:
+          # For main branch: uses environment secrets from 'production' environment
+          # For PRs: uses repository secrets (create these in Settings > Secrets and variables > Actions)
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CI: "true"
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
-          NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
-          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
