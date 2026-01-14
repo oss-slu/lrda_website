@@ -30,6 +30,7 @@ const TagManager: React.FC<TagManagerProps> = ({ inputTags = [], suggestedTags, 
   useEffect(() => {
     const newTags = convertOldTags(inputTags);
     // Only update if the tags are different to prevent infinite loop
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync pattern
     setTags((prevTags) => {
       if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
         return newTags;

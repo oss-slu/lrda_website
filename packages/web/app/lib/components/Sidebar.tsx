@@ -102,6 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // Reset to showing "Unreviewed" when switching to review mode
   useEffect(() => {
     if (viewMode === "review") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when mode changes
       setShowPublished(false);
     }
   }, [viewMode]);

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-// @ts-ignore
+// @ts-expect-error -- using app/ alias path for test
 import Page from "app/map/page";
 import { createTestWrapper } from "./utils/testQueryClient";
 

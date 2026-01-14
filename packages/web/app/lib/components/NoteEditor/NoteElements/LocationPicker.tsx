@@ -13,8 +13,9 @@ interface LocationPickerProps {
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationChange, disabled = false }) => {
-  const [longitude, setLongitude] = useState<number>(0);
-  const [latitude, setLatitude] = useState<number>(0);
+  // Use lazy initializer to parse props on first render
+  const [longitude, setLongitude] = useState<number>(() => (long ? parseFloat(long) : 0) || 0);
+  const [latitude, setLatitude] = useState<number>(() => (lat ? parseFloat(lat) : 0) || 0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [locationName, setLocationName] = useState<string>(""); // City name from reverse geocoding
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -39,14 +40,16 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ long, lat, onLocationCh
     }
   };
 
+  // Sync when lat/long props change from parent (e.g., loading different note)
   useEffect(() => {
     if (lat && long) {
       const parsedLat = parseFloat(lat);
       const parsedLong = parseFloat(long);
 
       if (!isNaN(parsedLat) && !isNaN(parsedLong)) {
-        setLatitude(parsedLat);
-        setLongitude(parsedLong);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from props
+        setLatitude((prev) => (prev !== parsedLat ? parsedLat : prev));
+        setLongitude((prev) => (prev !== parsedLong ? parsedLong : prev));
       }
     }
   }, [lat, long]);

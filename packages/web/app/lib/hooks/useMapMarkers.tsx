@@ -86,13 +86,14 @@ export function useMapMarkers({
 
     const map = mapRef.current;
 
-    // Clear existing markers
+    // Clear existing markers before creating new ones
     if (markerClustererRef.current) {
       markerClustererRef.current.clearMarkers();
     }
     markers.forEach((marker) => {
       marker.map = null;
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional clear before recreating markers
     setMarkers(new Map());
 
     if (filteredNotes.length === 0) {

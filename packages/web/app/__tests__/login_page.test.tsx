@@ -6,7 +6,7 @@ import Page from "../login/page";
  * Since `moxios` does not provide TypeScript types, we declare it as any to suppress type errors.
  * Alternatively, you can add a .d.ts file with 'declare module "moxios";' in your project.
  */
-// @ts-ignore
+// @ts-expect-error -- moxios doesn't have type declarations
 import moxios from 'moxios';
 
 jest.mock("firebase/database", () => ({

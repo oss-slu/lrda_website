@@ -68,15 +68,18 @@ function CaptionDropdowns(props: any) {
 }
 
 export default function TimePicker({ initialDate, onTimeChange, disabled = false }: TimePickerProps) {
-  const now = new Date();
-  const [date, setDate] = useState(initialDate || now);
-  const [viewMonth, setViewMonth] = useState(initialDate || now);
+  // Use lazy initializer to set initial date from prop
+  const [date, setDate] = useState(() => initialDate || new Date());
+  const [viewMonth, setViewMonth] = useState(() => initialDate || new Date());
 
+  // Only sync when initialDate changes from parent (e.g., loading different note)
   useEffect(() => {
-    const fallbackDate = initialDate || new Date();
-    setDate(fallbackDate);
-    setViewMonth(fallbackDate);
-  }, [initialDate]);
+    if (initialDate) {
+      setDate(initialDate);
+      setViewMonth(initialDate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate?.getTime()]);
 
   const formatTimeForInput = (date: Date) => {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;

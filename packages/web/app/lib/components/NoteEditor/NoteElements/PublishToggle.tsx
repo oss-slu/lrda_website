@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { UploadIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
 import { useAuthStore } from "../../../stores/authStore";
@@ -25,9 +25,6 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   onRequestApprovalClick,
   isInstructorReview = false,
 }) => {
-  const [isStudent, setIsStudent] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
-
   // Use auth store for user roles
   const { user: authUser } = useAuthStore(
     useShallow((state) => ({
@@ -35,10 +32,9 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
     }))
   );
 
-  useEffect(() => {
-    const roles = authUser?.roles;
-    setIsStudent(!!roles?.contributor && !roles?.administrator);
-  }, [authUser]);
+  // Compute isStudent directly from authUser roles (no need for useState)
+  const roles = authUser?.roles;
+  const isStudent = !!roles?.contributor && !roles?.administrator;
 
   const handlePublishClick = () => {
     if (isStudent) {
@@ -100,11 +96,6 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
           <TooltipContent>{tooltipText}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      {notification && (
-        <div role="alert" className="fixed bottom-4 right-4 bg-black text-white p-2 rounded">
-          {notification}
-        </div>
-      )}
     </div>
   );
 };

@@ -31,6 +31,7 @@ export const useCommentBubble = ({
   useEffect(() => {
     const editor = rteRef.current?.editor;
     if (!editor || !canComment || (!isViewingStudentNote && !isStudentViewingOwnNote)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- early return to hide bubble when conditions not met
       setShowCommentBubble(false);
       return;
     }
