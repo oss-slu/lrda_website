@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import PublishToggle from "./NoteElements/publish_toggle";
+import PublishToggle from "./NoteElements/PublishToggle";
 import { handleTitleChange } from "./handlers/noteHandlers";
 import type { NoteStateType, NoteHandlersType } from "./hooks/useNoteState";
 

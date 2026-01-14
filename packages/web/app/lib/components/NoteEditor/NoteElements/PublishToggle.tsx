@@ -1,6 +1,4 @@
-// PublishToggle.tsx
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { UploadIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";

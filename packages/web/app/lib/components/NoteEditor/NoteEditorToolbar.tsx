@@ -5,8 +5,8 @@ import { Download } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Document, Packer, Paragraph } from "docx";
 import { toast } from "sonner";
-import TimePicker from "./NoteElements/time_picker";
-import LocationPicker from "./NoteElements/location_component";
+import TimePicker from "./NoteElements/TimePicker";
+import LocationPicker from "./NoteElements/LocationPicker";
 import { handleTimeChange, handleLocationChange } from "./handlers/noteHandlers";
 import type { NoteStateType, NoteHandlersType } from "./hooks/useNoteState";
 

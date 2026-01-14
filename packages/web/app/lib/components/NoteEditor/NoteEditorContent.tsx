@@ -4,7 +4,7 @@ import React, { useState, RefObject } from "react";
 import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from "mui-tiptap";
 import type { Editor } from "@tiptap/core";
 import { v4 as uuidv4 } from "uuid";
-import TagManager from "./NoteElements/tag_manager";
+import TagManager from "./NoteElements/TagManager";
 import EditorMenuControls from "../editor_menu_controls";
 import useExtensions from "@/app/lib/utils/use_extensions";
 import ApiService from "@/app/lib/utils/api_service";

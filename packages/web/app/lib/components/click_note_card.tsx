@@ -5,7 +5,7 @@ import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import AudioPicker from "./NoteEditor/NoteElements/audio_component";
+import AudioPicker from "./NoteEditor/NoteElements/AudioPicker";
 import MediaViewer from "./media_viewer";
 import { PopoverClose } from "@radix-ui/react-popover";
 

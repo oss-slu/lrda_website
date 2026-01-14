@@ -10,9 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GoogleMap } from "@react-google-maps/api";
 import { useGoogleMaps } from "../utils/GoogleMapsContext";
-import AudioPicker from "@/app/lib/components/NoteEditor/NoteElements/audio_component";
+import AudioPicker from "@/app/lib/components/NoteEditor/NoteElements/AudioPicker";
 import MediaViewer from "./media_viewer";
-import NoteCard from "./note_card";
 
 /**
  * Safely checks if a URL belongs to a trusted domain by parsing the hostname
