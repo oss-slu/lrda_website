@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import VideoComponent from '../lib/components/noteElements/videoComponent';
+import VideoComponent from '../lib/components/NoteEditor/NoteElements/VideoPicker';
 import * as apiService from '../lib/utils/api_service';
 import { toast } from 'sonner';
 

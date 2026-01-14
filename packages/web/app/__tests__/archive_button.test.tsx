@@ -1,4 +1,4 @@
-import { handleDeleteNote } from "../lib/components/noteElements/note_handler"; // Import the function to be tested
+import { handleDeleteNote } from "../lib/components/NoteEditor/handlers/noteHandlers"; // Import the function to be tested
 import ApiService from "../lib/utils/api_service";
 import { toast } from "sonner";
 

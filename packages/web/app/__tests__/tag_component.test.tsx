@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
-import TagManager from '../lib/components/noteElements/tag_manager';
+import TagManager from '../lib/components/NoteEditor/NoteElements/TagManager';
 
 // Define Tag type to match the component
 type Tag = {

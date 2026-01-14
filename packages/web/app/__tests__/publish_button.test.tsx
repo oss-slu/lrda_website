@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import PublishToggle from "../lib/components/noteElements/publish_toggle";
+import PublishToggle from "../lib/components/NoteEditor/NoteElements/PublishToggle";
 
 describe("PublishToggle Component", () => {
   it("renders the publish button with correct initial state", () => {
