@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; // comment test
 import ApiService from '../utils/api_service';
+import { sanitizeHtml } from '../utils/sanitize';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 'lucide-react';
 import {
@@ -55,8 +56,7 @@ const ClickableNote: React.FC<{
   note: Note;
 }> = ({ note }) => {
   const [creator, setCreator] = useState<string>('Loading...');
-  const [likes, setLikes] = useState(0);
-  const [disLikes, setDisLikes] = useState(0);
+  const [sanitizedContent, setSanitizedContent] = useState<string>('');
   const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
 
   // Fetch the creator's name based on the note's creator ID
@@ -69,7 +69,12 @@ const ClickableNote: React.FC<{
       });
   }, [note.creator]);
 
-  const data = note.text;
+  // Sanitize note content
+  useEffect(() => {
+    if (note.text) {
+      setSanitizedContent(sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }));
+    }
+  }, [note.text]);
 
   return (
     <DialogContent className='flex h-[100vh] flex-col p-0 sm:max-w-[80%]'>
@@ -115,7 +120,10 @@ const ClickableNote: React.FC<{
           {' '}
           {/* Padding at the bottom */}
           {note.text && note.text.length > 0 ?
-            <div dangerouslySetInnerHTML={{ __html: data }} className='note-content mb-5 px-6' />
+            <div
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              className='note-content mb-5 px-6'
+            />
           : <div className='px-6 pb-6'>This Note has no content</div>}
         </div>
       </ScrollArea>

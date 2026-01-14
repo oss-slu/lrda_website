@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Note, Comment } from '@/app/types';
 import ApiService from '../utils/api_service';
 import { getCachedLocation } from '../utils/location_cache';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '../utils/sanitize';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CalendarDays, Clock3, UserCircle, ImageIcon, MessageSquare } from 'lucide-react';
@@ -52,12 +52,10 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const noteId = (note as any).id || (note as any)._id || (note as any)['@id'] || '';
   const bodyHtml = (note as any).BodyText || note.text || '';
 
-  // Load DOMPurify only on client side to avoid SSR issues
+  // Sanitize HTML content
   useEffect(() => {
-    if (typeof window !== 'undefined' && bodyHtml) {
-      import('dompurify').then(DOMPurify => {
-        setSanitizedBodyHtml(DOMPurify.default.sanitize(bodyHtml));
-      });
+    if (bodyHtml) {
+      setSanitizedBodyHtml(sanitizeHtml(bodyHtml, { allowVideo: true, allowAudio: true }));
     }
   }, [bodyHtml]);
 

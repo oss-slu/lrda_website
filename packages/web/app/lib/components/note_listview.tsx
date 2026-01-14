@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Note, newNote } from '../../types';
 import { format12hourTime } from '../utils/data_conversion';
+import { extractTextFromHtml } from '../utils/sanitize';
 import { FileText, Search, FileEdit } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -17,12 +18,6 @@ type NoteListViewProps = {
 };
 
 const batch_size = 15; //can change batch loading here
-
-const extractTextFromHtml = (htmlString: string) => {
-  const tempDivElement = document.createElement('div');
-  tempDivElement.innerHTML = htmlString;
-  return tempDivElement.textContent || tempDivElement.innerText || '';
-};
 
 const NoteListView: React.FC<NoteListViewProps> = ({
   notes,
