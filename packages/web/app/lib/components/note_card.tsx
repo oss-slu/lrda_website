@@ -1,105 +1,107 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Note } from '@/app/types';
 import { useCreatorName } from '../hooks/queries/useUsers';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Calendar as CalendarIcon, TagsIcon, User2Icon, ImageIcon } from 'lucide-react';
+import { Calendar, User, ImageIcon } from 'lucide-react';
 import CompactCarousel from './compact_carousel';
-import { formatDateTime } from '../utils/data_conversion';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface NoteCardProps {
   note: Note;
+  isActive?: boolean;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
+// Format date as "Jan 15, 2024"
+function formatShortDate(date: Date | undefined): string {
+  if (!date || isNaN(date.getTime())) return 'No date';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+// Safely extract tag labels (handles both string and object tags)
+function getTagLabels(tags: unknown): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .map(tag => {
+      if (typeof tag === 'string') return tag;
+      if (tag && typeof tag === 'object' && 'label' in tag) return String(tag.label);
+      return null;
+    })
+    .filter((label): label is string => label !== null && label.length > 0);
+}
+
+const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
   const title = note.title;
-  const tags: string[] = (note.tags || []).map(tag => tag.label); // Ensure correct mapping to labels
+  const tags = getTagLabels(note.tags);
   const { data: creator, isPending: isCreatorLoading } = useCreatorName(note.creator);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    note.time ? new Date(note.time) : undefined,
-  );
+  const noteDate = note.time ? new Date(note.time) : undefined;
 
   return (
-    <div
-      className='flex h-[300px] w-64 flex-col rounded-sm border border-gray-200 bg-white shadow'
+    <Card
+      className={`overflow-hidden bg-card transition-all duration-200 hover:shadow-md ${
+        isActive ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-1 hover:ring-border'
+      }`}
       data-testid='note-card'
     >
+      {/* Media section */}
       {note.media.length > 0 ?
-        <CompactCarousel mediaArray={note.media}></CompactCarousel>
-      : <div className='flex h-[180px] w-auto items-center justify-center bg-gray-100'>
+        <div className='aspect-[4/3] overflow-hidden'>
+          <CompactCarousel mediaArray={note.media} />
+        </div>
+      : <div className='flex aspect-[4/3] w-full items-center justify-center bg-muted/50'>
           <ImageIcon
             aria-label='No photo present'
-            className='text-gray-400'
-            size={72}
-            strokeWidth={1}
+            className='text-muted-foreground/50'
+            size={48}
+            strokeWidth={1.5}
           />
         </div>
       }
-      <div className='flex h-[118px] flex-col px-2'>
-        <div className='w-full'>
-          <h3
-            className='overflow-x-auto truncate whitespace-nowrap text-xl font-bold text-gray-900'
-            style={{ maxWidth: '100%' }}
-          >
-            {title}
-          </h3>
-        </div>
-        <div className='flex h-[100px] flex-col justify-evenly'>
-          <div className='flex flex-row items-center align-middle'>
-            <User2Icon className='mr-2' size={15} />
-            <p className='truncate text-[15px] text-gray-500'>
-              {isCreatorLoading ? 'Loading...' : (creator ?? 'Unknown')}
-            </p>
+
+      <CardContent className='p-3'>
+        {/* Title */}
+        <h3 className='mb-2 line-clamp-2 text-sm font-medium leading-tight text-foreground'>
+          {title}
+        </h3>
+
+        {/* Metadata - stacked */}
+        <div className='space-y-1 text-xs text-muted-foreground'>
+          <div className='flex items-center gap-1.5'>
+            <User className='h-3 w-3 flex-shrink-0' />
+            <span className='truncate'>
+              {isCreatorLoading ? '...' : (creator ?? 'Unknown')}
+            </span>
           </div>
-          {/* Interactive Calendar with formatted display */}
-          <div className='flex flex-row items-center'>
-            <CalendarIcon className='mr-2' size={15} />
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={cn(
-                    'rounded-md border border-gray-200 bg-white px-2 py-1 text-left text-sm font-normal text-gray-700 hover:bg-gray-50',
-                    !selectedDate && 'text-muted-foreground',
-                  )}
-                >
-                  {formatDateTime(selectedDate)}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='start'>
-                <Calendar
-                  mode='single'
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+          <div className='flex items-center gap-1.5'>
+            <Calendar className='h-3 w-3 flex-shrink-0' />
+            <span>{formatShortDate(noteDate)}</span>
           </div>
-          {tags.length > 0 && (
-            <div className='flex items-center'>
-              <div className='mr-2 flex h-[15px] w-[15px] items-center justify-center rounded-full'>
-                <TagsIcon size={15} />
-              </div>
-              <div className='flex h-5 items-center overflow-hidden'>
-                <ScrollArea className='mb-1 flex flex-nowrap self-center overflow-clip align-middle'>
-                  {tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className='mr-1 whitespace-nowrap rounded-full bg-blue-100 px-2 text-xs font-medium text-blue-800'
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  <ScrollBar orientation='horizontal' className='h-[5px]' />
-                </ScrollArea>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className='mt-2 flex flex-wrap gap-1'>
+            {tags.slice(0, 3).map((tag, index) => (
+              <Badge
+                key={index}
+                variant='secondary'
+                className='h-5 px-1.5 text-[10px] font-normal'
+              >
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <Badge variant='outline' className='h-5 px-1.5 text-[10px] font-normal'>
+                +{tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
