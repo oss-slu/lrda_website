@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';
 import { Note, CombinedResult } from '../../types';
+import { Card } from '@/components/ui/card';
 
 declare global {
   interface Window {
@@ -233,44 +235,44 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
         className='rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
       />
       {isDropdownVisible && (
-        <ul
-          ref={dropdownRef}
-          id='autocomplete-suggestions'
-          className='absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white shadow-lg'
-        >
-          {loading && (
-            <li className='flex items-center px-4 py-2 text-gray-500'>
-              <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-blue-500'></div>
-              <span className='ml-2'>Loading...</span>
-            </li>
-          )}
-          {!loading &&
-            combinedResults.length > 0 &&
-            combinedResults.map(result => {
-              const isSuggestion = result.type === 'suggestion';
-              const key = isSuggestion ? result.place_id : result.id;
-              const displayText = isSuggestion ? result.description : result.title;
+        <div className='absolute top-full z-50 mt-2 w-full'>
+          <Card className='max-h-60 overflow-auto border-2 shadow-xl'>
+            {loading && (
+              <div className='flex items-center gap-2 px-4 py-3 text-muted-foreground'>
+                <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                <span className='text-sm'>Searching...</span>
+              </div>
+            )}
+            {!loading && combinedResults.length > 0 && (
+              <div className='divide-y'>
+                {combinedResults.map(result => {
+                  const isSuggestion = result.type === 'suggestion';
+                  const key = isSuggestion ? result.place_id : result.id;
+                  const displayText = isSuggestion ? result.description : result.title;
 
-              return (
-                <li
-                  key={key}
-                  className='flex cursor-pointer items-center px-4 py-2 transition-colors hover:bg-blue-100'
-                  onClick={() => handleResultClick(result)}
-                  role='option'
-                  aria-selected='false'
-                >
-                  <img
-                    src={
-                      isSuggestion ? '/autocomplete_map_pin.png' : '/autocomplete_search_icon.png'
-                    }
-                    alt={isSuggestion ? 'Map Pin' : 'Search Icon'}
-                    className='mr-2 h-4 w-4'
-                  />
-                  {displayText}
-                </li>
-              );
-            })}
-        </ul>
+                  return (
+                    <button
+                      key={key}
+                      className='flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-accent'
+                      onClick={() => handleResultClick(result)}
+                      type='button'
+                    >
+                      {isSuggestion ?
+                        <MapPin className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
+                      : <StickyNote className='h-4 w-4 flex-shrink-0 text-primary' />}
+                      <span className='truncate'>{displayText}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {!loading && combinedResults.length === 0 && searchText.length > 2 && (
+              <div className='px-4 py-3 text-center text-sm text-muted-foreground'>
+                No results found
+              </div>
+            )}
+          </Card>
+        </div>
       )}
     </div>
   );

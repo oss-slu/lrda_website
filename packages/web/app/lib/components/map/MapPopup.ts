@@ -71,7 +71,8 @@ export function createPopupClass(refs: PopupRefs) {
       if (display === 'block') {
         this.containerDiv.style.left = divPosition.x + 'px';
         this.containerDiv.style.top = divPosition.y + 'px';
-        this.containerDiv.style.transform = 'translate(-50%, calc(-100% - 10px))';
+        // Position above marker: center horizontally, move up by popup height + marker height (40px) + gap
+        this.containerDiv.style.transform = 'translate(-50%, calc(-100% - 48px))';
       }
 
       if (this.containerDiv.style.display !== display) {

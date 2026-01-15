@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -35,14 +35,18 @@ export function useMapMarkers({
   scrollToNoteTile,
 }: UseMapMarkersProps) {
   const queryClient = useQueryClient();
+  // Store queryClient in ref to avoid dependency issues
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
+
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
+  const currentPopupNoteIdRef = useRef<string | null>(null);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = useRef(false);
   const popupHoveredRef = useRef(false);
-  const [markers, setMarkers] = useState(
-    new Map<string, google.maps.marker.AdvancedMarkerElement>(),
-  );
+  // Use ref instead of state to avoid re-render loops
+  const markersRef = useRef(new Map<string, google.maps.marker.AdvancedMarkerElement>());
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -54,10 +58,11 @@ export function useMapMarkers({
       if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
+        currentPopupNoteIdRef.current = null;
         setHoveredNoteId(null);
         setActiveNote(null);
       }
-    }, 200);
+    }, 300);
   }, [setHoveredNoteId, setActiveNote]);
 
   // Handle map click to close popup
@@ -66,6 +71,7 @@ export function useMapMarkers({
       currentPopupRef.current.setMap(null);
     }
     currentPopupRef.current = null;
+    currentPopupNoteIdRef.current = null;
     setActiveNote(null);
   }, [setActiveNote]);
 
@@ -92,13 +98,13 @@ export function useMapMarkers({
     if (markerClustererRef.current) {
       markerClustererRef.current.clearMarkers();
     }
-    markers.forEach(marker => {
+    markersRef.current.forEach(marker => {
       marker.map = null;
     });
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional clear before recreating markers
-    setMarkers(new Map());
+    markersRef.current = new Map();
 
     if (filteredNotes.length === 0) {
+      setIsLoading(false);
       return;
     }
 
@@ -115,25 +121,32 @@ export function useMapMarkers({
       if (currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
+        currentPopupNoteIdRef.current = null;
         setActiveNote(null);
       }
     });
 
     // Open popup helper
     const openPopup = (note: Note, isClick: boolean) => {
+      // If already showing this note's popup, don't recreate it
+      if (currentPopupNoteIdRef.current === note.id && currentPopupRef.current) {
+        return;
+      }
+
       if (currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
       }
 
       if (isClick) {
         setModalNote(note);
+        currentPopupNoteIdRef.current = null;
         return;
       }
 
       const popupContent = document.createElement('div');
       const root = ReactDOM.createRoot(popupContent);
       root.render(
-        <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClientRef.current}>
           <NoteCard note={note} />
         </QueryClientProvider>,
       );
@@ -145,6 +158,7 @@ export function useMapMarkers({
       );
 
       currentPopupRef.current = popup;
+      currentPopupNoteIdRef.current = note.id;
       popup.setMap(map);
     };
 
@@ -153,6 +167,7 @@ export function useMapMarkers({
       if (currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
+        currentPopupNoteIdRef.current = null;
       }
 
       setModalNote(note);
@@ -217,7 +232,7 @@ export function useMapMarkers({
       tempMarkers.set(note.id, marker);
     });
 
-    setMarkers(tempMarkers);
+    markersRef.current = tempMarkers;
 
     markerClustererRef.current = new MarkerClusterer({
       markers: Array.from(tempMarkers.values()),
@@ -247,7 +262,7 @@ export function useMapMarkers({
   ]);
 
   return {
-    markers,
+    markersRef,
     handleMapClick,
     currentPopupRef,
     startPopupCloseTimer,

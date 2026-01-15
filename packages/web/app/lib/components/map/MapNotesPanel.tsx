@@ -3,9 +3,12 @@
 import React, { forwardRef } from 'react';
 import { Note } from '@/app/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AlertCircle, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
 import NoteCard from '../note_card';
 import { PANEL_WIDTH } from '../../constants/mapConstants';
+import { cn } from '@/lib/utils';
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
@@ -48,106 +51,112 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
   ) => {
     return (
       <>
-        {/* Toggle Button - hidden on mobile when panel is open (panel has close button) */}
-        <button
+        {/* Toggle Button - hidden on mobile when panel is open */}
+        <Button
+          variant='secondary'
+          size='icon'
           onClick={onTogglePanel}
           aria-label={isPanelOpen ? 'Close notes panel' : 'Open notes panel'}
-          className={`absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-all duration-300 ease-in-out hover:bg-gray-100 ${isPanelOpen ? 'hidden md:flex' : 'flex'}`}
+          className={cn(
+            'absolute top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl',
+            isPanelOpen ? 'hidden md:flex' : 'flex',
+          )}
           style={{
             right: isPanelOpen ? PANEL_WIDTH : '1rem',
           }}
         >
-          {isPanelOpen ? '>' : '<'}
-        </button>
+          {isPanelOpen ?
+            <ChevronRight className='h-5 w-5' />
+          : <ChevronLeft className='h-5 w-5' />}
+        </Button>
 
-        {/* Notes Panel - full width on mobile, fixed width on desktop */}
+        {/* Notes Panel */}
         <div
-          className={`absolute right-0 top-0 z-30 h-full w-full overflow-y-auto bg-neutral-100 transition-transform duration-300 ease-in-out md:w-[34rem] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={cn(
+            'absolute right-0 top-0 z-30 h-full w-full overflow-y-auto border-l bg-background transition-transform duration-300 ease-in-out md:w-[34rem]',
+            isPanelOpen ? 'translate-x-0' : 'translate-x-full',
+          )}
           ref={notesListRef}
         >
-          {/* Mobile close button */}
-          <div className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white p-3 md:hidden'>
+          {/* Mobile header */}
+          <div className='sticky top-0 z-10 flex items-center justify-between border-b bg-card p-4 md:hidden'>
             <h2 className='text-lg font-semibold'>Notes</h2>
-            <button
+            <Button
+              variant='ghost'
+              size='icon'
               onClick={onTogglePanel}
               aria-label='Close notes panel'
-              className='rounded-full p-2 hover:bg-gray-100'
+              className='h-8 w-8 rounded-full'
             >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                width='20'
-                height='20'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              >
-                <line x1='18' y1='6' x2='6' y2='18'></line>
-                <line x1='6' y1='6' x2='18' y2='18'></line>
-              </svg>
-            </button>
+              <X className='h-4 w-4' />
+            </Button>
           </div>
-          <div className='grid grid-cols-1 content-start gap-2 p-2 lg:grid-cols-2'>
+
+          <div className='grid grid-cols-1 content-start gap-4 p-4 lg:grid-cols-2'>
             {isLoading ?
-              // Loading state
+              // Loading state with card-shaped skeletons
               [...Array(6)].map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className='flex h-[300px] w-64 flex-col rounded-sm border border-gray-200'
-                />
+                <Card key={index} className='overflow-hidden'>
+                  <Skeleton className='aspect-[4/3] w-full' />
+                  <div className='space-y-2 p-3'>
+                    <Skeleton className='h-4 w-full' />
+                    <Skeleton className='h-3 w-2/3' />
+                  </div>
+                </Card>
               ))
             : isError ?
               // Error state
-              <div className='col-span-full flex flex-col items-center justify-center p-4 py-20 text-center'>
-                <AlertCircle className='mb-4 h-12 w-12 text-red-500' />
-                <h3 className='text-xl font-semibold text-gray-700'>Failed to Load Notes</h3>
-                <p className='mt-2 text-gray-500'>
+              <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
+                <div className='mb-4 rounded-full bg-destructive/10 p-4'>
+                  <AlertCircle className='h-8 w-8 text-destructive' />
+                </div>
+                <h3 className='text-xl font-semibold text-foreground'>Failed to Load Notes</h3>
+                <p className='mt-2 max-w-sm text-center text-sm text-muted-foreground'>
                   {errorMessage ||
                     'Something went wrong while loading notes. Please try again later.'}
                 </p>
               </div>
             : visibleItems.length > 0 ?
-              // Notes found
+              // Notes grid
               visibleItems.map(note => (
                 <div
                   key={note.id}
                   ref={el => {
                     if (el) noteRefs.current[note.id] = el;
                   }}
-                  className={`max-h-[308px] max-w-[265px] cursor-pointer transition-transform duration-300 ease-in-out ${
-                    note.id === activeNoteId ? 'active-note' : 'hover:bg-gray-100'
-                  }`}
+                  className='cursor-pointer'
                   onMouseEnter={() => onNoteHover(note.id)}
                   onMouseLeave={() => onNoteHover(null)}
                   onClick={() => onNoteClick(note)}
                 >
-                  <NoteCard note={note} />
+                  <NoteCard note={note} isActive={note.id === activeNoteId} />
                 </div>
               ))
               // Empty state
-            : <div className='col-span-full flex flex-col items-center justify-center p-4 py-20 text-center'>
-                <h3 className='mt-4 text-xl font-semibold text-gray-700'>No Results Found</h3>
-                <p className='mt-2 text-gray-500'>
-                  Sorry, there are no notes in this area. Try zooming out or moving the map.
+            : <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
+                <div className='mb-4 rounded-full bg-muted p-4'>
+                  <MapPin className='h-8 w-8 text-muted-foreground' />
+                </div>
+                <h3 className='text-xl font-semibold text-foreground'>No Notes Found</h3>
+                <p className='mt-2 max-w-sm text-center text-sm text-muted-foreground'>
+                  Try zooming out or moving the map to discover notes in other areas.
                 </p>
               </div>
             }
 
             {/* Infinite scroll loader */}
-            <div className='col-span-full mt-4 flex min-h-10 justify-center'>
-              {hasMore ?
+            {hasMore && (
+              <div className='col-span-full mt-4 flex min-h-10 justify-center'>
                 <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
                   {isLoadingMore && (
-                    <div
-                      className='h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary'
-                      aria-label='Loading more'
-                    />
+                    <div className='flex items-center gap-2 text-muted-foreground'>
+                      <div className='h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                      <span className='text-sm'>Loading more...</span>
+                    </div>
                   )}
                 </div>
-              : null}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </>

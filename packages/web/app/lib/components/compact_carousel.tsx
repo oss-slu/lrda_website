@@ -76,9 +76,9 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: Media[] })
         ))}
       </CarouselContent>
       {count > 1 && isHovered && (
-        <div className='absolute bottom-1 flex h-5 w-20 flex-row items-center justify-center rounded bg-[rgb(255,255,255,0.7)] p-1'>
-          <span className='text-sm font-semibold'>
-            {current} of {count}
+        <div className='absolute bottom-4 left-1/2 flex h-5 -translate-x-1/2 flex-row items-center justify-center rounded bg-black/60 px-2'>
+          <span className='text-xs font-medium text-white'>
+            {current} / {count}
           </span>
         </div>
       )}

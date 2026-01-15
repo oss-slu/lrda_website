@@ -440,12 +440,6 @@
   transform: scale(1.05);
 }
 
-.active-note {
-  transform: scale(1.05);
-  background-color: #e2e2e2;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 /*Always set the map height explicitly to define the size of the div element that contains the map.  */
 
 #map {
@@ -459,46 +453,43 @@ body {
   padding: 0;
 }
 
-/* The popup bubble styling. */
-.popup-bubble {
-  /* Position the bubble centered above its parent. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translate(-50%, -102%);
-  background-color: none;
-  padding: 0;
-  border-radius: 5px;
-  font-family: sans-serif;
-  overflow-y: auto;
-  max-height: 320px;
-}
-
-/* The parent of the bubble. A zero-height div at the top of the tip. */
-.popup-bubble-anchor {
-  /* Position the div a fixed distance above the tip. */
-  position: absolute;
-  width: 100%;
-  bottom: 8px;
-  left: 0;
-}
-
-.popup-bubble-anchor::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  transform: translate(-50%, 0);
-  width: 0;
-  height: 0;
-}
-
+/* The popup container - positioned by JavaScript */
 .popup-container {
-  cursor: auto;
-  height: 0;
   position: absolute;
-  width: auto;
+  cursor: auto;
+}
+
+/* The anchor just wraps the bubble */
+.popup-bubble-anchor {
+  position: relative;
+}
+
+/* The popup bubble styling */
+.popup-bubble {
+  background-color: white;
+  padding: 0;
+  border-radius: 12px;
+  font-family: sans-serif;
+  overflow: hidden;
+  max-height: 360px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: popup-fade-in 0.15s ease-out;
+  width: 220px;
+}
+
+/* Remove card border/shadow inside popup since popup has its own */
+.popup-bubble .rounded-lg {
+  border: none;
+  box-shadow: none;
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Add this to your global stylesheet */
@@ -577,11 +568,21 @@ body {
 .custom-marker {
   cursor: pointer;
   transition: transform 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 /* Hover effect */
+.custom-marker:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
 .custom-marker:hover .marker-body {
   fill: #2563eb; /* Change to blue when hovering */
+}
+
+.custom-marker .marker-body {
+  transition: fill 0.2s ease;
 }
 
 /* Adds spacing to all img tags for note content */

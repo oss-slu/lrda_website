@@ -35,7 +35,7 @@ test.describe('Map Page', () => {
     await expect(mapRegion).toBeVisible();
 
     // Check for search input
-    const searchInput = page.getByPlaceholder('Search...');
+    const searchInput = page.getByPlaceholder('Search places or notes...');
     await expect(searchInput).toBeVisible();
   });
 });
