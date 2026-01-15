@@ -453,11 +453,19 @@ body {
   padding: 0;
 }
 
-/* The popup bubble styling. */
-.popup-bubble {
+/* The popup container - positioned by JavaScript */
+.popup-container {
   position: absolute;
-  top: 0;
-  left: 0;
+  cursor: auto;
+}
+
+/* The anchor just wraps the bubble */
+.popup-bubble-anchor {
+  position: relative;
+}
+
+/* The popup bubble styling */
+.popup-bubble {
   background-color: white;
   padding: 0;
   border-radius: 12px;
@@ -482,21 +490,6 @@ body {
   to {
     opacity: 1;
   }
-}
-
-/* The parent of the bubble. A zero-height div at the top of the tip. */
-.popup-bubble-anchor {
-  position: absolute;
-  width: 100%;
-  bottom: 8px;
-  left: 0;
-}
-
-.popup-container {
-  cursor: auto;
-  height: 0;
-  position: absolute;
-  width: auto;
 }
 
 /* Add this to your global stylesheet */
