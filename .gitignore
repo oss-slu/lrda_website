@@ -29,5 +29,5 @@ test-results/
 playwright/.cache/
 *.trace
 
-# Audit reports
-**/AUDIT_REPORT.md
+# Plans and drafts and audits
+/plans/

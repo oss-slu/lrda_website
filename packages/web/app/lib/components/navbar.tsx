@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import ApiService from '../utils/api_service';
+import { usersService } from '../services';
 import {
   Select,
   SelectContent,
@@ -56,7 +56,7 @@ export default function Navbar() {
         const userId = user.uid;
 
         if (userId) {
-          const userData = await ApiService.fetchUserData(userId);
+          const userData = await usersService.fetchById(userId);
           // Check if user is an instructor (has administrator role OR isInstructor flag)
           const isInstr = !!roles?.administrator || !!userData?.isInstructor;
           setIsInstructor(isInstr);

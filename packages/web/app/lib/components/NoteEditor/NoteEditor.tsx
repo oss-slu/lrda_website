@@ -8,7 +8,7 @@ import type { RichTextEditorRef } from 'mui-tiptap';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useNotesStore } from '@/app/lib/stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import ApiService from '@/app/lib/utils/api_service';
+import { notesService, instructorService } from '@/app/lib/services';
 import { Note, newNote } from '@/app/types';
 
 import useNoteState from './hooks/useNoteState';
@@ -169,38 +169,34 @@ export default function NoteEditor({
         published: false,
       };
 
-      const response = await ApiService.overwriteNote(updatedNote);
+      await notesService.update(updatedNote);
 
-      if (response.ok) {
-        if (updatedApprovalStatus && instructorId) {
-          await ApiService.requestApproval({
-            instructorId: instructorId,
-            title: updatedNote.title || '',
-            text: updatedNote.text || '',
-            creator: updatedNote.creator || '',
-            noteId: updatedNote.id || '',
-            time: updatedNote.time || new Date(),
-            latitude: updatedNote.latitude || '',
-            longitude: updatedNote.longitude || '',
-            tags: updatedNote.tags || [],
-            media: updatedNote.media || [],
-            audio: updatedNote.audio || [],
-            approvalRequested: true,
-          });
-        }
-
-        noteHandlers.setApprovalRequested(updatedApprovalStatus);
-
-        toast(updatedApprovalStatus ? 'Approval Requested' : 'Approval Request Canceled', {
-          description:
-            updatedApprovalStatus ?
-              'Your note has been submitted for instructor approval.'
-            : 'Your approval request has been canceled.',
-          duration: 4000,
+      if (updatedApprovalStatus && instructorId) {
+        await instructorService.requestApproval({
+          instructorId: instructorId,
+          title: updatedNote.title || '',
+          text: updatedNote.text || '',
+          creator: updatedNote.creator || '',
+          noteId: updatedNote.id || '',
+          time: updatedNote.time || new Date(),
+          latitude: updatedNote.latitude || '',
+          longitude: updatedNote.longitude || '',
+          tags: updatedNote.tags || [],
+          media: updatedNote.media || [],
+          audio: updatedNote.audio || [],
+          approvalRequested: true,
         });
-      } else {
-        throw new Error('Failed to update approval status in backend.');
       }
+
+      noteHandlers.setApprovalRequested(updatedApprovalStatus);
+
+      toast(updatedApprovalStatus ? 'Approval Requested' : 'Approval Request Canceled', {
+        description:
+          updatedApprovalStatus ?
+            'Your note has been submitted for instructor approval.'
+          : 'Your approval request has been canceled.',
+        duration: 4000,
+      });
     } catch (error) {
       console.error('Error requesting approval:', error);
       toast('Error', {
@@ -232,7 +228,7 @@ export default function NoteEditor({
     };
 
     try {
-      await ApiService.overwriteNote(updatedNote);
+      await notesService.update(updatedNote);
 
       noteHandlers.setIsPublished(updatedNote.published);
       noteHandlers.setApprovalRequested(updatedNote.approvalRequested);

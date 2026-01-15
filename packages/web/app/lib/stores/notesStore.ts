@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Note, newNote } from '@/app/types';
-import ApiService from '../utils/api_service';
+import { notesService } from '../services';
 import DataConversion from '../utils/data_conversion';
 
 interface NotesState {
@@ -39,7 +39,7 @@ export const useNotesStore = create<NotesState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const userNotes = await ApiService.fetchUserMessages(userId);
+          const userNotes = await notesService.fetchUserNotes(userId);
           // Filter out archived notes
           const unarchivedNotes = userNotes.filter((note: Note) => !note.isArchived);
 

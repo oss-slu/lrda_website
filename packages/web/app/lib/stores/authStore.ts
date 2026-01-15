@@ -4,7 +4,7 @@ import { UserData } from '../../types';
 import { auth, db } from '../config/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import ApiService from '../utils/api_service';
+import { usersService } from '../services';
 
 interface AuthState {
   // State
@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>()(
           document.cookie = `authToken=${token}; path=/`;
 
           // Fetch user data from API or Firestore
-          let userData = await ApiService.fetchUserData(firebaseUser.uid);
+          let userData = await usersService.fetchById(firebaseUser.uid);
 
           if (!userData && db) {
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>()(
         onAuthStateChanged(auth, async firebaseUser => {
           if (firebaseUser) {
             // Try to fetch user data
-            let userData = await ApiService.fetchUserData(firebaseUser.uid);
+            let userData = await usersService.fetchById(firebaseUser.uid);
 
             if (!userData && db) {
               const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));

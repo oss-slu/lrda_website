@@ -7,7 +7,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../lib/stores/authStore';
-import ApiService from '../lib/utils/api_service';
+import { instructorService } from '../lib/services';
 
 const InstructorSignupPage = () => {
   const router = useRouter();
@@ -128,7 +128,7 @@ const InstructorSignupPage = () => {
 
       // Send email notification to admin
       try {
-        await ApiService.sendInstructorNotification(email, `${firstName} ${lastName}`, description);
+        await instructorService.sendNotification(email, `${firstName} ${lastName}`, description);
       } catch (emailError) {
         console.error('Error sending email notification:', emailError);
         // Don't fail the signup if email fails

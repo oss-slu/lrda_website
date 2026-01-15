@@ -15,12 +15,11 @@ jest.mock('../lib/hooks/queries/useComments', () => ({
   })),
 }));
 
-// API Service stable mock
-jest.mock('../lib/utils/api_service', () => ({
-  __esModule: true,
-  default: {
+// API Service stable mock - now using new services
+jest.mock('../lib/services', () => ({
+  usersService: {
     fetchCreatorName: async () => 'User',
-    fetchUserData: async (uid: string) => {
+    fetchById: async (uid: string) => {
       if (uid === 'student-1') {
         return {
           uid: 'student-1',

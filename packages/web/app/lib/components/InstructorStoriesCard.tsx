@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Note, Comment } from '@/app/types';
-import ApiService from '../utils/api_service';
+import { usersService, notesService } from '../services';
 import { getCachedLocation } from '../utils/location_cache';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
@@ -74,7 +74,8 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
   // Fetch creator name and location
   useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
+    usersService
+      .fetchCreatorName(note.creator)
       .then(setCreatorName)
       .catch(() => setCreatorName('Unknown'));
 
@@ -123,8 +124,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         comments: updatedComments,
       };
 
-      const response = await ApiService.overwriteNote(updatedNote);
-      if (!response.ok) throw new Error('Failed to save comment');
+      await notesService.update(updatedNote);
 
       setComments(updatedComments);
       setCommentText('');
@@ -137,11 +137,11 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     }
   };
 
-  // Approve (publish): shown to any non‐student when approvalRequested && not yet published
+  // Approve (publish): shown to any non-student when approvalRequested && not yet published
   const handleApprove = async () => {
     setLoading(true);
     try {
-      await ApiService.overwriteNote({
+      await notesService.update({
         ...note,
         id: noteId,
         published: true,

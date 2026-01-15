@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Key, ReactNode } from 'react';
 import { Comment } from '@/app/types';
 import CommentPopover from '../CommentPopover';
-import ApiService from '../../utils/api_service';
+import { usersService } from '../../services';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '../../stores/authStore';
@@ -46,7 +46,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
       // Fetch userData to check isInstructor flag
       let userData = null;
       try {
-        userData = await ApiService.fetchUserData(uid);
+        userData = await usersService.fetchById(uid);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -77,7 +77,7 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   const resolveAuthorName = async (authorId: string, fallback: string): Promise<string> => {
     try {
       if (authorId) {
-        const resolved = await ApiService.fetchCreatorName(authorId);
+        const resolved = await usersService.fetchCreatorName(authorId);
         if (resolved && resolved !== 'Unknown User') return resolved;
       }
     } catch {}

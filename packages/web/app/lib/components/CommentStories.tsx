@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import ApiService from '../utils/api_service'; // (optional) for saving comments to rerum
 
 interface CommentStoriesProps {
   noteId: string;

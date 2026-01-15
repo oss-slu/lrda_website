@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import ApiService from '../../utils/api_service';
+import { notesService, usersService } from '../../services';
 import { Note } from '@/app/types';
 import DataConversion from '../../utils/data_conversion';
 
@@ -24,7 +24,7 @@ export function usePublishedNotes(limit = 150, skip = 0) {
   return useQuery({
     queryKey: notesKeys.published(),
     queryFn: async (): Promise<Note[]> => {
-      const data = await ApiService.fetchPublishedNotes(limit, skip);
+      const data = await notesService.fetchPublished(limit, skip);
       // Convert media types for all notes
       return DataConversion.convertMediaTypes(data);
     },
@@ -39,7 +39,7 @@ export function usePersonalNotes(userId: string | null, limit = 150, skip = 0) {
     queryKey: notesKeys.personal(userId ?? ''),
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await ApiService.fetchUserMessages(userId, limit, skip);
+      const data = await notesService.fetchUserNotes(userId, limit, skip);
       return DataConversion.convertMediaTypes(data);
     },
     enabled: !!userId,
@@ -53,7 +53,7 @@ export function useGlobalMapNotes() {
   return useQuery({
     queryKey: notesKeys.globalMap(),
     queryFn: async (): Promise<Note[]> => {
-      const data = await ApiService.fetchPublishedNotes();
+      const data = await notesService.fetchPublished();
       return DataConversion.convertMediaTypes(data)
         .reverse()
         .filter(note => note.published === true && note.isArchived !== true);
@@ -69,7 +69,7 @@ export function usePersonalMapNotes(userId: string | null) {
     queryKey: notesKeys.personalMap(userId ?? ''),
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await ApiService.fetchUserMessages(userId);
+      const data = await notesService.fetchUserNotes(userId);
       return DataConversion.convertMediaTypes(data)
         .reverse()
         .filter(note => note.isArchived !== true);
@@ -89,7 +89,7 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
       if (!instructorId) return [];
 
       // Fetch instructor data to get student list
-      const instructorData = await ApiService.fetchUserData(instructorId);
+      const instructorData = await usersService.fetchById(instructorId);
       if (!instructorData || !instructorData.isInstructor) {
         return [];
       }
@@ -100,7 +100,7 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
       }
 
       // Fetch all notes from students
-      const allNotes = await ApiService.fetchNotesByStudents(studentUids);
+      const allNotes = await notesService.fetchByStudents(studentUids);
       const converted = DataConversion.convertMediaTypes(allNotes).reverse();
       return converted.filter(n => !n.isArchived);
     },
@@ -122,7 +122,7 @@ export function useInfinitePublishedNotes(pageSize = 50) {
       data: Note[];
       nextCursor: number | undefined;
     }> => {
-      const data = await ApiService.fetchPublishedNotes(pageSize, pageParam);
+      const data = await notesService.fetchPublished(pageSize, pageParam);
       const notes = DataConversion.convertMediaTypes(data);
       return {
         data: notes,

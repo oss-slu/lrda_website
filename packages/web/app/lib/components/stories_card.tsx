@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import ApiService from '../utils/api_service';
+import { usersService } from '../services';
 import { getCachedLocation } from '../utils/location_cache';
 import { Note, Tag } from '@/app/types';
 // DOMPurify will be loaded dynamically
@@ -286,7 +286,8 @@ const EnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
   // Fetch the creator's name based on the note's creator ID (same logic as map page)
   useEffect(() => {
-    ApiService.fetchCreatorName(note.creator)
+    usersService
+      .fetchCreatorName(note.creator)
       .then(name => setCreator(name))
       .catch(error => {
         console.error('Error fetching creator name:', error, note.creator);

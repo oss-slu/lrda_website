@@ -19,10 +19,16 @@ jest.mock('@react-google-maps/api', () => ({
   GoogleMap: ({ children }: any) => <div data-testid='google-map'>{children}</div>,
 }));
 
-// Mock ClickableNote to a simple div for counting
-jest.mock('app/lib/components/click_note_card', () => ({
+// Mock NoteCard component (used in MapNotesPanel)
+jest.mock('app/lib/components/note_card', () => ({
   __esModule: true,
   default: ({ note }: any) => <div data-testid='note-card'>{note.title || note.id}</div>,
+}));
+
+// Mock ClickableNote (used in Dialog modal)
+jest.mock('app/lib/components/click_note_card', () => ({
+  __esModule: true,
+  default: ({ note }: any) => <div data-testid='clickable-note'>{note.title || note.id}</div>,
 }));
 
 // Mock useAuthStore instead of User class
@@ -52,12 +58,11 @@ class IO {
 }
 (window as any).IntersectionObserver = IO as any;
 
-// Utility to inject notes into state by mocking API service and initial effects
-jest.mock('app/lib/utils/api_service', () => ({
+// Mock the notes service (used by TanStack Query hooks)
+jest.mock('app/lib/services', () => ({
   __esModule: true,
-  default: {
-    fetchUserMessages: jest.fn().mockResolvedValue([]),
-    fetchPublishedNotes: jest.fn().mockResolvedValue(
+  notesService: {
+    fetchPublished: jest.fn().mockResolvedValue(
       Array.from({ length: 48 }, (_, i) => ({
         id: `id-${i}`,
         title: `Note ${i}`,
@@ -72,8 +77,16 @@ jest.mock('app/lib/utils/api_service', () => ({
         isArchived: false,
       })),
     ),
-    fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
+    fetchUserNotes: jest.fn().mockResolvedValue([]),
   },
+  usersService: {
+    fetchById: jest.fn().mockResolvedValue(null),
+  },
+}));
+
+// Mock useCreatorName hook used by NoteCard
+jest.mock('app/lib/hooks/queries/useUsers', () => ({
+  useCreatorName: () => ({ data: 'Test User', isPending: false }),
 }));
 
 // Bypass media conversion in tests
@@ -87,10 +100,15 @@ jest.mock('app/lib/utils/data_conversion', () => ({
 // Silence toasts in tests
 jest.mock('sonner', () => ({ toast: jest.fn() }));
 
-describe('Map page infinite scroll', () => {
-  jest.useFakeTimers();
+// Mock local storage functions
+jest.mock('app/lib/utils/local_storage', () => ({
+  getItem: jest.fn().mockResolvedValue(null),
+  setItem: jest.fn().mockResolvedValue(undefined),
+}));
 
+describe('Map page infinite scroll', () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     // Mock geolocation to immediately error (so page sets locationFound and proceeds)
     (global as any).navigator = {
       geolocation: {
@@ -99,16 +117,23 @@ describe('Map page infinite scroll', () => {
     };
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('renders initial 16 notes and loads more on sentinel intersect, shows spinner', async () => {
     render(<Page />, { wrapper: createTestWrapper() });
 
-    // wait until first batch visible
-    await screen.findAllByTestId('note-card');
+    // Flush pending timers and microtasks to allow TanStack Query to resolve
+    await act(async () => {
+      jest.runAllTimers();
+    });
+
+    // Wait until first batch visible
     const first = await screen.findAllByTestId('note-card');
-    console.log('\n\n FIRST \n\n', first);
     expect(first.length).toBe(16);
 
-    // trigger IntersectionObserver to load next page
+    // Trigger IntersectionObserver to load next page
     await act(async () => {
       lastIO.cb([{ isIntersecting: true } as any], lastIO);
       jest.advanceTimersByTime(250);
