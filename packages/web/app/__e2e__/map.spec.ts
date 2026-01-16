@@ -30,12 +30,16 @@ test.describe('Map Page', () => {
     const hasElements = (await page.locator('*').count()) > 10;
     expect(hasElements).toBeTruthy();
 
-    // Check for Google Map region (visible map element)
-    const mapRegion = page.getByRole('region', { name: 'Map' });
-    await expect(mapRegion).toBeVisible();
-
-    // Check for search input
-    const searchInput = page.getByPlaceholder('Search places or notes...');
+    // Check for search input (key map page element)
+    const searchInput = page.getByPlaceholder('Search notes...');
     await expect(searchInput).toBeVisible();
+
+    // Check for map controls (zoom buttons)
+    const zoomInButton = page.getByRole('button', { name: 'Zoom in' });
+    await expect(zoomInButton).toBeVisible();
+
+    // Check for location button
+    const locationButton = page.getByRole('button', { name: 'Find my location' });
+    await expect(locationButton).toBeVisible();
   });
 });

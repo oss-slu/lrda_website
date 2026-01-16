@@ -86,7 +86,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
           <TooltipTrigger asChild>
             <button
               id={id}
-              className='group inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+              className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
               onClick={handlePublishClick}
             >
               <UploadIcon

@@ -26,7 +26,13 @@ import {
 } from 'firebase/firestore';
 import Link from 'next/link'; // Import Link for routing
 import StrengthIndicator from '@/components/ui/strength-indicator';
-import Select, { type SingleValue } from 'react-select'; // Import react-select
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -242,14 +248,23 @@ const SignupPage = () => {
             <div className='mb-4'>
               <label className='mb-2 block font-medium text-gray-700'>Select an Instructor</label>
               <Select
-                options={instructors}
-                value={selectedInstructor}
-                onChange={(selected: SingleValue<{ value: string; label: string }>) =>
-                  setSelectedInstructor(selected)
-                }
-                placeholder='Choose an Instructor'
-                isClearable
-              />
+                value={selectedInstructor?.value ?? ''}
+                onValueChange={value => {
+                  const instructor = instructors.find(i => i.value === value);
+                  setSelectedInstructor(instructor ?? null);
+                }}
+              >
+                <SelectTrigger className='w-full rounded-lg border border-gray-300 bg-white'>
+                  <SelectValue placeholder='Choose an Instructor' />
+                </SelectTrigger>
+                <SelectContent>
+                  {instructors.map(instructor => (
+                    <SelectItem key={instructor.value} value={instructor.value}>
+                      {instructor.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className='flex flex-col items-center justify-center sm:flex-row'>

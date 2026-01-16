@@ -40,17 +40,9 @@ export default function NoteEditor({
 }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
 
-  // Stable editor session key - only changes when switching to a different note
-  // This prevents the editor from remounting when a draft is saved
-  const initialNoteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
-  const editorSessionKey = useMemo(() => {
-    if (initialNoteId) {
-      return `note-${initialNoteId}`;
-    }
-    // For new notes, generate a stable session ID that persists through the save
-    return `new-${++newNoteSessionCounter}`;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialNoteId ?? (isNewNote ? 'new' : 'unknown')]);
+  // Editor session key - changes when switching to a different note
+  const noteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
+  const editorSessionKey = noteId ? `note-${noteId}` : `new-${++newNoteSessionCounter}`;
 
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
@@ -84,7 +76,7 @@ export default function NoteEditor({
     lastEditTimeRef,
   });
 
-  const { isSaving } = useAutoSave({
+  const { isSaving, lastSavedAt } = useAutoSave({
     noteState,
     noteHandlers,
     isNewNote,
@@ -325,6 +317,7 @@ export default function NoteEditor({
                   noteState={noteState}
                   noteHandlers={noteHandlers}
                   isSaving={isSaving}
+                  lastSavedAt={lastSavedAt}
                   isViewingStudentNote={isViewingStudentNote}
                   userId={userId}
                   instructorId={instructorId}
@@ -335,9 +328,7 @@ export default function NoteEditor({
                   onTitleChange={handleEdit}
                   titleRef={titleRef}
                   deleteRef={deleteRef}
-                />
-
-                <div className='-mt-4 flex flex-row items-center gap-4 pb-4'>
+                >
                   <NoteEditorToolbar
                     noteState={noteState}
                     noteHandlers={noteHandlers}
@@ -347,7 +338,7 @@ export default function NoteEditor({
                     dateRef={dateRef}
                     locationRef={locationRef}
                   />
-                </div>
+                </NoteEditorHeader>
 
                 <NoteEditorContent
                   noteState={noteState}

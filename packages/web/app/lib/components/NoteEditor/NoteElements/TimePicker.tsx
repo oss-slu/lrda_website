@@ -112,7 +112,7 @@ export default function TimePicker({
       <PopoverTrigger asChild disabled={disabled}>
         <button
           disabled={disabled}
-          className={`group inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             disabled ? 'cursor-not-allowed opacity-50' : ''
           }`}
           aria-label='Open Calendar'

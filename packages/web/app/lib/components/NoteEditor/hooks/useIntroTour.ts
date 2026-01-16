@@ -14,7 +14,12 @@ export const useIntroTour = (refs: IntroTourRefs) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const observer = new MutationObserver(async () => {
+    // Check if intro has already been shown
+    const hasAddNoteIntroBeenShown = getCookie('addNoteIntroShown');
+    if (hasAddNoteIntroBeenShown) return;
+
+    // Use timeout instead of MutationObserver - more predictable timing
+    const timeoutId = setTimeout(async () => {
       if (introStartedRef.current) return;
 
       const addNote = document.getElementById('add-note-button');
@@ -23,61 +28,53 @@ export const useIntroTour = (refs: IntroTourRefs) => {
       const date = refs.dateRef.current;
       const location = refs.locationRef.current;
 
-      if (addNote && title && deleteButton && date && location) {
-        const hasAddNoteIntroBeenShown = getCookie('addNoteIntroShown');
-
-        if (hasAddNoteIntroBeenShown) {
-          observer.disconnect();
-          return;
-        }
-
-        introStartedRef.current = true;
-        observer.disconnect();
-
-        const introJs = (await import('intro.js')).default;
-        const intro = introJs.tour();
-
-        intro.setOptions({
-          steps: [
-            {
-              element: addNote,
-              intro: 'Click this button to add a note',
-            },
-            {
-              element: title,
-              intro: 'You can name your note here!',
-            },
-            {
-              element: deleteButton,
-              intro: "If you don't like your note, you can delete it here.",
-            },
-            {
-              element: date,
-              intro: 'We will automatically date and time your entry!',
-            },
-            {
-              element: location,
-              intro: 'Make sure you specify the location of your note.',
-            },
-          ],
-          scrollToElement: false,
-          skipLabel: 'Skip',
-        });
-
-        intro.oncomplete(() => {
-          setCookie('addNoteIntroShown', 'true', 365);
-        });
-
-        intro.onexit(() => {
-          setCookie('addNoteIntroShown', 'true', 365);
-        });
-
-        intro.start();
+      // Graceful degradation: if elements not ready, skip tour
+      if (!addNote || !title || !deleteButton || !date || !location) {
+        return;
       }
-    });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+      introStartedRef.current = true;
 
-    return () => observer.disconnect();
+      const introJs = (await import('intro.js')).default;
+      const intro = introJs.tour();
+
+      const handleTourComplete = () => {
+        setCookie('addNoteIntroShown', 'true', 365);
+      };
+
+      intro.setOptions({
+        steps: [
+          {
+            element: addNote,
+            intro: 'Click this button to add a note',
+          },
+          {
+            element: title,
+            intro: 'You can name your note here!',
+          },
+          {
+            element: deleteButton,
+            intro: "If you don't like your note, you can delete it here.",
+          },
+          {
+            element: date,
+            intro: 'We will automatically date and time your entry!',
+          },
+          {
+            element: location,
+            intro: 'Make sure you specify the location of your note.',
+          },
+        ],
+        scrollToElement: false,
+        skipLabel: 'Skip',
+      });
+
+      intro.oncomplete(handleTourComplete);
+      intro.onexit(handleTourComplete);
+
+      intro.start();
+    }, 1000); // Wait 1s for React to finish rendering
+
+    return () => clearTimeout(timeoutId);
   }, [refs.titleRef, refs.deleteRef, refs.dateRef, refs.locationRef]);
 };

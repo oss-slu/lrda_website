@@ -102,7 +102,13 @@ export const useNotesStore = create<NotesState>()(
       },
 
       clearDraftNote: () => {
-        set({ draftNote: null });
+        const state = get();
+        // Clear draft and also clear selectedNoteId if viewing draft
+        if (state.selectedNoteId === 'draft') {
+          set({ draftNote: null, selectedNoteId: null });
+        } else {
+          set({ draftNote: null });
+        }
       },
     }),
     {
