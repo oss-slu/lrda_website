@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Note, newNote } from '../../types';
+import { Note } from '../../types';
 import { format12hourTime } from '../utils/data_conversion';
 import { extractTextFromHtml } from '../utils/sanitize';
-import { FileText, Search, FileEdit, Loader2 } from 'lucide-react';
+import { FileText, Search, Loader2 } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
 import { usersService } from '../services';
@@ -14,8 +14,6 @@ type NoteListViewProps = {
   isSearching?: boolean;
   viewMode?: 'my' | 'review';
   isInstructor?: boolean;
-  draftNote?: newNote | null;
-  onDraftSelect?: () => void;
 };
 
 const BATCH_SIZE = 15;
@@ -26,14 +24,11 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   isSearching = false,
   viewMode = 'my',
   isInstructor = false,
-  draftNote = null,
-  onDraftSelect,
 }) => {
-  const { selectedNoteId, setSelectedNoteId, clearDraftNote } = useNotesStore(
+  const { selectedNoteId, setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
       selectedNoteId: state.selectedNoteId,
       setSelectedNoteId: state.setSelectedNoteId,
-      clearDraftNote: state.clearDraftNote,
     })),
   );
   const [fresh, setFresh] = useState(true);
@@ -110,16 +105,8 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   }, [loadMore]);
 
   const handleLoadText = (note: Note) => {
-    clearDraftNote();
     onNoteSelect(note, false);
     setSelectedNoteId(note.id);
-  };
-
-  const handleDraftSelect = () => {
-    setSelectedNoteId('draft');
-    if (onDraftSelect) {
-      onDraftSelect();
-    }
   };
 
   const handleGetTime = (inputDate: Date) => {
@@ -140,7 +127,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   };
 
   // Empty state: no notes at all
-  if (notes.length === 0 && !isSearching && !draftNote) {
+  if (notes.length === 0 && !isSearching) {
     return (
       <div className='flex flex-col items-center justify-center px-4 py-16 text-center'>
         <div className='mb-5 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-6'>
@@ -171,33 +158,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({
 
   return (
     <div id='notes-list' className='my-4 flex flex-col gap-2'>
-      {/* Draft note - shown at top when present */}
-      {draftNote && (
-        <div
-          className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-            selectedNoteId === 'draft'
-              ? 'border-blue-400 bg-blue-50 shadow-md'
-              : 'border-dashed border-amber-300 bg-amber-50 hover:border-amber-400 hover:shadow-md'
-          }`}
-          onClick={handleDraftSelect}
-        >
-          <div className='flex flex-col gap-1.5 p-3'>
-            <div className='flex flex-row items-center justify-between gap-2'>
-              <h3 className='flex-1 truncate text-sm font-semibold text-gray-900'>
-                {draftNote.title || 'Untitled'}
-              </h3>
-              <span className='inline-flex items-center gap-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-800'>
-                <FileEdit className='h-3 w-3' />
-                Draft
-              </span>
-            </div>
-            <p className='truncate text-xs leading-relaxed text-gray-600'>
-              {draftNote.text ? extractTextFromHtml(draftNote.text) : 'Start typing to save...'}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Note cards */}
       {notes.slice(0, visibleCount).map(note => {
         let noteTextContent = extractTextFromHtml(note.text);

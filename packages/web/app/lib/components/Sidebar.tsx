@@ -1,14 +1,14 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import SearchBarNote from './search_bar_note';
 import NoteListView from './note_listview';
 import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { usersService } from '../services';
+import { notesService, usersService } from '../services';
 import { useStudentNotes } from '../hooks/queries/useNotes';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,13 +18,12 @@ type SidebarProps = {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, viewMode, draftNote, setDraftNote, setSelectedNoteId } = useNotesStore(
+  const { notes, fetchNotes, viewMode, addNote, setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
       notes: state.notes,
       fetchNotes: state.fetchNotes,
       viewMode: state.viewMode,
-      draftNote: state.draftNote,
-      setDraftNote: state.setDraftNote,
+      addNote: state.addNote,
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
@@ -37,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
 
   // TanStack Query for student notes (instructor review mode) with automatic polling
   const { data: studentNotes = [] } = useStudentNotes(
@@ -46,8 +46,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
   const handleAddNote = async () => {
     const userId = user?.uid;
-    if (userId) {
-      const newDraftNote: newNote = {
+    if (!userId) {
+      console.error('User ID is null - cannot create a new note');
+      return;
+    }
+
+    if (isCreatingNote) return; // Prevent double-clicks
+
+    setIsCreatingNote(true);
+    try {
+      // Create the note on the server immediately
+      const newNoteData = {
         title: '',
         text: '',
         time: new Date(),
@@ -61,11 +70,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         isArchived: false,
       };
 
-      setDraftNote(newDraftNote);
-      setSelectedNoteId('draft');
-      onNoteSelect(newDraftNote, true);
-    } else {
-      console.error('User ID is null - cannot create a new note');
+      const data = await notesService.create(newNoteData);
+      const newNoteId = data['@id'] || (data as any).id;
+
+      if (!newNoteId) {
+        throw new Error('No ID returned from server');
+      }
+
+      const savedNote: Note = {
+        ...newNoteData,
+        id: newNoteId,
+        uid: (data as any).uid || newNoteId,
+      };
+
+      // Add to store and select it
+      addNote(savedNote);
+      setSelectedNoteId(newNoteId);
+      onNoteSelect(savedNote, false); // Not a "new note" anymore - it has an ID
+    } catch (error) {
+      console.error('Error creating new note:', error);
+    } finally {
+      setIsCreatingNote(false);
     }
   };
 
@@ -220,13 +245,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             isSearching={isSearching}
             viewMode={viewMode}
             isInstructor={isInstructor}
-            draftNote={!showPublished ? draftNote : null}
-            onDraftSelect={() => {
-              if (draftNote) {
-                setSelectedNoteId('draft');
-                onNoteSelect(draftNote, true);
-              }
-            }}
           />
         </div>
       </div>
@@ -237,10 +255,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             id='add-note-button'
             data-testid='add-note-button'
             onClick={handleAddNote}
-            className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700'
+            disabled={isCreatingNote}
+            className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
           >
-            <Plus size={18} className='mr-2' />
-            New Note
+            {isCreatingNote ? (
+              <>
+                <Loader2 size={18} className='mr-2 animate-spin' />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus size={18} className='mr-2' />
+                New Note
+              </>
+            )}
           </Button>
         </div>
       )}

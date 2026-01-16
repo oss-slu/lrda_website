@@ -40,17 +40,9 @@ export default function NoteEditor({
 }: NoteEditorProps) {
   const { noteState, noteHandlers } = useNoteState(initialNote as Note);
 
-  // Stable editor session key - only changes when switching to a different note
-  // This prevents the editor from remounting when a draft is saved
-  const initialNoteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
-  const editorSessionKey = useMemo(() => {
-    if (initialNoteId) {
-      return `note-${initialNoteId}`;
-    }
-    // For new notes, generate a stable session ID that persists through the save
-    return `new-${++newNoteSessionCounter}`;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialNoteId ?? (isNewNote ? 'new' : 'unknown')]);
+  // Editor session key - changes when switching to a different note
+  const noteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
+  const editorSessionKey = noteId ? `note-${noteId}` : `new-${++newNoteSessionCounter}`;
 
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
