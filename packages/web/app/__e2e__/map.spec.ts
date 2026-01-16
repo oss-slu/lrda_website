@@ -31,7 +31,7 @@ test.describe('Map Page', () => {
     expect(hasElements).toBeTruthy();
 
     // Check for search input (key map page element)
-    const searchInput = page.getByPlaceholder('Search places or notes...');
+    const searchInput = page.getByPlaceholder('Search notes...');
     await expect(searchInput).toBeVisible();
 
     // Check for map controls (zoom buttons)
