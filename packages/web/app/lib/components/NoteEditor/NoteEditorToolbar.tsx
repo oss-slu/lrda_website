@@ -78,7 +78,7 @@ export default function NoteEditorToolbar({
   };
 
   return (
-    <div className='ml-auto flex items-center gap-4'>
+    <>
       <div ref={dateRef}>
         <TimePicker
           initialDate={noteState.time || new Date()}
@@ -108,7 +108,7 @@ export default function NoteEditorToolbar({
       <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
         <PopoverTrigger asChild>
           <button
-            className='group inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
             aria-label='Download note'
           >
             <Download
@@ -119,13 +119,13 @@ export default function NoteEditorToolbar({
           </button>
         </PopoverTrigger>
         <PopoverContent className='w-48 p-2' align='end'>
-          <div className='flex flex-col gap-2'>
+          <div className='flex flex-col gap-1'>
             <button
               onClick={async () => {
                 setIsDownloadPopoverOpen(false);
                 await handleDownload('pdf');
               }}
-              className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full rounded-md px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none'
             >
               Download as PDF
             </button>
@@ -134,13 +134,13 @@ export default function NoteEditorToolbar({
                 setIsDownloadPopoverOpen(false);
                 await handleDownload('docx');
               }}
-              className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full rounded-md px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none'
             >
               Download as DOCX
             </button>
           </div>
         </PopoverContent>
       </Popover>
-    </div>
+    </>
   );
 }

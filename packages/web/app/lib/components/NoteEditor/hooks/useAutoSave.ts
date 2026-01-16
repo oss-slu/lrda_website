@@ -27,6 +27,7 @@ interface UseAutoSaveOptions {
 interface UseAutoSaveResult {
   isSaving: boolean;
   isCreatingNew: boolean;
+  lastSavedAt: Date | null;
 }
 
 export const useAutoSave = ({
@@ -39,6 +40,7 @@ export const useAutoSave = ({
 }: UseAutoSaveOptions): UseAutoSaveResult => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isCreatingNew, setIsCreatingNew] = useState(isNewNote);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedSnapshotRef = useRef<LastSavedSnapshot | null>(null);
   const isSavingRef = useRef(false);
@@ -56,6 +58,7 @@ export const useAutoSave = ({
   const updateNote = useNotesStore(state => state.updateNote);
   const addNote = useNotesStore(state => state.addNote);
   const clearDraftNote = useNotesStore(state => state.clearDraftNote);
+  const setSelectedNoteId = useNotesStore(state => state.setSelectedNoteId);
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
@@ -130,7 +133,10 @@ export const useAutoSave = ({
           noteHandlersRef.current.setNote(savedNote as Note);
           addNote(savedNote as Note);
           clearDraftNote();
+          // Update selected note to the newly created note
+          setSelectedNoteId(newNoteId);
           setIsCreatingNew(false);
+          setLastSavedAt(new Date());
           lastSavedSnapshotRef.current = {
             title: title,
             text: editorContent,
@@ -198,7 +204,6 @@ export const useAutoSave = ({
       };
 
       try {
-        console.log('Auto-saving note...', updatedNote);
         await notesService.update(updatedNote);
 
         updateNote(noteId, {
@@ -216,6 +221,7 @@ export const useAutoSave = ({
           latitude: latitude,
           longitude: longitude,
         };
+        setLastSavedAt(new Date());
       } catch (error) {
         console.error('Auto-save error:', error);
       } finally {
@@ -247,6 +253,7 @@ export const useAutoSave = ({
     updateNote,
     addNote,
     clearDraftNote,
+    setSelectedNoteId,
     time,
     images,
     videos,
@@ -258,5 +265,6 @@ export const useAutoSave = ({
   return {
     isSaving,
     isCreatingNew,
+    lastSavedAt,
   };
 };

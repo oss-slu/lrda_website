@@ -84,7 +84,7 @@ export default function NoteEditor({
     lastEditTimeRef,
   });
 
-  const { isSaving } = useAutoSave({
+  const { isSaving, lastSavedAt } = useAutoSave({
     noteState,
     noteHandlers,
     isNewNote,
@@ -325,6 +325,7 @@ export default function NoteEditor({
                   noteState={noteState}
                   noteHandlers={noteHandlers}
                   isSaving={isSaving}
+                  lastSavedAt={lastSavedAt}
                   isViewingStudentNote={isViewingStudentNote}
                   userId={userId}
                   instructorId={instructorId}
@@ -335,9 +336,7 @@ export default function NoteEditor({
                   onTitleChange={handleEdit}
                   titleRef={titleRef}
                   deleteRef={deleteRef}
-                />
-
-                <div className='-mt-4 flex flex-row items-center gap-4 pb-4'>
+                >
                   <NoteEditorToolbar
                     noteState={noteState}
                     noteHandlers={noteHandlers}
@@ -347,7 +346,7 @@ export default function NoteEditor({
                     dateRef={dateRef}
                     locationRef={locationRef}
                   />
-                </div>
+                </NoteEditorHeader>
 
                 <NoteEditorContent
                   noteState={noteState}

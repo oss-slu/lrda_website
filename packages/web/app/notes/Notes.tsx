@@ -27,8 +27,6 @@ export default function Notes() {
   const [isNewNote, setIsNewNote] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>('');
 
-  console.log('Notes page render');
-
   // Fetch notes when user logs in
   useEffect(() => {
     const loadNotes = async () => {

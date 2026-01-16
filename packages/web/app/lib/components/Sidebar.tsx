@@ -38,8 +38,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
 
-  console.log('Sidebar render');
-
   // TanStack Query for student notes (instructor review mode) with automatic polling
   const { data: studentNotes = [] } = useStudentNotes(
     user?.uid ?? null,
