@@ -86,7 +86,7 @@
     "file-saver": "^2.0.5",
     "firebase": "^12.5.0",
     "intro.js": "^8.3.2",
-    "jspdf": "^3.0.3",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.548.0",
     "mui-tiptap": "^1.28.1",
     "next": "^16.0.10",
