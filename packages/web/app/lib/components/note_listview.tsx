@@ -170,9 +170,9 @@ const NoteListView: React.FC<NoteListViewProps> = ({
           <div
             key={note.id}
             className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-              isSelected
-                ? 'border-blue-400 bg-blue-50 shadow-md'
-                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+              isSelected ?
+                'border-blue-400 bg-blue-50 shadow-md'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
             }`}
             onClick={() => handleLoadText(note)}
           >
@@ -190,7 +190,9 @@ const NoteListView: React.FC<NoteListViewProps> = ({
                   {creatorNames[note.creator] || 'Loading...'}
                 </p>
               )}
-              <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>{noteTextContent}</p>
+              <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>
+                {noteTextContent}
+              </p>
             </div>
           </div>
         );
@@ -199,17 +201,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
       {/* Infinite scroll sentinel & loading indicator */}
       {visibleCount < notes.length && (
         <div ref={sentinelRef} className='flex justify-center py-4'>
-          {isLoadingMore ? (
+          {isLoadingMore ?
             <div className='flex items-center gap-2 text-sm text-gray-500'>
               <Loader2 className='h-4 w-4 animate-spin' />
               <span>Loading more...</span>
             </div>
-          ) : (
-            <div className='flex flex-col gap-2'>
+          : <div className='flex flex-col gap-2'>
               <Skeleton className='h-16 w-full rounded-xl' />
               <Skeleton className='h-16 w-full rounded-xl' />
             </div>
-          )}
+          }
         </div>
       )}
 

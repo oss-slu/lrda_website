@@ -25,9 +25,8 @@
     "clear-port": "./scripts/clear-port.sh",
     "docker:up": "cd packages/server && docker compose up -d",
     "docker:down": "cd packages/server && docker compose down",
-    "firebase:emulators": "firebase emulators:start",
-    "firebase:emulators:export": "firebase emulators:export ./firebase-emulator-data",
-    "firebase:emulators:import": "firebase emulators:start --import=./firebase-emulator-data",
+    "firebase:emulators": "firebase emulators:start --import=./firebase-emulator-data --export-on-exit=./firebase-emulator-data",
+    "firebase:clear": "rm -rf ./firebase-emulator-data",
     "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/server/.env.example packages/server/.env && echo 'Created .env.local and .env files - ready for pnpm dev:full'"
   },
   "packageManager": "pnpm@10.20.0",

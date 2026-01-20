@@ -58,3 +58,7 @@ export {
 
 // Tags service
 export { tagsService, TagsService } from './tags/tags.service';
+
+// Admin service
+export { adminService, AdminService } from './admin/admin.service';
+export type { AdminUserData, PendingApplication, AdminStats } from './admin/admin.service';

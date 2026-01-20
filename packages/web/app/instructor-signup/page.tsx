@@ -115,6 +115,10 @@ const InstructorSignupPage = () => {
         name: `${firstName} ${lastName}`,
         description: description, // Description is now mandatory for all instructor signups
         isInstructor: true, // This page is specifically for instructor signup
+        roles: {
+          administrator: false,
+          contributor: true,
+        },
         students: [], // Empty array to store students
         createdAt: Timestamp.now(),
       };

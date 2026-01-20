@@ -472,7 +472,9 @@ body {
   font-family: sans-serif;
   overflow: hidden;
   max-height: 360px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.1);
   animation: popup-fade-in 0.15s ease-out;
   width: 220px;
 }

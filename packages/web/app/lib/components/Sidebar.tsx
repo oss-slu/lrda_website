@@ -258,17 +258,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             disabled={isCreatingNote}
             className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
           >
-            {isCreatingNote ? (
+            {isCreatingNote ?
               <>
                 <Loader2 size={18} className='mr-2 animate-spin' />
                 Creating...
               </>
-            ) : (
-              <>
+            : <>
                 <Plus size={18} className='mr-2' />
                 New Note
               </>
-            )}
+            }
           </Button>
         </div>
       )}
