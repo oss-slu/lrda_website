@@ -2,96 +2,18 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - openai_tags
-      - memoryleak
-      - december-sprint
+    branches: [main]
   pull_request:
-    branches:
-      - main
-      - openai_tags
-      - memoryleak
-      - december-sprint
+    branches: [main]
 
-# Prevent duplicate workflow runs
-# When a PR is synchronized, both 'push' and 'pull_request' events fire
-# Strategy:
-# - If it's a push event (not part of a PR), let it run
-# - If it's a pull_request event, let it run
-# - If both fire (PR synchronized), prefer pull_request event:
-#   * Use a concurrency group that groups by branch/PR
-#   * Set cancel-in-progress: true so the later event cancels the earlier one
-#   * Since pull_request events typically fire after push events, the pull_request will run
-#   * For push events, we'll check if there's an open PR and skip if so
 concurrency:
-  # Group by PR head ref if it's a PR event, otherwise by branch name
-  # This ensures push and pull_request events for the same branch/PR are grouped together
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
-  # Cancel in-progress runs when a new run starts (ensures only one runs at a time)
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  actions: read
-  deployments: write # Required for Netlify deployment status
-
 jobs:
-  # Check if push event is from a PR branch (to skip it in favor of pull_request event)
-  check-pr:
-    name: Check for open PR
-    runs-on: ubuntu-latest
-    # Always run, but only check for push events
-    outputs:
-      has-pr: ${{ steps.check.outputs.has-pr || steps.default.outputs.has-pr || 'false' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Authenticate GitHub CLI
-        if: github.event_name == 'push'
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token || echo "GitHub CLI authentication failed, continuing anyway"
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check if branch has open PR
-        id: check
-        if: github.event_name == 'push'
-        run: |
-          BRANCH_NAME="${{ github.ref_name }}"
-          # Check if there's an open PR for this branch
-          # If gh command fails, default to false (run the workflow)
-          PR_COUNT=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq 'length' 2>/dev/null || echo "0")
-          if [ "$PR_COUNT" -gt 0 ]; then
-            echo "has-pr=true" >> $GITHUB_OUTPUT
-            echo "Found open PR for branch $BRANCH_NAME, will skip push event"
-          else
-            echo "has-pr=false" >> $GITHUB_OUTPUT
-            echo "No open PR for branch $BRANCH_NAME, will run push event"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set default for pull_request events
-        id: default
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "has-pr=false" >> $GITHUB_OUTPUT
-          echo "Pull request event - will run workflow"
-
-  # Job 1: Unit Tests
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    # For push events: only run if there's no open PR (let pull_request event handle PRs)
-    # For pull_request events: always run
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
 
     steps:
       - name: Checkout repository
@@ -127,16 +49,10 @@ jobs:
           # Suppress console output in CI
           SUPPRESS_CONSOLE: 'true'
 
-  # Job 2: E2E Tests (includes build)
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [check-pr, unit-tests]
-    # For push events: only run if there's no open PR (let pull_request event handle PRs)
-    # For pull_request events: always run
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || needs.check-pr.outputs.has-pr != 'true'))
+    needs: unit-tests
     timeout-minutes: 60
     steps:
       - name: Checkout repository
@@ -202,181 +118,3 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 30
-
-  # Job 3: Deploy to Netlify (after all tests pass)
-  # - Pull Requests: Deploy preview builds
-  # - Push to main: Deploy to production
-  # - Push to other branches: Deploy preview builds
-  deploy-netlify:
-    name: Deploy to Netlify
-    runs-on: ubuntu-latest
-    needs: [check-pr, unit-tests, e2e-tests]
-    # For push events: only run if there's no open PR (let pull_request event handle PRs)
-    # For pull_request events: always run
-    # Also allow direct pushes to main (production deployments)
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || (needs.check-pr.result == 'success' && needs.check-pr.outputs.has-pr != 'true')))
-    # Allow workflow to run from forks (needed for PRs from external contributors)
-    permissions:
-      contents: read
-      pull-requests: write # Needed to comment on PRs with preview URL
-    # Use environment context only for main branch (production deployments)
-    # For PRs, we need repository-level secrets since environment is restricted to main branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || '' }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.20.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache Next.js build
-        uses: actions/cache@v4
-        with:
-          path: |
-            packages/web/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('packages/web/**/*.js', 'packages/web/**/*.jsx', 'packages/web/**/*.ts', 'packages/web/**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-
-      - name: Install Netlify Next.js plugin
-        run: pnpm add -D -w @netlify/plugin-nextjs
-
-      - name: Build the application
-        run: pnpm --filter web build
-        env:
-          CI: true
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_RERUM_PREFIX: ${{ secrets.NEXT_PUBLIC_RERUM_PREFIX }}
-          NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
-          NEXT_PUBLIC_OPENAI_API_URL: ${{ secrets.NEXT_PUBLIC_OPENAI_API_URL }}
-
-      - name: Setup Netlify CLI
-        run: npm install -g netlify-cli
-
-      - name: Setup GitHub CLI and jq (for PR comments and JSON parsing)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-          # gh CLI is usually pre-installed in GitHub Actions runners
-
-      - name: Validate Netlify secrets
-        run: |
-          # Check if secrets are set (they may be empty strings if not configured)
-          # For main branch: uses environment secrets
-          # For PRs: uses repository secrets
-          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ "$NETLIFY_AUTH_TOKEN" == "" ]; then
-            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-              echo "::error::NETLIFY_AUTH_TOKEN not accessible. For main branch, ensure secret is set in: Settings > Environments > production > Environment secrets"
-            else
-              echo "::error::NETLIFY_AUTH_TOKEN not accessible. For PRs/previews, ensure secret is set in: Settings > Secrets and variables > Actions > Repository secrets"
-            fi
-            exit 1
-          fi
-          if [ -z "$NETLIFY_SITE_ID" ] || [ "$NETLIFY_SITE_ID" == "" ]; then
-            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-              echo "::error::NETLIFY_SITE_ID not accessible. For main branch, ensure secret is set in: Settings > Environments > production > Environment secrets"
-            else
-              echo "::error::NETLIFY_SITE_ID not accessible. For PRs/previews, ensure secret is set in: Settings > Secrets and variables > Actions > Repository secrets"
-            fi
-            exit 1
-          fi
-          echo "✓ Netlify secrets are configured"
-        env:
-          # Try environment secrets first (for main branch), fall back to repository secrets (for PRs)
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-
-      - name: Authenticate with Netlify
-        run: |
-          # Create Netlify config directory and auth file (non-interactive)
-          mkdir -p ~/.config/netlify
-          # Create config file with token (Netlify CLI reads this automatically)
-          cat > ~/.config/netlify/config.json <<EOF
-          {
-            "auth": {
-              "token": "$NETLIFY_AUTH_TOKEN"
-            }
-          }
-          EOF
-          echo "✓ Netlify authentication configured"
-          # Verify config file exists (without printing token)
-          if [ -f ~/.config/netlify/config.json ]; then
-            echo "✓ Config file created successfully"
-          else
-            echo "::error::Failed to create Netlify config file"
-            exit 1
-          fi
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-
-      - name: Deploy to Netlify
-        id: netlify-deploy
-        run: |
-          # Create state file to pre-link the site and skip project detection
-          mkdir -p .netlify
-          cat > .netlify/state.json << EOF
-          {
-            "siteId": "$NETLIFY_SITE_ID"
-          }
-          EOF
-
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Pull requests always get preview deployments (works for all PRs, including from forks)
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-            echo "Deploying preview for PR #${PR_NUMBER} by @${PR_AUTHOR}"
-            echo "Branch: ${PR_BRANCH}"
-            # Deploy the built .next directory (already built in previous step)
-            # Change to packages/web to avoid project detection issues
-            cd packages/web
-            DEPLOY_OUTPUT=$(netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: PR #${PR_NUMBER} by @${PR_AUTHOR} - ${PR_TITLE}" --json)
-            echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url // empty' > deploy_url.txt
-            if [ -s deploy_url.txt ]; then
-              PREVIEW_URL=$(cat deploy_url.txt)
-              echo "🚀 Preview deployment ready: ${PREVIEW_URL}"
-              # Optionally comment on PR (requires permissions: pull-requests: write)
-              # Note: May not work for PRs from forks due to token restrictions
-              if [ -n "$PREVIEW_URL" ]; then
-                echo "::notice::Preview URL: ${PREVIEW_URL}"
-                # Try to comment on PR (may fail for fork PRs, which is okay)
-                # Use $'...' syntax to properly interpret escape sequences
-                COMMENT_BODY=$'🚀 **Preview deployment ready!**\n\n📍 **Preview URL:** '"${PREVIEW_URL}"$'\n📝 **Branch:** `'"${PR_BRANCH}"$'`\n👤 **Author:** @'"${PR_AUTHOR}"
-                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" 2>&1 || echo "Note: Could not post PR comment (this is normal for PRs from forks)"
-              fi
-            fi
-          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            # Push to main = production deployment
-            echo "Deploying to production..."
-            cd packages/web && netlify deploy --prod --dir=.next --site="$NETLIFY_SITE_ID" --message="Production deploy from main - ${{ github.sha }}" --json
-          else
-            # Push to other branches = preview deployment
-            echo "Deploying preview for branch: ${{ github.ref_name }}"
-            cd packages/web && netlify deploy --dir=.next --site="$NETLIFY_SITE_ID" --message="Preview: ${{ github.ref_name }} - ${{ github.sha }}" --json
-          fi
-        env:
-          # For main branch: uses environment secrets from 'production' environment
-          # For PRs: uses repository secrets (create these in Settings > Secrets and variables > Actions)
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
