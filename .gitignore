@@ -31,3 +31,12 @@ playwright/.cache/
 
 # Plans and drafts and audits
 /plans/
+
+# Terraform
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/*.tfstate
+infrastructure/*.tfstate.*
+infrastructure/tfplan
+infrastructure/terraform.tfvars
+infrastructure/*.backup

@@ -1,0 +1,64 @@
+name: Infrastructure
+
+# DISABLED: Manual trigger only until ready for automated deployments
+# To enable automatic runs, uncomment the push/pull_request triggers below
+on:
+  workflow_dispatch: # Manual trigger only
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'infrastructure/**'
+  # pull_request:
+  #   paths:
+  #     - 'infrastructure/**'
+
+env:
+  AWS_REGION: us-east-1
+  TF_VERSION: 1.6.0
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="environment=${{ secrets.TF_ENVIRONMENT || 'staging' }}" \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="domain_name=${{ secrets.DOMAIN_NAME }}" \
+            -var="ssh_allowed_ips=${{ secrets.SSH_ALLOWED_IPS }}" \
+            -var="key_pair_name=${{ secrets.KEY_PAIR_NAME }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan

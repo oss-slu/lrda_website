@@ -39,6 +39,7 @@ const getMeRoute = createRoute({
   method: "get",
   path: "/me",
   tags: ["Users"],
+  middleware: [requireAuth],
   responses: {
     200: {
       content: { "application/json": { schema: UserDetailSchema } },
@@ -80,6 +81,7 @@ const updateMeRoute = createRoute({
   method: "patch",
   path: "/me",
   tags: ["Users"],
+  middleware: [requireAuth],
   request: {
     body: {
       content: {
@@ -87,6 +89,7 @@ const updateMeRoute = createRoute({
           schema: z.object({
             name: z.string().optional(),
             image: z.string().nullable().optional(),
+            isInstructor: z.boolean().optional(),
             pendingInstructorDescription: z.string().nullable().optional(),
           }),
         },
@@ -125,6 +128,7 @@ const getStudentsRoute = createRoute({
   method: "get",
   path: "/{id}/students",
   tags: ["Users"],
+  middleware: [requireAuth],
   request: {
     params: z.object({
       id: z.string(),
@@ -154,6 +158,7 @@ const assignInstructorRoute = createRoute({
   method: "post",
   path: "/me/instructor",
   tags: ["Users"],
+  middleware: [requireAuth],
   request: {
     body: {
       content: {
@@ -192,9 +197,8 @@ const assignInstructorRoute = createRoute({
 // Create router
 export const userRoutes = new OpenAPIHono<AppEnv>()
   // GET /users/me - requires auth
-  .use("/me", requireAuth)
   .openapi(getMeRoute, async (c) => {
-    const authUser = c.get("user")!;
+    const authUser = c.get("user") as NonNullable<AppEnv["Variables"]["user"]>;
 
     const result = await db.query.user.findFirst({
       where: eq(user.id, authUser.id),
@@ -232,7 +236,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // PATCH /users/me - requires auth
   .openapi(updateMeRoute, async (c) => {
-    const authUser = c.get("user")!;
+    const authUser = c.get("user") as NonNullable<AppEnv["Variables"]["user"]>;
     const body = c.req.valid("json");
 
     const [updated] = await db
@@ -265,9 +269,8 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
   })
 
   // POST /users/me/instructor - requires auth
-  .use("/me/instructor", requireAuth)
   .openapi(assignInstructorRoute, async (c) => {
-    const authUser = c.get("user")!;
+    const authUser = c.get("user") as NonNullable<AppEnv["Variables"]["user"]>;
     const body = c.req.valid("json");
 
     // Verify the instructor exists and is actually an instructor
@@ -344,10 +347,9 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
   })
 
   // GET /users/:id/students - requires auth
-  .use("/:id/students", requireAuth)
   .openapi(getStudentsRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const authUser = c.get("user")!;
+    const authUser = c.get("user") as NonNullable<AppEnv["Variables"]["user"]>;
 
     // First verify the instructor exists and is actually an instructor
     const instructor = await db.query.user.findFirst({

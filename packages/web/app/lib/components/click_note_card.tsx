@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; // comment test
-import { usersService } from '../services';
+import { fetchCreatorName } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 'lucide-react';
@@ -61,10 +61,9 @@ const ClickableNote: React.FC<{
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
-    usersService
-      .fetchCreatorName(note.creator)
-      .then(name => setCreator(name))
-      .catch(error => {
+    fetchCreatorName(note.creator)
+      .then((name: string) => setCreator(name))
+      .catch((error: Error) => {
         console.error('Error fetching creator name:', error, note.creator);
         setCreator('Error loading name');
       });

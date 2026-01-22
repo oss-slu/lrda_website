@@ -1,8 +1,8 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { cors } from "hono/cors";
-import { routes } from "../routes";
-import { auth } from "../auth";
-import type { AppEnv } from "../types";
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { cors } from 'hono/cors';
+import { routes } from '../routes';
+import { auth } from '../auth';
+import type { AppEnv } from '../types';
 
 // Create a test app instance (without listening)
 export function createTestApp() {
@@ -10,21 +10,21 @@ export function createTestApp() {
 
   // CORS middleware
   app.use(
-    "*",
+    '*',
     cors({
-      origin: "*",
+      origin: '*',
       credentials: true,
-      allowHeaders: ["Content-Type", "Authorization"],
-    })
+      allowHeaders: ['Content-Type', 'Authorization'],
+    }),
   );
 
   // Mount better-auth handler
-  app.on(["POST", "GET"], "/api/auth/*", (c) => {
+  app.on(['POST', 'GET'], '/api/auth/*', c => {
     return auth.handler(c.req.raw);
   });
 
   // Mount API routes
-  app.route("/api", routes);
+  app.route('/api', routes);
 
   return app;
 }
@@ -37,14 +37,14 @@ export async function request(
   options: {
     body?: unknown;
     headers?: Record<string, string>;
-  } = {}
+  } = {},
 ) {
   const { body, headers = {} } = options;
 
   const req = new Request(`http://localhost${path}`, {
     method,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,

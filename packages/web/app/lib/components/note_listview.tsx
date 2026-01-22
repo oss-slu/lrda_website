@@ -5,7 +5,7 @@ import { extractTextFromHtml } from '../utils/sanitize';
 import { FileText, Search, Loader2 } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import { usersService } from '../services';
+import { fetchCreatorName } from '../services';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type NoteListViewProps = {
@@ -58,7 +58,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
         await Promise.all(
           uniqueCreators.map(async creatorId => {
             try {
-              const name = await usersService.fetchCreatorName(creatorId);
+              const name = await fetchCreatorName(creatorId);
               names[creatorId] = name || 'Unknown User';
             } catch {
               names[creatorId] = 'Unknown User';

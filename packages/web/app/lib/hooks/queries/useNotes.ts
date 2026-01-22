@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { notesService, usersService } from '../../services';
+import { notesService, fetchUserById } from '../../services';
 import { Note } from '@/app/types';
 import DataConversion from '../../utils/data_conversion';
 
@@ -89,7 +89,7 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
       if (!instructorId) return [];
 
       // Fetch instructor data to get student list
-      const instructorData = await usersService.fetchById(instructorId);
+      const instructorData = await fetchUserById(instructorId);
       if (!instructorData || !instructorData.isInstructor) {
         return [];
       }

@@ -26,8 +26,22 @@ export type {
 export { transformNoteToRerum } from './notes/notes.types';
 
 // Users service
-export { usersService, UsersService } from './users/users.service';
-export type { UserData, UserRoles, CreateUserOptions, RerumAgentData } from './users/users.types';
+export {
+  fetchMe,
+  fetchUserById,
+  fetchProfileById,
+  fetchInstructors,
+  updateProfile,
+  assignInstructor,
+  fetchCreatorName,
+} from './users/users.service';
+export type {
+  UserData,
+  UserRoles,
+  UserProfile,
+  UpdateProfileOptions,
+  InstructorInfo,
+} from './users/users.types';
 
 // Comments service
 export { commentsService, CommentsService } from './comments/comments.service';
@@ -39,7 +53,11 @@ export type {
 } from './comments/comments.types';
 
 // Instructor service
-export { instructorService, InstructorService } from './instructor/instructor.service';
+export {
+  fetchStudents,
+  requestApproval,
+  sendNotification as sendInstructorNotification,
+} from './instructor/instructor.service';
 export type {
   StudentInfo,
   ApprovalNoteData,
@@ -60,5 +78,14 @@ export {
 export { tagsService, TagsService } from './tags/tags.service';
 
 // Admin service
-export { adminService, AdminService } from './admin/admin.service';
+export {
+  fetchAllUsers,
+  fetchPendingApplications,
+  getStats as getAdminStats,
+  approveApplication,
+  rejectApplication,
+} from './admin/admin.service';
 export type { AdminUserData, PendingApplication, AdminStats } from './admin/admin.service';
+
+// API utilities
+export { fetchWithAuth } from './api';

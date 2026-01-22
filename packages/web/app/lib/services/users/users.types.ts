@@ -2,8 +2,13 @@
  * Type definitions for the Users service.
  */
 
+import type { UserProfile as AppUserProfile } from '@/app/types';
+
+// Re-export the main UserProfile type
+export type UserProfile = AppUserProfile;
+
 /**
- * User roles in the system.
+ * User roles in the system (legacy format).
  */
 export interface UserRoles {
   administrator: boolean;
@@ -11,8 +16,8 @@ export interface UserRoles {
 }
 
 /**
- * Core user data structure.
- * Note: This type aligns with app/types.ts UserData
+ * Legacy user data structure for backward compatibility.
+ * @deprecated Use UserProfile instead
  */
 export interface UserData {
   uid: string;
@@ -25,28 +30,22 @@ export interface UserData {
 }
 
 /**
- * Options for creating a new user.
+ * Options for updating a user profile.
  */
-export interface CreateUserOptions {
-  uid: string;
-  name: string;
-  email?: string;
+export interface UpdateProfileOptions {
+  name?: string;
+  image?: string | null;
   isInstructor?: boolean;
-  parentInstructorId?: string;
+  pendingInstructorDescription?: string | null;
 }
 
 /**
- * Response from RERUM for user/agent queries.
+ * Response from the instructors endpoint.
  */
-export interface RerumAgentData {
-  '@id': string;
-  '@type': string;
-  uid: string;
-  name?: string;
-  displayName?: string;
-  email?: string;
-  roles?: UserRoles;
-  isInstructor?: boolean;
-  students?: string[];
-  parentInstructorId?: string;
+export interface InstructorInfo {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  createdAt: string;
 }

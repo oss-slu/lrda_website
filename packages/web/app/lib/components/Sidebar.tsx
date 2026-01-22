@@ -8,7 +8,7 @@ import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService, usersService } from '../services';
+import { notesService, fetchUserById } from '../services';
 import { useStudentNotes } from '../hooks/queries/useNotes';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
       let userData = null;
       try {
-        userData = await usersService.fetchById(userId);
+        userData = await fetchUserById(userId);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }

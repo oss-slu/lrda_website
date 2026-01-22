@@ -1,13 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { auth, db } from '../lib/config/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { Timestamp, doc, setDoc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../lib/stores/authStore';
-import { instructorService } from '../lib/services';
+import { updateProfile } from '../lib/services';
 
 const InstructorSignupPage = () => {
   const router = useRouter();
@@ -17,12 +14,15 @@ const InstructorSignupPage = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [description, setDescription] = useState(''); // New state for description
+  const [description, setDescription] = useState('');
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [emailError, setEmailError] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signup } = useAuthStore();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,7 +37,7 @@ const InstructorSignupPage = () => {
   };
 
   const calculatePasswordStrength = (password: string | any[]) => {
-    if (password.length === 0) return 0; // Ensure strength is 0 for an empty password
+    if (password.length === 0) return 0;
     const checks = Object.values(passwordValidationFeedback).filter(Boolean);
     return (checks.length / Object.keys(passwordValidationFeedback).length) * 100;
   };
@@ -51,17 +51,15 @@ const InstructorSignupPage = () => {
   const handleEmailChange = (e: { target: { value: any } }) => {
     const value = e.target.value;
     setEmail(value);
-    setEmailError(false); // Reset error state while typing
+    setEmailError(false);
 
-    // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
 
-    // Set a timeout to validate the email after the user stops typing
     setTypingTimeout(
       setTimeout(() => {
         const isValid = validateEmail(value);
         setEmailError(!isValid);
-      }, 500), // Delay of 500ms after user stops typing
+      }, 500),
     );
   };
 
@@ -96,79 +94,42 @@ const InstructorSignupPage = () => {
       return;
     }
 
-    if (!auth) {
-      console.error('Firebase auth is not initialized');
-      return;
-    }
+    setIsLoading(true);
+
     try {
-      console.log('Starting user registration with Firebase Authentication...');
+      const fullName = `${firstName} ${lastName}`;
 
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log('User successfully registered:', user.uid);
-
-      // Prepare user data
-      const userData = {
-        uid: user.uid,
+      // Create user via better-auth
+      await signup({
         email,
-        name: `${firstName} ${lastName}`,
-        description: description, // Description is now mandatory for all instructor signups
-        isInstructor: true, // This page is specifically for instructor signup
-        roles: {
-          administrator: false,
-          contributor: true,
-        },
-        students: [], // Empty array to store students
-        createdAt: Timestamp.now(),
-      };
+        password,
+        name: fullName,
+      });
 
-      // Save user data in Firestore `users` collection
-      if (!db) {
-        throw new Error('Firebase db is not initialized');
-      }
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, userData);
-
-      // Send email notification to admin
+      // Update user profile to set as instructor with description
       try {
-        await instructorService.sendNotification(email, `${firstName} ${lastName}`, description);
-      } catch (emailError) {
-        console.error('Error sending email notification:', emailError);
-        // Don't fail the signup if email fails
+        await updateProfile({
+          isInstructor: true,
+          pendingInstructorDescription: description,
+        });
+      } catch (profileError) {
+        console.error('Failed to set instructor profile:', profileError);
+        toast.warning(
+          'Account created but instructor status may not be set. Please contact support.',
+        );
       }
 
-      toast.success('Instructor account created successfully! Logging you in...');
+      toast.success('Instructor account created successfully!');
 
-      // Auto-login the user using the auth store
-      const { login } = useAuthStore.getState();
-      try {
-        await login(email, password);
-        console.log('Instructor auto-logged in successfully');
-
-        // Redirect to map page
-        router.push('/map');
-      } catch (loginError) {
-        console.error('Auto-login failed:', loginError);
-        // Still show success message and reset form even if auto-login fails
-        toast.success('Instructor account created! Please log in manually.');
-      }
-
-      // Reset form fields
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setFirstName('');
-      setLastName('');
-      setDescription('');
+      // Redirect to map page
+      router.push('/map');
     } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error during signup: ', error.message);
-        toast.error(`Signup failed: ${error.message}`);
-      } else {
-        console.error('Unexpected error during signup: ', error);
-        toast.error('Signup failed: An unexpected error occurred.');
-      }
+      console.error('Signup error:', error);
+      toast.error(
+        `Signup failed: ${error instanceof Error ? error.message : 'An unexpected error occurred.'}`,
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -180,7 +141,7 @@ const InstructorSignupPage = () => {
       <div className='absolute inset-10 flex flex-col items-center justify-center'>
         <div
           className='relative w-full rounded-lg bg-white p-8 shadow-lg md:w-1/2'
-          style={{ minHeight: '50px' }} // Ensure minimum height to avoid upward push
+          style={{ minHeight: '50px' }}
         >
           <h1 className='text-black-500 mb-10 text-center text-3xl font-bold'>
             Instructor Sign Up
@@ -218,7 +179,7 @@ const InstructorSignupPage = () => {
               className='w-full rounded-lg border border-gray-300 p-3'
             />
             {emailError && (
-              <p className='mt-1 text-sm text-red-500'>Please use a valid .edu email address.</p>
+              <p className='mt-1 text-sm text-red-500'>Please use a valid email address.</p>
             )}
           </div>
           <div className='relative mb-4'>
@@ -237,19 +198,19 @@ const InstructorSignupPage = () => {
               onClick={() => setIsPasswordVisible(!isPasswordVisible)}
               className='absolute right-4 top-3 text-gray-500'
             >
-              {isPasswordVisible ? '👁️' : '👁️‍🗨️'}
+              {isPasswordVisible ? 'Hide' : 'Show'}
             </button>
             {isPasswordFocused && (
               <>
                 <div className='mt-2 text-sm'>
-                  <p>{passwordValidationFeedback.length ? '✔' : '✖'} At least 8 characters</p>
+                  <p>{passwordValidationFeedback.length ? '+' : '-'} At least 8 characters</p>
                   <p>
-                    {passwordValidationFeedback.uppercase ? '✔' : '✖'} At least 1 uppercase letter
+                    {passwordValidationFeedback.uppercase ? '+' : '-'} At least 1 uppercase letter
                   </p>
                   <p>
-                    {passwordValidationFeedback.special ? '✔' : '✖'} At least 1 special character
+                    {passwordValidationFeedback.special ? '+' : '-'} At least 1 special character
                   </p>
-                  <p>{passwordValidationFeedback.number ? '✔' : '✖'} At least 1 number</p>
+                  <p>{passwordValidationFeedback.number ? '+' : '-'} At least 1 number</p>
                 </div>
                 <div className='mt-3 h-2 w-full rounded-lg bg-gray-300'>
                   <div
@@ -285,7 +246,7 @@ const InstructorSignupPage = () => {
               onClick={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
               className='absolute right-4 top-3 text-gray-500'
             >
-              {isConfirmPasswordVisible ? '👁️' : '👁️‍🗨️'}
+              {isConfirmPasswordVisible ? 'Hide' : 'Show'}
             </button>
             {confirmPassword && password !== confirmPassword && (
               <p className='mt-1 text-sm text-red-500'>
@@ -309,9 +270,10 @@ const InstructorSignupPage = () => {
 
           <button
             onClick={handleSignup}
-            className='w-full rounded-lg bg-blue-500 p-3 text-white hover:bg-blue-600'
+            disabled={isLoading}
+            className='w-full rounded-lg bg-blue-500 p-3 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
           >
-            Submit Application
+            {isLoading ? 'Creating Account...' : 'Submit Application'}
           </button>
         </div>
       </div>

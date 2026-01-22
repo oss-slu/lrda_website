@@ -2,121 +2,74 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '../lib/config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import {
-  submitInstructorApplication,
-  canApplyForInstructor,
-  AdminUser,
-  AuthOnlyUser,
-  getInstructorFieldRequirements,
-} from '../lib/utils/adminToInstructor';
+import { useAuthStore } from '../lib/stores/authStore';
+import { updateProfile } from '../lib/services';
 
 export default function AdminToInstructorApplication() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [adminData, setAdminData] = useState<AdminUser | null>(null);
-  const [isNewUser, setIsNewUser] = useState(false);
+  const { isLoggedIn, isLoading: authLoading, profile, isAdmin, isInstructor } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
-    name: '',
-    email: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth) {
-      console.warn('Firebase auth is not initialized');
+    // Wait for auth to be initialized
+    if (authLoading) return;
+
+    if (!isLoggedIn) {
+      router.push('/login');
       return;
     }
-    const unsubscribe = onAuthStateChanged(auth, async currentUser => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Pre-fill form with Firebase Auth data for new users
-        setFormData(prev => ({
-          ...prev,
-          name: currentUser.displayName || '',
-          email: currentUser.email || '',
-        }));
-        await fetchAdminData(currentUser.uid);
-      } else {
-        router.push('/login');
-      }
-    });
 
-    return () => unsubscribe();
-  }, [router]);
-
-  const fetchAdminData = async (uid: string) => {
-    try {
-      const eligibility = await canApplyForInstructor(uid);
-
-      if (eligibility.canApply) {
-        if (eligibility.isNewUser) {
-          // User has authentication but no profile data
-          setIsNewUser(true);
-          setAdminData(null);
-        } else if (eligibility.currentData) {
-          // Existing admin user
-          setIsNewUser(false);
-          setAdminData(eligibility.currentData);
-          setFormData(prev => ({
-            ...prev,
-            name: eligibility.currentData!.name,
-            email: eligibility.currentData!.email,
-          }));
-        }
-      } else {
-        alert(eligibility.reason || 'Only administrators can apply to become instructors.');
-        router.push('/');
-      }
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      alert('Error loading user data.');
-    } finally {
+    // Check eligibility
+    if (isInstructor()) {
+      setError('You are already an instructor.');
       setLoading(false);
+      return;
     }
-  };
+
+    if (profile?.pendingInstructorDescription) {
+      setError('You already have a pending instructor application.');
+      setLoading(false);
+      return;
+    }
+
+    if (!isAdmin()) {
+      setError('Only administrators can apply to become instructors through this page.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+  }, [authLoading, isLoggedIn, profile, isAdmin, isInstructor, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!profile) return;
 
-    // Validate required fields for new users
-    if (isNewUser && (!formData.name.trim() || !formData.email.trim())) {
-      alert('Please fill in all required fields.');
+    if (!formData.description.trim()) {
+      alert('Please provide a description.');
       return;
     }
 
     setSubmitting(true);
     try {
-      if (isNewUser) {
-        // Submit application for new user with authentication only
-        const userData: AuthOnlyUser = {
-          uid: user.uid,
-          email: formData.email,
-          name: formData.name,
-        };
-        await submitInstructorApplication(user.uid, formData.description, userData);
-      } else {
-        // Submit application for existing admin user
-        await submitInstructorApplication(user.uid, formData.description);
-      }
+      // Submit application by updating profile with pending description
+      await updateProfile({
+        pendingInstructorDescription: formData.description,
+      });
 
       alert(
         'Application submitted successfully! Your application is now pending administrator approval.',
       );
       router.push('/');
-    } catch (error: any) {
-      console.error('Error submitting application:', error);
-      console.error('Error details:', {
-        message: error?.message || 'Unknown error',
-        code: error?.code || 'No code',
-        stack: error?.stack || 'No stack',
-      });
+    } catch (err) {
+      console.error('Error submitting application:', err);
       alert(
-        `Error submitting application: ${error?.message || 'Unknown error'}. Please try again.`,
+        `Error submitting application: ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
       );
     } finally {
       setSubmitting(false);
@@ -131,7 +84,7 @@ export default function AdminToInstructorApplication() {
     }));
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <div className='text-xl'>Loading...</div>
@@ -139,7 +92,23 @@ export default function AdminToInstructorApplication() {
     );
   }
 
-  if (!user) {
+  if (error) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <div className='mb-4 text-xl text-red-600'>{error}</div>
+          <button
+            onClick={() => router.push('/')}
+            className='rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700'
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <div className='text-xl text-red-600'>Access denied. Please log in.</div>
@@ -152,118 +121,45 @@ export default function AdminToInstructorApplication() {
       <div className='mx-auto max-w-2xl'>
         <div className='rounded-lg bg-white p-8 shadow-lg'>
           <div className='mb-8'>
-            <h1 className='mb-2 text-3xl font-bold text-gray-900'>
-              {isNewUser ? 'Complete Your Instructor Profile' : 'Apply to Become an Instructor'}
-            </h1>
+            <h1 className='mb-2 text-3xl font-bold text-gray-900'>Apply to Become an Instructor</h1>
             <p className='text-gray-600'>
-              {isNewUser ?
-                'You have authentication but need to complete your profile to become an instructor.'
-              : 'Complete your instructor application using your existing admin information.'}
+              Complete your instructor application using your existing admin information.
             </p>
           </div>
 
           {/* User Information Section */}
-          {
-            isNewUser ?
-              // New user form - collect basic info
-              <div className='mb-6 rounded-lg border border-blue-300 bg-blue-50 p-4'>
-                <h3 className='mb-3 text-lg font-semibold text-blue-900'>Complete Your Profile</h3>
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                  <div>
-                    <label htmlFor='name' className='mb-1 block text-sm font-medium text-blue-700'>
-                      Full Name *
-                    </label>
-                    <input
-                      type='text'
-                      id='name'
-                      name='name'
-                      required
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className='w-full rounded-md border border-blue-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                      placeholder='Enter your full name'
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor='email' className='mb-1 block text-sm font-medium text-blue-700'>
-                      Email *
-                    </label>
-                    <input
-                      type='email'
-                      id='email'
-                      name='email'
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className='w-full rounded-md border border-blue-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                      placeholder='Enter your email'
-                    />
-                  </div>
-                </div>
+          <div className='mb-6 rounded-lg border border-gray-300 bg-gray-50 p-4'>
+            <h3 className='mb-3 text-lg font-semibold text-gray-900'>Your Information</h3>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700'>Name</label>
+                <p className='text-gray-900'>{profile.name}</p>
               </div>
-              // Existing admin information display
-            : <div className='mb-6 rounded-lg border border-gray-300 bg-gray-50 p-4'>
-                <h3 className='mb-3 text-lg font-semibold text-gray-900'>Your Admin Information</h3>
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700'>Name</label>
-                    <p className='text-gray-900'>{adminData?.name}</p>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700'>Email</label>
-                    <p className='text-gray-900'>{adminData?.email}</p>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700'>Admin Since</label>
-                    <p className='text-gray-900'>
-                      {adminData?.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700'>Current Roles</label>
-                    <p className='text-gray-900'>
-                      {Object.entries(adminData?.roles || {})
-                        .filter(([_, value]) => value)
-                        .map(([key, _]) => key.charAt(0).toUpperCase() + key.slice(1))
-                        .join(', ')}
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700'>Email</label>
+                <p className='text-gray-900'>{profile.email}</p>
               </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700'>Role</label>
+                <p className='capitalize text-gray-900'>{profile.role}</p>
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700'>Member Since</label>
+                <p className='text-gray-900'>{new Date(profile.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
 
-          }
-
-          {/* Field Requirements Information */}
+          {/* What You'll Gain Section */}
           <div className='mb-6 rounded-lg border border-gray-300 bg-gray-50 p-4'>
             <h3 className='mb-3 text-lg font-semibold text-gray-900'>
               What You'll Gain as an Instructor
             </h3>
-            <div className='space-y-3'>
-              <div>
-                <h4 className='font-medium text-gray-800'>New Fields to Complete:</h4>
-                <ul className='ml-2 list-inside list-disc text-sm text-gray-700'>
-                  {getInstructorFieldRequirements().requiredFields.map(field => (
-                    <li key={field} className='capitalize'>
-                      {field}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className='font-medium text-gray-800'>
-                  {isNewUser ?
-                    'Your Profile Data Will Be Created:'
-                  : 'Your Admin Data Will Be Preserved:'}
-                </h4>
-                <ul className='ml-2 list-inside list-disc text-sm text-gray-700'>
-                  {getInstructorFieldRequirements().preservedFields.map(field => (
-                    <li key={field} className='capitalize'>
-                      {field}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            <ul className='ml-2 list-inside list-disc text-sm text-gray-700'>
+              <li>Ability to manage and mentor students</li>
+              <li>Access to student notes for review</li>
+              <li>Instructor badge on your profile</li>
+            </ul>
           </div>
 
           {/* Application Form */}
@@ -302,12 +198,7 @@ export default function AdminToInstructorApplication() {
                   <h3 className='text-sm font-medium text-gray-800'>Important Information</h3>
                   <div className='mt-2 text-sm text-gray-700'>
                     <ul className='list-disc space-y-1 pl-5'>
-                      {isNewUser ?
-                        <>
-                          <li>Your profile will be created with administrator privileges</li>
-                          <li>You will retain your administrator privileges</li>
-                        </>
-                      : <li>You will retain your administrator privileges</li>}
+                      <li>You will retain your administrator privileges</li>
                       <li>Your application will be reviewed by an administrator</li>
                       <li>You will be notified once your application is approved or rejected</li>
                       <li>You can start teaching only after approval</li>

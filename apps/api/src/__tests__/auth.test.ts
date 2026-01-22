@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
-import { createTestApp, request } from "./helpers";
-import { db } from "../db";
-import { user, account, session } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { createTestApp, request } from './helpers';
+import { db } from '../db';
+import { user, account, session } from '../db/schema';
+import { eq } from 'drizzle-orm';
 
-describe("Auth endpoints", () => {
+describe('Auth endpoints', () => {
   let app: ReturnType<typeof createTestApp>;
   const testEmail = `auth-test-${Date.now()}@test.com`;
 
@@ -24,40 +24,40 @@ describe("Auth endpoints", () => {
     }
   });
 
-  describe("POST /api/auth/sign-up/email", () => {
-    it("should create a new user", async () => {
-      const res = await request(app, "POST", "/api/auth/sign-up/email", {
+  describe('POST /api/auth/sign-up/email', () => {
+    it('should create a new user', async () => {
+      const res = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: "password123",
-          name: "Test Auth User",
+          password: 'password123',
+          name: 'Test Auth User',
         },
       });
 
       expect(res.status).toBe(200);
-      expect(res.json).toHaveProperty("token");
-      expect(res.json).toHaveProperty("user");
+      expect(res.json).toHaveProperty('token');
+      expect(res.json).toHaveProperty('user');
 
       const responseUser = (res.json as { user: { email: string } }).user;
       expect(responseUser.email).toBe(testEmail);
     });
 
-    it("should reject duplicate email", async () => {
+    it('should reject duplicate email', async () => {
       // First signup
-      await request(app, "POST", "/api/auth/sign-up/email", {
+      await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: "password123",
-          name: "Test Auth User",
+          password: 'password123',
+          name: 'Test Auth User',
         },
       });
 
       // Second signup with same email
-      const res = await request(app, "POST", "/api/auth/sign-up/email", {
+      const res = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: "password456",
-          name: "Another User",
+          password: 'password456',
+          name: 'Another User',
         },
       });
 
@@ -65,35 +65,35 @@ describe("Auth endpoints", () => {
     });
   });
 
-  describe("POST /api/auth/sign-in/email", () => {
-    it("should sign in existing user", async () => {
+  describe('POST /api/auth/sign-in/email', () => {
+    it('should sign in existing user', async () => {
       // First create user
-      await request(app, "POST", "/api/auth/sign-up/email", {
+      await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: "password123",
-          name: "Test Auth User",
+          password: 'password123',
+          name: 'Test Auth User',
         },
       });
 
       // Then sign in
-      const res = await request(app, "POST", "/api/auth/sign-in/email", {
+      const res = await request(app, 'POST', '/api/auth/sign-in/email', {
         body: {
           email: testEmail,
-          password: "password123",
+          password: 'password123',
         },
       });
 
       expect(res.status).toBe(200);
-      expect(res.json).toHaveProperty("token");
-      expect(res.json).toHaveProperty("user");
+      expect(res.json).toHaveProperty('token');
+      expect(res.json).toHaveProperty('user');
     });
 
-    it("should reject invalid credentials", async () => {
-      const res = await request(app, "POST", "/api/auth/sign-in/email", {
+    it('should reject invalid credentials', async () => {
+      const res = await request(app, 'POST', '/api/auth/sign-in/email', {
         body: {
-          email: "nonexistent@test.com",
-          password: "wrongpassword",
+          email: 'nonexistent@test.com',
+          password: 'wrongpassword',
         },
       });
 

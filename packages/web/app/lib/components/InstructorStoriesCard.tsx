@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Note, Comment } from '@/app/types';
-import { usersService, notesService } from '../services';
+import { fetchCreatorName, fetchUserById, notesService } from '../services';
 import { getCachedLocation } from '../utils/location_cache';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
@@ -74,8 +74,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
   // Fetch creator name and location
   useEffect(() => {
-    usersService
-      .fetchCreatorName(note.creator)
+    fetchCreatorName(note.creator)
       .then(setCreatorName)
       .catch(() => setCreatorName('Unknown'));
 
