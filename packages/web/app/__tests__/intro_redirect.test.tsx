@@ -3,10 +3,20 @@ import MapPage from '../map/page'; // Import the MapPage component
 import NotePage from '../notes/page';
 import introJs from 'intro.js'; // Mock intro.js
 import { createTestWrapper } from './utils/testQueryClient';
-jest.mock('firebase/auth'); // Mock Firebase Auth
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
+
+// Mock auth store to prevent nanostores ESM import chain
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: null,
+      isLoggedIn: false,
+      isLoading: false,
+      isInitialized: true,
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
 }));
+
 jest.mock('../lib/utils/api_service');
 jest.mock('intro.js'); // Mock intro.js to control its behavior
 

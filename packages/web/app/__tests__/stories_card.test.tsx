@@ -39,12 +39,10 @@ const mockNote: Note = {
   ],
 };
 
-// Mock the usersService
+// Mock the fetchCreatorName function
 const mockFetchCreatorName = jest.fn();
 jest.mock('../lib/services', () => ({
-  usersService: {
-    fetchCreatorName: (...args: unknown[]) => mockFetchCreatorName(...args),
-  },
+  fetchCreatorName: (...args: unknown[]) => mockFetchCreatorName(...args),
 }));
 
 // Mock DOMPurify

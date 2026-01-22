@@ -53,19 +53,17 @@ jest.mock('../lib/stores/authStore', () => ({
 }));
 
 jest.mock('../lib/services', () => ({
-  usersService: {
-    fetchCreatorName: async () => 'Student User',
-    fetchById: async (uid: string) => {
-      if (uid === 'student-1') {
-        return {
-          uid: 'student-1',
-          name: 'Student User',
-          parentInstructorId: 'instructor-1',
-          roles: { contributor: true, administrator: false },
-        };
-      }
-      return null;
-    },
+  fetchCreatorName: async () => 'Student User',
+  fetchUserById: async (uid: string) => {
+    if (uid === 'student-1') {
+      return {
+        uid: 'student-1',
+        name: 'Student User',
+        parentInstructorId: 'instructor-1',
+        roles: { contributor: true, administrator: false },
+      };
+    }
+    return null;
   },
 }));
 

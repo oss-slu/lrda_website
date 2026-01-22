@@ -15,29 +15,27 @@ jest.mock('../lib/hooks/queries/useComments', () => ({
   })),
 }));
 
-// API Service stable mock - now using new services
+// API Service stable mock - using new function-based services
 jest.mock('../lib/services', () => ({
-  usersService: {
-    fetchCreatorName: async () => 'User',
-    fetchById: async (uid: string) => {
-      if (uid === 'student-1') {
-        return {
-          uid: 'student-1',
-          name: 'Student',
-          parentInstructorId: 'instructor-1',
-          roles: { contributor: true, administrator: false },
-        };
-      }
-      if (uid === 'inst-1') {
-        return {
-          uid: 'inst-1',
-          name: 'Instructor',
-          isInstructor: true,
-          roles: { contributor: false, administrator: true },
-        };
-      }
-      return null;
-    },
+  fetchCreatorName: async () => 'User',
+  fetchUserById: async (uid: string) => {
+    if (uid === 'student-1') {
+      return {
+        uid: 'student-1',
+        name: 'Student',
+        parentInstructorId: 'instructor-1',
+        roles: { contributor: true, administrator: false },
+      };
+    }
+    if (uid === 'inst-1') {
+      return {
+        uid: 'inst-1',
+        name: 'Instructor',
+        isInstructor: true,
+        roles: { contributor: false, administrator: true },
+      };
+    }
+    return null;
   },
 }));
 

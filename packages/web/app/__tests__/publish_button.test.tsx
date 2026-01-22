@@ -2,6 +2,19 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
+// Mock auth store to prevent nanostores ESM import chain
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: { uid: 'mockUserId', email: 'mock@example.com' },
+      isLoggedIn: true,
+      isLoading: false,
+      isInitialized: true,
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
+}));
+
 describe('PublishToggle Component', () => {
   it('renders the publish button with correct initial state', () => {
     render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);

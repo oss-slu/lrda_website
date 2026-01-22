@@ -1,9 +1,29 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'; // Import act from testing-library
+import { render, screen, waitFor, act } from '@testing-library/react';
 import Navbar from '../lib/components/navbar';
 import { usePathname } from 'next/navigation';
 
-// Jest globals (it, expect, describe, beforeAll) are available via @types/jest
+// Define mock auth state that can be mutated in tests
+const mockAuthState = {
+  user: null as any,
+  isLoggedIn: false,
+  isLoading: false,
+  isInitialized: true,
+  login: jest.fn().mockResolvedValue('success'),
+  logout: jest.fn().mockResolvedValue(undefined),
+  signup: jest.fn().mockResolvedValue(undefined),
+  refreshUser: jest.fn().mockResolvedValue(undefined),
+  isAdmin: jest.fn().mockReturnValue(false),
+};
+
+// Define mockLoggedInUser for use in tests
+const mockLoggedInUser = {
+  uid: 'test-user-id',
+  name: 'Test User',
+  email: 'test@example.com',
+  roles: { administrator: false, contributor: true },
+  isInstructor: false,
+};
 
 // Mock next/navigation
 const mockPush = jest.fn();
@@ -16,33 +36,16 @@ jest.mock('next/navigation', () => ({
   })),
 }));
 
-// Mock auth store with configurable state
-const mockAuthState = {
-  user: null as any,
-  isLoggedIn: false,
-  isLoading: false,
-  isInitialized: true,
-  login: jest.fn(),
-  logout: jest.fn(),
-  getId: jest.fn(),
-  getName: jest.fn(),
-  getRoles: jest.fn(),
-};
-
+// Mock auth store
 jest.mock('../lib/stores/authStore', () => ({
-  useAuthStore: jest.fn(selector => {
-    return selector ? selector(mockAuthState) : mockAuthState;
-  }),
-}));
-
-jest.mock('../lib/config/firebase', () => ({
-  auth: {}, // a fake auth object
-  db: {}, // a fake Firestore object
+  useAuthStore: jest.fn((selector?: (state: any) => any) =>
+    selector ? selector(mockAuthState) : mockAuthState
+  ),
 }));
 
 // Mock useNotesStore
 jest.mock('../lib/stores/notesStore', () => ({
-  useNotesStore: jest.fn(selector => {
+  useNotesStore: jest.fn((selector?: (state: any) => any) => {
     const mockStore = {
       viewMode: 'my',
       setViewMode: jest.fn(),
@@ -51,17 +54,20 @@ jest.mock('../lib/stores/notesStore', () => ({
   }),
 }));
 
-// Mock ApiService
-jest.mock('../lib/utils/api_service', () => ({
-  __esModule: true,
-  default: {
-    fetchUserData: jest.fn().mockResolvedValue({}),
-  },
+// Mock services - inline to avoid hoisting issues
+jest.mock('../lib/services', () => ({
+  fetchMe: jest.fn().mockResolvedValue(null),
+  fetchUserById: jest.fn().mockResolvedValue(null),
+  fetchProfileById: jest.fn().mockResolvedValue(null),
+  fetchInstructors: jest.fn().mockResolvedValue([]),
+  updateProfile: jest.fn().mockResolvedValue({}),
+  assignInstructor: jest.fn().mockResolvedValue(undefined),
+  fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
 }));
 
 // Mock Select component
 jest.mock('../../components/ui/select', () => ({
-  Select: ({ children, value, onValueChange }: any) => <div data-testid='select'>{children}</div>,
+  Select: ({ children }: any) => <div data-testid='select'>{children}</div>,
   SelectTrigger: ({ children, className }: any) => (
     <button className={className} data-testid='select-trigger'>
       {children}
@@ -102,19 +108,14 @@ describe('Navbar Component', () => {
     // Reset mock auth state
     mockAuthState.user = null;
     mockAuthState.isLoggedIn = false;
-    mockAuthState.login.mockReset();
-    mockAuthState.logout.mockReset();
-    mockAuthState.getId.mockReset();
-    mockAuthState.getName.mockReset();
-    mockAuthState.getRoles.mockReset();
+    mockAuthState.login.mockClear();
+    mockAuthState.logout.mockClear();
     window.localStorage.clear();
     mockedUsePathname.mockReset();
   });
 
   it('shows Login when user is not logged in', async () => {
     mockedUsePathname.mockReturnValue('/');
-    // For now, let's just test that the navbar renders without crashing
-    // The authentication logic is complex and difficult to mock properly
     render(<Navbar />);
 
     // Check that the navbar renders with basic navigation elements
@@ -130,14 +131,10 @@ describe('Navbar Component', () => {
     mockedUsePathname.mockReturnValue('/');
     // Set up auth state as logged in
     mockAuthState.user = {
+      ...mockLoggedInUser,
       name: 'John Doe',
-      uid: 'test-uid',
-      roles: { administrator: false, contributor: true },
     };
     mockAuthState.isLoggedIn = true;
-    // Set up localStorage with auth token and user data
-    window.localStorage.setItem('authToken', 'mock-token');
-    window.localStorage.setItem('userData', JSON.stringify({ name: 'John Doe', uid: 'test-uid' }));
 
     await act(async () => {
       render(<Navbar />);
@@ -153,22 +150,19 @@ describe('Navbar Component', () => {
   it('renders Notes link when logged in', async () => {
     // Set up auth state BEFORE render
     mockAuthState.user = {
+      ...mockLoggedInUser,
       name: 'John Doe',
-      uid: 'test-uid',
       roles: { administrator: true, contributor: true },
     };
     mockAuthState.isLoggedIn = true;
 
     mockedUsePathname.mockReturnValue('/notes');
-    // Set up localStorage with auth token and user data
-    window.localStorage.setItem('authToken', 'mock-token');
-    window.localStorage.setItem('userData', JSON.stringify({ name: 'John Doe', uid: 'test-uid' }));
 
     await act(async () => {
       render(<Navbar />);
     });
 
-    // Notes link should appear for logged-in users (using getAllByText since there may be multiple matches like "My Notes")
+    // Notes link should appear for logged-in users
     const notesElements = screen.getAllByText(/Notes/i);
     expect(notesElements.length).toBeGreaterThan(0);
     expect(screen.getByRole('navigation')).toBeTruthy();
@@ -190,14 +184,11 @@ describe('Navbar Component', () => {
     mockedUsePathname.mockReturnValue('/notes');
     // Set up auth state as logged in with roles
     mockAuthState.user = {
+      ...mockLoggedInUser,
       name: 'John Doe',
-      uid: 'test-uid',
       roles: { administrator: true, contributor: true },
     };
     mockAuthState.isLoggedIn = true;
-    // Set up localStorage with auth token and user data
-    window.localStorage.setItem('authToken', 'mock-token');
-    window.localStorage.setItem('userData', JSON.stringify({ name: 'John Doe', uid: 'test-uid' }));
 
     await act(async () => {
       render(<Navbar />);
