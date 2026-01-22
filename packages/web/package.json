@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@netlify/plugin-nextjs": "^5.15.3",
+    "@netlify/plugin-nextjs": "^5.15.5",
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
