@@ -18,19 +18,8 @@ if (typeof global.setImmediate === 'undefined') {
   };
 }
 
-// Ensure Firebase env vars exist in test environment
-process.env.NEXT_PUBLIC_FIREBASE_API_KEY =
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'test-api-key';
-process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN =
-  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'test-auth.example.com';
-process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID =
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'test-project';
-process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET =
-  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'test-bucket';
-process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID =
-  process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890';
-process.env.NEXT_PUBLIC_FIREBASE_APP_ID =
-  process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123:web:abc';
+// Ensure API env vars exist in test environment
+process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 // Store original console methods
 const originalConsoleError = console.error;
@@ -50,7 +39,6 @@ const suppressedMessages = [
   'Could not process a result in paged query',
   'User is not an instructor',
   'No students found for instructor',
-  'No user data found in Firestore',
 
   // Log messages (debug/info that's noisy in tests)
   '🔍 User.getRoles()',

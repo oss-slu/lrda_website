@@ -7,17 +7,8 @@ yarn.lock
 .env
 pnpm-lock.yaml
 
-firebase-admin.json
 all_notes.json
 *.tsbuildinfo
-
-# Firebase Emulators
-firebase-emulator-data/
-firebase-debug.log
-firestore-debug.log
-database-debug.log
-ui-debug.log
-storage-debug.log
 
 # LocalStack (local S3)
 .localstack/
