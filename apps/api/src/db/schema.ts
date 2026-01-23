@@ -107,7 +107,9 @@ export const verification = pgTable('verification', {
  * Notes table - main content entity
  */
 export const note = pgTable('note', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   title: text('title'),
   text: text('text').notNull().default(''),
   creatorId: text('creator_id')
@@ -137,7 +139,9 @@ export const noteRelations = relations(note, ({ one, many }) => ({
  * Media table - images and videos attached to notes
  */
 export const media = pgTable('media', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   noteId: text('note_id')
     .notNull()
     .references(() => note.id, { onDelete: 'cascade' }),
@@ -159,7 +163,9 @@ export const mediaRelations = relations(media, ({ one }) => ({
  * Audio table - audio recordings attached to notes
  */
 export const audio = pgTable('audio', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   noteId: text('note_id')
     .notNull()
     .references(() => note.id, { onDelete: 'cascade' }),
@@ -181,7 +187,9 @@ export const audioRelations = relations(audio, ({ one }) => ({
  * Comments table - comments on notes with threading support
  */
 export const comment = pgTable('comment', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   noteId: text('note_id')
     .notNull()
     .references(() => note.id, { onDelete: 'cascade' }),

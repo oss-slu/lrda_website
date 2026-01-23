@@ -83,6 +83,6 @@ export const mockInstructorUser: MockUser = {
  */
 export const createAuthStoreMock = (authState: MockAuthState) => ({
   useAuthStore: jest.fn((selector?: (state: MockAuthState) => any) =>
-    selector ? selector(authState) : authState
+    selector ? selector(authState) : authState,
   ),
 });

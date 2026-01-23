@@ -35,6 +35,7 @@ choco install terraform
 ```
 
 Verify installation:
+
 ```bash
 terraform --version
 ```
@@ -52,6 +53,7 @@ terraform --version
    - Download the CSV with access keys
 
 3. **Configure AWS credentials** on your machine:
+
    ```bash
    # Option 1: AWS CLI (recommended)
    aws configure
@@ -80,14 +82,17 @@ terraform --version
 ### 4. Find Your Public IP
 
 You'll need your public IP address to allow SSH access:
+
 ```bash
 curl ifconfig.me
 ```
+
 Note this IP - you'll use it in the configuration.
 
 ## Configuration
 
 1. **Copy the example variables file**:
+
    ```bash
    cd infrastructure
    cp terraform.tfvars.example terraform.tfvars
@@ -109,6 +114,7 @@ Note this IP - you'll use it in the configuration.
 ### Initialize Terraform
 
 First-time setup only:
+
 ```bash
 cd infrastructure
 terraform init
@@ -117,6 +123,7 @@ terraform init
 ### Preview Changes
 
 See what will be created:
+
 ```bash
 terraform plan
 ```
@@ -124,6 +131,7 @@ terraform plan
 ### Apply Changes
 
 Create the infrastructure:
+
 ```bash
 terraform apply
 ```
@@ -133,11 +141,13 @@ Type `yes` when prompted to confirm.
 ### View Outputs
 
 After applying, see important information:
+
 ```bash
 terraform output
 ```
 
 This shows:
+
 - EC2 instance ID
 - Public IP address
 - SSH command
@@ -146,6 +156,7 @@ This shows:
 ### Destroy Infrastructure
 
 Remove all created resources (careful!):
+
 ```bash
 terraform destroy
 ```
@@ -159,17 +170,20 @@ After `terraform apply` completes:
    - Production: `api.wherereligion.org` -> `<elastic-ip>`
 
 2. **SSH into the server**:
+
    ```bash
    # Use the command from terraform output
    ssh -i ~/.ssh/lrda-staging-keypair.pem ubuntu@<elastic-ip>
    ```
 
 3. **Set up SSL certificate**:
+
    ```bash
    sudo certbot --nginx -d api-staging.wherereligion.org
    ```
 
 4. **Verify setup**:
+
    ```bash
    # Check PostgreSQL
    sudo -u postgres psql -c "\l"
@@ -191,15 +205,15 @@ The infrastructure workflow (`.github/workflows/infrastructure.yml`) automatical
 
 Configure these secrets in your repository settings (Settings > Secrets and variables > Actions):
 
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `AWS_ACCESS_KEY_ID` | IAM user access key | `AKIA...` |
-| `AWS_SECRET_ACCESS_KEY` | IAM user secret key | `wJalr...` |
-| `DB_PASSWORD` | PostgreSQL database password | `strong_password_123` |
-| `DOMAIN_NAME` | Your domain name | `wherereligion.org` |
-| `SSH_ALLOWED_IPS` | JSON array of allowed IPs | `["1.2.3.4/32"]` |
-| `KEY_PAIR_NAME` | EC2 key pair name | `lrda-staging-keypair` |
-| `TF_ENVIRONMENT` | (Optional) Environment name | `staging` or `production` |
+| Secret                  | Description                  | Example                   |
+| ----------------------- | ---------------------------- | ------------------------- |
+| `AWS_ACCESS_KEY_ID`     | IAM user access key          | `AKIA...`                 |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key          | `wJalr...`                |
+| `DB_PASSWORD`           | PostgreSQL database password | `strong_password_123`     |
+| `DOMAIN_NAME`           | Your domain name             | `wherereligion.org`       |
+| `SSH_ALLOWED_IPS`       | JSON array of allowed IPs    | `["1.2.3.4/32"]`          |
+| `KEY_PAIR_NAME`         | EC2 key pair name            | `lrda-staging-keypair`    |
+| `TF_ENVIRONMENT`        | (Optional) Environment name  | `staging` or `production` |
 
 Note: If `TF_ENVIRONMENT` is not set, it defaults to `staging`.
 
@@ -207,10 +221,10 @@ Note: If `TF_ENVIRONMENT` is not set, it defaults to `staging`.
 
 This configuration supports two environments:
 
-| Environment | API Subdomain | Frontend Origin |
-|-------------|--------------|-----------------|
-| staging | api-staging.wherereligion.org | staging.wherereligion.org |
-| production | api.wherereligion.org | wherereligion.org |
+| Environment | API Subdomain                 | Frontend Origin           |
+| ----------- | ----------------------------- | ------------------------- |
+| staging     | api-staging.wherereligion.org | staging.wherereligion.org |
+| production  | api.wherereligion.org         | wherereligion.org         |
 
 Switch environments by changing the `environment` variable in `terraform.tfvars`.
 
@@ -225,6 +239,7 @@ Switch environments by changing the `environment` variable in `terraform.tfvars`
 ### User-data script failed
 
 SSH in and check the logs:
+
 ```bash
 sudo cat /var/log/user-data.log
 ```
@@ -232,6 +247,7 @@ sudo cat /var/log/user-data.log
 ### PostgreSQL connection issues
 
 Verify PostgreSQL is running and configured:
+
 ```bash
 sudo systemctl status postgresql
 sudo -u postgres psql -c "\du"  # List users
@@ -242,12 +258,12 @@ sudo -u postgres psql -c "\l"   # List databases
 
 Monthly costs (us-east-1):
 
-| Resource | Type | Estimated Cost |
-|----------|------|----------------|
-| EC2 | t3.small | ~$15/month |
-| EBS | 30GB gp3 | ~$2.40/month |
-| Elastic IP | (when attached) | Free |
-| **Total** | | **~$17.40/month** |
+| Resource   | Type            | Estimated Cost    |
+| ---------- | --------------- | ----------------- |
+| EC2        | t3.small        | ~$15/month        |
+| EBS        | 30GB gp3        | ~$2.40/month      |
+| Elastic IP | (when attached) | Free              |
+| **Total**  |                 | **~$17.40/month** |
 
 Note: Costs may vary. Use the [AWS Pricing Calculator](https://calculator.aws/) for accurate estimates.
 

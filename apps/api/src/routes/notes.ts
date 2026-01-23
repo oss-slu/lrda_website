@@ -123,13 +123,19 @@ const UpdateNoteInputSchema = z.object({
 });
 
 const ListNotesQuerySchema = z.object({
-  published: z.string().transform(v => v === 'true').optional(),
+  published: z
+    .string()
+    .transform(v => v === 'true')
+    .optional(),
   creatorId: z.string().optional(),
   minLat: z.string().transform(Number).optional(),
   maxLat: z.string().transform(Number).optional(),
   minLng: z.string().transform(Number).optional(),
   maxLng: z.string().transform(Number).optional(),
-  approvalRequested: z.string().transform(v => v === 'true').optional(),
+  approvalRequested: z
+    .string()
+    .transform(v => v === 'true')
+    .optional(),
   limit: z.string().transform(Number).default('50'),
   offset: z.string().transform(Number).default('0'),
 });
@@ -276,7 +282,10 @@ const getStudentNotesRoute = createRoute({
       instructorId: z.string(),
     }),
     query: z.object({
-      approvalRequested: z.string().transform(v => v === 'true').optional(),
+      approvalRequested: z
+        .string()
+        .transform(v => v === 'true')
+        .optional(),
     }),
   },
   responses: {
@@ -549,10 +558,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     }
 
     // Build conditions
-    const conditions = [
-      inArray(note.creatorId, studentIds),
-      eq(note.isPublished, false),
-    ];
+    const conditions = [inArray(note.creatorId, studentIds), eq(note.isPublished, false)];
 
     if (query.approvalRequested) {
       conditions.push(eq(note.approvalRequested, true));

@@ -10,10 +10,14 @@ import type { AppEnv } from './types';
 const app = new OpenAPIHono<AppEnv>();
 
 // CORS middleware
+// Note: credentials: true requires specific origins, not '*'
 app.use(
   '*',
   cors({
-    origin: env.NODE_ENV === 'development' ? '*' : (env.CORS_ORIGINS?.split(',') ?? []),
+    origin:
+      env.NODE_ENV === 'development' ?
+        ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002']
+      : (env.CORS_ORIGINS?.split(',') ?? []),
     credentials: true,
     allowHeaders: ['Content-Type', 'Authorization'],
   }),

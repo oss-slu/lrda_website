@@ -9,7 +9,7 @@ const mockAuthState = createMockAuthState();
 // Mock auth store
 jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) =>
-    selector ? selector(mockAuthState) : mockAuthState
+    selector ? selector(mockAuthState) : mockAuthState,
   ),
 }));
 

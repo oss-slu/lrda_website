@@ -91,16 +91,16 @@ pnpm dev
 
 ## Available Commands
 
-| Command            | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| `pnpm dev:full`    | Start everything (Docker, API server, frontend)   |
-| `pnpm dev:api`     | Start Docker services + API server only           |
-| `pnpm dev`         | Start frontend only (requires separate API)       |
-| `pnpm docker:up`   | Start Docker services (MongoDB, LocalStack)       |
-| `pnpm docker:down` | Stop Docker services                              |
-| `pnpm setup`       | Create .env files from examples                   |
-| `pnpm test`        | Run unit and e2e tests                            |
-| `pnpm lint`        | Run ESLint                                        |
+| Command            | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `pnpm dev:full`    | Start everything (Docker, API server, frontend) |
+| `pnpm dev:api`     | Start Docker services + API server only         |
+| `pnpm dev`         | Start frontend only (requires separate API)     |
+| `pnpm docker:up`   | Start Docker services (MongoDB, LocalStack)     |
+| `pnpm docker:down` | Stop Docker services                            |
+| `pnpm setup`       | Create .env files from examples                 |
+| `pnpm test`        | Run unit and e2e tests                          |
+| `pnpm lint`        | Run ESLint                                      |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 

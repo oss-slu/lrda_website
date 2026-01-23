@@ -1,7 +1,6 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { notesService, fetchUserById } from '../../services';
 import { Note } from '@/app/types';
-import DataConversion from '../../utils/data_conversion';
 
 // Query key factory for notes
 export const notesKeys = {
@@ -24,9 +23,7 @@ export function usePublishedNotes(limit = 150, skip = 0) {
   return useQuery({
     queryKey: notesKeys.published(),
     queryFn: async (): Promise<Note[]> => {
-      const data = await notesService.fetchPublished(limit, skip);
-      // Convert media types for all notes
-      return DataConversion.convertMediaTypes(data);
+      return notesService.fetchPublished(limit, skip);
     },
   });
 }
@@ -39,8 +36,7 @@ export function usePersonalNotes(userId: string | null, limit = 150, skip = 0) {
     queryKey: notesKeys.personal(userId ?? ''),
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await notesService.fetchUserNotes(userId, limit, skip);
-      return DataConversion.convertMediaTypes(data);
+      return notesService.fetchUserNotes(userId, limit, skip);
     },
     enabled: !!userId,
   });
@@ -54,9 +50,7 @@ export function useGlobalMapNotes() {
     queryKey: notesKeys.globalMap(),
     queryFn: async (): Promise<Note[]> => {
       const data = await notesService.fetchPublished();
-      return DataConversion.convertMediaTypes(data)
-        .reverse()
-        .filter(note => note.published === true && note.isArchived !== true);
+      return data.reverse().filter(note => note.published === true && note.isArchived !== true);
     },
   });
 }
@@ -70,9 +64,7 @@ export function usePersonalMapNotes(userId: string | null) {
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
       const data = await notesService.fetchUserNotes(userId);
-      return DataConversion.convertMediaTypes(data)
-        .reverse()
-        .filter(note => note.isArchived !== true);
+      return data.reverse().filter(note => note.isArchived !== true);
     },
     enabled: !!userId,
   });
@@ -101,8 +93,7 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
 
       // Fetch all notes from students
       const allNotes = await notesService.fetchByStudents(studentUids);
-      const converted = DataConversion.convertMediaTypes(allNotes).reverse();
-      return converted.filter(n => !n.isArchived);
+      return allNotes.reverse().filter(n => !n.isArchived);
     },
     enabled: !!instructorId && isInstructor,
     refetchInterval: 15000, // Poll every 15 seconds
@@ -122,11 +113,10 @@ export function useInfinitePublishedNotes(pageSize = 50) {
       data: Note[];
       nextCursor: number | undefined;
     }> => {
-      const data = await notesService.fetchPublished(pageSize, pageParam);
-      const notes = DataConversion.convertMediaTypes(data);
+      const notes = await notesService.fetchPublished(pageSize, pageParam);
       return {
         data: notes,
-        nextCursor: data.length === pageSize ? pageParam + pageSize : undefined,
+        nextCursor: notes.length === pageSize ? pageParam + pageSize : undefined,
       };
     },
     getNextPageParam: lastPage => lastPage.nextCursor,

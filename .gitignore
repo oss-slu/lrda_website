@@ -10,6 +10,10 @@ pnpm-lock.yaml
 all_notes.json
 *.tsbuildinfo
 
+# Firebase service account (sensitive)
+firebase-service-account.json
+*-service-account.json
+
 # LocalStack (local S3)
 .localstack/
 localstack-data/

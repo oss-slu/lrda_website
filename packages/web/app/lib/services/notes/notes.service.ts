@@ -138,7 +138,9 @@ class NotesService {
     const response = await restClient.post<ApiNoteData>('/api/notes', payload);
 
     if (!response.ok) {
-      throw new Error('Failed to create note');
+      const error = new Error(`Failed to create note: ${response.status}`);
+      console.error('[NotesService] Create failed:', response.data);
+      throw error;
     }
 
     return response.data;
@@ -152,7 +154,9 @@ class NotesService {
     const response = await restClient.patch<ApiNoteData>(`/api/notes/${note.id}`, payload);
 
     if (!response.ok) {
-      throw new Error('Failed to update note');
+      const error = new Error(`Failed to update note: ${response.status}`);
+      console.error('[NotesService] Update failed:', response.data);
+      throw error;
     }
 
     return response.data;

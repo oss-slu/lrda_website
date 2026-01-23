@@ -1,9 +1,9 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { eq, isNotNull, and, ne } from "drizzle-orm";
-import { db } from "../db";
-import { user } from "../db/schema";
-import { requireAuth, requireAdmin } from "../middleware/auth";
-import type { AppEnv } from "../types";
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { eq, isNotNull, and, ne } from 'drizzle-orm';
+import { db } from '../db';
+import { user } from '../db/schema';
+import { requireAuth, requireAdmin } from '../middleware/auth';
+import type { AppEnv } from '../types';
 
 // Schemas
 const AdminUserSchema = z.object({
@@ -43,74 +43,74 @@ const SuccessSchema = z.object({
 
 // Routes
 const getAllUsersRoute = createRoute({
-  method: "get",
-  path: "/users",
-  tags: ["Admin"],
+  method: 'get',
+  path: '/users',
+  tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   responses: {
     200: {
-      content: { "application/json": { schema: z.array(AdminUserSchema) } },
-      description: "List of all users",
+      content: { 'application/json': { schema: z.array(AdminUserSchema) } },
+      description: 'List of all users',
     },
     401: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Unauthorized",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
     },
     403: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Forbidden - Admin access required",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
   },
 });
 
 const getPendingApplicationsRoute = createRoute({
-  method: "get",
-  path: "/pending-instructors",
-  tags: ["Admin"],
+  method: 'get',
+  path: '/pending-instructors',
+  tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   responses: {
     200: {
       content: {
-        "application/json": { schema: z.array(PendingApplicationSchema) },
+        'application/json': { schema: z.array(PendingApplicationSchema) },
       },
-      description: "List of pending instructor applications",
+      description: 'List of pending instructor applications',
     },
     401: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Unauthorized",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
     },
     403: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Forbidden - Admin access required",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
   },
 });
 
 const getStatsRoute = createRoute({
-  method: "get",
-  path: "/stats",
-  tags: ["Admin"],
+  method: 'get',
+  path: '/stats',
+  tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   responses: {
     200: {
-      content: { "application/json": { schema: StatsSchema } },
-      description: "Admin statistics",
+      content: { 'application/json': { schema: StatsSchema } },
+      description: 'Admin statistics',
     },
     401: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Unauthorized",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
     },
     403: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Forbidden - Admin access required",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
   },
 });
 
 const approveInstructorRoute = createRoute({
-  method: "post",
-  path: "/approve-instructor/{id}",
-  tags: ["Admin"],
+  method: 'post',
+  path: '/approve-instructor/{id}',
+  tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   request: {
     params: z.object({
@@ -119,28 +119,28 @@ const approveInstructorRoute = createRoute({
   },
   responses: {
     200: {
-      content: { "application/json": { schema: SuccessSchema } },
-      description: "Application approved",
+      content: { 'application/json': { schema: SuccessSchema } },
+      description: 'Application approved',
     },
     401: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Unauthorized",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
     },
     403: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Forbidden - Admin access required",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
     404: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "User not found or no pending application",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'User not found or no pending application',
     },
   },
 });
 
 const rejectInstructorRoute = createRoute({
-  method: "post",
-  path: "/reject-instructor/{id}",
-  tags: ["Admin"],
+  method: 'post',
+  path: '/reject-instructor/{id}',
+  tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   request: {
     params: z.object({
@@ -148,7 +148,7 @@ const rejectInstructorRoute = createRoute({
     }),
     body: {
       content: {
-        "application/json": {
+        'application/json': {
           schema: z.object({
             reason: z.string().optional(),
           }),
@@ -158,20 +158,20 @@ const rejectInstructorRoute = createRoute({
   },
   responses: {
     200: {
-      content: { "application/json": { schema: SuccessSchema } },
-      description: "Application rejected",
+      content: { 'application/json': { schema: SuccessSchema } },
+      description: 'Application rejected',
     },
     401: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Unauthorized",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
     },
     403: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "Forbidden - Admin access required",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
     404: {
-      content: { "application/json": { schema: ErrorSchema } },
-      description: "User not found or no pending application",
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'User not found or no pending application',
     },
   },
 });
@@ -179,7 +179,7 @@ const rejectInstructorRoute = createRoute({
 // Create router
 export const adminRoutes = new OpenAPIHono<AppEnv>()
   // GET /admin/users - list all users
-  .openapi(getAllUsersRoute, async (c) => {
+  .openapi(getAllUsersRoute, async c => {
     const users = await db.query.user.findMany({
       columns: {
         id: true,
@@ -198,12 +198,12 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
   })
 
   // GET /admin/pending-instructors - list pending applications
-  .openapi(getPendingApplicationsRoute, async (c) => {
+  .openapi(getPendingApplicationsRoute, async c => {
     const pending = await db.query.user.findMany({
       where: and(
         isNotNull(user.pendingInstructorDescription),
-        ne(user.pendingInstructorDescription, ""),
-        eq(user.isInstructor, false)
+        ne(user.pendingInstructorDescription, ''),
+        eq(user.isInstructor, false),
       ),
       columns: {
         id: true,
@@ -215,11 +215,11 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
       orderBy: (user, { asc }) => [asc(user.createdAt)],
     });
 
-    const applications = pending.map((u) => ({
+    const applications = pending.map(u => ({
       id: u.id,
       name: u.name,
       email: u.email,
-      description: u.pendingInstructorDescription || "",
+      description: u.pendingInstructorDescription || '',
       createdAt: u.createdAt,
     }));
 
@@ -227,7 +227,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
   })
 
   // GET /admin/stats - get statistics
-  .openapi(getStatsRoute, async (c) => {
+  .openapi(getStatsRoute, async c => {
     const users = await db.query.user.findMany({
       columns: {
         role: true,
@@ -238,19 +238,18 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
 
     const stats = {
       totalUsers: users.length,
-      totalAdmins: users.filter((u) => u.role === "admin").length,
-      totalInstructors: users.filter((u) => u.isInstructor).length,
-      pendingApplications: users.filter(
-        (u) => u.pendingInstructorDescription && !u.isInstructor
-      ).length,
+      totalAdmins: users.filter(u => u.role === 'admin').length,
+      totalInstructors: users.filter(u => u.isInstructor).length,
+      pendingApplications: users.filter(u => u.pendingInstructorDescription && !u.isInstructor)
+        .length,
     };
 
     return c.json(stats, 200);
   })
 
   // POST /admin/approve-instructor/:id - approve application
-  .openapi(approveInstructorRoute, async (c) => {
-    const { id } = c.req.valid("param");
+  .openapi(approveInstructorRoute, async c => {
+    const { id } = c.req.valid('param');
 
     // Find user with pending application
     const targetUser = await db.query.user.findFirst({
@@ -258,15 +257,15 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
     });
 
     if (!targetUser) {
-      return c.json({ error: "User not found" }, 404);
+      return c.json({ error: 'User not found' }, 404);
     }
 
     if (!targetUser.pendingInstructorDescription) {
-      return c.json({ error: "No pending instructor application" }, 404);
+      return c.json({ error: 'No pending instructor application' }, 404);
     }
 
     if (targetUser.isInstructor) {
-      return c.json({ error: "User is already an instructor" }, 404);
+      return c.json({ error: 'User is already an instructor' }, 404);
     }
 
     // Approve - set isInstructor to true and clear pending description
@@ -279,15 +278,12 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
       })
       .where(eq(user.id, id));
 
-    return c.json(
-      { success: true, message: "Instructor application approved" },
-      200
-    );
+    return c.json({ success: true, message: 'Instructor application approved' }, 200);
   })
 
   // POST /admin/reject-instructor/:id - reject application
-  .openapi(rejectInstructorRoute, async (c) => {
-    const { id } = c.req.valid("param");
+  .openapi(rejectInstructorRoute, async c => {
+    const { id } = c.req.valid('param');
 
     // Find user with pending application
     const targetUser = await db.query.user.findFirst({
@@ -295,11 +291,11 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
     });
 
     if (!targetUser) {
-      return c.json({ error: "User not found" }, 404);
+      return c.json({ error: 'User not found' }, 404);
     }
 
     if (!targetUser.pendingInstructorDescription) {
-      return c.json({ error: "No pending instructor application" }, 404);
+      return c.json({ error: 'No pending instructor application' }, 404);
     }
 
     // Reject - clear pending description
@@ -311,8 +307,5 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
       })
       .where(eq(user.id, id));
 
-    return c.json(
-      { success: true, message: "Instructor application rejected" },
-      200
-    );
+    return c.json({ success: true, message: 'Instructor application rejected' }, 200);
   });

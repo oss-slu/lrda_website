@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "dev:api": "pnpm --filter @lrda/api dev",
-    "dev:full": "pnpm clear-ports && concurrently -k -n api,web -c blue,cyan \"pnpm dev:api\" \"sleep 3 && pnpm dev\"",
+    "dev:full": "pnpm clear-ports && pnpm api:docker:up && sleep 2 && pnpm api:db:push && concurrently -k -n api,web -c blue,cyan \"pnpm dev:api\" \"sleep 3 && pnpm dev\"",
     "api:docker:up": "pnpm --filter @lrda/api docker:up",
     "api:docker:down": "pnpm --filter @lrda/api docker:down",
     "api:db:generate": "pnpm --filter @lrda/api db:generate",

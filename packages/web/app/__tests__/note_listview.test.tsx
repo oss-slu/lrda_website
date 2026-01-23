@@ -51,9 +51,48 @@ jest.mock('../lib/services', () => ({
 
 describe('NoteListView', () => {
   const mockNotes = [
-    { id: '1', title: 'Note 1', text: 'Content 1', time: new Date(), creator: 'user-1', media: [], audio: [], latitude: '', longitude: '', published: false, tags: [], isArchived: false },
-    { id: '2', title: 'Note 2', text: 'Content 2', time: new Date(), creator: 'user-1', media: [], audio: [], latitude: '', longitude: '', published: false, tags: [], isArchived: false },
-    { id: '3', title: 'Note 3', text: 'Content 3', time: new Date(), creator: 'user-1', media: [], audio: [], latitude: '', longitude: '', published: false, tags: [], isArchived: false },
+    {
+      id: '1',
+      title: 'Note 1',
+      text: 'Content 1',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
+    {
+      id: '2',
+      title: 'Note 2',
+      text: 'Content 2',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
+    {
+      id: '3',
+      title: 'Note 3',
+      text: 'Content 3',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
   ];
 
   it('renders without crashing', () => {

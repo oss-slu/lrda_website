@@ -14,7 +14,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
  * @returns {Promise<Response>} The response from the API.
  */
 export async function editAboutPageFlag(enabled: boolean): Promise<Response> {
-  console.warn('Feature flags not yet implemented in new API - editAboutPageFlag called with:', enabled);
+  console.warn(
+    'Feature flags not yet implemented in new API - editAboutPageFlag called with:',
+    enabled,
+  );
   // Return a mock response for now
   return new Response(JSON.stringify({ success: true }), { status: 200 });
 }

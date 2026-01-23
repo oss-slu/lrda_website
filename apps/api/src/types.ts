@@ -1,4 +1,4 @@
-import type { User, Session } from "better-auth";
+import type { User, Session } from 'better-auth';
 
 // Extended user type with app-specific fields
 export type AuthUser = User & {
