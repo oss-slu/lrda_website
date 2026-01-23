@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { commentsService } from '@/app/lib/services';
+import { useAuthStore } from '@/app/lib/stores/authStore';
 
 interface CommentStoriesProps {
   noteId: string;
@@ -9,23 +11,25 @@ interface CommentStoriesProps {
 const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
   const [comment, setComment] = useState<string>('');
   const [submittedComment, setSubmittedComment] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const user = useAuthStore(state => state.user);
 
   const handleSubmit = async () => {
     if (!comment.trim()) return;
+    if (!user) {
+      alert('You must be logged in to comment.');
+      return;
+    }
 
-    const commentData = {
-      type: 'noteComment',
-      about: noteId,
-      comment,
-      time: new Date(),
-    };
+    setIsSubmitting(true);
 
     try {
-      // Save the comment into rerum
-      await fetch(`${process.env.NEXT_PUBLIC_RERUM_PREFIX}create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(commentData),
+      await commentsService.create({
+        noteId,
+        text: comment,
+        authorId: user.uid,
+        authorName: user.name,
+        createdAt: new Date().toISOString(),
       });
 
       setSubmittedComment(comment);
@@ -33,6 +37,8 @@ const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
     } catch (error) {
       console.error('Failed to submit comment:', error);
       alert('Failed to save comment.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,14 +50,16 @@ const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
         onChange={e => setComment(e.target.value)}
         className='mb-2 w-full rounded-md border p-2'
         rows={3}
+        disabled={isSubmitting}
       />
 
       <div className='flex gap-2'>
         <button
           onClick={handleSubmit}
-          className='rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600'
+          disabled={isSubmitting || !comment.trim()}
+          className='rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-gray-400'
         >
-          Submit Comment
+          {isSubmitting ? 'Submitting...' : 'Submit Comment'}
         </button>
       </div>
 

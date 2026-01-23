@@ -2,7 +2,7 @@
  * Type definitions for the Notes service.
  */
 
-import type { Note, Tag } from '@/app/types';
+import type { Note, Tag, Comment } from '@/app/types';
 import type { VideoType, PhotoType, AudioType } from '@/app/lib/models/media_class';
 
 /**
@@ -53,7 +53,6 @@ export interface CreateNotePayload {
   tags?: Tag[];
   time?: Date;
   approvalRequested?: boolean;
-  isArchived?: boolean;
 }
 
 /**
@@ -64,54 +63,83 @@ export interface UpdateNotePayload extends CreateNotePayload {
 }
 
 /**
- * Raw note data from RERUM API.
- * This represents the JSON structure returned by RERUM,
- * which uses plain objects rather than class instances.
+ * Media data from API.
  */
-export interface RerumNoteData {
-  '@id': string;
+export interface ApiMediaData {
+  id: string;
+  noteId: string;
   type: string;
-  title: string;
-  BodyText: string;
-  creator: string;
-  media?: unknown[];
-  latitude?: string;
-  longitude?: string;
-  audio?: unknown[];
-  published?: boolean;
-  tags?: unknown[];
-  time?: string;
-  approvalRequested?: boolean;
-  isArchived?: boolean;
-  comments?: unknown[];
+  uri: string;
+  thumbnailUri?: string | null;
+  uuid?: string | null;
+  createdAt: string;
 }
 
 /**
- * Transform internal Note to RERUM format for API calls.
- * Note: The response from RERUM will be plain objects that need
- * to be handled by the consuming code (e.g., stores may reconstruct class instances).
+ * Audio data from API.
  */
-export function transformNoteToRerum(note: Note | CreateNotePayload): object {
-  const payload: Record<string, unknown> = {
-    type: 'message',
-    title: note.title,
-    BodyText: note.text,
-    creator: note.creator,
-    latitude: note.latitude || '',
-    longitude: note.longitude || '',
-    media: note.media,
-    audio: note.audio,
-    published: note.published,
-    tags: note.tags,
-    time: note.time || new Date(),
-    approvalRequested: note.approvalRequested,
-    isArchived: note.isArchived,
-  };
-
-  // Include @id for updates
-  if ('id' in note && note.id) {
-    payload['@id'] = note.id;
-  }
-
-  return payload;
+export interface ApiAudioData {
+  id: string;
+  noteId: string;
+  uri: string;
+  name?: string | null;
+  duration?: string | null;
+  uuid?: string | null;
+  createdAt: string;
 }
+
+/**
+ * Note data from REST API.
+ */
+export interface ApiNoteData {
+  id: string;
+  title: string | null;
+  text: string;
+  creatorId: string;
+  latitude: string | null;
+  longitude: string | null;
+  isPublished: boolean;
+  approvalRequested: boolean;
+  tags: Tag[] | null;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
+  media?: ApiMediaData[];
+  audio?: ApiAudioData[];
+  comments?: Comment[];
+}
+
+/**
+ * Transform internal Note to API format for API calls.
+ * @deprecated Use NotesService methods directly which handle transformation internally.
+ */
+export function transformNoteToApi(note: Note | CreateNotePayload): object {
+  return {
+    title: note.title,
+    text: note.text,
+    latitude: note.latitude || undefined,
+    longitude: note.longitude || undefined,
+    isPublished: note.published ?? false,
+    approvalRequested: note.approvalRequested ?? false,
+    tags: note.tags || [],
+    time: note.time ? new Date(note.time).toISOString() : undefined,
+    media: note.media?.map(m => ({
+      type: m.type,
+      uri: m.uri,
+      thumbnailUri: (m as any).thumbnail,
+      uuid: m.uuid,
+    })),
+    audio: note.audio?.map(a => ({
+      uri: a.uri,
+      name: a.name,
+      duration: a.duration,
+      uuid: a.uuid,
+    })),
+  };
+}
+
+// Legacy type aliases for backward compatibility
+/** @deprecated Use ApiNoteData instead */
+export type RerumNoteData = ApiNoteData;
+/** @deprecated Use transformNoteToApi instead */
+export const transformNoteToRerum = transformNoteToApi;

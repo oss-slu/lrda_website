@@ -71,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       };
 
       const data = await notesService.create(newNoteData);
-      const newNoteId = data['@id'] || (data as any).id;
+      const newNoteId = data.id;
 
       if (!newNoteId) {
         throw new Error('No ID returned from server');

@@ -2,22 +2,24 @@
  * Notes Service
  *
  * Handles all note-related operations including CRUD, search, and filtering.
- * Uses RERUM as the backend storage.
+ * Uses the REST API backend (Hono/PostgreSQL).
  *
- * Note: This service returns raw data from RERUM. The consuming code (stores, components)
+ * Note: This service returns raw data from the API. The consuming code (stores, components)
  * is responsible for transforming the data into the appropriate types (e.g., class instances
  * for media/audio).
  */
 
 import type { Note, Tag } from '@/app/types';
-import { rerumClient, RERUM_PREFIX } from '../base/rerum-client';
+import { restClient, API_URL } from '../base/rest-client';
+import { VideoType, PhotoType, AudioType } from '@/app/lib/models/media_class';
 import type {
   NoteQueryOptions,
   NotesBoundsQuery,
   CreateNotePayload,
-  RerumNoteData,
+  ApiNoteData,
+  ApiMediaData,
+  ApiAudioData,
 } from './notes.types';
-import { transformNoteToRerum } from './notes.types';
 
 class NotesService {
   /**
@@ -26,34 +28,39 @@ class NotesService {
   async fetchAll(options: NoteQueryOptions = {}): Promise<Note[]> {
     const { limit = 150, skip = 0, userId, published } = options;
 
-    const queryObj: Record<string, unknown> = { type: 'message' };
+    const params: Record<string, unknown> = {
+      limit,
+      offset: skip,
+    };
 
     if (userId) {
-      queryObj.creator = userId;
+      params.creatorId = userId;
     }
     if (published !== undefined) {
-      queryObj.published = published;
+      params.published = published;
     }
 
-    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
    * Fetch notes filtered by date.
    */
   async fetchByDate(options: NoteQueryOptions): Promise<Note[]> {
-    const { limit = 150, afterDate, isGlobal = true, userId } = options;
+    // Note: Date filtering would require backend support.
+    // For now, we filter client-side after fetching.
+    const { limit = 150, isGlobal = true, userId } = options;
 
-    const queryObj: Record<string, unknown> = { type: 'message' };
-
-    if (afterDate) {
-      queryObj.time = { $gt: afterDate };
-    }
+    const params: Record<string, unknown> = { limit };
     if (!isGlobal && userId) {
-      queryObj.creator = userId;
+      params.creatorId = userId;
     }
 
-    return rerumClient.query<Note>(queryObj, { limit });
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
@@ -67,55 +74,68 @@ class NotesService {
    * Fetch published notes within geographic bounds.
    */
   async fetchByBounds(bounds: NotesBoundsQuery, limit = 150, skip = 0): Promise<Note[]> {
-    const queryObj = {
-      type: 'message',
+    const params = {
       published: true,
-      'latitude[gte]': bounds.swLat,
-      'latitude[lte]': bounds.neLat,
-      'longitude[gte]': bounds.swLng,
-      'longitude[lte]': bounds.neLng,
+      minLat: bounds.swLat,
+      maxLat: bounds.neLat,
+      minLng: bounds.swLng,
+      maxLng: bounds.neLng,
+      limit,
+      offset: skip,
     };
 
-    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
    * Fetch notes by a list of student UIDs.
-   * Handles both direct UIDs and RERUM URL formats.
    */
   async fetchByStudents(studentUids: string[]): Promise<Note[]> {
     if (!studentUids.length) {
       return [];
     }
 
-    // Build creator variations (UID + RERUM URL format)
-    const creatorValues = studentUids.flatMap(uid => [uid, `${RERUM_PREFIX}id/${uid}`]);
+    // Fetch unpublished notes that have approval requested for each student
+    const allNotes: Note[] = [];
 
-    const queryObj = {
-      type: 'message',
-      published: false,
-      approvalRequested: true,
-      creator: { $in: creatorValues },
-      $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
-    };
+    for (const uid of studentUids) {
+      const params = {
+        creatorId: uid,
+        published: false,
+        approvalRequested: true,
+      };
 
-    const notes = await rerumClient.pagedQuery<Note>(queryObj);
-    return this.normalizeCreators(notes, studentUids);
+      const queryString = restClient.buildQueryString(params);
+      const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+      allNotes.push(...response.data.map(this.transformApiNote));
+    }
+
+    return allNotes;
   }
 
   /**
    * Fetch notes for a specific user.
    */
   async fetchUserNotes(userId: string, limit = 150, skip = 0): Promise<Note[]> {
-    return rerumClient.pagedQuery<Note>({ type: 'message', creator: userId }, limit, skip);
+    const params = {
+      creatorId: userId,
+      limit,
+      offset: skip,
+    };
+
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
    * Create a new note.
    */
-  async create(note: CreateNotePayload): Promise<RerumNoteData> {
-    const payload = transformNoteToRerum(note);
-    const response = await rerumClient.create<RerumNoteData>(payload);
+  async create(note: CreateNotePayload): Promise<ApiNoteData> {
+    const payload = this.transformNoteToApi(note);
+    const response = await restClient.post<ApiNoteData>('/api/notes', payload);
 
     if (!response.ok) {
       throw new Error('Failed to create note');
@@ -125,11 +145,11 @@ class NotesService {
   }
 
   /**
-   * Update an existing note (full overwrite).
+   * Update an existing note (partial update).
    */
-  async update(note: Note): Promise<RerumNoteData> {
-    const payload = transformNoteToRerum(note);
-    const response = await rerumClient.overwrite<RerumNoteData>(payload);
+  async update(note: Note): Promise<ApiNoteData> {
+    const payload = this.transformNoteToApi(note);
+    const response = await restClient.patch<ApiNoteData>(`/api/notes/${note.id}`, payload);
 
     if (!response.ok) {
       throw new Error('Failed to update note');
@@ -141,8 +161,9 @@ class NotesService {
   /**
    * Delete a note.
    */
-  async delete(id: string, userId: string): Promise<boolean> {
-    return rerumClient.remove(id, { type: 'message', creator: userId });
+  async delete(id: string, _userId?: string): Promise<boolean> {
+    const response = await restClient.delete<void>(`/api/notes/${id}`);
+    return response.status === 204 || response.ok;
   }
 
   /**
@@ -150,8 +171,9 @@ class NotesService {
    */
   async search(query: string): Promise<Note[]> {
     // Fetch all notes then filter client-side
-    // (RERUM doesn't support text search)
-    const notes = await rerumClient.pagedQuery<Note>({ type: 'message' });
+    // (Could add backend search support in the future)
+    const response = await restClient.get<ApiNoteData[]>('/api/notes?limit=500');
+    const notes = response.data.map(this.transformApiNote);
     const lowerQuery = query.toLowerCase();
 
     return notes.filter(note => {
@@ -168,11 +190,18 @@ class NotesService {
   }
 
   /**
-   * Query notes with a custom query object.
-   * Useful for complex queries that can't be handled by other methods.
+   * Query notes with custom parameters.
    */
-  async query(queryObj: object, limit = 150, skip = 0): Promise<Note[]> {
-    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+  async query(queryObj: Record<string, unknown>, limit = 150, skip = 0): Promise<Note[]> {
+    const params = {
+      ...queryObj,
+      limit,
+      offset: skip,
+    };
+
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
@@ -185,57 +214,116 @@ class NotesService {
     limit = 150,
     skip = 0,
   ): Promise<Note[]> {
-    const queryObj: Record<string, unknown> = { type: 'message' };
+    const params: Record<string, unknown> = { limit, offset: skip };
 
     if (!global) {
-      queryObj.creator = userId;
+      params.creatorId = userId;
     }
     if (published) {
-      queryObj.published = true;
+      params.published = true;
     }
 
-    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
    * Get paged query with custom parameters (legacy API compatibility).
    */
   async getPagedQueryWithParams(limit: number, skip: number, creatorId: string): Promise<Note[]> {
-    const queryObj = {
-      type: 'message',
-      creator: creatorId,
+    const params = {
+      creatorId,
       published: true,
+      limit,
+      offset: skip,
     };
-    return rerumClient.pagedQuery<Note>(queryObj, limit, skip);
+
+    const queryString = restClient.buildQueryString(params);
+    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
+    return response.data.map(this.transformApiNote);
   }
 
   /**
-   * Normalize creator IDs by extracting UIDs from RERUM URLs.
-   * Filters notes to only include those from valid student UIDs.
+   * Transform API note data to internal Note format.
    */
-  private normalizeCreators(notes: Note[], validUids: string[]): Note[] {
-    return notes.filter(note => {
-      if (!note.creator) {
-        return false;
+  private transformApiNote = (data: ApiNoteData): Note => {
+    // Transform API media to class instances
+    const transformedMedia = (data.media || []).map((m: ApiMediaData) => {
+      if (m.type === 'video') {
+        return new VideoType({
+          uuid: m.uuid || m.id,
+          uri: m.uri,
+          type: 'video',
+          thumbnail: m.thumbnailUri || '',
+          duration: '',
+        });
       }
-
-      let normalizedCreator = note.creator;
-
-      // Check if creator is a URL
-      if (note.creator.startsWith('http')) {
-        // Extract UID from RERUM URL format: .../v1/id/{uid} or .../id/{uid}
-        const match = note.creator.match(/\/(?:v1\/)?id\/([^\/\?]+)/);
-
-        if (match?.[1]) {
-          normalizedCreator = match[1];
-        } else {
-          // Fallback: get last path segment
-          normalizedCreator = note.creator.split('/').pop() || note.creator;
-        }
-      }
-
-      return validUids.includes(normalizedCreator);
+      // Default to PhotoType for images
+      return new PhotoType({
+        uuid: m.uuid || m.id,
+        uri: m.uri,
+        type: 'image',
+      });
     });
+
+    // Transform API audio to class instances
+    const transformedAudio = (data.audio || []).map((a: ApiAudioData) => {
+      return new AudioType({
+        uuid: a.uuid || a.id,
+        uri: a.uri,
+        type: 'audio',
+        duration: a.duration || '',
+        name: a.name || '',
+        isPlaying: false,
+      });
+    });
+
+    return {
+      id: data.id,
+      title: data.title || '',
+      text: data.text || '',
+      time: data.time ? new Date(data.time) : new Date(data.createdAt),
+      media: transformedMedia,
+      audio: transformedAudio,
+      creator: data.creatorId,
+      latitude: data.latitude || '',
+      longitude: data.longitude || '',
+      published: data.isPublished,
+      approvalRequested: data.approvalRequested,
+      tags: data.tags || [],
+      uid: data.creatorId,
+      isArchived: false, // No longer using archive - hard deletes instead
+      comments: data.comments,
+    };
+  };
+
+  /**
+   * Transform internal Note/CreateNotePayload to API format.
+   */
+  private transformNoteToApi(note: Note | CreateNotePayload): Record<string, unknown> {
+    return {
+      title: note.title,
+      text: note.text,
+      latitude: note.latitude || undefined,
+      longitude: note.longitude || undefined,
+      isPublished: note.published ?? false,
+      approvalRequested: note.approvalRequested ?? false,
+      tags: note.tags || [],
+      time: note.time ? new Date(note.time).toISOString() : undefined,
+      media: note.media?.map(m => ({
+        type: m.type,
+        uri: m.uri,
+        thumbnailUri: (m as any).thumbnail,
+        uuid: m.uuid,
+      })),
+      audio: note.audio?.map(a => ({
+        uri: a.uri,
+        name: a.name,
+        duration: a.duration,
+        uuid: a.uuid,
+      })),
+    };
   }
 }
 

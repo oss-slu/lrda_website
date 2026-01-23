@@ -11,8 +11,7 @@
 export { HttpClient } from './base/http-client';
 export type { HttpClientConfig, ApiResponse, ApiError } from './base/http-client';
 
-export { RerumClient, rerumClient, RERUM_PREFIX } from './base/rerum-client';
-export type { PagedQueryOptions } from './base/rerum-client';
+export { RestClient, restClient, API_URL } from './base/rest-client';
 
 // Notes service
 export { notesService, NotesService } from './notes/notes.service';
@@ -21,9 +20,11 @@ export type {
   NotesBoundsQuery,
   CreateNotePayload,
   UpdateNotePayload,
+  ApiNoteData,
+  // Legacy aliases
   RerumNoteData,
 } from './notes/notes.types';
-export { transformNoteToRerum } from './notes/notes.types';
+export { transformNoteToApi, transformNoteToRerum } from './notes/notes.types';
 
 // Users service
 export {
@@ -48,8 +49,10 @@ export { commentsService, CommentsService } from './comments/comments.service';
 export type {
   CommentData,
   CommentPosition,
-  RerumCommentData,
+  ApiCommentData,
   ResolveThreadResult,
+  // Legacy alias
+  RerumCommentData,
 } from './comments/comments.types';
 
 // Instructor service
