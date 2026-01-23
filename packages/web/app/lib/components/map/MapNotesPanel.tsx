@@ -92,7 +92,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
             </Button>
           </div>
 
-          <div className='grid grid-cols-1 content-start gap-4 p-4 lg:grid-cols-2'>
+          <div className='grid grid-cols-1 content-start gap-4 p-4 md:grid-cols-2'>
             {isLoading ?
               // Loading state with card-shaped skeletons
               [...Array(6)].map((_, index) => (
@@ -124,7 +124,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
                   ref={el => {
                     if (el) noteRefs.current[note.id] = el;
                   }}
-                  className='cursor-pointer'
+                  className='max-w-xs cursor-pointer'
                   onMouseEnter={() => onNoteHover(note.id)}
                   onMouseLeave={() => onNoteHover(null)}
                   onClick={() => onNoteClick(note)}

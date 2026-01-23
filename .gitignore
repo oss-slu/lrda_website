@@ -7,7 +7,7 @@ yarn.lock
 .env
 pnpm-lock.yaml
 
-firebase-admin.json
+firebase-*.json
 all_notes.json
 *.tsbuildinfo
 
