@@ -1,14 +1,20 @@
 import React from 'react';
 import { render, waitFor, act, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Page from '../map/page'; // Importing the Page component that will be tested
+import Page from '../map/page';
 import { createTestWrapper } from './utils/testQueryClient';
 
-// Mock Firebase Auth and API services
-jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
-
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
+// Mock auth store to prevent nanostores ESM import chain
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: null,
+      isLoggedIn: false,
+      isLoading: false,
+      isInitialized: true,
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
 }));
 
 // Mock introJs to simulate tooltips being added
@@ -24,14 +30,13 @@ jest.mock('intro.js', () => {
       return this;
     }),
     start: jest.fn(() => {
-      const tooltip = document.createElement('div'); // Create a new div element
-      tooltip.className = 'introjs-tooltip'; // Set the class name to simulate an Intro.js tooltip
-      tooltip.textContent = "Don't show again"; // Add the expected text content
-      document.body.appendChild(tooltip); // Append the tooltip div to the body to mimic the behavior of Intro.js
+      const tooltip = document.createElement('div');
+      tooltip.className = 'introjs-tooltip';
+      tooltip.textContent = "Don't show again";
+      document.body.appendChild(tooltip);
     }),
   };
   const mockIntroJs: any = jest.fn(() => mockIntroInstance);
-  // Add tour method to the default export
   mockIntroJs.tour = jest.fn(() => mockIntroInstance);
   return {
     __esModule: true,
@@ -41,13 +46,13 @@ jest.mock('intro.js', () => {
 
 // Mock the API service to avoid actual network calls
 jest.mock('../lib/utils/api_service', () => ({
-  fetchPublishedNotes: jest.fn(() => Promise.resolve([])), // Mocking fetch to return an empty array
+  fetchPublishedNotes: jest.fn(() => Promise.resolve([])),
 }));
 
 // Mock the geolocation API
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.useFakeTimers(); // Ensure fake timers are used globally
+  jest.useFakeTimers();
 
   const mockGeolocation = {
     getCurrentPosition: jest.fn().mockImplementation(success => {
@@ -79,7 +84,7 @@ beforeEach(() => {
 
 // Cleanup after each test to ensure a clean state
 afterEach(() => {
-  cleanup(); // Cleanup to remove any leftover DOM elements
+  cleanup();
 });
 
 describe("Intro.js 'Don't show again' checkbox rendering", () => {
@@ -114,9 +119,9 @@ describe("Intro.js 'Don't show again' checkbox rendering", () => {
 
     // Wait for tooltips to be added by Intro.js and verify the "Don't show again" checkbox is present
     await waitFor(() => {
-      const introTooltips = document.querySelector('.introjs-tooltip'); // Query for the introJs tooltip element
+      const introTooltips = document.querySelector('.introjs-tooltip');
       if (introTooltips) {
-        expect(introTooltips.textContent).toContain("Don't show again"); // Verifies the content of the tooltip
+        expect(introTooltips.textContent).toContain("Don't show again");
       }
     });
   });

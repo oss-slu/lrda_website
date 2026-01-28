@@ -1,10 +1,49 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useRouter } from 'next/router';
-import Sidebar from '../lib/components/Sidebar'; // Update the path to your Sidebar component accordingly
+import Sidebar from '../lib/components/Sidebar';
 
+// Mock next/router
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
+}));
+
+// Mock auth store - inline to avoid hoisting issues
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: {
+        uid: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        roles: { administrator: false, contributor: true },
+        isInstructor: false,
+      },
+      isLoggedIn: true,
+      isLoading: false,
+      isInitialized: true,
+      login: jest.fn().mockResolvedValue('success'),
+      logout: jest.fn().mockResolvedValue(undefined),
+      signup: jest.fn().mockResolvedValue(undefined),
+      refreshUser: jest.fn().mockResolvedValue(undefined),
+      isAdmin: jest.fn().mockReturnValue(false),
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
+}));
+
+// Mock notes store
+jest.mock('../lib/stores/notesStore', () => ({
+  useNotesStore: jest.fn((selector?: (state: any) => any) => {
+    const mockStore = {
+      notes: [],
+      fetchNotes: jest.fn(),
+      viewMode: 'my',
+      addNote: jest.fn(),
+      setSelectedNoteId: jest.fn(),
+    };
+    return selector ? selector(mockStore) : mockStore;
+  }),
 }));
 
 // Mock TanStack Query hooks
@@ -14,44 +53,27 @@ jest.mock('../lib/hooks/queries/useNotes', () => ({
   })),
 }));
 
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
+// Mock services - inline to avoid hoisting issues
+jest.mock('../lib/services', () => ({
+  fetchMe: jest.fn().mockResolvedValue(null),
+  fetchUserById: jest.fn().mockResolvedValue(null),
+  fetchProfileById: jest.fn().mockResolvedValue(null),
+  fetchInstructors: jest.fn().mockResolvedValue([]),
+  updateProfile: jest.fn().mockResolvedValue({}),
+  assignInstructor: jest.fn().mockResolvedValue(undefined),
+  fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
+  notesService: {
+    create: jest.fn().mockResolvedValue({ '@id': 'new-note-id' }),
+    fetchUserNotes: jest.fn().mockResolvedValue([]),
+  },
 }));
 
-jest.mock('firebase/auth', () => {
-  const originalModule = jest.requireActual('firebase/auth');
-  return {
-    ...originalModule,
-    getAuth: jest.fn(() => ({
-      currentUser: {
-        uid: 'mockUserId',
-        email: 'mock@example.com',
-      },
-    })),
-    signInWithEmailAndPassword: jest.fn((auth, email, password) => {
-      return Promise.resolve({
-        user: {
-          uid: 'mockUserId',
-          email,
-        },
-      });
-    }),
-    signOut: jest.fn(() => Promise.resolve()),
-    onAuthStateChanged: jest.fn((auth, callback) => {
-      callback({
-        uid: 'mockUserId',
-        email: 'mock@example.com',
-      });
-    }),
-  };
-});
-
 describe('Sidebar Component', () => {
-  let mockPush;
+  let mockPush: jest.Mock;
 
   beforeEach(() => {
     mockPush = jest.fn();
-    useRouter.mockImplementation(() => ({
+    (useRouter as jest.Mock).mockImplementation(() => ({
       push: mockPush,
     }));
   });
@@ -75,16 +97,4 @@ describe('Sidebar Component', () => {
     const tabsElement = screen.getByRole('tablist');
     expect(tabsElement).toBeInTheDocument();
   });
-
-  /*
-  it('toggles between published and unpublished notes', () => {
-    render(<Sidebar onNoteSelect={jest.fn()} />);
-    const switchElement = screen.getByRole('switch');
-    expect(switchElement).toBeInTheDocument();
-    expect(switchElement).toBeChecked(); // Initially published
-
-    fireEvent.click(switchElement);
-    expect(switchElement).not.toBeChecked(); // Should toggle to unpublished
-  });
-  */
 });

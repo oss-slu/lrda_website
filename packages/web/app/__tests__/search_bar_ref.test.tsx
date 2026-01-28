@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import React, { RefObject } from 'react';
 
-jest.mock('firebase/auth'); // This mocks the Firebase authentication service, preventing real Firebase API calls
 jest.mock('../lib/utils/api_service');
 jest.mock('intro.js'); // Mock intro.js to control its behavior
 

@@ -49,7 +49,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ username, password }) => {
       console.log('Login status:', status);
       if (status == 'success') {
         // Do not store passwords in localStorage - security risk
-        // Authentication is handled by Firebase Auth tokens
+        // Authentication is handled by session cookies
         window.location.href = '/map';
       }
       setIsLoading(false);

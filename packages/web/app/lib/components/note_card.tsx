@@ -71,9 +71,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
         <div className='space-y-1 text-xs text-muted-foreground'>
           <div className='flex items-center gap-1.5'>
             <User className='h-3 w-3 flex-shrink-0' />
-            <span className='truncate'>
-              {isCreatorLoading ? '...' : (creator ?? 'Unknown')}
-            </span>
+            <span className='truncate'>{isCreatorLoading ? '...' : (creator ?? 'Unknown')}</span>
           </div>
           <div className='flex items-center gap-1.5'>
             <Calendar className='h-3 w-3 flex-shrink-0' />
@@ -85,11 +83,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
         {tags.length > 0 && (
           <div className='mt-2 flex flex-wrap gap-1'>
             {tags.slice(0, 3).map((tag, index) => (
-              <Badge
-                key={index}
-                variant='secondary'
-                className='h-5 px-1.5 text-[10px] font-normal'
-              >
+              <Badge key={index} variant='secondary' className='h-5 px-1.5 text-[10px] font-normal'>
                 {tag}
               </Badge>
             ))}

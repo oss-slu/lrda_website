@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Comment } from '@/app/types';
-import { commentsService, usersService } from '../../services';
+import { commentsService, fetchCreatorName } from '../../services';
 
 // Query key factory for comments
 export const commentsKeys = {
@@ -21,7 +21,7 @@ async function enrichCommentsWithAuthorNames(comments: Comment[]): Promise<Comme
 
       if (needsName && comment.authorId) {
         try {
-          const displayName = await usersService.fetchCreatorName(comment.authorId);
+          const displayName = await fetchCreatorName(comment.authorId);
           return { ...comment, authorName: displayName };
         } catch {
           return comment;

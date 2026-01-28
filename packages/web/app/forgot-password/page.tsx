@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../lib/config/firebase';
+import { forgotPassword } from '../lib/auth';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePasswordReset = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,15 +16,18 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    if (!auth) {
-      toast.error('Firebase auth is not initialized');
-      return;
-    }
+    setIsLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
-      toast.success('Password reset email sent!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to send reset email.');
+      const result = await forgotPassword(email);
+      if (result.error) {
+        toast.error(result.error.message || 'Failed to send reset email.');
+      } else {
+        toast.success('Password reset email sent! Check your inbox.');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to send reset email.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,9 +50,10 @@ const ForgotPasswordPage = () => {
           </div>
           <button
             onClick={handlePasswordReset}
-            className='w-full rounded-lg bg-blue-500 py-3 font-semibold text-white hover:bg-blue-600'
+            disabled={isLoading}
+            className='w-full rounded-lg bg-blue-500 py-3 font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
           >
-            Send Reset Email
+            {isLoading ? 'Sending...' : 'Send Reset Email'}
           </button>
           <div className='mt-4 text-center'>
             <Link href='/login' className='text-blue-500 hover:underline'>

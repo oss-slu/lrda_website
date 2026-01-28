@@ -31,23 +31,20 @@ export interface CommentData {
 }
 
 /**
- * Raw comment data from RERUM.
+ * Comment data from REST API.
  */
-export interface RerumCommentData {
-  '@id': string;
-  type: string;
+export interface ApiCommentData {
+  id: string;
   noteId: string;
-  text: string;
   authorId: string;
   authorName: string;
+  text: string;
+  position?: CommentPosition | null;
+  threadId?: string | null;
+  parentId?: string | null;
+  isResolved: boolean;
   createdAt: string;
-  position?: CommentPosition;
-  threadId?: string;
-  parentId?: string;
-  resolved?: boolean;
-  archived?: boolean;
-  resolvedAt?: string;
-  archivedAt?: string;
+  updatedAt: string;
 }
 
 /**
@@ -57,3 +54,7 @@ export interface ResolveThreadResult {
   success: boolean;
   updatedCount: number;
 }
+
+// Legacy type alias for backward compatibility
+/** @deprecated Use ApiCommentData instead */
+export type RerumCommentData = ApiCommentData;

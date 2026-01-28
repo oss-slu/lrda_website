@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { usersService } from '@/app/lib/services';
+import { fetchUserById } from '@/app/lib/services';
 import { Note } from '@/app/types';
 
 interface UseNotePermissionsResult {
@@ -64,7 +64,7 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
 
       let userData = null;
       try {
-        userData = await usersService.fetchById(fetchedUserId);
+        userData = await fetchUserById(fetchedUserId);
         console.log('fetchUserDetails: Fetched userData', userData);
       } catch (error) {
         console.error('Error fetching user data:', error);

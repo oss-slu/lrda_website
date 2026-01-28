@@ -69,6 +69,16 @@ export class HttpClient {
         data = (await response.text()) as unknown as T;
       }
 
+      // Log non-ok responses to console
+      if (!response.ok) {
+        console.error('[HttpClient] Request failed:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          data,
+        });
+      }
+
       return {
         data,
         status: response.status,
@@ -78,14 +88,18 @@ export class HttpClient {
       clearTimeout(timeoutId);
 
       if (error instanceof Error && error.name === 'AbortError') {
-        throw this.createError('Request timeout', 408, 'TIMEOUT');
+        const apiError = this.createError('Request timeout', 408, 'TIMEOUT');
+        console.error('[HttpClient] Request timeout:', url, apiError);
+        throw apiError;
       }
 
-      throw this.createError(
+      const apiError = this.createError(
         error instanceof Error ? error.message : 'Unknown error',
         0,
         'NETWORK_ERROR',
       );
+      console.error('[HttpClient] Network error:', url, error);
+      throw apiError;
     }
   }
 

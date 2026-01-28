@@ -11,8 +11,7 @@
 export { HttpClient } from './base/http-client';
 export type { HttpClientConfig, ApiResponse, ApiError } from './base/http-client';
 
-export { RerumClient, rerumClient, RERUM_PREFIX } from './base/rerum-client';
-export type { PagedQueryOptions } from './base/rerum-client';
+export { RestClient, restClient, API_URL } from './base/rest-client';
 
 // Notes service
 export { notesService, NotesService } from './notes/notes.service';
@@ -21,25 +20,47 @@ export type {
   NotesBoundsQuery,
   CreateNotePayload,
   UpdateNotePayload,
+  ApiNoteData,
+  // Legacy aliases
   RerumNoteData,
 } from './notes/notes.types';
-export { transformNoteToRerum } from './notes/notes.types';
+export { transformNoteToApi, transformNoteToRerum } from './notes/notes.types';
 
 // Users service
-export { usersService, UsersService } from './users/users.service';
-export type { UserData, UserRoles, CreateUserOptions, RerumAgentData } from './users/users.types';
+export {
+  fetchMe,
+  fetchUserById,
+  fetchProfileById,
+  fetchInstructors,
+  updateProfile,
+  assignInstructor,
+  fetchCreatorName,
+} from './users/users.service';
+export type {
+  UserData,
+  UserRoles,
+  UserProfile,
+  UpdateProfileOptions,
+  InstructorInfo,
+} from './users/users.types';
 
 // Comments service
 export { commentsService, CommentsService } from './comments/comments.service';
 export type {
   CommentData,
   CommentPosition,
-  RerumCommentData,
+  ApiCommentData,
   ResolveThreadResult,
+  // Legacy alias
+  RerumCommentData,
 } from './comments/comments.types';
 
 // Instructor service
-export { instructorService, InstructorService } from './instructor/instructor.service';
+export {
+  fetchStudents,
+  requestApproval,
+  sendNotification as sendInstructorNotification,
+} from './instructor/instructor.service';
 export type {
   StudentInfo,
   ApprovalNoteData,
@@ -58,3 +79,16 @@ export {
 
 // Tags service
 export { tagsService, TagsService } from './tags/tags.service';
+
+// Admin service
+export {
+  fetchAllUsers,
+  fetchPendingApplications,
+  getStats as getAdminStats,
+  approveApplication,
+  rejectApplication,
+} from './admin/admin.service';
+export type { AdminUserData, PendingApplication, AdminStats } from './admin/admin.service';
+
+// API utilities
+export { fetchWithAuth } from './api';

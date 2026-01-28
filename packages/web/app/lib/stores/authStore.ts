@@ -1,25 +1,35 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserData } from '../../types';
-import { auth, db } from '../config/firebase';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { usersService } from '../services';
+import type { UserData, UserProfile } from '@/app/types';
+import { toUserData } from '@/app/types';
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signOut as authSignOut,
+  getCurrentSession,
+} from '@/app/lib/auth/client';
+import { fetchMe } from '@/app/lib/services';
 
 interface AuthState {
   // State
   user: UserData | null;
+  profile: UserProfile | null;
   isLoggedIn: boolean;
   isLoading: boolean;
   isInitialized: boolean;
 
-  // Getters (computed from state)
+  // Getters (computed from state) - maintain backward compatibility
   getId: () => string | null;
   getName: () => string | null;
   getRoles: () => { administrator: boolean; contributor: boolean } | null;
 
+  // New getters for clean architecture
+  isInstructor: () => boolean;
+  isAdmin: () => boolean;
+
   // Actions
   login: (email: string, password: string) => Promise<string>;
+  signup: (data: { email: string; password: string; name: string }) => Promise<string>;
   logout: () => Promise<void>;
   setUser: (user: UserData | null) => void;
   initialize: () => void;
@@ -29,23 +39,42 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      profile: null,
       isLoggedIn: false,
       isLoading: true,
       isInitialized: false,
 
+      // Legacy getters for backward compatibility
       getId: () => {
-        const { user } = get();
-        return user?.uid ?? null;
+        const { user, profile } = get();
+        return profile?.id ?? user?.uid ?? null;
       },
 
       getName: () => {
-        const { user } = get();
-        return user?.name ?? null;
+        const { user, profile } = get();
+        return profile?.name ?? user?.name ?? null;
       },
 
       getRoles: () => {
-        const { user } = get();
+        const { user, profile } = get();
+        if (profile) {
+          return {
+            administrator: profile.role === 'admin',
+            contributor: true,
+          };
+        }
         return user?.roles ?? null;
+      },
+
+      // New getters
+      isInstructor: () => {
+        const { profile, user } = get();
+        return profile?.isInstructor ?? user?.isInstructor ?? false;
+      },
+
+      isAdmin: () => {
+        const { profile, user } = get();
+        return profile?.role === 'admin' || user?.roles?.administrator === true;
       },
 
       setUser: (userData: UserData | null) => {
@@ -57,31 +86,27 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (email: string, password: string): Promise<string> => {
-        if (!auth) throw new Error('Firebase auth is not initialized');
-
         set({ isLoading: true });
 
         try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          const firebaseUser = userCredential.user;
-          const token = await firebaseUser.getIdToken();
+          const response = await signInWithEmail(email, password);
 
-          // Store token in localStorage and cookie
-          localStorage.setItem('authToken', token);
-          document.cookie = `authToken=${token}; path=/`;
-
-          // Fetch user data from API or Firestore
-          let userData = await usersService.fetchById(firebaseUser.uid);
-
-          if (!userData && db) {
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            if (userDoc.exists()) {
-              userData = userDoc.data() as UserData;
-            }
+          if (response.error) {
+            set({ isLoading: false });
+            throw new Error(response.error.message || 'Login failed');
           }
 
-          if (userData) {
-            set({ user: userData, isLoggedIn: true, isLoading: false });
+          // Fetch full user profile from API
+          const profile = await fetchMe();
+
+          if (profile) {
+            const userData = toUserData(profile);
+            set({
+              profile,
+              user: userData,
+              isLoggedIn: true,
+              isLoading: false,
+            });
           } else {
             set({ isLoading: false });
           }
@@ -94,18 +119,48 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: async () => {
-        if (!auth) return;
+      signup: async (data: { email: string; password: string; name: string }): Promise<string> => {
+        set({ isLoading: true });
 
         try {
-          await signOut(auth);
+          const response = await signUpWithEmail(data);
 
-          // Clear storage
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-          document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          if (response.error) {
+            set({ isLoading: false });
+            throw new Error(response.error.message || 'Signup failed');
+          }
 
-          set({ user: null, isLoggedIn: false });
+          // Fetch full user profile from API
+          const profile = await fetchMe();
+
+          if (profile) {
+            const userData = toUserData(profile);
+            set({
+              profile,
+              user: userData,
+              isLoggedIn: true,
+              isLoading: false,
+            });
+          } else {
+            set({ isLoading: false });
+          }
+
+          return 'success';
+        } catch (error) {
+          set({ isLoading: false });
+          console.error('Signup error:', error);
+          return Promise.reject(error);
+        }
+      },
+
+      logout: async () => {
+        try {
+          await authSignOut();
+          set({
+            user: null,
+            profile: null,
+            isLoggedIn: false,
+          });
         } catch (error) {
           console.error('Logout error:', error);
         }
@@ -114,39 +169,51 @@ export const useAuthStore = create<AuthState>()(
       initialize: () => {
         if (get().isInitialized) return;
 
-        if (!auth) {
-          set({ isLoading: false, isInitialized: true });
-          return;
-        }
+        // Check for existing session
+        getCurrentSession()
+          .then(async response => {
+            if (response.data?.session) {
+              // Session exists, fetch user profile
+              const profile = await fetchMe();
 
-        // Set up Firebase auth state listener
-        onAuthStateChanged(auth, async firebaseUser => {
-          if (firebaseUser) {
-            // Try to fetch user data
-            let userData = await usersService.fetchById(firebaseUser.uid);
-
-            if (!userData && db) {
-              const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-              if (userDoc.exists()) {
-                userData = userDoc.data() as UserData;
+              if (profile) {
+                const userData = toUserData(profile);
+                set({
+                  profile,
+                  user: userData,
+                  isLoggedIn: true,
+                  isLoading: false,
+                  isInitialized: true,
+                });
+              } else {
+                set({
+                  user: null,
+                  profile: null,
+                  isLoggedIn: false,
+                  isLoading: false,
+                  isInitialized: true,
+                });
               }
+            } else {
+              set({
+                user: null,
+                profile: null,
+                isLoggedIn: false,
+                isLoading: false,
+                isInitialized: true,
+              });
             }
-
-            set({
-              user: userData,
-              isLoggedIn: userData !== null,
-              isLoading: false,
-              isInitialized: true,
-            });
-          } else {
+          })
+          .catch(error => {
+            console.error('Session check error:', error);
             set({
               user: null,
+              profile: null,
               isLoggedIn: false,
               isLoading: false,
               isInitialized: true,
             });
-          }
-        });
+          });
       },
     }),
     {
@@ -154,15 +221,16 @@ export const useAuthStore = create<AuthState>()(
       partialize: state => ({
         // Only persist user data, not loading/initialized states
         user: state.user,
+        profile: state.profile,
         isLoggedIn: state.isLoggedIn,
       }),
     },
   ),
 );
 
-// Initialize auth listener when module loads (client-side only)
+// Initialize auth when module loads (client-side only)
 if (typeof window !== 'undefined') {
-  // Delay initialization to ensure Firebase is ready
+  // Delay initialization to ensure everything is ready
   setTimeout(() => {
     useAuthStore.getState().initialize();
   }, 0);

@@ -8,7 +8,7 @@ import type { RichTextEditorRef } from 'mui-tiptap';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useNotesStore } from '@/app/lib/stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService, instructorService } from '@/app/lib/services';
+import { notesService, requestApproval } from '@/app/lib/services';
 import { Note, newNote } from '@/app/types';
 
 import useNoteState from './hooks/useNoteState';
@@ -164,7 +164,7 @@ export default function NoteEditor({
       await notesService.update(updatedNote);
 
       if (updatedApprovalStatus && instructorId) {
-        await instructorService.requestApproval({
+        await requestApproval({
           instructorId: instructorId,
           title: updatedNote.title || '',
           text: updatedNote.text || '',

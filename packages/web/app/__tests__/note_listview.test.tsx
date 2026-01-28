@@ -3,43 +3,96 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import NoteListView from '../lib/components/note_listview';
 
-// Mock Firebase modules to prevent real initialization
-jest.mock('../lib/config/firebase', () => ({
-  auth: {},
-  db: {},
-  realtimeDb: {},
-  storage: {},
+// Mock auth store - inline to avoid hoisting issues
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: {
+        uid: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        roles: { administrator: false, contributor: true },
+        isInstructor: false,
+      },
+      isLoggedIn: true,
+      isLoading: false,
+      isInitialized: true,
+      login: jest.fn().mockResolvedValue('success'),
+      logout: jest.fn().mockResolvedValue(undefined),
+      signup: jest.fn().mockResolvedValue(undefined),
+      refreshUser: jest.fn().mockResolvedValue(undefined),
+      isAdmin: jest.fn().mockReturnValue(false),
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
 }));
 
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({ currentUser: { uid: 'mockUserId', email: 'mock@example.com' } })),
-  signInWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+// Mock notes store
+jest.mock('../lib/stores/notesStore', () => ({
+  useNotesStore: jest.fn((selector?: (state: any) => any) => {
+    const mockStore = {
+      selectedNoteId: null,
+      setSelectedNoteId: jest.fn(),
+    };
+    return selector ? selector(mockStore) : mockStore;
+  }),
 }));
 
-jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(),
-}));
-
-jest.mock('firebase/firestore', () => ({
-  getFirestore: jest.fn(),
-  Timestamp: jest.fn(),
-}));
-
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(),
-}));
-
-jest.mock('firebase/storage', () => ({
-  getStorage: jest.fn(),
+// Mock services - inline to avoid hoisting issues
+jest.mock('../lib/services', () => ({
+  fetchMe: jest.fn().mockResolvedValue(null),
+  fetchUserById: jest.fn().mockResolvedValue(null),
+  fetchProfileById: jest.fn().mockResolvedValue(null),
+  fetchInstructors: jest.fn().mockResolvedValue([]),
+  updateProfile: jest.fn().mockResolvedValue({}),
+  assignInstructor: jest.fn().mockResolvedValue(undefined),
+  fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
 }));
 
 describe('NoteListView', () => {
   const mockNotes = [
-    { id: 1, title: 'Note 1', text: 'Content 1', time: new Date() },
-    { id: 2, title: 'Note 2', text: 'Content 2', time: new Date() },
-    { id: 3, title: 'Note 3', text: 'Content 3', time: new Date() },
+    {
+      id: '1',
+      title: 'Note 1',
+      text: 'Content 1',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
+    {
+      id: '2',
+      title: 'Note 2',
+      text: 'Content 2',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
+    {
+      id: '3',
+      title: 'Note 3',
+      text: 'Content 3',
+      time: new Date(),
+      creator: 'user-1',
+      media: [],
+      audio: [],
+      latitude: '',
+      longitude: '',
+      published: false,
+      tags: [],
+      isArchived: false,
+    },
   ];
 
   it('renders without crashing', () => {

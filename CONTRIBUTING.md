@@ -1,6 +1,6 @@
 # Contributing to Where's Religion? Desktop
 
-Thank you for your interest in contributing to _Where’s Religion? Desktop_! We're excited to collaborate with students, developers, researchers, and community members. This guide will help you get started.
+Thank you for your interest in contributing to _Where's Religion? Desktop_! We're excited to collaborate with students, developers, researchers, and community members. This guide will help you get started.
 
 ---
 
@@ -38,11 +38,10 @@ This guide helps new contributors get the Where's Religion? web application runn
 
 ## Prerequisites
 
-- **Node.js** 18+ (recommend using [nvm](https://github.com/nvm-sh/nvm))
-- **pnpm** (install with `npm i -g pnpm`)
+- **Node.js** 24+ (recommend using [nvm](https://github.com/nvm-sh/nvm))
+- **pnpm** 10+ (install with `npm i -g pnpm`)
 - **Docker** (for local backend - [Install Docker](https://docs.docker.com/get-docker/))
 - **Git**
-- **Java** 21+ (for mac `brew install openjdk@21`)
 
 ## Quick Start (5 minutes)
 
@@ -72,41 +71,49 @@ pnpm dev:full
 
 This single command starts:
 
-- **Docker services** (MongoDB, LocalStack S3)
-- **Firebase Emulators** (Auth, Firestore, Storage)
-- **Backend API server** on port 3001
+- **Docker services** (PostgreSQL, LocalStack S3)
+- **Backend API server** on port 3002
 - **Next.js frontend** on port 3000
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
 > **Tip:** Use `Ctrl+C` to stop all services at once.
 
-### Alternative: Minimal Setup (Frontend Only)
+### 4. Seed the Database (Optional)
 
-If you only need the frontend with Firebase emulators (no backend/S3):
+Populate the database with sample data so you have something to work with right away:
 
 ```bash
-# Terminal 1: Start Firebase emulators
-pnpm firebase:emulators
+pnpm api:db:seed
+```
 
-# Terminal 2: Start frontend
-pnpm dev:emulators
+This inserts a set of sample users, notes with geolocation data, media, audio, and threaded comments. The seed data is hand-crafted to exercise all major features (map pins, published/draft notes, instructor-student relationships, comment threads, etc.).
+
+The seed script **truncates all tables** before inserting, so it is safe to run multiple times. Note that any data you created manually will be wiped.
+
+### Alternative: Frontend Only
+
+If you only need the frontend (pointing to a running API server):
+
+```bash
+pnpm dev
 ```
 
 ---
 
 ## Available Commands
 
-| Command                   | Description                                              |
-| ------------------------- | -------------------------------------------------------- |
-| `pnpm dev:full`           | Start everything (Docker, Firebase, server, frontend)    |
-| `pnpm dev:backend`        | Start Docker services + backend server only              |
-| `pnpm dev:emulators`      | Start frontend with Firebase emulators                   |
-| `pnpm dev`                | Start frontend only (requires separate Firebase/backend) |
-| `pnpm services:up`        | Start Docker services (MongoDB, LocalStack)              |
-| `pnpm services:down`      | Stop Docker services                                     |
-| `pnpm firebase:emulators` | Start Firebase emulators                                 |
-| `pnpm setup`              | Create .env files from examples                          |
+| Command              | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `pnpm dev:full`      | Start everything (Docker, API server, frontend) |
+| `pnpm dev:api`       | Start Docker services + API server only         |
+| `pnpm dev`           | Start frontend only (requires separate API)     |
+| `pnpm docker:up`     | Start Docker services (MongoDB, LocalStack)     |
+| `pnpm docker:down`   | Stop Docker services                            |
+| `pnpm api:db:seed`   | Seed database with sample data                  |
+| `pnpm setup`         | Create .env files from examples                 |
+| `pnpm test`          | Run unit and e2e tests                          |
+| `pnpm lint`          | Run ESLint                                      |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 
@@ -114,78 +121,30 @@ Open [http://localhost:3000](http://localhost:3000) - you should see the app run
 
 ## Environment Setup
 
-### Option A: Use Firebase Emulators (Recommended)
+### Required Environment Variables
 
-The easiest way to get started - no Firebase account needed! Firebase Emulators run locally and provide full authentication, Firestore, and storage functionality.
-
-**Step 1: Set up environment**
-
-```bash
-cp packages/web/.env.example packages/web/.env.local
-```
-
-The default `packages/web/.env.example` already has `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` set.
-
-**Step 2: Start Firebase Emulators (Terminal 1)**
-
-```bash
-pnpm firebase:emulators
-```
-
-This starts:
-
-- **Auth Emulator** on port 9099
-- **Firestore Emulator** on port 8080
-- **Database Emulator** on port 9000
-- **Storage Emulator** on port 9199
-- **Emulator UI** on port 4000 - [http://localhost:4000](http://localhost:4000)
-
-**Step 3: Start Next.js with Emulators (Terminal 2)**
-
-```bash
-pnpm dev:emulators
-```
-
-Or use the filter command: `pnpm --filter web dev:emulators`
-
-Or use the filter command: `pnpm --filter web dev:emulators`
-
-Open [http://localhost:3000](http://localhost:3000) - authentication and data storage will use local emulators!
-
-**Emulator UI**: Visit [http://localhost:4000](http://localhost:4000) to view/edit users, Firestore data, and more.
-
-**Persisting Data**: To save emulator data between sessions:
-
-```bash
-# Export data before stopping
-pnpm firebase:emulators:export
-
-# Start with previous data
-pnpm firebase:emulators:import
-```
-
----
-
-### Option B: Use Mock/Demo Mode
-
-For UI work that doesn't require authentication, you can use mock values:
+Create `packages/web/.env.local` with the following:
 
 ```env
-# packages/web/.env.local - Mock mode for UI development
-NEXT_PUBLIC_FIREBASE_API_KEY=demo-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-project
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=demo.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123:web:abc
-NEXT_PUBLIC_RERUM_PREFIX=http://localhost:3001/v1/
+# API Server URL
+NEXT_PUBLIC_API_URL=http://localhost:3002
+
+# better-auth configuration
+BETTER_AUTH_SECRET=your-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+
+# Google Maps (for map features)
+NEXT_PUBLIC_MAP_KEY=your-google-maps-api-key
 ```
 
-> **Note:** Authentication features will not work with mock values, but you can still work on UI components, styling, and non-auth features.
+> **Note:** Run `pnpm setup` to automatically create env files from the examples.
 
----
+### Getting API Keys
 
-### Option C: Request Team Credentials
+- **Google Maps API Key**: Required for map features. Get one from [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+- **BETTER_AUTH_SECRET**: Generate a random string (e.g., `openssl rand -base64 32`)
+
+### Request Team Credentials
 
 For full access to the development environment, contact the team lead at yashkamal.bhatia@slu.edu.
 
@@ -195,16 +154,23 @@ For full access to the development environment, contact the team lead at yashkam
 
 The backend uses MongoDB, a custom RERUM-compatible API server, and LocalStack for S3 emulation.
 
+### Architecture
+
+- **Authentication**: better-auth (session-based, self-hosted)
+- **Database**: MongoDB (via Docker)
+- **Media Storage**: LocalStack S3 emulator (via Docker)
+- **API Server**: Express.js on port 3002
+
 ### Starting Services Manually
 
 If you prefer to start services individually instead of using `pnpm dev:full`:
 
 ```bash
 # Start Docker services
-pnpm services:up
+pnpm docker:up
 
 # Start the API server (in a separate terminal)
-pnpm --filter server dev
+pnpm dev:api
 ```
 
 Docker starts:
@@ -215,7 +181,7 @@ Docker starts:
 
 ### Initialize LocalStack S3 (Only needed for manual setup)
 
-When using `pnpm dev:full` or `pnpm services:up`, the S3 bucket is created automatically.
+When using `pnpm dev:full` or `pnpm docker:up`, the S3 bucket is created automatically.
 
 For manual setup, after starting Docker, run:
 
@@ -232,15 +198,15 @@ Open [http://localhost:8081](http://localhost:8081) with:
 - Username: `mongoexpressuser`
 - Password: `mongoexpresspass`
 
-### Running the API Server
+### API Server
 
 When using `pnpm dev:full`, the server starts automatically. For manual setup:
 
 ```bash
-pnpm --filter server dev
+pnpm dev:api
 ```
 
-The API server runs on [http://localhost:3001](http://localhost:3001).
+The API server runs on [http://localhost:3002](http://localhost:3002).
 
 > **Note:** The server uses `packages/server/.env`. Run `pnpm setup` to create it from the example.
 
@@ -248,40 +214,19 @@ The API server runs on [http://localhost:3001](http://localhost:3001).
 
 ```bash
 # Stop everything (if using pnpm dev:full, just Ctrl+C)
-pnpm services:down
+pnpm docker:down
 ```
 
 ---
 
 ## Common Issues
 
-### "Firebase: No Firebase App" Error
-
-Your Firebase environment variables are missing or invalid. Check that:
-
-1. `packages/web/.env.local` exists in the web package directory
-2. All `NEXT_PUBLIC_FIREBASE_*` variables have values (or use emulators)
-3. You've restarted the dev server after changing `packages/web/.env.local`
-
-### Firebase Emulator Issues
-
-**Emulators won't start:**
+### Port Already in Use
 
 ```bash
-# Check if ports are in use
-lsof -ti:9099 -ti:8080 -ti:9000 -ti:9199 -ti:4000 | xargs kill -9
-```
-
-**"Not connected to emulators" in console:**
-
-- Make sure you started the app with `pnpm dev:emulators` (not `pnpm dev`)
-- Verify emulators are running: visit [http://localhost:4000](http://localhost:4000)
-
-### Port 3000 Already in Use
-
-```bash
-# Find and kill the process
+# Find and kill the process on port 3000
 lsof -ti:3000 | xargs kill -9
+
 # Or use a different port
 pnpm dev -- -p 3001
 ```
@@ -290,9 +235,8 @@ pnpm dev -- -p 3001
 
 ```bash
 # Reset Docker containers
-cd packages/server
-docker compose down -v
-docker compose up -d
+pnpm docker:down
+pnpm docker:up
 ```
 
 ### MongoDB Connection Failed
@@ -304,6 +248,14 @@ docker ps
 docker logs server-mongo-1
 ```
 
+### Authentication Issues
+
+If you're having trouble logging in:
+
+1. Ensure the API server is running (`pnpm dev:api`)
+2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` points to the correct API server
+3. Clear browser cookies and try again
+
 ---
 
 ## Development Workflow
@@ -311,7 +263,8 @@ docker logs server-mongo-1
 ### Running Tests
 
 ```bash
-pnpm test          # Unit tests (Jest)
+pnpm test          # All tests (unit + e2e)
+pnpm test:unit     # Unit tests only (Jest)
 pnpm test:e2e      # End-to-end tests (Playwright)
 ```
 

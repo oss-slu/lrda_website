@@ -1,27 +1,22 @@
 /**
  * Comments Service
  *
- * Handles comment operations including CRUD, thread resolution, and archiving.
- * Uses RERUM as the backend storage.
+ * Handles comment operations including CRUD, thread resolution, and deletion.
+ * Uses the REST API backend (Hono/PostgreSQL).
  */
 
 import { Comment } from '@/app/types';
-import { rerumClient } from '../base/rerum-client';
-import type { CommentData, RerumCommentData, ResolveThreadResult } from './comments.types';
+import { restClient } from '../base/rest-client';
+import type { CommentData, ApiCommentData, ResolveThreadResult } from './comments.types';
 
 class CommentsService {
   /**
    * Fetch all comments for a specific note.
-   * Filters out archived comments.
    */
   async fetchForNote(noteId: string): Promise<CommentData[]> {
     try {
-      const results = await rerumClient.query<RerumCommentData>({
-        type: 'comment',
-        noteId,
-      });
-
-      return results.filter(item => !item.archived).map(item => this.transformComment(item));
+      const response = await restClient.get<ApiCommentData[]>(`/api/comments/note/${noteId}`);
+      return response.data.map(this.transformComment);
     } catch (error) {
       console.error('Error fetching comments:', error);
       return [];
@@ -32,26 +27,16 @@ class CommentsService {
    * Create a new comment.
    * Accepts the app's Comment type for compatibility.
    */
-  async create(comment: Comment | CommentData): Promise<RerumCommentData> {
-    // Extract authorName as string if it's a ReactNode
-    const authorNameStr =
-      typeof comment.authorName === 'string' ?
-        comment.authorName
-      : String(comment.authorName || comment.author || '');
-
-    const response = await rerumClient.create<RerumCommentData>({
-      type: 'comment',
+  async create(comment: Comment | CommentData): Promise<ApiCommentData> {
+    const payload = {
       noteId: comment.noteId,
       text: comment.text,
-      authorId: comment.authorId,
-      authorName: authorNameStr,
-      createdAt: comment.createdAt,
       position: comment.position || null,
       threadId: comment.threadId || null,
       parentId: comment.parentId || null,
-      resolved: !!comment.resolved,
-      archived: !!comment.archived,
-    });
+    };
+
+    const response = await restClient.post<ApiCommentData>('/api/comments', payload);
 
     if (!response.ok) {
       throw new Error('Failed to create comment');
@@ -64,62 +49,43 @@ class CommentsService {
    * Resolve all comments in a thread.
    */
   async resolveThread(threadId: string): Promise<ResolveThreadResult> {
-    // Fetch all comments in this thread
-    const comments = await rerumClient.query<RerumCommentData>({
-      type: 'comment',
-      threadId,
-    });
-
-    if (!comments.length) {
-      throw new Error('No comments found for this thread');
-    }
-
-    // Update each comment to mark as resolved
-    const updatePromises = comments.map(comment =>
-      rerumClient.overwrite({
-        ...comment,
-        resolved: true,
-        resolvedAt: new Date().toISOString(),
-      }),
+    const response = await restClient.post<ResolveThreadResult>(
+      `/api/comments/thread/${threadId}/resolve`,
+      {},
     );
 
-    const responses = await Promise.all(updatePromises);
-    const failed = responses.filter(r => !r.ok);
-
-    if (failed.length) {
-      throw new Error(`Failed to resolve ${failed.length} comment(s) in thread`);
+    if (!response.ok) {
+      throw new Error('Failed to resolve thread');
     }
 
-    return { success: true, updatedCount: comments.length };
+    return response.data;
   }
 
   /**
-   * Archive a comment (soft delete).
+   * Delete a comment (hard delete).
+   */
+  async delete(commentId: string): Promise<boolean> {
+    const response = await restClient.delete<void>(`/api/comments/${commentId}`);
+    return response.status === 204 || response.ok;
+  }
+
+  /**
+   * Archive a comment.
+   * @deprecated Use delete() instead - we now use hard deletes.
    */
   async archive(commentId: string): Promise<boolean> {
-    const response = await rerumClient.overwrite({
-      type: 'comment',
-      '@id': commentId,
-      archived: true,
-      archivedAt: new Date().toISOString(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to archive comment');
-    }
-
-    return true;
+    return this.delete(commentId);
   }
 
   /**
    * Update a comment's text.
    */
-  async update(commentId: string, updates: Partial<CommentData>): Promise<RerumCommentData> {
-    const response = await rerumClient.overwrite<RerumCommentData>({
-      type: 'comment',
-      '@id': commentId,
-      ...updates,
-    });
+  async update(commentId: string, updates: Partial<CommentData>): Promise<ApiCommentData> {
+    const payload: Record<string, unknown> = {};
+    if (updates.text !== undefined) payload.text = updates.text;
+    if (updates.resolved !== undefined) payload.isResolved = updates.resolved;
+
+    const response = await restClient.patch<ApiCommentData>(`/api/comments/${commentId}`, payload);
 
     if (!response.ok) {
       throw new Error('Failed to update comment');
@@ -129,11 +95,11 @@ class CommentsService {
   }
 
   /**
-   * Transform RERUM comment data to internal format.
+   * Transform API comment data to internal format.
    */
-  private transformComment(item: RerumCommentData): CommentData {
+  private transformComment(item: ApiCommentData): CommentData {
     return {
-      id: item['@id'],
+      id: item.id,
       noteId: item.noteId,
       text: item.text,
       authorId: item.authorId,
@@ -142,8 +108,8 @@ class CommentsService {
       position: item.position ? { from: item.position.from, to: item.position.to } : null,
       threadId: item.threadId || null,
       parentId: item.parentId || null,
-      resolved: !!item.resolved,
-      archived: !!item.archived,
+      resolved: item.isResolved,
+      archived: false, // No longer using archive
     };
   }
 }

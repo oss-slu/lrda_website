@@ -1,4 +1,4 @@
-import { handleDeleteNote } from '../lib/components/NoteEditor/handlers/noteHandlers'; // Import the function to be tested
+import { handleDeleteNote } from '../lib/components/NoteEditor/handlers/noteHandlers';
 import { toast } from 'sonner';
 
 // Mock notesService
@@ -9,11 +9,6 @@ jest.mock('../lib/services', () => ({
   },
 }));
 
-// Mocking necessary modules
-jest.mock('firebase/auth');
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
-}));
 jest.useFakeTimers().setSystemTime(new Date('2024-11-12T07:43:02.627Z'));
 jest.mock('sonner', () => ({
   toast: jest.fn(),
@@ -51,12 +46,11 @@ describe('Archive Note Functionality Tests', () => {
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
 
-      // Update across all relevant test cases to ensure consistent expectations
       expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
-        archivedAt: expect.any(String), // Matches any string date format
-        published: false, // Consistently include this field
+        archivedAt: expect.any(String),
+        published: false,
       });
 
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
@@ -66,23 +60,13 @@ describe('Archive Note Functionality Tests', () => {
       });
       expect(result).toBe(true);
     });
-    /* this test can't be tested because the confirmation is not in the note_handler file */
-    // test('shows confirmation prompt before archiving', async () => {
-    //   // Mocking confirmation prompt
-    //   global.confirm = jest.fn(() => true); // Simulates user confirming the action
-
-    //   const result = await handleDeleteNote(mockNote, mockUser, mockSetNote);
-
-    //   expect(global.confirm).toHaveBeenCalledWith('Are you absolutely sure?');
-    //   expect(result).toBe(true);
-    // });
 
     test('reflects the archive state in UI', async () => {
       mockNotesServiceUpdate.mockResolvedValueOnce({ '@id': 'test-note-id' });
 
       await handleDeleteNote(mockNote, mockSetNote);
 
-      expect(mockSetNote).toHaveBeenCalledWith(undefined); // Note should disappear from UI
+      expect(mockSetNote).toHaveBeenCalledWith(undefined);
     });
   });
 
@@ -97,13 +81,11 @@ describe('Archive Note Functionality Tests', () => {
         archivedAt: new Date().toISOString(),
       });
 
-      // Service returns RerumNoteData with @id on success, not Response with .ok
       expect(response['@id']).toBe('test-note-id');
-      // Update across all relevant test cases to ensure consistent expectations
       expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
-        archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
+        archivedAt: '2024-11-12T07:43:02.627Z',
       });
     });
   });
@@ -115,12 +97,11 @@ describe('Archive Note Functionality Tests', () => {
 
       const result = await handleDeleteNote(mockNote, mockSetNote);
 
-      // Update across all relevant test cases to ensure consistent expectations
       expect(mockNotesServiceUpdate).toHaveBeenCalledWith({
         ...mockNote,
         isArchived: true,
-        archivedAt: '2024-11-12T07:43:02.627Z', // Matches any string date format
-        published: false, // Consistently include this field
+        archivedAt: '2024-11-12T07:43:02.627Z',
+        published: false,
       });
 
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
@@ -136,7 +117,6 @@ describe('Archive Note Functionality Tests', () => {
 
       await handleDeleteNote(mockNote, mockSetNote);
 
-      // Ensure that the note is not present in the UI anymore
       expect(mockSetNote).toHaveBeenCalledWith(undefined);
       expect(toast).toHaveBeenCalledWith('Success', {
         description: 'Note successfully archived.',

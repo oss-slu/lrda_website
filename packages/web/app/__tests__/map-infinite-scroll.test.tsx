@@ -5,11 +5,6 @@ import '@testing-library/jest-dom';
 import Page from 'app/map/page';
 import { createTestWrapper } from './utils/testQueryClient';
 
-// Mock Firebase config to avoid real initialization
-jest.mock('app/lib/config/firebase', () => ({
-  db: {},
-}));
-
 // Mock Google Maps context and components used within the page
 jest.mock('app/lib/utils/GoogleMapsContext', () => ({
   useGoogleMaps: () => ({ isMapsApiLoaded: false }),

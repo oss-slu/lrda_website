@@ -2,37 +2,18 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(), // Mock Realtime Database
+// Mock auth store to prevent nanostores ESM import chain
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: { uid: 'mockUserId', email: 'mock@example.com' },
+      isLoggedIn: true,
+      isLoading: false,
+      isInitialized: true,
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
 }));
-
-jest.mock('firebase/auth', () => {
-  const originalModule = jest.requireActual('firebase/auth');
-  return {
-    ...originalModule,
-    getAuth: jest.fn(() => ({
-      currentUser: {
-        uid: 'mockUserId',
-        email: 'mock@example.com',
-      },
-    })),
-    signInWithEmailAndPassword: jest.fn((auth, email, password) => {
-      return Promise.resolve({
-        user: {
-          uid: 'mockUserId',
-          email,
-        },
-      });
-    }),
-    signOut: jest.fn(() => Promise.resolve()),
-    onAuthStateChanged: jest.fn((auth, callback) => {
-      callback({
-        uid: 'mockUserId',
-        email: 'test@gmail.com',
-      });
-    }),
-  };
-});
 
 describe('PublishToggle Integration Test', () => {
   it('toggles publish state when clicked', async () => {

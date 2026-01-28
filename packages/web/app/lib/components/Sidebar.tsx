@@ -8,7 +8,7 @@ import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService, usersService } from '../services';
+import { notesService, fetchUserById } from '../services';
 import { useStudentNotes } from '../hooks/queries/useNotes';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -71,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       };
 
       const data = await notesService.create(newNoteData);
-      const newNoteId = data['@id'] || (data as any).id;
+      const newNoteId = data.id;
 
       if (!newNoteId) {
         throw new Error('No ID returned from server');
@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
 
       let userData = null;
       try {
-        userData = await usersService.fetchById(userId);
+        userData = await fetchUserById(userId);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -258,17 +258,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             disabled={isCreatingNote}
             className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
           >
-            {isCreatingNote ? (
+            {isCreatingNote ?
               <>
                 <Loader2 size={18} className='mr-2 animate-spin' />
                 Creating...
               </>
-            ) : (
-              <>
+            : <>
                 <Plus size={18} className='mr-2' />
                 New Note
               </>
-            )}
+            }
           </Button>
         </div>
       )}

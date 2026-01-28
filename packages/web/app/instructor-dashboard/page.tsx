@@ -5,7 +5,7 @@ import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
-import { usersService, notesService } from '../lib/services';
+import { fetchUserById, fetchCreatorName, notesService } from '../lib/services';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -26,7 +26,7 @@ const InstructorDashboardPage = () => {
     queryKey: ['instructor', authUser?.uid],
     queryFn: async () => {
       if (!authUser?.uid) return null;
-      const userData = await usersService.fetchById(authUser.uid);
+      const userData = await fetchUserById(authUser.uid);
       if (!userData || !userData.isInstructor) {
         throw new Error('Access denied. Instructor only.');
       }
@@ -56,7 +56,7 @@ const InstructorDashboardPage = () => {
     queryFn: async () => {
       return Promise.all(
         studentIds.map(async (uid: string) => {
-          const name = await usersService.fetchCreatorName(uid);
+          const name = await fetchCreatorName(uid);
           return { uid, name };
         }),
       );

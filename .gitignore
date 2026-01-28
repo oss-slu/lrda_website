@@ -7,17 +7,12 @@ yarn.lock
 .env
 pnpm-lock.yaml
 
-firebase-admin.json
 all_notes.json
 *.tsbuildinfo
 
-# Firebase Emulators
-firebase-emulator-data/
-firebase-debug.log
-firestore-debug.log
-database-debug.log
-ui-debug.log
-storage-debug.log
+# Firebase service account (sensitive)
+firebase-service-account.json
+*-service-account.json
 
 # LocalStack (local S3)
 .localstack/
@@ -31,3 +26,12 @@ playwright/.cache/
 
 # Plans and drafts and audits
 /plans/
+
+# Terraform
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/*.tfstate
+infrastructure/*.tfstate.*
+infrastructure/tfplan
+infrastructure/terraform.tfvars
+infrastructure/*.backup

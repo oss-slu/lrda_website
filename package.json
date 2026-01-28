@@ -4,12 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter web dev",
-    "dev:emulators": "pnpm --filter web dev:emulators",
-    "dev:full": "pnpm clear-ports && concurrently -k -n services,firebase,server,web -c blue,yellow,green,cyan \"pnpm services:up --wait\" \"pnpm firebase:emulators\" \"sleep 5 && pnpm --filter server dev\" \"sleep 3 && pnpm --filter web dev:emulators\"",
-    "dev:backend": "concurrently -k -n services,server -c blue,green \"pnpm services:up --wait\" \"sleep 5 && pnpm --filter server dev\"",
-    "services:up": "./scripts/services-up.sh",
-    "services:down": "docker compose -f packages/server/docker-compose.yml down",
-    "clear-ports": "lsof -ti:3000 -ti:3001 -ti:8080 -ti:9000 -ti:9099 -ti:9199 -ti:4000 2>/dev/null | xargs kill -9 2>/dev/null || true",
+    "dev:api": "pnpm --filter @lrda/api dev",
+    "dev:full": "pnpm clear-ports && pnpm api:docker:up && sleep 2 && pnpm api:db:push && concurrently -k -n api,web -c blue,cyan \"pnpm dev:api\" \"sleep 3 && pnpm dev\"",
+    "api:docker:up": "pnpm --filter @lrda/api docker:up",
+    "api:docker:down": "pnpm --filter @lrda/api docker:down",
+    "api:db:generate": "pnpm --filter @lrda/api db:generate",
+    "api:db:migrate": "pnpm --filter @lrda/api db:migrate",
+    "api:db:push": "pnpm --filter @lrda/api db:push",
+    "api:db:studio": "pnpm --filter @lrda/api db:studio",
+    "api:db:seed": "pnpm --filter @lrda/api db:seed",
+    "clear-ports": "lsof -ti:3000 -ti:3001 -ti:3002 2>/dev/null | xargs kill -9 2>/dev/null || true",
     "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
     "lint": "pnpm --filter web lint",
@@ -23,12 +27,7 @@
     "test:e2e:debug": "pnpm --filter web test:e2e:debug",
     "test:e2e:install": "pnpm --filter web test:e2e:install",
     "clear-port": "./scripts/clear-port.sh",
-    "docker:up": "cd packages/server && docker compose up -d",
-    "docker:down": "cd packages/server && docker compose down",
-    "firebase:emulators": "firebase emulators:start",
-    "firebase:emulators:export": "firebase emulators:export ./firebase-emulator-data",
-    "firebase:emulators:import": "firebase emulators:start --import=./firebase-emulator-data",
-    "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/server/.env.example packages/server/.env && echo 'Created .env.local and .env files - ready for pnpm dev:full'"
+    "setup": "cp packages/web/.env.example packages/web/.env.local && cp apps/api/.env.example apps/api/.env && echo 'Created .env files - ready for pnpm dev:full'"
   },
   "packageManager": "pnpm@10.20.0",
   "engines": {
@@ -49,7 +48,6 @@
       "baseline-browser-mapping": "^2.9.0"
     },
     "onlyBuiltDependencies": [
-      "@firebase/util",
       "core-js",
       "esbuild",
       "protobufjs",

@@ -14,37 +14,58 @@ jest.mock('../lib/hooks/queries/useNotes', () => ({
   })),
 }));
 
-jest.mock('firebase/database', () => ({
-  getDatabase: jest.fn(),
+// Mock auth store
+jest.mock('../lib/stores/authStore', () => ({
+  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+    const mockAuthState = {
+      user: {
+        uid: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        roles: { administrator: false, contributor: true },
+        isInstructor: false,
+      },
+      isLoggedIn: true,
+      isLoading: false,
+      isInitialized: true,
+      login: jest.fn().mockResolvedValue('success'),
+      logout: jest.fn().mockResolvedValue(undefined),
+      signup: jest.fn().mockResolvedValue(undefined),
+      refreshUser: jest.fn().mockResolvedValue(undefined),
+      isAdmin: jest.fn().mockReturnValue(false),
+    };
+    return selector ? selector(mockAuthState) : mockAuthState;
+  }),
 }));
 
-jest.mock('firebase/auth', () => {
-  const originalModule = jest.requireActual('firebase/auth');
-  return {
-    ...originalModule,
-    getAuth: jest.fn(() => ({
-      currentUser: {
-        uid: 'mockUserId',
-        email: 'mock@example.com',
-      },
-    })),
-    signInWithEmailAndPassword: jest.fn((auth, email, password) => {
-      return Promise.resolve({
-        user: {
-          uid: 'mockUserId',
-          email,
-        },
-      });
-    }),
-    signOut: jest.fn(() => Promise.resolve()),
-    onAuthStateChanged: jest.fn((auth, callback) => {
-      callback({
-        uid: 'mockUserId',
-        email: 'mock@example.com',
-      });
-    }),
-  };
-});
+// Mock notes store
+jest.mock('../lib/stores/notesStore', () => ({
+  useNotesStore: jest.fn((selector?: (state: any) => any) => {
+    const mockStore = {
+      notes: [],
+      fetchNotes: jest.fn(),
+      viewMode: 'my',
+      addNote: jest.fn(),
+      setSelectedNoteId: jest.fn(),
+    };
+    return selector ? selector(mockStore) : mockStore;
+  }),
+}));
+
+// Mock services
+jest.mock('../lib/services', () => ({
+  fetchMe: jest.fn().mockResolvedValue(null),
+  fetchUserById: jest.fn().mockResolvedValue(null),
+  fetchProfileById: jest.fn().mockResolvedValue(null),
+  fetchInstructors: jest.fn().mockResolvedValue([]),
+  updateProfile: jest.fn().mockResolvedValue({}),
+  assignInstructor: jest.fn().mockResolvedValue(undefined),
+  fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
+  notesService: {
+    create: jest.fn().mockResolvedValue({ '@id': 'new-note-id' }),
+    fetchUserNotes: jest.fn().mockResolvedValue([]),
+  },
+}));
 
 describe('Publish and Unpublish Notes Slider', () => {
   let mockPush;
