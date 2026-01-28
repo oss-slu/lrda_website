@@ -12,6 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:seed": "bun run src/scripts/seed.ts --yolo",
+    "db:seed:dry": "bun run src/scripts/seed.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "sync:users": "bun run src/scripts/sync-users-from-firebase.ts",
