@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import {
-  validateEmail,
-  validatePassword,
-  validateFirstName,
-  validateLastName,
-} from '../lib/utils/validation';
 import { useAuthStore } from '../lib/stores/authStore';
 import { fetchInstructors, assignInstructor } from '../lib/services';
 import StrengthIndicator from '@/components/ui/strength-indicator';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,24 +19,38 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+interface SignupFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: 'teacher' | 'student';
+  instructorId?: string;
+}
+
 const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [workingUnderInstructor, setWorkingUnderInstructor] = useState('');
   const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([]);
-  const [selectedInstructor, setSelectedInstructor] = useState<{
-    value: string;
-    label: string;
-  } | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
   const { signup } = useAuthStore();
 
-  // Fetch instructors for the dropdown
+  const form = useForm<SignupFormData>({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'student',
+      instructorId: '',
+    },
+  });
+
+  const selectedRole = form.watch('role');
+
+  // Fetch instructors when role changes to student
   useEffect(() => {
     const loadInstructors = async () => {
       try {
@@ -54,31 +67,35 @@ const SignupPage = () => {
       }
     };
 
-    if (workingUnderInstructor === 'yes') {
+    if (selectedRole === 'student') {
       loadInstructors();
     }
-  }, [workingUnderInstructor]);
+  }, [selectedRole]);
 
-  const handleSignup = async () => {
-    if (!validateEmail(email)) return;
-    if (!validatePassword(password)) return;
+  const calculatePasswordStrength = (password: string): number => {
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (/[A-Z]/.test(password)) strength += 25;
+    if (/[0-9]/.test(password)) strength += 25;
+    if (/[!@#$%^&*]/.test(password)) strength += 25;
+    return strength;
+  };
 
-    // Check if password meets all requirements
+  const onSubmit = async (data: SignupFormData) => {
+    // Validate password strength
     if (passwordRequirements.length > 0) {
-      toast.error(`Password must meet all requirements`);
+      toast.error('Password must meet all requirements');
       return;
     }
 
-    if (password !== confirmPassword) {
+    // Validate passwords match
+    if (data.password !== data.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    if (!validateFirstName(firstName)) return;
-    if (!validateLastName(lastName)) return;
-
-    // Validate instructor selection if working under an instructor
-    if (workingUnderInstructor === 'yes' && !selectedInstructor) {
+    // Validate instructor selection for students
+    if (data.role === 'student' && !data.instructorId) {
       toast.error('Please select an instructor');
       return;
     }
@@ -86,19 +103,19 @@ const SignupPage = () => {
     setIsLoading(true);
 
     try {
-      const fullName = `${firstName} ${lastName}`;
+      const fullName = `${data.firstName} ${data.lastName}`;
 
       // Create user via better-auth
       await signup({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         name: fullName,
       });
 
-      // If working under an instructor, assign the instructor relationship
-      if (workingUnderInstructor === 'yes' && selectedInstructor) {
+      // If student, assign the instructor relationship
+      if (data.role === 'student' && data.instructorId) {
         try {
-          await assignInstructor(selectedInstructor.value);
+          await assignInstructor(data.instructorId);
         } catch (error) {
           console.error('Failed to assign instructor:', error);
           // Don't fail signup if instructor assignment fails
@@ -121,130 +138,212 @@ const SignupPage = () => {
   };
 
   return (
-    <div className='flex flex-col items-center justify-center bg-[#F4DFCD]'>
-      <div className='flex items-center justify-center'>
-        <Image src='/splash.png' alt='Background Image' width='2080' height='300' />
-      </div>
-      <div className='absolute inset-10 flex flex-col items-center justify-center'>
-        <div className='w-3/4 rounded-lg bg-white p-8 shadow-lg'>
-          <h1 className='text-black-500 mb-20 text-center text-3xl font-bold'>User Sign Up</h1>
-          <div className='mb-4'>
-            <input
-              type='text'
-              placeholder='First Name'
-              value={firstName}
-              onChange={e => setFirstName(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 p-3'
-            />
-          </div>
-          <div className='mb-4'>
-            <input
-              type='text'
-              placeholder='Last Name'
-              value={lastName}
-              onChange={e => setLastName(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 p-3'
-            />
-          </div>
-          <div className='mb-4'>
-            <input
-              type='text'
-              placeholder='Email'
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 p-3'
-            />
-          </div>
-          <div className='mb-4'>
-            <input
-              type='password'
-              placeholder='Password'
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 p-3'
-            />
-            <StrengthIndicator
-              password={password}
-              onUnmet={unmetRequirements => setPasswordRequirements(unmetRequirements)}
-            />
-          </div>
-          <div className='mb-4'>
-            <input
-              type='password'
-              placeholder='Confirm Password'
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              className='w-full rounded-lg border border-gray-300 p-3'
-            />
-          </div>
-          <div className='mb-4'>
-            <label className='mb-2 block font-medium text-gray-700'>
-              Will you be working under an Instructor?
-            </label>
-            <div className='flex space-x-4'>
-              <label>
-                <input
-                  type='radio'
-                  value='yes'
-                  checked={workingUnderInstructor === 'yes'}
-                  onChange={e => setWorkingUnderInstructor(e.target.value)}
-                  className='mr-2'
+    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
+      {/* Container with Image and Form Side by Side */}
+      <div className='flex w-full max-w-5xl gap-8'>
+        {/* Left: Image */}
+        <div className='hidden lg:flex flex-1 items-center justify-center'>
+          <Image src='/splash.png' alt="Where's Religion?" width={400} height={400} className='w-full h-auto object-contain' />
+        </div>
+
+        {/* Right: Signup Card */}
+        <Card className='flex-1 bg-white shadow-lg'>
+          <div className='p-8'>
+            <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Sign Up</h1>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+              {/* Name Fields */}
+              <div className='grid grid-cols-2 gap-4'>
+                <FormField
+                  control={form.control}
+                  name='firstName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-gray-700'>First Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='John'
+                          {...field}
+                          className='border-gray-300'
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                Yes
-              </label>
-              <label>
-                <input
-                  type='radio'
-                  value='no'
-                  checked={workingUnderInstructor === 'no'}
-                  onChange={e => setWorkingUnderInstructor(e.target.value)}
-                  className='mr-2'
+                <FormField
+                  control={form.control}
+                  name='lastName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-gray-700'>Last Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Doe'
+                          {...field}
+                          className='border-gray-300'
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                No
-              </label>
-            </div>
-          </div>
-          {workingUnderInstructor === 'yes' && (
-            <div className='mb-4'>
-              <label className='mb-2 block font-medium text-gray-700'>Select an Instructor</label>
-              <Select
-                value={selectedInstructor?.value ?? ''}
-                onValueChange={value => {
-                  const instructor = instructors.find(i => i.value === value);
-                  setSelectedInstructor(instructor ?? null);
-                }}
+              </div>
+
+              {/* Email Field */}
+              <FormField
+                control={form.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-gray-700'>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='email'
+                        placeholder='john@example.com'
+                        {...field}
+                        className='border-gray-300'
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Password Field */}
+              <FormField
+                control={form.control}
+                name='password'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-gray-700'>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='password'
+                        placeholder='Enter password'
+                        {...field}
+                        className='border-gray-300'
+                        disabled={isLoading}
+                        onChange={e => {
+                          field.onChange(e);
+                          setPasswordStrength(calculatePasswordStrength(e.target.value));
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {field.value && (
+                      <StrengthIndicator
+                        password={field.value}
+                        onUnmet={unmetRequirements => setPasswordRequirements(unmetRequirements)}
+                      />
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {/* Confirm Password Field */}
+              <FormField
+                control={form.control}
+                name='confirmPassword'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-gray-700'>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='password'
+                        placeholder='Confirm password'
+                        {...field}
+                        className='border-gray-300'
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Role Selection */}
+              <FormField
+                control={form.control}
+                name='role'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-gray-700'>Role</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
+                      <FormControl>
+                        <SelectTrigger className='border-gray-300'>
+                          <SelectValue placeholder='Select your role' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='student'>Student</SelectItem>
+                        <SelectItem value='teacher'>Teacher</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Instructor Selection (Student Only) */}
+              {selectedRole === 'student' && (
+                <FormField
+                  control={form.control}
+                  name='instructorId'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-gray-700'>Select Your Instructor</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
+                        <FormControl>
+                          <SelectTrigger className='border-gray-300'>
+                            <SelectValue placeholder='Choose an instructor' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {instructors.map(instructor => (
+                            <SelectItem key={instructor.value} value={instructor.value}>
+                              {instructor.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type='submit'
+                disabled={isLoading}
+                className='w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                <SelectTrigger className='w-full rounded-lg border border-gray-300 bg-white'>
-                  <SelectValue placeholder='Choose an Instructor' />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map(instructor => (
-                    <SelectItem key={instructor.value} value={instructor.value}>
-                      {instructor.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <div className='flex flex-col items-center justify-center sm:flex-row'>
-            <button
-              onClick={handleSignup}
-              disabled={isLoading}
-              className='w-full rounded-lg bg-blue-500 p-3 text-white disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              {isLoading ? 'Creating Account...' : 'Sign Up'}
-            </button>
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
+              </Button>
+            </form>
+          </Form>
+
+          {/* Sign In Link */}
+          <div className='mt-4 text-center text-sm'>
+            <span className='text-gray-600'>Already have an account? </span>
+            <Link href='/signin' className='text-blue-600 hover:text-blue-800 font-semibold underline'>
+              Sign In
+            </Link>
           </div>
-          <div className='mt-4 text-center'>
-            <Link
-              href='/instructor-signup'
-              className='text-sm text-blue-600 underline hover:text-blue-800'
-            >
+
+          {/* Instructor Signup Link */}
+          <div className='mt-2 text-center text-sm'>
+            <Link href='/instructor-signup' className='text-blue-600 hover:text-blue-800 font-semibold underline'>
               Want to sign up as an Instructor?
             </Link>
           </div>
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
