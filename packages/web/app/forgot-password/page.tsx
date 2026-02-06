@@ -1,3 +1,4 @@
+/*
 'use client';
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -67,3 +68,73 @@ const ForgotPasswordPage = () => {
 };
 
 export default ForgotPasswordPage;
+*/
+
+
+'use client';
+
+import { useState } from 'react';
+import { authClient } from '@/app/lib/auth/client';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    await authClient.requestPasswordReset({
+      email,
+    });
+
+    setSubmitted(true);
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Forgot password?</CardTitle>
+          <CardDescription>
+            Enter your email and we&apos;ll send you instructions to reset your password
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {submitted ? (
+            <p className="text-sm text-muted-foreground">
+              If an account exists for that email, a reset link has been generated.
+              Check the server console.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Sending…' : 'Send reset link'}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -26,6 +26,10 @@ export const auth = betterAuth({
   trustedOrigins: getTrustedOrigins(),
   emailAndPassword: {
     enabled: true,
+
+    sendResetPasswordEmail: async (email: string, url: string) => {
+      console.log('[DEV] Password reset link:', url);
+    },
   },
   session: {
     cookieCache: {
