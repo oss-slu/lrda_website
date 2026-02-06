@@ -31,14 +31,21 @@ export default function ResetPasswordPage() {
     setError(null);
 
     try {
-      await authClient.resetPassword({
+      const res = await authClient.resetPassword({
         token,
         newPassword: password,
       });
 
+      // better-auth clients may return an object with an `error` field
+      if (res && (res as any).error) {
+        const err = (res as any).error;
+        setError(err?.message || err || 'Password reset failed.');
+        return;
+      }
+
       router.push('/login');
     } catch (err) {
-      setError('Password reset failed. Token may be expired.');
+      setError(err instanceof Error ? err.message : 'Password reset failed. Token may be expired.');
     } finally {
       setLoading(false);
     }

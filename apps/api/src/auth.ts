@@ -27,8 +27,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
 
-    sendResetPasswordEmail: async (email: string, url: string) => {
-      console.log('[DEV] Password reset link:', url);
+    sendResetPassword: async (data) => {
+      // In development, just log the reset link for testing
+      // In production, replace this with actual email sending
+      console.log(`✓ Password reset link generated for ${data.user.email}`);
+      console.log(`Reset URL: ${data.url}`);
     },
   },
   session: {

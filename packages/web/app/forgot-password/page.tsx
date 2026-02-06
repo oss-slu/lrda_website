@@ -92,6 +92,7 @@ export default function ForgotPasswordPage() {
 
     await authClient.requestPasswordReset({
       email,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     setSubmitted(true);
@@ -103,9 +104,6 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Forgot password?</CardTitle>
-          <CardDescription>
-            Enter your email and we&apos;ll send you instructions to reset your password
-          </CardDescription>
         </CardHeader>
 
         <CardContent>
