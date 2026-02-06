@@ -138,16 +138,9 @@ const SignupPage = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
-      {/* Container with Image and Form Side by Side */}
-      <div className='flex w-full max-w-5xl gap-8'>
-        {/* Left: Image */}
-        <div className='hidden lg:flex flex-1 items-center justify-center'>
-          <Image src='/splash.png' alt="Where's Religion?" width={400} height={400} className='w-full h-auto object-contain' />
-        </div>
-
-        {/* Right: Signup Card */}
-        <Card className='flex-1 bg-white shadow-lg'>
+    <div className='min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
+      {/* Signup Card */}
+      <Card className='w-full max-w-md bg-white shadow-lg'>
           <div className='p-8'>
             <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Sign Up</h1>
 
@@ -344,7 +337,6 @@ const SignupPage = () => {
           </div>
           </div>
         </Card>
-      </div>
     </div>
   );
 };
