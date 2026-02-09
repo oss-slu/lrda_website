@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center p-6">
+    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Reset password</CardTitle>
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
               <p className="text-sm text-red-600">{error}</p>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-blue-600" disabled={loading}>
               {loading ? 'Resetting…' : 'Reset password'}
             </Button>
           </form>
