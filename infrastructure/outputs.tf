@@ -29,6 +29,33 @@ output "api_subdomain" {
 #   value       = "https://${aws_s3_bucket.media.bucket}.s3.${var.aws_region}.amazonaws.com"
 # }
 
+# Uncomment when using SES for transactional email
+# output "ses_domain_identity_arn" {
+#   description = "SES domain identity ARN"
+#   value       = aws_ses_domain_identity.main.arn
+# }
+#
+# output "ses_dkim_tokens" {
+#   description = "DKIM CNAME tokens (add to DNS if not using Route 53)"
+#   value       = aws_ses_domain_dkim.main.dkim_tokens
+# }
+#
+# output "ses_smtp_endpoint" {
+#   description = "SES SMTP endpoint for this region"
+#   value       = "email-smtp.${var.aws_region}.amazonaws.com"
+# }
+#
+# output "ses_sender_access_key" {
+#   description = "Access key ID for SES sender IAM user"
+#   value       = aws_iam_access_key.ses_sender.id
+# }
+#
+# output "ses_sender_secret_key" {
+#   description = "Secret access key for SES sender IAM user (use to generate SMTP password)"
+#   value       = aws_iam_access_key.ses_sender.secret
+#   sensitive   = true
+# }
+
 output "next_steps" {
   description = "Post-deployment steps"
   value       = <<-EOT
