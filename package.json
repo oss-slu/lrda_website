@@ -12,6 +12,7 @@
     "api:db:migrate": "pnpm --filter @lrda/api db:migrate",
     "api:db:push": "pnpm --filter @lrda/api db:push",
     "api:db:studio": "pnpm --filter @lrda/api db:studio",
+    "api:db:seed": "pnpm --filter @lrda/api db:seed",
     "clear-ports": "lsof -ti:3000 -ti:3001 -ti:3002 2>/dev/null | xargs kill -9 2>/dev/null || true",
     "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",

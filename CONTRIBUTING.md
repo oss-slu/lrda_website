@@ -71,13 +71,25 @@ pnpm dev:full
 
 This single command starts:
 
-- **Docker services** (MongoDB, LocalStack S3)
+- **Docker services** (PostgreSQL, LocalStack S3)
 - **Backend API server** on port 3002
 - **Next.js frontend** on port 3000
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
 > **Tip:** Use `Ctrl+C` to stop all services at once.
+
+### 4. Seed the Database (Optional)
+
+Populate the database with sample data so you have something to work with right away:
+
+```bash
+pnpm api:db:seed
+```
+
+This inserts a set of sample users, notes with geolocation data, media, audio, and threaded comments. The seed data is hand-crafted to exercise all major features (map pins, published/draft notes, instructor-student relationships, comment threads, etc.).
+
+The seed script **truncates all tables** before inserting, so it is safe to run multiple times. Note that any data you created manually will be wiped.
 
 ### Alternative: Frontend Only
 
@@ -91,16 +103,17 @@ pnpm dev
 
 ## Available Commands
 
-| Command            | Description                                     |
-| ------------------ | ----------------------------------------------- |
-| `pnpm dev:full`    | Start everything (Docker, API server, frontend) |
-| `pnpm dev:api`     | Start Docker services + API server only         |
-| `pnpm dev`         | Start frontend only (requires separate API)     |
-| `pnpm docker:up`   | Start Docker services (MongoDB, LocalStack)     |
-| `pnpm docker:down` | Stop Docker services                            |
-| `pnpm setup`       | Create .env files from examples                 |
-| `pnpm test`        | Run unit and e2e tests                          |
-| `pnpm lint`        | Run ESLint                                      |
+| Command              | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `pnpm dev:full`      | Start everything (Docker, API server, frontend) |
+| `pnpm dev:api`       | Start Docker services + API server only         |
+| `pnpm dev`           | Start frontend only (requires separate API)     |
+| `pnpm docker:up`     | Start Docker services (MongoDB, LocalStack)     |
+| `pnpm docker:down`   | Stop Docker services                            |
+| `pnpm api:db:seed`   | Seed database with sample data                  |
+| `pnpm setup`         | Create .env files from examples                 |
+| `pnpm test`          | Run unit and e2e tests                          |
+| `pnpm lint`          | Run ESLint                                      |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 

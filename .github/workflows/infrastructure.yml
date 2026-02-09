@@ -1,5 +1,8 @@
 name: Infrastructure
 
+permissions:
+  contents: read
+
 # DISABLED: Manual trigger only until ready for automated deployments
 # To enable automatic runs, uncomment the push/pull_request triggers below
 on:
