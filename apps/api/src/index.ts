@@ -24,6 +24,45 @@ app.use(
 );
 
 // Mount better-auth handler
+// Server-side password strength validation for reset-password requests.
+// This checks the `newPassword` field and forwards the request to better-auth
+// if it passes validation. Returning a 400 for weak/missing passwords.
+app.post('/api/auth/reset-password', async c => {
+  try {
+    const json = await c.req.json();
+    const newPassword = json?.newPassword ?? json?.new_password ?? json?.password;
+
+    if (!newPassword) {
+      return c.json({ error: 'Missing newPassword' }, 400);
+    }
+
+    const strong = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/;
+    if (!strong.test(newPassword)) {
+      return c.json(
+        {
+          error: 'Password too weak',
+          message:
+            'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
+        },
+        400,
+      );
+    }
+
+    // Forward validated request to better-auth. Recreate Request because body
+    // has been consumed by c.req.json().
+    const forwarded = new Request(c.req.raw.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(json),
+    });
+
+    return auth.handler(forwarded);
+  } catch (err) {
+    return c.json({ error: 'Invalid request' }, 400);
+  }
+});
+
+// Mount better-auth handler for all other auth routes
 app.on(['POST', 'GET'], '/api/auth/*', c => {
   return auth.handler(c.req.raw);
 });
