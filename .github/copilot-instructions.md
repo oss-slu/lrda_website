@@ -2,17 +2,51 @@
 
 ## Project Overview
 
-This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Firebase for authentication and data, Google Maps for mapping, and supports rich text editing with media uploads.
+This is the **Where's Religion?** desktop web application - a monorepo for documenting and mapping lived religion research. The app uses Google Maps for mapping, and supports rich text editing with media uploads.
+
+### Monorepo Structure
+
+```
+lrda_website/
+├── apps/
+│   └── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL, port 3002)
+│       └── src/
+│           ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│           ├── db/         # Drizzle schema and db connection
+│           └── middleware/  # Auth middleware
+├── packages/
+│   ├── web/                # Next.js App Router application
+│   ├── server/             # Legacy Express.js server (RERUM-based, port 3001)
+│   └── lrda-server-core/   # RERUM framework library
+```
+
+The **primary backend** is `apps/api/` (Hono + Drizzle + PostgreSQL). The frontend (`packages/web/`) talks to it via `NEXT_PUBLIC_API_URL`. When looking for API endpoints, always check `apps/api/src/routes/` first. `packages/server/` is legacy.
 
 ## Tech Stack
 
-- **Framework**: Next.js (App Router)
-- **Language**: TypeScript
+### Frontend (`packages/web/`)
+
+- **Framework**: Next.js 16+ (App Router)
+- **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui (Radix primitives), MUI (Material UI)
+- **UI Components**: shadcn/ui (Radix primitives) -- primary; MUI -- only for rich text editor
 - **Rich Text Editor**: Tiptap with mui-tiptap
 - **State Management**: Zustand
-- **Backend**: Firebase (Auth, Firestore), S3 for media storage
+- **Data Fetching**: TanStack React Query
+- **Maps**: Google Maps API (@react-google-maps/api)
+- **Icons**: Lucide React (primary), MUI icons (secondary)
+
+### Backend (`apps/api/`)
+
+- **Server Framework**: Hono (with `@hono/zod-openapi`)
+- **ORM**: Drizzle ORM
+- **Database**: PostgreSQL
+- **Authentication**: Better Auth (session-based with cookies)
+- **Storage**: S3-compatible storage for media
+- **API Documentation**: OpenAPI/Scalar
+
+### General
+
 - **Testing**: Jest (unit), Playwright (e2e)
 - **Package Manager**: pnpm
 
@@ -30,11 +64,13 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 - Split functionality into logically grouped modules.
 - Each file should handle one coherent responsibility.
 - Use the `@/` alias for imports from the project root.
-- Component files go in `app/lib/components/` or `components/ui/` (shadcn).
-- Utility functions go in `app/lib/utils/`.
-- Data models go in `app/lib/models/`.
-- Zustand stores go in `app/lib/stores/`.
-- Page components go in `app/lib/pages/`.
+- Frontend components: `packages/web/app/lib/components/` or `packages/web/components/ui/` (shadcn).
+- Frontend utilities: `packages/web/app/lib/utils/`.
+- Data models: `packages/web/app/lib/models/`.
+- Zustand stores: `packages/web/app/lib/stores/`.
+- Page components: `packages/web/app/lib/pages/`.
+- API routes (primary): `apps/api/src/routes/`.
+- API DB schema: `apps/api/src/db/schema.ts`.
 
 ## Styling Guidelines
 

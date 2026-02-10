@@ -11,9 +11,10 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 
 This is a **monorepo** containing:
 
-- **Web package** (root): Next.js App Router application
-- **Server package** (`server/`): Express.js REST API server
-- **lrda-server-core package** (`packages/lrda-server-core/`): RERUM framework-based reusable server core library
+- **API app** (`apps/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL (port 3002). This is the backend the web frontend talks to.
+- **Web package** (`packages/web/`): Next.js App Router application
+- **Server package** (`packages/server/`): Legacy RERUM-based Express.js server (port 3001). Not the primary API.
+- **lrda-server-core package** (`packages/lrda-server-core/`): RERUM framework library consumed by `packages/server/`
 
 ## Architecture
 
@@ -21,11 +22,18 @@ This is a **monorepo** containing:
 
 ```
 lrda_website/
-├── app/                    # Next.js App Router pages and components
-├── components/             # Shared UI components (shadcn/ui)
-├── server/                 # Express.js server
+├── apps/
+│   └── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
+│       └── src/
+│           ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│           ├── db/         # Drizzle schema and db connection
+│           └── middleware/  # Auth middleware
 ├── packages/
-│   └── lrda-server-core/   # RERUM-based server core library
+│   ├── web/                # Next.js App Router application
+│   │   ├── app/            # Pages, components, hooks, stores
+│   │   └── components/     # shadcn/ui components
+│   ├── server/             # Legacy Express.js server (RERUM-based)
+│   └── lrda-server-core/   # RERUM framework library
 └── public/                 # Static assets
 ```
 
@@ -33,7 +41,7 @@ lrda_website/
 
 - **Package Manager**: pnpm (v10.20.0)
 - **Node Version**: >=24.9.0
-- **Workspace**: pnpm workspaces with three packages (web, server, lrda-server-core)
+- **Workspace**: pnpm workspaces with packages in `apps/` and `packages/`
 
 **Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
 
@@ -57,14 +65,21 @@ lrda_website/
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
 
-### Backend
+### Backend (Primary -- `apps/api/`)
+
+- **Server Framework**: Hono (with `@hono/zod-openapi`)
+- **ORM**: Drizzle ORM
+- **Database**: PostgreSQL
+- **Authentication**: Better Auth (session-based with cookies)
+- **Storage**: S3-compatible storage for media
+- **API Documentation**: OpenAPI/Scalar
+
+### Backend (Legacy -- `packages/server/`)
 
 - **Server Framework**: Express.js
 - **Core Library**: RERUM API framework (lrda-server-core)
 - **Database**: MongoDB
 - **Authentication**: Firebase Admin SDK
-- **Storage**: S3-compatible storage for media
-- **API Documentation**: OpenAPI/Scalar
 
 ### Testing
 
@@ -94,8 +109,10 @@ lrda_website/
 - **Hooks**: `app/lib/hooks/`
 - **Configuration**: `app/lib/config/`
 - **Constants**: `app/lib/constants/`
-- **Server Routes**: `server/routes/`
-- **Server Controllers**: `packages/lrda-server-core/controllers/`
+- **API Routes (primary)**: `apps/api/src/routes/`
+- **API DB Schema**: `apps/api/src/db/schema.ts`
+- **Legacy Server Routes**: `packages/server/`
+- **Legacy Server Controllers**: `packages/lrda-server-core/controllers/`
 
 ### Import Guidelines
 
@@ -213,10 +230,14 @@ pnpm docker:down                      # Stop MongoDB container
 
 ### Running Full Stack
 
-1. Start MongoDB: `pnpm docker:up` (or external MongoDB)
+1. Start PostgreSQL (for `apps/api`)
+2. Start API server: `pnpm --filter api dev`
+3. Start Next.js app: `pnpm dev`
+
+Legacy stack (if needed):
+1. Start MongoDB: `pnpm docker:up`
 2. Start server core: `pnpm --filter lrda-server-core start`
 3. Start Express server: `pnpm --filter server dev`
-4. Start Next.js app: `pnpm dev`
 
 ## Testing Guidelines
 
