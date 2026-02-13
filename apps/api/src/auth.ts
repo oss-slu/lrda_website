@@ -40,7 +40,6 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes
     },
   },
-  trustedOrigins: ['http://localhost:3000', 'http://localhost:3001'],
   plugins: [
     admin({
       defaultRole: 'user',
