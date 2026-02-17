@@ -104,16 +104,32 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
 /**
  * Hook for infinite scroll of published notes (for StoriesPage)
  */
-export function useInfinitePublishedNotes(pageSize = 50) {
+export function useInfinitePublishedNotes(
+  pageSize = 20,
+  options?: {
+    search?: string;
+    creatorId?: string;
+    sort?: 'newest' | 'oldest' | 'alphabetical';
+  },
+) {
   return useInfiniteQuery({
-    queryKey: notesKeys.publishedPaginated(pageSize),
+    queryKey: [
+      notesKeys.publishedPaginated(pageSize),
+      options?.search ?? '',
+      options?.creatorId ?? '',
+      options?.sort ?? 'newest',
+    ],
     queryFn: async ({
       pageParam = 0,
     }): Promise<{
       data: Note[];
       nextCursor: number | undefined;
     }> => {
-      const notes = await notesService.fetchPublished(pageSize, pageParam);
+      const notes = await notesService.fetchPublished(pageSize, pageParam, {
+        search: options?.search,
+        creatorId: options?.creatorId,
+        sort: options?.sort,
+      });
       return {
         data: notes,
         nextCursor: notes.length === pageSize ? pageParam + pageSize : undefined,

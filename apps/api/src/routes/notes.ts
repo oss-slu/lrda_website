@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { eq, and, gte, lte, desc, inArray, or } from 'drizzle-orm';
+import { eq, and, gte, lte, desc, inArray, or, ilike, asc } from 'drizzle-orm';
 import { db } from '../db';
 import { note, media, audio } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
@@ -128,6 +128,8 @@ const ListNotesQuerySchema = z.object({
     .transform(v => v === 'true')
     .optional(),
   creatorId: z.string().optional(),
+  search: z.string().optional(),
+  sort: z.enum(['newest', 'oldest', 'alphabetical']).optional(),
   minLat: z.string().transform(Number).optional(),
   maxLat: z.string().transform(Number).optional(),
   minLng: z.string().transform(Number).optional(),
@@ -136,7 +138,7 @@ const ListNotesQuerySchema = z.object({
     .string()
     .transform(v => v === 'true')
     .optional(),
-  limit: z.string().transform(Number).default('50'),
+  limit: z.string().transform(Number).default('20'),
   offset: z.string().transform(Number).default('0'),
 });
 
@@ -329,6 +331,26 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       conditions.push(lte(note.longitude, String(query.maxLng)));
     }
 
+    // Handle search - search in title, text, and tags
+    if (query.search) {
+      const searchTerm = `%${query.search}%`;
+      conditions.push(
+        or(
+          ilike(note.title, searchTerm),
+          ilike(note.text, searchTerm),
+          ilike(note.tags, searchTerm),
+        ),
+      );
+    }
+
+    // Determine sort order
+    let orderBy = desc(note.createdAt); // Default: newest first
+    if (query.sort === 'oldest') {
+      orderBy = asc(note.createdAt);
+    } else if (query.sort === 'alphabetical') {
+      orderBy = asc(note.title);
+    }
+
     const results = await db.query.note.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
       with: {
@@ -337,7 +359,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       },
       limit: query.limit,
       offset: query.offset,
-      orderBy: desc(note.createdAt),
+      orderBy: orderBy,
     });
 
     return c.json(results, 200);

@@ -27,11 +27,21 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
 
-    sendResetPassword: async (data) => {
+    sendResetPassword: async data => {
       // In development, just log the reset link for testing
       // In production, replace this with actual email sending
       console.log(`✓ Password reset link generated for ${data.user.email}`);
       console.log(`Reset URL: ${data.url}`);
+    },
+  },
+  emailVerification: {
+    autoSignInAfterVerification: false,
+    sendVerificationEmail: async data => {
+      // In development, just log the verification link for testing
+      // In production, replace this with actual email sending
+      const verificationUrl = `http://localhost:3000/verify-email?token=${data.token}`;
+      console.log(`✓ Verification email sent to ${data.user.email}`);
+      console.log(`Verification URL: ${verificationUrl}`);
     },
   },
   session: {

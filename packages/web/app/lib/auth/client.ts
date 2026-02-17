@@ -45,5 +45,12 @@ export async function resetPassword(newPassword: string) {
   });
 }
 
+// Verify email with token
+export async function verifyEmail(token: string) {
+  return authClient.verifyEmail({
+    token,
+  });
+}
+
 // Export the useSession hook for components that need reactive session state
 export const useSession = authClient.useSession;

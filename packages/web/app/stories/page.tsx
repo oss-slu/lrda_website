@@ -1,24 +1,37 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Note } from '@/app/types';
 import EnhancedClickableNote from '../lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useInfinitePublishedNotes } from '../lib/hooks/queries/useNotes';
 import { useCreatorName } from '../lib/hooks/queries/useUsers';
 
 // Component to display user name with caching via TanStack Query
 const UserOption = ({ uid }: { uid: string }) => {
   const { data: name = 'Loading...' } = useCreatorName(uid);
-  return <option value={uid}>{name}</option>;
+  return <SelectItem value={uid}>{name}</SelectItem>;
 };
 
 const StoriesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
 
-  // Use TanStack Query infinite query for published notes
+  // Use TanStack Query infinite query for published notes with server-side filtering
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useInfinitePublishedNotes(50);
+    useInfinitePublishedNotes(20, {
+      search: searchQuery,
+      creatorId: selectedUser !== 'all' ? selectedUser : undefined,
+      sort: sortOrder,
+    });
 
   // Flatten pages into single array
   const allNotes = useMemo(() => {
@@ -26,39 +39,11 @@ const StoriesPage = () => {
     return data.pages.flatMap(page => page.data);
   }, [data]);
 
-  // Get unique creator IDs for user filter dropdown
+  // Get unique creator IDs for user filter dropdown (from loaded data)
   const uniqueCreatorIds = useMemo(() => {
     const ids = new Set(allNotes.map(note => note.creator));
     return Array.from(ids).filter(Boolean);
   }, [allNotes]);
-
-  // Filter notes by search query and selected user
-  const filteredNotes = useMemo(() => {
-    let results = allNotes.filter(note => note.published === true && !note.isArchived);
-
-    // Filter by selected user
-    if (selectedUser) {
-      results = results.filter(note => note.creator === selectedUser);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      results = results.filter(
-        note =>
-          note.title?.toLowerCase().includes(lowerQuery) ||
-          note.text?.toLowerCase().includes(lowerQuery) ||
-          note.tags?.some(tag => tag?.label?.toLowerCase().includes(lowerQuery)),
-      );
-    }
-
-    // Sort by date (most recent first)
-    return results.sort((a, b) => {
-      const dateA = new Date(a.time).getTime();
-      const dateB = new Date(b.time).getTime();
-      return dateB - dateA;
-    });
-  }, [allNotes, searchQuery, selectedUser]);
 
   // Intersection observer for infinite scroll
   const loaderRef = React.useRef<HTMLDivElement>(null);
@@ -82,54 +67,77 @@ const StoriesPage = () => {
 
   return (
     <div className='flex min-h-screen w-full flex-col bg-gray-100 p-2 sm:p-4'>
-      {/* Search Bar - Centered */}
+      {/* Filter Bar - Centered */}
       <div className='mb-6 flex w-full justify-center sm:mb-8'>
-        <div className='flex w-full max-w-4xl flex-col gap-2 sm:flex-row sm:gap-4'>
-          <input
+        <div className='flex w-full max-w-5xl flex-col gap-3 rounded-lg bg-white p-4 shadow-sm sm:flex-row sm:gap-4 sm:p-5'>
+          {/* Search Input */}
+          <Input
             type='text'
             placeholder='Search stories...'
-            className='w-full rounded-lg border border-gray-300 p-3 text-sm shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-1 sm:p-4 sm:text-base'
+            className='flex-1'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
-          {/* Dropdown for filtering by user */}
-          <select
-            value={selectedUser}
-            onChange={e => setSelectedUser(e.target.value)}
-            className='w-full rounded-lg border border-gray-300 p-3 text-sm shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto sm:min-w-[200px] sm:p-4 sm:text-base'
+
+          {/* User Filter Dropdown */}
+          <Select value={selectedUser} onValueChange={setSelectedUser}>
+            <SelectTrigger className='w-full sm:w-auto sm:min-w-[180px]'>
+              <SelectValue placeholder='All Users' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>All Users</SelectItem>
+              {uniqueCreatorIds.map(uid => (
+                <UserOption key={uid} uid={uid} />
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Sort Dropdown */}
+          <Select
+            value={sortOrder}
+            onValueChange={value => setSortOrder(value as 'newest' | 'oldest' | 'alphabetical')}
           >
-            <option value=''>All Users</option>
-            {uniqueCreatorIds.map(uid => (
-              <UserOption key={uid} uid={uid} />
-            ))}
-          </select>
+            <SelectTrigger className='w-full sm:w-auto sm:min-w-[150px]'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='newest'>Newest First</SelectItem>
+              <SelectItem value='oldest'>Oldest First</SelectItem>
+              <SelectItem value='alphabetical'>A to Z</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {/* Stories Grid - Mobile Responsive */}
       <div className='w-full px-2 sm:px-4 lg:px-6'>
-        <div className='grid w-full grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-10 xl:grid-cols-4 2xl:grid-cols-5'>
+        <div className='grid w-full grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-10 xl:grid-cols-4'>
           {isLoading ?
             [...Array(6)].map((_, index) => (
               <Skeleton
                 key={`skeleton-${index}`}
-                className='h-[450px] w-full rounded-xl border border-gray-200 sm:h-[500px] lg:h-[550px]'
+                className='h-[400px] w-full rounded-xl border border-gray-200'
               />
             ))
-          : filteredNotes.length > 0 ?
-            filteredNotes.map(note => {
+          : allNotes.length > 0 ?
+            allNotes.map(note => {
               const noteId = note.id || (note as Record<string, unknown>)['@id'];
               return <EnhancedClickableNote key={noteId as string} note={note} />;
             })
-          : <div className='col-span-full py-8 text-center'>
-              <p className='text-lg text-gray-600'>No stories found.</p>
+          : <div className='col-span-full py-12 text-center'>
+              <p className='mb-2 text-lg font-medium text-gray-700'>No stories found</p>
+              <p className='text-sm text-gray-500'>
+                {searchQuery || selectedUser ?
+                  'Try adjusting your filters'
+                : 'Check back soon for new stories'}
+              </p>
             </div>
           }
         </div>
       </div>
 
       {/* Infinite Scroll Loader */}
-      {filteredNotes.length > 0 && (
+      {allNotes.length > 0 && (
         <div className='mb-4 mt-6 flex justify-center'>
           {hasNextPage ?
             <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
@@ -140,9 +148,11 @@ const StoriesPage = () => {
                 />
               )}
             </div>
-          : <div className='py-4 text-center'>
-              <p className='text-sm text-gray-500'>No more stories to load.</p>
-            </div>
+          : allNotes.length > 0 && (
+              <div className='py-4 text-center'>
+                <p className='text-sm text-gray-500'>No more stories to load.</p>
+              </div>
+            )
           }
         </div>
       )}

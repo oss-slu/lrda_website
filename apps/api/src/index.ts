@@ -23,7 +23,21 @@ app.use(
   }),
 );
 
-// Mount better-auth handler
+// Mount better-auth handler - use all() to catch all methods
+app.all('/api/auth/*', async c => {
+  // Clone the request to pass to auth handler
+  const response = await auth.handler(
+    new Request(c.req.raw.url, {
+      method: c.req.method,
+      headers: c.req.raw.headers,
+      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? 
+        c.req.raw.body : 
+        undefined,
+    })
+  );
+  return response;
+});
+
 // Server-side password strength validation for reset-password requests.
 // This checks the `newPassword` field and forwards the request to better-auth
 // if it passes validation. Returning a 400 for weak/missing passwords.
@@ -60,11 +74,6 @@ app.post('/api/auth/reset-password', async c => {
   } catch (err) {
     return c.json({ error: 'Invalid request' }, 400);
   }
-});
-
-// Mount better-auth handler for all other auth routes
-app.on(['POST', 'GET'], '/api/auth/*', c => {
-  return auth.handler(c.req.raw);
 });
 
 // Mount API routes

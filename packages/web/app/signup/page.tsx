@@ -9,7 +9,14 @@ import { fetchInstructors, assignInstructor } from '../lib/services';
 import StrengthIndicator from '@/components/ui/strength-indicator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -25,7 +32,7 @@ interface SignupFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'teacher' | 'student';
+  role: 'none' | 'instructor' | 'student';
   instructorId?: string;
 }
 
@@ -43,7 +50,7 @@ const SignupPage = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'student',
+      role: 'none',
       instructorId: '',
     },
   });
@@ -106,7 +113,7 @@ const SignupPage = () => {
       const fullName = `${data.firstName} ${data.lastName}`;
 
       // Create user via better-auth
-      await signup({
+      const result = await signup({
         email: data.email,
         password: data.password,
         name: fullName,
@@ -125,10 +132,11 @@ const SignupPage = () => {
         }
       }
 
-      toast.success('Account created successfully!');
+      toast.success('Account created! Check your email to verify.');
 
-      // Redirect to home page
-      window.location.href = '/';
+      // Redirect to confirmation page showing email verification info
+      // The verification link will be in their email with the token
+      window.location.href = `/confirm?email=${encodeURIComponent(data.email)}`;
     } catch (error) {
       console.error('Signup error:', error);
       toast.error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -138,16 +146,16 @@ const SignupPage = () => {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
+    <div className='flex h-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
       {/* Signup Card */}
       <Card className='w-full max-w-md bg-white shadow-lg'>
-          <div className='p-8'>
-            <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Sign Up</h1>
+        <div className='p-8'>
+          <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Sign Up</h1>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
               {/* Name Fields */}
-              <div className='grid grid-cols-2 gap-4'>
+              <div className='grid grid-cols-2 gap-2'>
                 <FormField
                   control={form.control}
                   name='firstName'
@@ -273,8 +281,9 @@ const SignupPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value='none'>None</SelectItem>
                         <SelectItem value='student'>Student</SelectItem>
-                        <SelectItem value='teacher'>Teacher</SelectItem>
+                        <SelectItem value='instructor'>Instructor</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -290,7 +299,11 @@ const SignupPage = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='text-gray-700'>Select Your Instructor</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isLoading}
+                      >
                         <FormControl>
                           <SelectTrigger className='border-gray-300'>
                             <SelectValue placeholder='Choose an instructor' />
@@ -314,7 +327,7 @@ const SignupPage = () => {
               <Button
                 type='submit'
                 disabled={isLoading}
-                className='w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='w-full rounded-lg bg-blue-600 py-2 font-medium text-white hover:bg-blue-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
               >
                 {isLoading ? 'Creating Account...' : 'Sign Up'}
               </Button>
@@ -324,19 +337,15 @@ const SignupPage = () => {
           {/* Sign In Link */}
           <div className='mt-4 text-center text-sm'>
             <span className='text-gray-600'>Already have an account? </span>
-            <Link href='/signin' className='text-blue-600 hover:text-blue-800 font-semibold underline'>
-              Sign In
+            <Link
+              href='/login'
+              className='font-semibold text-blue-600 underline hover:text-blue-800'
+            >
+              Log In
             </Link>
           </div>
-
-          {/* Instructor Signup Link */}
-          <div className='mt-2 text-center text-sm'>
-            <Link href='/instructor-signup' className='text-blue-600 hover:text-blue-800 font-semibold underline'>
-              Want to sign up as an Instructor?
-            </Link>
-          </div>
-          </div>
-        </Card>
+        </div>
+      </Card>
     </div>
   );
 };

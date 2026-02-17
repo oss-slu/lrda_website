@@ -1,115 +1,86 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { authClient } from '@/app/lib/auth/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { FormItem, FormLabel } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 
-const VerifyEmailPage = () => {
+export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
-  const email = searchParams.get('email') || '';
-  const [isLoading, setIsLoading] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
+  const router = useRouter();
+  const token = searchParams.get('token');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    // Check if email is provided
-    if (!email) {
-      toast.error('No email provided');
-    }
-  }, [email]);
-
-  const handleVerification = async () => {
-    if (!verificationCode.trim()) {
-      toast.error('Please enter the verification code');
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) {
+      setError('Invalid or missing verification token.');
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
 
     try {
-      // In development, the verification link is logged to console
-      // For now, show a message
-      toast.info('In development mode, check the terminal for the verification link');
-      
-      // Redirect to home after a short delay to show the message
+      const res = await authClient.verifyEmail({
+        query: {
+          token,
+        },
+      });
+
+      // better-auth clients may return an object with an `error` field
+      if (res && (res as any).error) {
+        const err = (res as any).error;
+        setError(err?.message || err || 'Email verification failed.');
+        return;
+      }
+
+      setSuccess(true);
+      // Redirect to login after successful verification
       setTimeout(() => {
-        window.location.href = '/';
+        router.push('/login');
       }, 2000);
-    } catch (error) {
-      console.error('Verification error:', error);
-      toast.error('Verification failed. Please try again.');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Email verification failed. Token may be expired.',
+      );
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendEmail = async () => {
-    setIsLoading(true);
-
-    try {
-      // The resend link functionality will be added when email service is configured
-      toast.info('Resend email functionality coming soon');
-    } catch (error) {
-      console.error('Resend error:', error);
-      toast.error('Failed to resend verification email');
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
-      {/* Verification Card */}
-      <Card className='w-full max-w-md bg-white shadow-lg'>
-        <div className='p-8'>
-          <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Verify Your Email</h1>
-
-          <div className='mb-6 text-center'>
-            <p className='text-gray-600 mb-2'>We've sent a verification link to:</p>
-            <p className='font-semibold text-gray-800'>{email}</p>
-          </div>
-
-          <FormItem className='mb-6'>
-            <FormLabel className='text-gray-700'>Verification Code (if received by email)</FormLabel>
-            <Input
-              type='text'
-              placeholder='Enter verification code'
-              value={verificationCode}
-              onChange={e => setVerificationCode(e.target.value)}
-              className='border-gray-300 mt-2'
-              disabled={isLoading}
-            />
-          </FormItem>
-
-          <div className='space-y-3'>
-            <Button
-              onClick={handleVerification}
-              disabled={isLoading}
-              className='w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-            >
-              {isLoading ? 'Verifying...' : 'Verify Email'}
-            </Button>
-
-            <Button
-              onClick={handleResendEmail}
-              disabled={isLoading}
-              variant='outline'
-              className='w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-            >
-              Resend Verification Email
-            </Button>
-          </div>
-
-          <div className='mt-6 text-center text-sm text-gray-600'>
-            <p>Check your email for a verification link or code.</p>
-            <p className='mt-2'>In development mode, check the terminal for the link.</p>
-          </div>
-        </div>
+    <div className='flex min-h-svh items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-6'>
+      <Card className='w-full max-w-sm'>
+        <CardHeader>
+          <CardTitle>Verify your email</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {success ?
+            <div className='space-y-4'>
+              <p className='text-sm font-medium text-green-600'>✓ Email verified successfully!</p>
+              <p className='text-sm text-gray-600'>Redirecting to login...</p>
+            </div>
+          : <form onSubmit={handleVerify} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label>Verification Link Token</Label>
+                <p className='text-sm text-gray-600'>
+                  {token ?
+                    'Token received and ready to verify.'
+                  : 'No verification token found in URL.'}
+                </p>
+              </div>
+              {error && <p className='text-sm text-red-600'>{error}</p>}
+              <Button type='submit' className='w-full' disabled={loading || !token}>
+                {loading ? 'Verifying…' : 'Verify email'}
+              </Button>
+            </form>
+          }
+        </CardContent>
       </Card>
     </div>
   );
-};
-
-export default VerifyEmailPage;
+}

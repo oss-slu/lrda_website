@@ -26,7 +26,7 @@ class NotesService {
    * Fetch all notes with optional filtering.
    */
   async fetchAll(options: NoteQueryOptions = {}): Promise<Note[]> {
-    const { limit = 150, skip = 0, userId, published } = options;
+    const { limit = 20, skip = 0, userId, published, search, sort } = options;
 
     const params: Record<string, unknown> = {
       limit,
@@ -38,6 +38,12 @@ class NotesService {
     }
     if (published !== undefined) {
       params.published = published;
+    }
+    if (search) {
+      params.search = search;
+    }
+    if (sort) {
+      params.sort = sort;
     }
 
     const queryString = restClient.buildQueryString(params);
@@ -66,8 +72,23 @@ class NotesService {
   /**
    * Fetch all published notes.
    */
-  async fetchPublished(limit = 150, skip = 0): Promise<Note[]> {
-    return this.fetchAll({ limit, skip, published: true });
+  async fetchPublished(
+    limit = 20,
+    skip = 0,
+    options: {
+      search?: string;
+      creatorId?: string;
+      sort?: 'newest' | 'oldest' | 'alphabetical';
+    } = {},
+  ): Promise<Note[]> {
+    return this.fetchAll({
+      limit,
+      skip,
+      published: true,
+      search: options.search,
+      userId: options.creatorId,
+      sort: options.sort,
+    });
   }
 
   /**

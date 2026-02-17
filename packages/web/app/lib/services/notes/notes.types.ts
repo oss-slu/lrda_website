@@ -21,6 +21,10 @@ export interface NoteQueryOptions {
   userId?: string;
   /** Filter by published status */
   published?: boolean;
+  /** Search text for title, body, and tags */
+  search?: string;
+  /** Sort order: newest, oldest, alphabetical */
+  sort?: 'newest' | 'oldest' | 'alphabetical';
 }
 
 /**
