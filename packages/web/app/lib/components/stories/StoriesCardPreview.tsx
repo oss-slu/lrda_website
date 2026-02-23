@@ -61,6 +61,26 @@ function formatTime(date: string | number | Date) {
   return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
+/**
+ * Safely extract a tag label from either a string or Tag object
+ */
+function getTagLabel(tag: Tag | string | undefined | null): string {
+  if (!tag) return '';
+  if (typeof tag === 'string') return tag;
+  if (typeof tag === 'object' && 'label' in tag) return tag.label || '';
+  return '';
+}
+
+/**
+ * Normalize tags array, filtering out invalid entries
+ */
+function normalizeTags(tags: (Tag | string | null | undefined)[] | null | undefined): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .map(tag => getTagLabel(tag))
+    .filter((label): label is string => Boolean(label && label.trim()));
+}
+
 export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, onClick }) => {
   const [creator, setCreator] = useState<string>('Loading...');
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -76,6 +96,11 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
     note.longitude &&
     !isNaN(Number(note.latitude)) &&
     !isNaN(Number(note.longitude));
+
+  // Normalize and parse tags
+  const normalizedTags = normalizeTags(note.tags);
+  const displayTags = normalizedTags.slice(0, 2);
+  const remainingTagCount = Math.max(0, normalizedTags.length - 2);
 
   // Fetch creator name
   useEffect(() => {
@@ -177,6 +202,26 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
 
         {/* Body Preview */}
         {bodyPreview && <p className='mt-auto line-clamp-2 text-xs text-gray-600'>{bodyPreview}</p>}
+
+        {/* Tags - Display top 2 with overflow indicator */}
+        {displayTags.length > 0 && (
+          <div className='mt-3 flex flex-wrap gap-1.5'>
+            {displayTags.map((tag, idx) => (
+              <span
+                key={idx}
+                className='inline-block truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700'
+                title={tag}
+              >
+                {tag}
+              </span>
+            ))}
+            {remainingTagCount > 0 && (
+              <span className='inline-block px-2 py-1 text-xs font-medium text-gray-500'>
+                +{remainingTagCount}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

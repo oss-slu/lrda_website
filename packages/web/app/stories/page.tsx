@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Note } from '@/app/types';
 import EnhancedClickableNote from '../lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,9 @@ const StoriesPage = () => {
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
 
+  // Track all unique creator IDs across all pages (persistent ref)
+  const allCreatorsRef = useRef<Set<string>>(new Set());
+
   // Use TanStack Query infinite query for published notes with server-side filtering
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useInfinitePublishedNotes(20, {
@@ -39,10 +42,18 @@ const StoriesPage = () => {
     return data.pages.flatMap(page => page.data);
   }, [data]);
 
-  // Get unique creator IDs for user filter dropdown (from loaded data)
+  // Update the persistent set of all creators seen (across all pages and filters)
+  useEffect(() => {
+    allNotes.forEach(note => {
+      if (note.creator) {
+        allCreatorsRef.current.add(note.creator);
+      }
+    });
+  }, [allNotes]);
+
+  // Get unique creator IDs for user filter dropdown (from persistent set, updated whenever allNotes changes)
   const uniqueCreatorIds = useMemo(() => {
-    const ids = new Set(allNotes.map(note => note.creator));
-    return Array.from(ids).filter(Boolean);
+    return Array.from(allCreatorsRef.current).filter(Boolean);
   }, [allNotes]);
 
   // Intersection observer for infinite scroll

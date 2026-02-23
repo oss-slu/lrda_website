@@ -48,7 +48,9 @@ export async function resetPassword(newPassword: string) {
 // Verify email with token
 export async function verifyEmail(token: string) {
   return authClient.verifyEmail({
-    token,
+    query: {
+      token,
+    },
   });
 }
 

@@ -26,10 +26,9 @@ export const auth = betterAuth({
   trustedOrigins: getTrustedOrigins(),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true, // Require email verification before login
 
     sendResetPassword: async data => {
-      // In development, just log the reset link for testing
-      // In production, replace this with actual email sending
       console.log(`✓ Password reset link generated for ${data.user.email}`);
       console.log(`Reset URL: ${data.url}`);
     },
@@ -37,9 +36,14 @@ export const auth = betterAuth({
   emailVerification: {
     autoSignInAfterVerification: false,
     sendVerificationEmail: async data => {
-      // In development, just log the verification link for testing
-      // In production, replace this with actual email sending
-      const verificationUrl = `http://localhost:3000/verify-email?token=${data.token}`;
+      // Extract token from the verification URL
+      const url = new URL(data.url);
+      const token = url.searchParams.get('token');
+
+      // Construct the web app verification URL
+      const webAppUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+      const verificationUrl = `${webAppUrl}/verify-email?token=${token}`;
+
       console.log(`✓ Verification email sent to ${data.user.email}`);
       console.log(`Verification URL: ${verificationUrl}`);
     },

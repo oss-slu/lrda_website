@@ -313,9 +313,13 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     const query = c.req.valid('query');
     const conditions = [];
 
+    // Default to published notes if not explicitly specified
     if (query.published !== undefined) {
       conditions.push(eq(note.isPublished, query.published));
+    } else {
+      conditions.push(eq(note.isPublished, true));
     }
+
     if (query.creatorId) {
       conditions.push(eq(note.creatorId, query.creatorId));
     }
@@ -323,24 +327,18 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       conditions.push(eq(note.approvalRequested, query.approvalRequested));
     }
     if (query.minLat !== undefined && query.maxLat !== undefined) {
-      conditions.push(gte(note.latitude, String(query.minLat)));
-      conditions.push(lte(note.latitude, String(query.maxLat)));
+      conditions.push(gte(note.latitude, query.minLat.toString()));
+      conditions.push(lte(note.latitude, query.maxLat.toString()));
     }
     if (query.minLng !== undefined && query.maxLng !== undefined) {
-      conditions.push(gte(note.longitude, String(query.minLng)));
-      conditions.push(lte(note.longitude, String(query.maxLng)));
+      conditions.push(gte(note.longitude, query.minLng.toString()));
+      conditions.push(lte(note.longitude, query.maxLng.toString()));
     }
 
-    // Handle search - search in title, text, and tags
+    // Handle search - search in title and text (not tags due to JSONB complexity)
     if (query.search) {
       const searchTerm = `%${query.search}%`;
-      conditions.push(
-        or(
-          ilike(note.title, searchTerm),
-          ilike(note.text, searchTerm),
-          ilike(note.tags, searchTerm),
-        ),
-      );
+      conditions.push(or(ilike(note.title, searchTerm), ilike(note.text, searchTerm)));
     }
 
     // Determine sort order
