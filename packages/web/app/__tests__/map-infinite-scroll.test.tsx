@@ -69,7 +69,7 @@ jest.mock('app/lib/services', () => ({
         published: true,
         tags: [],
         time: new Date(),
-        isArchived: false,
+        uid: 'u',
       })),
     ),
     fetchUserNotes: jest.fn().mockResolvedValue([]),

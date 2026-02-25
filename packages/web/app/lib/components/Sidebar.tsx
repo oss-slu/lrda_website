@@ -9,7 +9,8 @@ import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { notesService, fetchUserById } from '../services';
-import { useStudentNotes } from '../hooks/queries/useNotes';
+import { usePersonalNotes, useStudentNotes, notesKeys } from '../hooks/queries/useNotes';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -18,12 +19,9 @@ type SidebarProps = {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, viewMode, addNote, setSelectedNoteId } = useNotesStore(
+  const { viewMode, setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
-      notes: state.notes,
-      fetchNotes: state.fetchNotes,
       viewMode: state.viewMode,
-      addNote: state.addNote,
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
@@ -32,11 +30,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       user: state.user,
     })),
   );
+
+  const queryClient = useQueryClient();
+
   const [showPublished, setShowPublished] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
+
+  // TanStack Query for personal notes
+  const { data: personalNotes = [] } = usePersonalNotes(
+    viewMode === 'my' ? (user?.uid ?? null) : null,
+  );
 
   // TanStack Query for student notes (instructor review mode) with automatic polling
   const { data: studentNotes = [] } = useStudentNotes(
@@ -67,7 +73,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         longitude: '',
         published: false,
         tags: [],
-        isArchived: false,
       };
 
       const data = await notesService.create(newNoteData);
@@ -80,13 +85,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       const savedNote: Note = {
         ...newNoteData,
         id: newNoteId,
-        uid: (data as any).uid || newNoteId,
+        uid: newNoteId,
       };
 
-      // Add to store and select it
-      addNote(savedNote);
+      // Add to query cache immediately for instant UI update
+      queryClient.setQueryData<Note[]>(notesKeys.personal(userId), old =>
+        old ? [savedNote, ...old] : [savedNote],
+      );
+
       setSelectedNoteId(newNoteId);
-      onNoteSelect(savedNote, false); // Not a "new note" anymore - it has an ID
+      onNoteSelect(savedNote, false);
     } catch (error) {
       console.error('Error creating new note:', error);
     } finally {
@@ -118,13 +126,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     initRoleFlags();
   }, [user]);
 
-  // Fetch personal notes for "my" mode
-  useEffect(() => {
-    if (viewMode === 'my' && user?.uid) {
-      fetchNotes(user.uid);
-    }
-  }, [viewMode, user?.uid, fetchNotes]);
-
   // Reset to showing "Unreviewed" when switching to review mode
   useEffect(() => {
     if (viewMode === 'review') {
@@ -139,20 +140,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       return searchResults;
     }
 
-    const notesToFilter = viewMode === 'review' ? studentNotes : notes;
+    const notesToFilter = viewMode === 'review' ? studentNotes : personalNotes;
 
     if (viewMode === 'review') {
       if (showPublished) {
-        return notesToFilter.filter(n => !n.isArchived && !!n.published);
+        return notesToFilter.filter(n => !!n.published);
       } else {
-        return notesToFilter.filter(n => !n.isArchived && !!n.approvalRequested && !n.published);
+        return notesToFilter.filter(n => !!n.approvalRequested && !n.published);
       }
     } else {
-      return notesToFilter.filter(
-        note => !note.isArchived && (showPublished ? note.published : !note.published),
-      );
+      return notesToFilter.filter(note => (showPublished ? note.published : !note.published));
     }
-  }, [notes, studentNotes, showPublished, viewMode, isSearching, searchResults]);
+  }, [personalNotes, studentNotes, showPublished, viewMode, isSearching, searchResults]);
 
   // Update selected note when it changes in studentNotes (for instructor review mode)
   useEffect(() => {
@@ -160,12 +159,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       const selectedNoteId = useNotesStore.getState().selectedNoteId;
       if (selectedNoteId) {
         const updatedNote = studentNotes.find(n => {
-          const noteId = n.id || (n as any)?.['@id'];
-          return (
-            noteId === selectedNoteId ||
-            (typeof selectedNoteId === 'string' && noteId && noteId.includes(selectedNoteId)) ||
-            (typeof noteId === 'string' && selectedNoteId && selectedNoteId.includes(noteId))
-          );
+          const noteId = n.id;
+          return noteId === selectedNoteId;
         });
 
         if (updatedNote) {
@@ -183,7 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     }
     setIsSearching(true);
     const query = searchQuery.toLowerCase();
-    const notesToSearch = viewMode === 'review' ? studentNotes : notes;
+    const notesToSearch = viewMode === 'review' ? studentNotes : personalNotes;
     const filtered = notesToSearch.filter(note => {
       const matchesText =
         note.title.toLowerCase().includes(query) ||

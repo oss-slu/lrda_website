@@ -112,7 +112,6 @@ export type Note = {
   approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
   uid: string;
-  isArchived?: boolean; //add property of archived, then filter for it
   comments?: Comment[];
 };
 
@@ -132,7 +131,6 @@ export type newNote = {
   published: boolean | undefined;
   approvalRequested?: boolean | undefined; // New field for approval request
   tags: Tag[];
-  isArchived?: boolean;
 };
 
 export type RootStackParamList = {

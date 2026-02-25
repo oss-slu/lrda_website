@@ -28,44 +28,26 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
   const [canComment, setCanComment] = useState<boolean>(false);
 
   const isViewingStudentNote = useMemo(() => {
-    const result = !!(isInstructorUser && userId && note?.creator && note.creator !== userId);
-    console.log('isViewingStudentNote calculation:', {
-      isInstructorUser,
-      userId,
-      noteCreator: note?.creator,
-      result,
-    });
-    return result;
+    return !!(isInstructorUser && userId && note?.creator && note.creator !== userId);
   }, [isInstructorUser, userId, note?.creator]);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- note?.creator is the correct minimal dependency
   const isStudentViewingOwnNote = useMemo(() => {
-    const result = !!(isStudent && userId && note?.creator && note.creator === userId);
-    console.log('isStudentViewingOwnNote calculation:', {
-      isStudent,
-      userId,
-      noteCreator: note?.creator,
-      result,
-    });
-    return result;
+    return !!(isStudent && userId && note?.creator && note.creator === userId);
   }, [isStudent, userId, note?.creator]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      console.log('fetchUserDetails: Starting...');
       const roles = authUser?.roles;
       const fetchedUserId = authUser?.uid;
-      console.log('fetchUserDetails: Got userId and roles', { fetchedUserId, roles });
 
       if (!fetchedUserId) {
-        console.log('fetchUserDetails: No userId, returning early');
         return;
       }
 
       let userData = null;
       try {
         userData = await fetchUserById(fetchedUserId);
-        console.log('fetchUserDetails: Fetched userData', userData);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -87,19 +69,6 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
         !!fetchedUserId &&
         (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel);
       setCanComment(canCommentValue);
-
-      console.log('Comment button debug:', {
-        fetchedUserId,
-        roles: roles,
-        userData: userData,
-        isInstr,
-        isStudentInTeacherStudentModel,
-        canComment: canCommentValue,
-        noteId: note?.id,
-        isAdministrator: !!roles?.administrator,
-        hasIsInstructorFlag: !!userData?.isInstructor,
-        noteCreator: note?.creator,
-      });
     };
     fetchUserDetails();
   }, [authUser, note?.id, note?.creator]);

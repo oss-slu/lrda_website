@@ -148,8 +148,7 @@ export default class DataConversion {
               longitude: note.longitude,
               published: note?.published || false,
               tags: note?.tags || [],
-              uid: note.uid, // Add the uid property here
-              //isArchived: note.isArchived
+              uid: note.uid,
             },
           };
         }

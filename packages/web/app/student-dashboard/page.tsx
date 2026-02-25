@@ -25,16 +25,9 @@ const StudentDashboardPage: React.FC = () => {
     queryFn: async () => {
       if (!authUser?.uid) return [];
 
-      // Fetch notes created by this student, still unpublished, with at least one comment
-      const queryObj = {
-        type: 'message',
-        published: false,
-        creator: authUser.uid,
-        approvalRequested: true,
-        $or: [{ isArchived: { $exists: false } }, { isArchived: false }],
-      };
-      const fetched = await notesService.query(queryObj, 150, 0);
-      return (fetched as Note[]).filter(note => (note.comments || []).length > 0);
+      // Fetch notes created by this student that have approval requested
+      const fetched = await notesService.fetchUserNotes(authUser.uid, 150, 0);
+      return fetched.filter(note => !!note.approvalRequested && !note.published);
     },
     enabled: !!authUser?.uid,
   });
@@ -77,8 +70,7 @@ const StudentDashboardPage: React.FC = () => {
             ))
           : filteredNotes.length > 0 ?
             filteredNotes.map(note => {
-              const noteId =
-                (note as any).id || (note as any)._id || (note as any)['@id'] || note.title;
+              const noteId = note.id;
               const latestComments = (note.comments || []).slice(-2);
 
               return (

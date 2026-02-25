@@ -6,8 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { RichTextEditorRef } from 'mui-tiptap';
 import { useAuthStore } from '@/app/lib/stores/authStore';
-import { useNotesStore } from '@/app/lib/stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
+import { useQueryClient } from '@tanstack/react-query';
+import { notesKeys } from '@/app/lib/hooks/queries/useNotes';
 import { notesService, requestApproval } from '@/app/lib/services';
 import { Note, newNote } from '@/app/types';
 
@@ -17,7 +18,6 @@ import { useNoteSync } from './hooks/useNoteSync';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useCommentBubble } from './hooks/useCommentBubble';
 import { useIntroTour } from './hooks/useIntroTour';
-import { handleDeleteNote as handleArchiveNote } from './handlers/noteHandlers';
 
 import NoteEditorHeader from './NoteEditorHeader';
 import NoteEditorToolbar from './NoteEditorToolbar';
@@ -50,7 +50,7 @@ export default function NoteEditor({
     })),
   );
 
-  const updateNote = useNotesStore(state => state.updateNote);
+  const queryClient = useQueryClient();
 
   // Refs
   const rteRef = useRef<RichTextEditorRef>(null);
@@ -182,6 +182,9 @@ export default function NoteEditor({
 
       noteHandlers.setApprovalRequested(updatedApprovalStatus);
 
+      // Invalidate queries so lists refresh with updated approval state
+      queryClient.invalidateQueries({ queryKey: notesKeys.all });
+
       toast(updatedApprovalStatus ? 'Approval Requested' : 'Approval Request Canceled', {
         description:
           updatedApprovalStatus ?
@@ -226,6 +229,9 @@ export default function NoteEditor({
       noteHandlers.setApprovalRequested(updatedNote.approvalRequested);
       noteHandlers.setNote(updatedNote);
 
+      // Invalidate all note queries so lists refresh with updated publish state
+      queryClient.invalidateQueries({ queryKey: notesKeys.all });
+
       toast(updatedNote.published ? 'Note Published' : 'Note Unpublished', {
         description:
           updatedNote.published ?
@@ -245,43 +251,50 @@ export default function NoteEditor({
   };
 
   const handleDeleteNote = async (): Promise<boolean> => {
-    try {
-      const creatorId = noteState.note?.creator || authUser?.uid;
+    const noteId = noteState.note?.id;
+    const creatorId = noteState.note?.creator || authUser?.uid;
 
-      const updatedNote = {
-        ...noteState.note,
-        text: noteState.editorContent,
-        title: noteState.title,
-        media: [...noteState.images, ...noteState.videos],
-        time: noteState.time,
-        longitude: noteState.longitude,
-        latitude: noteState.latitude,
-        tags: noteState.tags,
-        audio: noteState.audio,
-        id: noteState.note?.id || '',
-        uid: noteState.note?.uid ?? '',
-        creator: creatorId || '',
-        published: false,
-        isArchived: true,
-      };
-
-      if (noteState.note?.id) {
-        updateNote(noteState.note.id, {
-          isArchived: true,
-        });
-      }
-
-      noteHandlers.setNote(updatedNote);
-
-      return await handleArchiveNote(updatedNote, noteHandlers.setNote);
-    } catch (error) {
-      console.error('Error updating note state:', error);
+    if (!noteId) {
       toast('Error', {
-        description: 'Failed to update note state. Please try again later.',
+        description: "This note hasn't been saved yet. Please wait a moment and try again.",
         duration: 4000,
       });
+      return false;
     }
-    return false;
+
+    // Snapshot current cache for synchronous rollback on failure
+    const cacheKey = notesKeys.personal(creatorId ?? '');
+    const previousNotes = queryClient.getQueryData<Note[]>(cacheKey);
+
+    try {
+      // Remove from query cache immediately for instant UI feedback
+      if (creatorId) {
+        queryClient.setQueryData<Note[]>(cacheKey, old =>
+          old ? old.filter(n => n.id !== noteId) : [],
+        );
+      }
+
+      // Hard delete on the server
+      await notesService.delete(noteId);
+
+      // Invalidate all note queries to ensure consistency
+      queryClient.invalidateQueries({ queryKey: notesKeys.all });
+
+      toast('Note Deleted', {
+        description: 'Your note has been permanently deleted.',
+        duration: 4000,
+      });
+      return true;
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      // Synchronous restore from snapshot
+      queryClient.setQueryData(cacheKey, previousNotes);
+      toast('Error', {
+        description: 'Failed to delete note. Please try again later.',
+        duration: 4000,
+      });
+      return false;
+    }
   };
 
   const handleEdit = () => {

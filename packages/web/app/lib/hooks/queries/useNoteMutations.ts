@@ -69,28 +69,21 @@ export function usePublishNote() {
 }
 
 /**
- * Hook for archiving a note
+ * Hook for deleting a note (hard delete)
  */
-export function useArchiveNote() {
+export function useDeleteNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (note: Note) => {
-      const updatedNote = {
-        ...note,
-        isArchived: true,
-        published: false,
-        archivedAt: new Date().toISOString(),
-      };
-      return await notesService.update(updatedNote);
+    mutationFn: async (noteId: string) => {
+      return await notesService.delete(noteId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
-      toast.success('Note archived successfully');
     },
     onError: error => {
-      console.error('Failed to archive note:', error);
-      toast.error('Failed to archive note');
+      console.error('Failed to delete note:', error);
+      toast.error('Failed to delete note');
     },
   });
 }

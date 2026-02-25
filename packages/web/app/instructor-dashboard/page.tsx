@@ -37,17 +37,14 @@ const InstructorDashboardPage = () => {
 
   const studentIds = instructorData?.students || [];
 
-  // Fetch student notes
+  // Fetch student notes using the dedicated backend endpoint
   const { data: notes = [], isLoading: notesLoading } = useQuery({
-    queryKey: ['instructor-notes', studentIds],
+    queryKey: ['instructor-notes', authUser?.uid],
     queryFn: async () => {
-      if (studentIds.length === 0) {
-        toast('No students linked to this instructor.');
-        return [];
-      }
-      return await notesService.fetchByStudents(studentIds);
+      if (!authUser?.uid) return [];
+      return await notesService.fetchByStudents(authUser.uid);
     },
-    enabled: studentIds.length > 0,
+    enabled: !!authUser?.uid && studentIds.length > 0,
   });
 
   // Fetch student names

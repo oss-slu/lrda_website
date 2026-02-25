@@ -34,22 +34,40 @@ jest.mock('../lib/stores/authStore', () => ({
 
 // Mock notes store
 jest.mock('../lib/stores/notesStore', () => ({
-  useNotesStore: jest.fn((selector?: (state: any) => any) => {
-    const mockStore = {
-      notes: [],
-      fetchNotes: jest.fn(),
-      viewMode: 'my',
-      addNote: jest.fn(),
-      setSelectedNoteId: jest.fn(),
-    };
-    return selector ? selector(mockStore) : mockStore;
-  }),
+  useNotesStore: Object.assign(
+    jest.fn((selector?: (state: any) => any) => {
+      const mockStore = {
+        viewMode: 'my',
+        selectedNoteId: null,
+        setSelectedNoteId: jest.fn(),
+        setViewMode: jest.fn(),
+      };
+      return selector ? selector(mockStore) : mockStore;
+    }),
+    { getState: jest.fn(() => ({ selectedNoteId: null, viewMode: 'my' })) },
+  ),
 }));
 
 // Mock TanStack Query hooks
 jest.mock('../lib/hooks/queries/useNotes', () => ({
+  usePersonalNotes: jest.fn(() => ({
+    data: [],
+  })),
   useStudentNotes: jest.fn(() => ({
     data: [],
+  })),
+  notesKeys: {
+    all: ['notes'],
+    personal: (userId: string) => ['notes', 'personal', userId],
+  },
+}));
+
+// Mock @tanstack/react-query
+jest.mock('@tanstack/react-query', () => ({
+  useQueryClient: jest.fn(() => ({
+    setQueryData: jest.fn(),
+    invalidateQueries: jest.fn(),
+    getQueryData: jest.fn(() => []),
   })),
 }));
 

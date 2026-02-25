@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { notesService, fetchUserById } from '../../services';
+import { notesService } from '../../services';
 import { Note } from '@/app/types';
 
 // Query key factory for notes
@@ -50,7 +50,7 @@ export function useGlobalMapNotes() {
     queryKey: notesKeys.globalMap(),
     queryFn: async (): Promise<Note[]> => {
       const data = await notesService.fetchPublished();
-      return data.reverse().filter(note => note.published === true && note.isArchived !== true);
+      return data.reverse().filter(note => note.published === true);
     },
   });
 }
@@ -64,7 +64,7 @@ export function usePersonalMapNotes(userId: string | null) {
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
       const data = await notesService.fetchUserNotes(userId);
-      return data.reverse().filter(note => note.isArchived !== true);
+      return data.reverse();
     },
     enabled: !!userId,
   });
@@ -80,24 +80,13 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
     queryFn: async (): Promise<Note[]> => {
       if (!instructorId) return [];
 
-      // Fetch instructor data to get student list
-      const instructorData = await fetchUserById(instructorId);
-      if (!instructorData || !instructorData.isInstructor) {
-        return [];
-      }
-
-      const studentUids = instructorData.students || [];
-      if (studentUids.length === 0) {
-        return [];
-      }
-
-      // Fetch all notes from students
-      const allNotes = await notesService.fetchByStudents(studentUids);
-      return allNotes.reverse().filter(n => !n.isArchived);
+      // Uses the dedicated backend endpoint that fetches all student notes in one DB query
+      const allNotes = await notesService.fetchByStudents(instructorId);
+      return allNotes.reverse();
     },
     enabled: !!instructorId && isInstructor,
-    refetchInterval: 15000, // Poll every 15 seconds
-    refetchIntervalInBackground: false, // Pause when tab is hidden
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
   });
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Note, Comment } from '@/app/types';
-import { fetchCreatorName, fetchUserById, notesService } from '../services';
+import { fetchCreatorName, notesService } from '../services';
 import { getCachedLocation } from '../utils/location_cache';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
@@ -49,8 +49,8 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   );
 
   // Determine real ID and body text fields
-  const noteId = (note as any).id || (note as any)._id || (note as any)['@id'] || '';
-  const bodyHtml = (note as any).BodyText || note.text || '';
+  const noteId = note.id;
+  const bodyHtml = note.text || '';
 
   // Sanitize HTML content
   useEffect(() => {
@@ -58,12 +58,6 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
       setSanitizedBodyHtml(sanitizeHtml(bodyHtml, { allowVideo: true, allowAudio: true }));
     }
   }, [bodyHtml]);
-
-  // Debug logs
-  useEffect(() => {
-    console.log('🃏 [EnhancedNoteCard] noteId:', noteId);
-    console.log('🃏 [EnhancedNoteCard] bodyHtml:', bodyHtml);
-  }, [noteId, bodyHtml]);
 
   // Set user roles from auth store
   useEffect(() => {

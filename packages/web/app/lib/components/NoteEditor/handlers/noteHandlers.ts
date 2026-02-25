@@ -1,5 +1,5 @@
 import React from 'react';
-import { Note, Tag } from '@/app/types';
+import { Tag } from '@/app/types';
 import { notesService } from '@/app/lib/services';
 import { toast } from 'sonner';
 import type { NoteStateType, NoteHandlersType } from '../hooks/useNoteState';
@@ -91,49 +91,3 @@ export const handleEditorChange = (
   setEditorContent(content);
 };
 
-export const handleDeleteNote = async (
-  note: Note | undefined,
-  setNote: React.Dispatch<React.SetStateAction<Note | undefined>>,
-) => {
-  if (!note) {
-    toast('Error', {
-      description: 'No note selected to archive.',
-      duration: 4000,
-    });
-    return false;
-  }
-
-  if (!note.id || note.id === '') {
-    console.log('Note ID is missing or empty:', note);
-    toast('Error', {
-      description: "This note hasn't been saved yet. Please wait a moment and try again.",
-      duration: 4000,
-    });
-    return false;
-  }
-
-  try {
-    const updatedNote = {
-      ...note,
-      isArchived: true,
-      published: false,
-      archivedAt: new Date().toISOString(),
-    };
-
-    await notesService.update(updatedNote);
-
-    toast('Success', {
-      description: 'Note successfully archived.',
-      duration: 4000,
-    });
-    setNote(undefined);
-    return true;
-  } catch (error) {
-    toast('Error', {
-      description: 'Failed to archive note. Please try again.',
-      duration: 4000,
-    });
-    console.error('Error archiving note:', error);
-    return false;
-  }
-};

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useMemo, RefObject, MutableRefObject } from 'react';
-import { useNotesStore } from '@/app/lib/stores/notesStore';
+import { useAuthStore } from '@/app/lib/stores/authStore';
+import { usePersonalNotes } from '@/app/lib/hooks/queries/useNotes';
 import { Note, newNote } from '@/app/types';
 import { PhotoType, VideoType } from '@/app/lib/models/media_class';
-import { normalizeNoteId, noteIdsMatch } from '../utils/noteHelpers';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
 import type { RichTextEditorRef } from 'mui-tiptap';
 
@@ -21,10 +21,14 @@ export const useNoteSync = ({
   rteRef,
   lastEditTimeRef,
 }: UseNoteSyncOptions) => {
-  const notes = useNotesStore(state => state.notes);
+  // Get personal notes from TanStack Query instead of Zustand store.
+  // Only subscribe when viewing own notes (not when instructor views student notes).
+  const user = useAuthStore(state => state.user);
+  const noteCreator = noteState.note?.creator;
+  const isOwnNote = !noteCreator || noteCreator === user?.uid;
+  const { data: notes = [] } = usePersonalNotes(isOwnNote ? (user?.uid ?? null) : null);
+
   const lastSyncedNoteRef = useRef<string>('');
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isPollingPausedRef = useRef<boolean>(false);
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
@@ -49,35 +53,27 @@ export const useNoteSync = ({
   // Get current note ID
   const currentNoteId =
     stateNoteId ||
-    (note as any)?.['@id'] ||
-    (initialNote && 'id' in initialNote ? initialNote.id : undefined) ||
-    (initialNote as any)?.['@id'];
+    (initialNote && 'id' in initialNote ? initialNote.id : undefined);
 
-  // Find current note in store
-  const currentNoteFromStore = useMemo(() => {
+  // Find current note in query data
+  const currentNoteFromQuery = useMemo(() => {
     if (!currentNoteId) return undefined;
-
-    return notes.find(n => {
-      const noteId1 = n.id;
-      const noteId2 = (n as any)['@id'];
-      if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
-      return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
-    });
+    return notes.find(n => n.id === currentNoteId);
   }, [notes, currentNoteId]);
 
   // Content hash for change detection
   const currentNoteContentHash = useMemo(() => {
-    if (!currentNoteFromStore) return null;
+    if (!currentNoteFromQuery) return null;
     return JSON.stringify({
-      id: currentNoteFromStore.id || (currentNoteFromStore as any)?.['@id'],
-      text: currentNoteFromStore.text || (currentNoteFromStore as any)?.BodyText,
-      title: currentNoteFromStore.title,
-      published: currentNoteFromStore.published,
-      approvalRequested: currentNoteFromStore.approvalRequested,
-      tags: currentNoteFromStore.tags,
-      comments: currentNoteFromStore.comments?.length || 0,
+      id: currentNoteFromQuery.id,
+      text: currentNoteFromQuery.text,
+      title: currentNoteFromQuery.title,
+      published: currentNoteFromQuery.published,
+      approvalRequested: currentNoteFromQuery.approvalRequested,
+      tags: currentNoteFromQuery.tags,
+      comments: currentNoteFromQuery.comments?.length || 0,
     });
-  }, [currentNoteFromStore]);
+  }, [currentNoteFromQuery]);
 
   // Initialize note from initialNote prop
   useEffect(() => {
@@ -110,31 +106,24 @@ export const useNoteSync = ({
     }
   }, [initialNote, lastEditTimeRef]);
 
-  // Sync from store/initialNote to local state
+  // Sync from query data to local state when external changes are detected
   useEffect(() => {
     if (!currentNoteId) {
       lastSyncedNoteRef.current = '';
       return;
     }
 
+    // First try to use initialNote if it matches
     let sourceNote: Note | undefined = undefined;
     if (initialNote && 'id' in initialNote) {
-      const initialNoteId = initialNote.id || (initialNote as any)?.['@id'];
-      if (
-        initialNoteId &&
-        (initialNoteId === currentNoteId || noteIdsMatch(initialNoteId, currentNoteId))
-      ) {
+      if (initialNote.id === currentNoteId) {
         sourceNote = initialNote as Note;
       }
     }
 
+    // Fall back to query data
     if (!sourceNote) {
-      sourceNote = notes.find(n => {
-        const noteId1 = n.id;
-        const noteId2 = (n as any)['@id'];
-        if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
-        return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
-      });
+      sourceNote = notes.find(n => n.id === currentNoteId);
     }
 
     if (!sourceNote) {
@@ -142,11 +131,10 @@ export const useNoteSync = ({
     }
 
     const storeNote = sourceNote;
-    const storeNoteText = storeNote.text || (storeNote as any).BodyText || '';
-    const storeNoteId = normalizeNoteId(storeNote.id || (storeNote as any)['@id']) || '';
+    const storeNoteText = storeNote.text || '';
 
     const storeNoteKey = JSON.stringify({
-      id: storeNoteId,
+      id: storeNote.id,
       published: storeNote.published,
       approvalRequested: storeNote.approvalRequested,
       tags: storeNote.tags,
@@ -246,8 +234,7 @@ export const useNoteSync = ({
     }
   }, [editorContent, rteRef, lastEditTimeRef]);
 
-  // Focus at start only when switching to a different note (based on initialNote)
-  // Not when a draft note gets saved and receives an ID
+  // Focus at start only when switching to a different note
   const initialNoteIdRef = useRef<string | undefined>(
     initialNote && 'id' in initialNote ? initialNote.id : undefined,
   );
@@ -256,8 +243,6 @@ export const useNoteSync = ({
     const currentInitialId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
     const previousInitialId = initialNoteIdRef.current;
 
-    // Only focus if we're switching to a different note (initialNote changed)
-    // or if this is the first mount
     if (currentInitialId !== previousInitialId || previousInitialId === undefined) {
       const editor = rteRef.current?.editor;
       if (editor) {
@@ -269,97 +254,9 @@ export const useNoteSync = ({
     initialNoteIdRef.current = currentInitialId;
   }, [initialNote, rteRef]);
 
-  // Polling for updates
-  useEffect(() => {
-    if (!stateNoteId) {
-      return;
-    }
-
-    const POLLING_INTERVAL = 15000;
-
-    const handleVisibilityChange = () => {
-      isPollingPausedRef.current = document.hidden;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const startPolling = () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-
-      pollingIntervalRef.current = setInterval(() => {
-        if (isPollingPausedRef.current) {
-          return;
-        }
-
-        const storeNote = notes.find(n => n.id === stateNoteId);
-        if (!storeNote) {
-          return;
-        }
-
-        const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
-        const shouldUpdate = timeSinceLastEdit > 2000;
-
-        if (shouldUpdate) {
-          const handlers = noteHandlersRef.current;
-          const currentTitle = title;
-          const currentEditorContent = editorContent;
-          const currentIsPublished = isPublished;
-          const currentApprovalRequested = approvalRequested;
-          const currentTags = tags;
-          const currentNoteComments = note?.comments?.length || 0;
-
-          const hasChanges =
-            storeNote.title !== currentTitle ||
-            storeNote.text !== currentEditorContent ||
-            storeNote.published !== currentIsPublished ||
-            storeNote.approvalRequested !== currentApprovalRequested ||
-            JSON.stringify(storeNote.tags) !== JSON.stringify(currentTags) ||
-            storeNote.comments?.length !== currentNoteComments;
-
-          if (hasChanges) {
-            handlers.setNote(storeNote);
-
-            if (storeNote.title !== currentTitle && timeSinceLastEdit > 5000) {
-              handlers.setTitle(storeNote.title);
-            }
-            if (storeNote.text !== currentEditorContent && timeSinceLastEdit > 5000) {
-              handlers.setEditorContent(storeNote.text || '');
-            }
-
-            handlers.setIsPublished(storeNote.published || false);
-            handlers.setApprovalRequested(storeNote.approvalRequested || false);
-            handlers.setTags(storeNote.tags || []);
-          }
-        }
-      }, POLLING_INTERVAL);
-    };
-
-    startPolling();
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    };
-  }, [
-    stateNoteId,
-    notes,
-    title,
-    editorContent,
-    isPublished,
-    approvalRequested,
-    tags,
-    note?.comments?.length,
-    lastEditTimeRef,
-  ]);
-
   return {
     currentNoteId,
-    currentNoteFromStore,
+    currentNoteFromStore: currentNoteFromQuery,
     currentNoteContentHash,
   };
 };

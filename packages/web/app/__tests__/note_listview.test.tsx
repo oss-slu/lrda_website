@@ -63,7 +63,7 @@ describe('NoteListView', () => {
       longitude: '',
       published: false,
       tags: [],
-      isArchived: false,
+      uid: 'user-1',
     },
     {
       id: '2',
@@ -77,7 +77,7 @@ describe('NoteListView', () => {
       longitude: '',
       published: false,
       tags: [],
-      isArchived: false,
+      uid: 'user-1',
     },
     {
       id: '3',
@@ -91,7 +91,7 @@ describe('NoteListView', () => {
       longitude: '',
       published: false,
       tags: [],
-      isArchived: false,
+      uid: 'user-1',
     },
   ];
 

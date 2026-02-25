@@ -313,10 +313,12 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     const query = c.req.valid('query');
     const conditions = [];
 
-    // Default to published notes if not explicitly specified
+    // Filter by published status if explicitly specified.
+    // Only default to published=true for global queries (no creatorId),
+    // so users can see their own unpublished drafts.
     if (query.published !== undefined) {
       conditions.push(eq(note.isPublished, query.published));
-    } else {
+    } else if (!query.creatorId) {
       conditions.push(eq(note.isPublished, true));
     }
 

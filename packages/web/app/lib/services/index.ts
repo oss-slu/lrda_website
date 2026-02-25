@@ -17,14 +17,10 @@ export { RestClient, restClient, API_URL } from './base/rest-client';
 export { notesService, NotesService } from './notes/notes.service';
 export type {
   NoteQueryOptions,
-  NotesBoundsQuery,
   CreateNotePayload,
   UpdateNotePayload,
   ApiNoteData,
-  // Legacy aliases
-  RerumNoteData,
 } from './notes/notes.types';
-export { transformNoteToApi, transformNoteToRerum } from './notes/notes.types';
 
 // Users service
 export {

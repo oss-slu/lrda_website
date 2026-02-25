@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Sidebar from '../lib/components/Sidebar';
 import NoteEditor from '../lib/components/NoteEditor';
 import { Note, newNote } from '@/app/types';
@@ -7,11 +7,12 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { useNotesStore } from '../lib/stores/notesStore';
 import { useAuthStore } from '../lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
+import { useQueryClient } from '@tanstack/react-query';
+import { notesKeys } from '../lib/hooks/queries/useNotes';
 
 export default function Notes() {
-  const { fetchNotes, setSelectedNoteId } = useNotesStore(
+  const { setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
-      fetchNotes: state.fetchNotes,
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
@@ -23,32 +24,24 @@ export default function Notes() {
     })),
   );
 
+  const queryClient = useQueryClient();
+
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-
-  // Fetch notes when user logs in
-  useEffect(() => {
-    const loadNotes = async () => {
-      const userId = user?.uid;
-      if (userId) {
-        await fetchNotes(userId);
-      }
-    };
-    loadNotes();
-  }, [user?.uid, fetchNotes]);
 
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
     setIsNewNote(isNew);
-    // Remove success banner/message per request
-    setDebugInfo('');
   };
 
   const handleNoteDeleted = () => {
-    const currentNotes = useNotesStore.getState().notes;
+    const userId = user?.uid ?? '';
+    const currentNotes = queryClient.getQueryData<Note[]>(notesKeys.personal(userId)) ?? [];
     setSelectedNote(currentNotes[0] || undefined);
     setSelectedNoteId(currentNotes[0]?.id || null);
+
+    // Reconcile cache with server to recover if the optimistic removal failed
+    queryClient.invalidateQueries({ queryKey: notesKeys.personal(userId) });
   };
 
   return (
