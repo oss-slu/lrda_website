@@ -15,7 +15,7 @@ function WelcomeHero() {
       style={{ backgroundImage: 'url("/splash.png")' }}
     >
       {/* Gradient overlay with modern feel */}
-      <div className='absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70' />
+      <div className='absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70 backdrop-blur-[2px]' />
 
       {/* Animated background elements */}
       <div className='pointer-events-none absolute inset-0 overflow-hidden'>

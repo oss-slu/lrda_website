@@ -2,12 +2,22 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useNotesStore } from '../stores/notesStore';
-import { useAuthStore } from '../stores/authStore';
-import { useShallow } from 'zustand/react/shallow';
-import { fetchUserById } from '../services';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import {
   Select,
   SelectContent,
@@ -15,9 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { useNotesStore } from '../stores/notesStore';
+import { useAuthStore } from '../stores/authStore';
+import { useShallow } from 'zustand/react/shallow';
+import { fetchUserById } from '../services';
 
 export default function Navbar() {
-  // Use auth store for reactive auth state
   const { user, isLoggedIn, logout } = useAuthStore(
     useShallow(state => ({
       user: state.user,
@@ -30,6 +44,7 @@ export default function Navbar() {
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [isLinkedStudent, setIsLinkedStudent] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const pathname = usePathname();
   const router = useRouter();
   const { viewMode, setViewMode } = useNotesStore(
@@ -48,7 +63,6 @@ export default function Navbar() {
     }
   };
 
-  // Check if user is instructor
   useEffect(() => {
     const checkInstructorStatus = async () => {
       if (!user?.uid) return;
@@ -58,7 +72,6 @@ export default function Navbar() {
 
         if (userId) {
           const userData = await fetchUserById(userId);
-          // Check if user is an instructor (has administrator role OR isInstructor flag)
           const isInstr = !!roles?.administrator || !!userData?.isInstructor;
           setIsInstructor(isInstr);
           setIsLinkedStudent(!isInstr && !!userData?.parentInstructorId);
@@ -70,138 +83,243 @@ export default function Navbar() {
     checkInstructorStatus();
   }, [user]);
 
-  // Determine dashboard link based on role
   const dashboardHref = isInstructor ? '/instructor-dashboard' : '/student-dashboard';
 
-  // Define nav items
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes', authRequired: true },
-    ...(isInstructor || isLinkedStudent ?
-      [{ href: dashboardHref, label: 'Dashboard', authRequired: true }]
-    : []),
+    ...(isInstructor || isLinkedStudent
+      ? [{ href: dashboardHref, label: 'Dashboard', authRequired: true }]
+      : []),
     { href: '/map', label: 'Map' },
     { href: '/stories', label: 'Stories' },
     { href: '/resources', label: 'Resources' },
   ];
 
-  // Active link styling
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   const linkClass = (href: string) =>
     cn(
-      'text-xl font-bold transition duration-300 ease-in-out mr-6',
-
-      href === '/' ?
-        (
-          pathname === '/' // Home should only match exactly
-        ) ?
-          'text-blue-500'
-        : 'text-blue-300 hover:text-blue-500'
-      : (
-        pathname.startsWith(href) // Others can use startsWith
-      ) ?
-        'text-blue-500'
-      : 'text-blue-300 hover:text-blue-500',
+      'text-sm font-medium rounded-md px-3 py-1.5 transition-colors',
+      isActive(href)
+        ? 'bg-blue-50 text-blue-600'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
     );
 
+  // Instructor Notes select for desktop
+  const renderNotesSelect = () => (
+    <Select
+      value={viewMode}
+      open={selectOpen}
+      onOpenChange={open => {
+        if (open && !pathname.startsWith('/notes')) {
+          router.push('/notes');
+          setSelectOpen(false);
+          return;
+        }
+        setSelectOpen(open);
+      }}
+      onValueChange={value => {
+        setViewMode(value as 'my' | 'review');
+        setSelectOpen(false);
+        if (!pathname.startsWith('/notes')) {
+          router.push('/notes');
+        }
+      }}
+    >
+      <SelectTrigger
+        className={cn(
+          'h-auto w-auto cursor-pointer border-none bg-transparent px-3 py-1.5 text-sm font-medium shadow-none transition-colors focus:ring-0 focus:ring-offset-0 rounded-md',
+          isActive('/notes')
+            ? 'bg-blue-50 text-blue-600'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+        )}
+      >
+        <SelectValue>
+          <span>Notes</span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value='my'>My Notes</SelectItem>
+        <SelectItem value='review'>Students Notes</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
+  // Mobile nav link (closes sheet on click)
+  const renderMobileLink = (item: { href: string; label: string }) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      onClick={() => setMobileOpen(false)}
+      className={cn(
+        'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        isActive(item.href)
+          ? 'bg-blue-50 text-blue-600'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+      )}
+    >
+      {item.label}
+    </Link>
+  );
+
+  // Mobile instructor notes: two separate links for "My Notes" and "Students Notes"
+  const renderMobileNotesLinks = () => (
+    <div className='space-y-1'>
+      <button
+        onClick={() => {
+          setViewMode('my');
+          setMobileOpen(false);
+          router.push('/notes');
+        }}
+        className={cn(
+          'block w-full text-left rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          isActive('/notes') && viewMode === 'my'
+            ? 'text-blue-500'
+            : 'text-blue-300 hover:text-blue-500',
+        )}
+      >
+        My Notes
+      </button>
+      <button
+        onClick={() => {
+          setViewMode('review');
+          setMobileOpen(false);
+          router.push('/notes');
+        }}
+        className={cn(
+          'block w-full text-left rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          isActive('/notes') && viewMode === 'review'
+            ? 'text-blue-500'
+            : 'text-blue-300 hover:text-blue-500',
+        )}
+      >
+        Students Notes
+      </button>
+    </div>
+  );
+
   return (
-    <nav className='flex w-full items-center justify-between bg-gray-900 px-6 py-4 text-white'>
-      {/* Left side links */}
-      <div className='flex items-center'>
-        {navItems.map(
-          item =>
-            (!item.authRequired || name) &&
-            (item.href === '/notes' && isInstructor ?
-              <div key={item.href} className='mr-6'>
-                <Select
-                  value={viewMode}
-                  open={selectOpen}
-                  onOpenChange={open => {
-                    // If trying to open from another page, navigate first without opening dropdown
-                    if (open && !pathname.startsWith('/notes')) {
-                      // Navigate directly - viewMode is already persisted in localStorage
-                      router.push('/notes');
-                      setSelectOpen(false); // Don't open the dropdown
-                      return;
-                    }
-                    setSelectOpen(open);
-                  }}
-                  onValueChange={value => {
-                    setViewMode(value as 'my' | 'review');
-                    setSelectOpen(false);
-                    // Navigate to notes page if not already there
-                    if (!pathname.startsWith('/notes')) {
-                      router.push('/notes');
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    className={cn(
-                      'h-auto w-auto cursor-pointer border-none bg-transparent px-0 py-0 text-xl font-bold text-blue-300 shadow-none transition duration-300 ease-in-out hover:text-blue-500 focus:ring-0 focus:ring-offset-0',
-                      pathname.startsWith(item.href) ? 'text-blue-500' : '',
-                    )}
-                  >
-                    <SelectValue>
-                      <span
-                        className={cn(
-                          pathname.startsWith(item.href) ? 'text-blue-500' : (
-                            'text-blue-300 hover:text-blue-500'
-                          ),
-                        )}
-                      >
-                        {item.label}
-                      </span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='my'>My Notes</SelectItem>
-                    <SelectItem value='review'>Students Notes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            : <Link
-                key={item.href}
-                href={item.href}
-                className={linkClass(item.href)}
-                aria-current={pathname.startsWith(item.href) ? 'page' : undefined}
-              >
-                {item.label}
-              </Link>),
+    <nav className='sticky top-0 z-50 flex w-full items-center justify-between bg-white border-b border-gray-200 px-6 py-3'>
+      {/* Mobile hamburger */}
+      <Button
+        variant='ghost'
+        size='icon'
+        className='md:hidden text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+        onClick={() => setMobileOpen(true)}
+        aria-label='Open menu'
+      >
+        <Menu className='h-5 w-5' />
+      </Button>
+
+      {/* Desktop links */}
+      <div className='hidden md:flex items-center gap-1'>
+        {navItems.map(item =>
+          (!item.authRequired || name) &&
+          (item.href === '/notes' && isInstructor ? (
+            <div key={item.href}>{renderNotesSelect()}</div>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={linkClass(item.href)}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
+          )),
         )}
       </div>
 
-      {/* Right side buttons */}
-      <div>
-        {name ?
-          <div className='flex items-center gap-6'>
-            <span className='min-w-max max-w-[150px] truncate text-lg font-semibold' title={name}>
-              Hi, {name}!
-            </span>
-            <Button
-              id='navbar-logout'
-              className='rounded border border-blue-700 bg-blue-600 px-4 py-2 font-semibold text-white shadow hover:bg-blue-700'
-              onClick={handleLogout}
-            >
-              Logout
+      {/* Right side: auth */}
+      <div className='flex items-center'>
+        {name ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant='ghost'
+                className='text-gray-600 hover:bg-gray-100 hover:text-blue-600 gap-2'
+              >
+                <User className='h-4 w-4' />
+                <span className='max-w-[120px] truncate text-sm'>{name}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='w-48'>
+              <DropdownMenuLabel className='font-normal'>
+                <p className='text-sm font-medium truncate'>{name}</p>
+                {user?.email && (
+                  <p className='text-xs text-muted-foreground truncate'>{user.email}</p>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className='cursor-pointer'
+              >
+                <LogOut className='h-4 w-4 mr-2' />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className='flex items-center gap-2'>
+            <Button variant='default' asChild className='whitespace-nowrap'>
+              <Link href='/login'>Login</Link>
+            </Button>
+            <Button variant='outline' asChild className='whitespace-nowrap'>
+              <Link href='/signup'>Sign Up</Link>
             </Button>
           </div>
-        : <div className='flex items-center gap-2'>
-            <Button
-              variant='default'
-              onClick={() => (window.location.href = '/login')}
-              className='whitespace-nowrap'
-            >
-              Login
-            </Button>
-            <Button
-              variant='outline'
-              onClick={() => (window.location.href = '/signup')}
-              className='whitespace-nowrap'
-            >
-              Sign Up
-            </Button>
-          </div>
-        }
+        )}
       </div>
+
+      {/* Mobile sheet drawer */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side='left' className='bg-white border-gray-200 w-64'>
+          <SheetHeader>
+            <SheetTitle>Menu</SheetTitle>
+          </SheetHeader>
+          <nav className='flex flex-col gap-1 mt-4'>
+            {navItems.map(item =>
+              (!item.authRequired || name) &&
+              (item.href === '/notes' && isInstructor
+                ? <div key={item.href}>{renderMobileNotesLinks()}</div>
+                : renderMobileLink(item)),
+            )}
+          </nav>
+          <div className='mt-auto pt-6 border-t border-gray-200'>
+            {name ? (
+              <div className='space-y-2'>
+                <p className='text-sm font-medium text-gray-900 truncate px-3'>{name}</p>
+                {user?.email && (
+                  <p className='text-xs text-gray-500 truncate px-3'>{user.email}</p>
+                )}
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  <LogOut className='h-4 w-4 mr-2' />
+                  Log out
+                </Button>
+              </div>
+            ) : (
+              <div className='flex flex-col gap-2 px-3'>
+                <Button variant='default' asChild>
+                  <Link href='/login' onClick={() => setMobileOpen(false)}>Login</Link>
+                </Button>
+                <Button variant='outline' asChild>
+                  <Link href='/signup' onClick={() => setMobileOpen(false)}>Sign Up</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </nav>
   );
 }
