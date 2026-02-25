@@ -55,12 +55,7 @@ module.exports = {
         destination: '/instructor-dashboard',
         permanent: true,
       },
-      {
-        source: '/lib/pages/InstructorSignupPage',
-        destination: '/instructor-signup',
-        permanent: true,
-      },
-      { source: '/lib/pages/StudentDashBoard', destination: '/student-dashboard', permanent: true },
+{ source: '/lib/pages/StudentDashBoard', destination: '/student-dashboard', permanent: true },
       {
         source: '/lib/pages/AdminToInstructorApplication',
         destination: '/admin-to-instructor',

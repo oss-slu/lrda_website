@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, AlertCircle, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const ConfirmPage = () => {
   const router = useRouter();

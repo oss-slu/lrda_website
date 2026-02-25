@@ -90,7 +90,7 @@ export default function LoginPage() {
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <a
                     href="/forgot-password"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
+                    className="ml-auto text-sm text-blue-600 underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </a>
