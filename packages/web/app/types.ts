@@ -1,4 +1,5 @@
 import { Key, ReactNode } from 'react';
+import type { CommentData } from './lib/services/comments/comments.types';
 import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
 
 export interface Tag {
@@ -12,21 +13,21 @@ export type MediaData = {
   uri: string;
 };
 
-export type Comment = {
-  authorName: ReactNode;
-  id: Key | null | undefined;
-  noteId: string;
-  uid: string;
-  text: string;
-  author: string; // Display name
-  authorId: string; // UID of the commenter
-  role: 'instructor' | 'student'; // For styling or permissions
-  createdAt: string; // ISO date
-  position?: { from: number; to: number } | null; // Anchor to selected range
-  threadId?: string | null; // Thread grouping id
-  parentId?: string | null; // Parent comment id when this is a reply
-  resolved?: boolean; // Whether the thread is resolved
-  archived?: boolean; // Soft-delete flag
+/**
+ * Comment type aligned with the PostgreSQL comment table.
+ * Legacy fields are kept for backward compatibility but deprecated.
+ */
+export type Comment = CommentData & {
+  /** @deprecated Use authorId instead */
+  uid?: string;
+  /** @deprecated Use authorName instead */
+  author?: string;
+  /** @deprecated Not stored in PostgreSQL backend */
+  role?: 'instructor' | 'student';
+  /** @deprecated Use delete instead of soft-delete */
+  archived?: boolean;
+  /** Overridden to allow Key type for React rendering */
+  id?: Key | null | undefined;
 };
 
 // New UserProfile type matching PostgreSQL schema (via better-auth)

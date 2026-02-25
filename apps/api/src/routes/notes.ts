@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { eq, and, gte, lte, desc, inArray, or, ilike, asc } from 'drizzle-orm';
 import { db } from '../db';
-import { note, media, audio } from '../db/schema';
+import { note, media, audio, user } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../types';
 
@@ -459,9 +459,17 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Note not found' }, 404);
     }
 
-    // Allow update if user owns the note OR is admin
+    // Allow update if user owns the note, is admin, or is the creator's instructor
     const isAdmin = authUser.role === 'admin';
-    if (existingNote.creatorId !== authUser.id && !isAdmin) {
+    let isCreatorsInstructor = false;
+    if (authUser.isInstructor === true && existingNote.creatorId !== authUser.id) {
+      const noteCreator = await db.query.user.findFirst({
+        where: eq(user.id, existingNote.creatorId),
+        columns: { instructorId: true },
+      });
+      isCreatorsInstructor = noteCreator?.instructorId === authUser.id;
+    }
+    if (existingNote.creatorId !== authUser.id && !isAdmin && !isCreatorsInstructor) {
       return c.json({ error: 'You can only update your own notes' }, 403);
     }
 
@@ -543,9 +551,17 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Note not found' }, 404);
     }
 
-    // Allow delete if user owns the note OR is admin
+    // Allow delete if user owns the note, is admin, or is the creator's instructor
     const isAdmin = authUser.role === 'admin';
-    if (existingNote.creatorId !== authUser.id && !isAdmin) {
+    let isCreatorsInstructor = false;
+    if (authUser.isInstructor === true && existingNote.creatorId !== authUser.id) {
+      const noteCreator = await db.query.user.findFirst({
+        where: eq(user.id, existingNote.creatorId),
+        columns: { instructorId: true },
+      });
+      isCreatorsInstructor = noteCreator?.instructorId === authUser.id;
+    }
+    if (existingNote.creatorId !== authUser.id && !isAdmin && !isCreatorsInstructor) {
       return c.json({ error: 'You can only delete your own notes' }, 403);
     }
 

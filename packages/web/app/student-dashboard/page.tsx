@@ -8,6 +8,30 @@ import { useQuery } from '@tanstack/react-query';
 import { notesService } from '../lib/services';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCommentPreview } from '../lib/hooks/queries/useComments';
+
+/** Wrapper component that fetches comment preview per note */
+function StudentNotePreview({ note }: { note: Note }) {
+  const { preview } = useCommentPreview(note.id);
+
+  return (
+    <div className='flex flex-col rounded-lg bg-white shadow-sm'>
+      <InstructorEnhancedNoteCard note={note} />
+
+      <div className='border-t bg-gray-50 p-4'>
+        <h4 className='mb-2 text-sm font-semibold'>Recent Feedback:</h4>
+        {preview.length > 0 ?
+          preview.map(c => (
+            <div key={String(c.id)} className='mb-1 text-xs text-gray-700'>
+              <span className='font-medium'>{String(c.authorName)}:</span>{' '}
+              {c.text.length > 100 ? c.text.slice(0, 100) + '...' : c.text}
+            </div>
+          ))
+        : <p className='text-xs text-gray-500'>No feedback yet.</p>}
+      </div>
+    </div>
+  );
+}
 
 const StudentDashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,16 +56,12 @@ const StudentDashboardPage: React.FC = () => {
     enabled: !!authUser?.uid,
   });
 
-  // Filter notes by search query
+  // Filter notes by search query (title only -- comments are fetched separately)
   const filteredNotes = useMemo(() => {
     if (!searchQuery.trim()) return notes;
 
     const lower = searchQuery.toLowerCase();
-    return notes.filter(
-      note =>
-        note.title.toLowerCase().includes(lower) ||
-        (note.comments || []).some(c => c.text.toLowerCase().includes(lower)),
-    );
+    return notes.filter(note => note.title.toLowerCase().includes(lower));
   }, [notes, searchQuery]);
 
   return (
@@ -69,28 +89,7 @@ const StudentDashboardPage: React.FC = () => {
               />
             ))
           : filteredNotes.length > 0 ?
-            filteredNotes.map(note => {
-              const noteId = note.id;
-              const latestComments = (note.comments || []).slice(-2);
-
-              return (
-                <div key={noteId} className='flex flex-col rounded-lg bg-white shadow-sm'>
-                  {/* Note Card Preview */}
-                  <InstructorEnhancedNoteCard note={note} />
-
-                  {/* Inline Feedback Preview */}
-                  <div className='border-t bg-gray-50 p-4'>
-                    <h4 className='mb-2 text-sm font-semibold'>Recent Feedback:</h4>
-                    {latestComments.map(c => (
-                      <div key={c.id} className='mb-1 text-xs text-gray-700'>
-                        <span className='font-medium'>{c.author}:</span>{' '}
-                        {c.text.length > 100 ? c.text.slice(0, 100) + '...' : c.text}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
+            filteredNotes.map(note => <StudentNotePreview key={note.id} note={note} />)
           : <div className='col-span-full text-center text-gray-600'>
               No feedback to review at the moment.
             </div>

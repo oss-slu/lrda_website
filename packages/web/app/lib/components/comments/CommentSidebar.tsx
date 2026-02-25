@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Key, ReactNode } from 'react';
+import type { Key } from 'react';
 import { Comment } from '@/app/types';
 import CommentPopover from '../CommentPopover';
 import { fetchUserById, fetchCreatorName } from '../../services';
@@ -11,6 +11,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { v4 as uuidv4 } from 'uuid';
 import { useComments, useCommentMutations } from '../../hooks/queries/useComments';
+import { CommentThreadList } from './CommentThreadList';
 
 interface CommentSidebarProps {
   noteId: string;
@@ -96,13 +97,13 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
 
     const threadId = uuidv4();
     const newComment: Comment = {
-      id: uuidv4() as Key,
+      id: uuidv4(),
       noteId,
       uid: authorId,
       text: trimmed,
       author: authorDisplay,
       authorId,
-      authorName: authorDisplay as ReactNode,
+      authorName: authorDisplay,
       role: isInstructor ? 'instructor' : 'student',
       createdAt: new Date().toISOString(),
       position: selection,
@@ -136,13 +137,13 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     const authorDisplay = await resolveAuthorName(authorId, fallbackAuthor);
 
     const reply: Comment = {
-      id: uuidv4() as Key,
+      id: uuidv4(),
       noteId,
       uid: authorId,
       text: trimmed,
       author: authorDisplay,
       authorId,
-      authorName: authorDisplay as ReactNode,
+      authorName: authorDisplay,
       role: isInstructor ? 'instructor' : 'student',
       createdAt: new Date().toISOString(),
       position: null,
@@ -165,121 +166,21 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
     await deleteComment.mutateAsync(id);
   };
 
-  // Group comments by thread
-  const threads = comments
-    .filter(c => !c.parentId)
-    .map(root => {
-      const tid = String(root.threadId || root.id);
-      return {
-        root: { ...root, threadId: tid },
-        replies: comments.filter(r => String(r.parentId) === tid),
-      };
-    });
-
   return (
     <div className='flex h-full w-full flex-col overflow-hidden border-t bg-white p-2.5 sm:p-3 md:w-80 md:border-l md:border-t-0'>
       <h2 className='mb-2.5 flex-shrink-0 text-sm font-semibold sm:mb-3 sm:text-base'>Comments</h2>
 
-      <ScrollArea className='min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1 sm:space-y-3'>
-        {threads.length === 0 ?
-          <p className='text-gray-400'>No comments yet.</p>
-        : threads.map(({ root, replies }) => (
-            <div
-              key={String(root.id)}
-              className='space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 sm:p-2.5'
-            >
-              <div className='flex items-start justify-between'>
-                <div className='min-w-0'>
-                  <p className='truncate text-[13px] font-semibold sm:text-sm'>
-                    {root.authorName}
-                    {root.resolved && (
-                      <span className='ml-2 text-xs text-green-600'>(Resolved)</span>
-                    )}
-                  </p>
-                  <p className='whitespace-pre-wrap break-words text-[12px] text-gray-700 sm:text-xs'>
-                    {root.text}
-                  </p>
-                  <p className='text-[10px] text-gray-400 sm:text-[11px]'>
-                    {new Date(root.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                {isInstructor && (
-                  <div className='ml-2 flex shrink-0 gap-1.5'>
-                    {!root.resolved && (
-                      <Button
-                        size='sm'
-                        className='h-7 px-2 text-xs'
-                        variant='secondary'
-                        onClick={() => handleResolveThread(String(root.threadId))}
-                      >
-                        Resolve
-                      </Button>
-                    )}
-                    <Button
-                      size='sm'
-                      className='h-7 px-2 text-xs'
-                      variant='ghost'
-                      onClick={() => handleDeleteComment(root.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {replies.length > 0 && (
-                <div className='ml-2 space-y-1.5 border-l pl-2 sm:ml-3 sm:pl-3'>
-                  {replies.map(r => (
-                    <div key={String(r.id)} className=''>
-                      <p className='truncate text-[12px] font-medium sm:text-xs'>{r.authorName}</p>
-                      <p className='whitespace-pre-wrap break-words text-[12px] text-gray-700 sm:text-xs'>
-                        {r.text}
-                      </p>
-                      <div className='flex items-center justify-between'>
-                        <p className='text-[10px] text-gray-400 sm:text-[11px]'>
-                          {new Date(r.createdAt).toLocaleString()}
-                        </p>
-                        {isInstructor && (
-                          <Button
-                            size='sm'
-                            className='h-7 px-2 text-xs'
-                            variant='ghost'
-                            onClick={() => handleDeleteComment(r.id)}
-                          >
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {canComment && !root.resolved && (
-                <div className='mt-1.5 flex gap-1.5'>
-                  <input
-                    className='flex-1 rounded border px-2 py-1 text-[12px] sm:text-xs'
-                    placeholder='Reply...'
-                    value={replyDrafts[String(root.threadId || root.id)] || ''}
-                    onChange={e =>
-                      setReplyDrafts(d => ({
-                        ...d,
-                        [String(root.threadId || root.id)]: e.target.value,
-                      }))
-                    }
-                  />
-                  <Button
-                    size='sm'
-                    className='h-7 px-2 text-xs'
-                    onClick={() => handleReply(String(root.threadId || root.id))}
-                  >
-                    Reply
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))
-        }
+      <ScrollArea className='min-h-0 flex-1 overflow-y-auto pr-1'>
+        <CommentThreadList
+          comments={comments}
+          isInstructor={isInstructor}
+          canComment={canComment}
+          replyDrafts={replyDrafts}
+          onReplyDraftChange={(tid, val) => setReplyDrafts(d => ({ ...d, [tid]: val }))}
+          onReply={handleReply}
+          onResolveThread={handleResolveThread}
+          onDeleteComment={handleDeleteComment}
+        />
       </ScrollArea>
 
       {canComment && (

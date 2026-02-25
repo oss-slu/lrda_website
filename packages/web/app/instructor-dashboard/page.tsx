@@ -5,60 +5,41 @@ import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserById, fetchCreatorName, notesService } from '../lib/services';
+import { fetchStudents, notesService } from '../lib/services';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
 
 const InstructorDashboardPage = () => {
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Use auth store for user data
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
       user: state.user,
     })),
   );
 
-  // Fetch instructor data (user info and students)
-  const { data: instructorData } = useQuery({
-    queryKey: ['instructor', authUser?.uid],
+  const isInstructor = !!authUser?.isInstructor;
+
+  // Fetch students assigned to this instructor
+  const { data: students = [] } = useQuery({
+    queryKey: ['instructor-students', authUser?.uid],
     queryFn: async () => {
-      if (!authUser?.uid) return null;
-      const userData = await fetchUserById(authUser.uid);
-      if (!userData || !userData.isInstructor) {
-        throw new Error('Access denied. Instructor only.');
-      }
-      return userData;
+      if (!authUser?.uid) return [];
+      return fetchStudents(authUser.uid);
     },
-    enabled: !!authUser?.uid,
+    enabled: !!authUser?.uid && isInstructor,
   });
 
-  const studentIds = instructorData?.students || [];
-
   // Fetch student notes using the dedicated backend endpoint
+  // fetchByStudents finds students server-side, so we don't need studentIds here
   const { data: notes = [], isLoading: notesLoading } = useQuery({
     queryKey: ['instructor-notes', authUser?.uid],
     queryFn: async () => {
       if (!authUser?.uid) return [];
-      return await notesService.fetchByStudents(authUser.uid);
+      return notesService.fetchByStudents(authUser.uid);
     },
-    enabled: !!authUser?.uid && studentIds.length > 0,
-  });
-
-  // Fetch student names
-  const { data: students = [] } = useQuery({
-    queryKey: ['student-names', studentIds],
-    queryFn: async () => {
-      return Promise.all(
-        studentIds.map(async (uid: string) => {
-          const name = await fetchCreatorName(uid);
-          return { uid, name };
-        }),
-      );
-    },
-    enabled: studentIds.length > 0,
+    enabled: !!authUser?.uid && isInstructor,
   });
 
   // Filter notes by selected student and search query
@@ -86,13 +67,10 @@ const InstructorDashboardPage = () => {
     return filtered;
   }, [notes, selectedStudent, searchQuery]);
 
-  const isLoading = notesLoading && studentIds.length > 0;
-
   return (
     <div className='flex h-[90vh] w-screen min-w-[600px] flex-col bg-gray-100 p-6'>
       {/* Search + Filter Row */}
       <div className='mb-6 flex flex-col justify-center gap-4 sm:flex-row'>
-        {/* Search Box */}
         <input
           type='text'
           placeholder='Search notes...'
@@ -101,7 +79,6 @@ const InstructorDashboardPage = () => {
           className='w-full max-w-md rounded-lg border p-2 shadow-sm'
         />
 
-        {/* Student Filter Dropdown */}
         <select
           value={selectedStudent}
           onChange={e => setSelectedStudent(e.target.value)}
@@ -119,7 +96,7 @@ const InstructorDashboardPage = () => {
       {/* Notes Grid */}
       <div className='flex justify-center'>
         <div className='grid max-w-screen-lg grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3'>
-          {isLoading ?
+          {notesLoading ?
             [...Array(6)].map((_, idx) => (
               <Skeleton
                 key={`skeleton-${idx}`}

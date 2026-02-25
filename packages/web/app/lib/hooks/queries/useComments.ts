@@ -133,3 +133,17 @@ export function useCommentMutations(noteId: string) {
     deleteComment,
   };
 }
+
+/**
+ * Returns the last 2 root-level (non-reply) comments for a note.
+ * Used for inline comment previews on dashboard cards.
+ * Shares the same query cache as useComments.
+ */
+export function useCommentPreview(noteId: string | null) {
+  const query = useComments(noteId);
+  const preview = (query.data ?? [])
+    .filter(c => !c.parentId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 2);
+  return { ...query, preview };
+}
