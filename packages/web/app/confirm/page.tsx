@@ -44,7 +44,7 @@ const ConfirmPage = () => {
             <p className='mb-2 font-medium'>In development mode:</p>
             <p>Check the server console for the verification link.</p>
           </div>
-          <Button onClick={handleGoToLogin} className='w-full'>
+          <Button onClick={handleGoToLogin} className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white'>
             Go to Login
           </Button>
         </div>

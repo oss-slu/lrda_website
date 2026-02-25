@@ -29,7 +29,14 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<string>;
-  signup: (data: { email: string; password: string; name: string }) => Promise<string>;
+  signup: (data: {
+    email: string;
+    password: string;
+    name: string;
+    isInstructor?: boolean;
+    pendingInstructorDescription?: string;
+    instructorId?: string;
+  }) => Promise<string>;
   logout: () => Promise<void>;
   setUser: (user: UserData | null) => void;
   initialize: () => void;
@@ -119,7 +126,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signup: async (data: { email: string; password: string; name: string }): Promise<string> => {
+      signup: async (data: {
+        email: string;
+        password: string;
+        name: string;
+        isInstructor?: boolean;
+        pendingInstructorDescription?: string;
+        instructorId?: string;
+      }): Promise<string> => {
         set({ isLoading: true });
 
         try {

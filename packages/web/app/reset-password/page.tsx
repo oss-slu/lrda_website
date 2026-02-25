@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
               <p className="text-sm text-red-600">{error}</p>
             )}
 
-            <Button type="submit" className="w-full bg-blue-600" disabled={loading}>
+            <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white" disabled={loading}>
               {loading ? 'Resetting…' : 'Reset password'}
             </Button>
           </form>

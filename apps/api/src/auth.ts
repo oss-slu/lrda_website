@@ -24,6 +24,25 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   basePath: '/api/auth',
   trustedOrigins: getTrustedOrigins(),
+  user: {
+    additionalFields: {
+      isInstructor: {
+        type: 'boolean',
+        defaultValue: false,
+        input: true,
+      },
+      pendingInstructorDescription: {
+        type: 'string',
+        required: false,
+        input: true,
+      },
+      instructorId: {
+        type: 'string',
+        required: false,
+        input: true,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true, // Require email verification before login

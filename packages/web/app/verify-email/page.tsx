@@ -109,7 +109,7 @@ export default function VerifyEmailPage() {
                     </div>
                   )}
 
-                  <Button type='submit' className='w-full' disabled={loading || !token}>
+                  <Button type='submit' className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white' disabled={loading || !token}>
                     {loading ? 'Verifying…' : 'Verify email'}
                   </Button>
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/stores/authStore';
-import { fetchInstructors, assignInstructor } from '../lib/services';
+import { fetchInstructors } from '../lib/services';
 import StrengthIndicator from '@/components/ui/strength-indicator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -112,25 +112,14 @@ const SignupPage = () => {
     try {
       const fullName = `${data.firstName} ${data.lastName}`;
 
-      // Create user via better-auth
-      const result = await signup({
+      // Create user via better-auth with role-specific fields set at creation time
+      await signup({
         email: data.email,
         password: data.password,
         name: fullName,
+        ...(data.role === 'instructor' && { isInstructor: true }),
+        ...(data.role === 'student' && data.instructorId && { instructorId: data.instructorId }),
       });
-
-      // If student, assign the instructor relationship
-      if (data.role === 'student' && data.instructorId) {
-        try {
-          await assignInstructor(data.instructorId);
-        } catch (error) {
-          console.error('Failed to assign instructor:', error);
-          // Don't fail signup if instructor assignment fails
-          toast.warning(
-            'Account created but instructor assignment failed. Please contact support.',
-          );
-        }
-      }
 
       toast.success('Account created! Check your email to verify.');
 
@@ -327,7 +316,7 @@ const SignupPage = () => {
               <Button
                 type='submit'
                 disabled={isLoading}
-                className='w-full rounded-lg bg-blue-600 py-2 font-medium text-white hover:bg-blue-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
+                className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white'
               >
                 {isLoading ? 'Creating Account...' : 'Sign Up'}
               </Button>

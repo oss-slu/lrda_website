@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../lib/stores/authStore';
-import { updateProfile } from '../lib/services';
+import { Button } from '@/components/ui/button';
 
 const InstructorSignupPage = () => {
   const router = useRouter();
@@ -99,30 +99,19 @@ const InstructorSignupPage = () => {
     try {
       const fullName = `${firstName} ${lastName}`;
 
-      // Create user via better-auth
+      // Create user via better-auth with instructor fields set at creation time
       await signup({
         email,
         password,
         name: fullName,
+        isInstructor: true,
+        pendingInstructorDescription: description,
       });
 
-      // Update user profile to set as instructor with description
-      try {
-        await updateProfile({
-          isInstructor: true,
-          pendingInstructorDescription: description,
-        });
-      } catch (profileError) {
-        console.error('Failed to set instructor profile:', profileError);
-        toast.warning(
-          'Account created but instructor status may not be set. Please contact support.',
-        );
-      }
+      toast.success('Account created! Check your email to verify.');
 
-      toast.success('Instructor account created successfully!');
-
-      // Redirect to map page
-      router.push('/map');
+      // Redirect to confirmation page -- user must verify email first
+      router.push(`/confirm?email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error('Signup error:', error);
       toast.error(
@@ -268,13 +257,13 @@ const InstructorSignupPage = () => {
             />
           </div>
 
-          <button
+          <Button
             onClick={handleSignup}
             disabled={isLoading}
-            className='w-full rounded-lg bg-blue-500 p-3 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
+            className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white'
           >
             {isLoading ? 'Creating Account...' : 'Submit Application'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

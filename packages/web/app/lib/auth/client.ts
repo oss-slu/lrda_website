@@ -16,7 +16,14 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 // Typed wrapper for email sign up
-export async function signUpWithEmail(data: { email: string; password: string; name: string }) {
+export async function signUpWithEmail(data: {
+  email: string;
+  password: string;
+  name: string;
+  isInstructor?: boolean;
+  pendingInstructorDescription?: string;
+  instructorId?: string;
+}) {
   return authClient.signUp.email(data);
 }
 
