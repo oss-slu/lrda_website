@@ -18,8 +18,8 @@ function StudentNotePreview({ note }: { note: Note }) {
     <div className='flex flex-col rounded-lg bg-white shadow-sm'>
       <InstructorEnhancedNoteCard note={note} />
 
-      <div className='border-t bg-gray-50 p-4'>
-        <h4 className='mb-2 text-sm font-semibold'>Recent Feedback:</h4>
+      <div className='border-t border-blue-100 bg-blue-50/50 p-4'>
+        <h4 className='mb-2 text-sm font-semibold text-blue-900'>Recent Feedback:</h4>
         {preview.length > 0 ?
           preview.map(c => (
             <div key={String(c.id)} className='mb-1 text-xs text-gray-700'>
@@ -65,8 +65,9 @@ const StudentDashboardPage: React.FC = () => {
   }, [notes, searchQuery]);
 
   return (
-    <div className='flex h-[90vh] w-screen min-w-[600px] flex-col bg-gray-50 p-6'>
-      <h1 className='mb-4 text-2xl font-bold'>Feedback Pending Approval</h1>
+    <div className='flex min-h-screen w-screen min-w-[600px] flex-col bg-gradient-to-br from-blue-50 to-slate-100 p-6'>
+      <h1 className='mb-1 text-2xl font-bold text-gray-900'>Pending Feedback</h1>
+      <p className='mb-6 text-sm text-gray-500'>Notes you've submitted for instructor review.</p>
 
       {/* Search Box */}
       <div className='mb-6 flex justify-center'>
@@ -75,7 +76,7 @@ const StudentDashboardPage: React.FC = () => {
           placeholder='Search feedback...'
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className='w-full max-w-md rounded-lg border p-2 shadow-sm'
+          className='w-full max-w-md rounded-lg border border-gray-300 bg-white p-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200'
         />
       </div>
 

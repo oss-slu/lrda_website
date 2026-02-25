@@ -86,7 +86,7 @@ export function CommentThreadList({
           </div>
 
           {replies.length > 0 && (
-            <div className='ml-2 space-y-1.5 border-l pl-2 sm:ml-3 sm:pl-3'>
+            <div className='ml-2 space-y-1.5 border-l-2 border-blue-200 pl-2 sm:ml-3 sm:pl-3'>
               {replies.map(r => (
                 <div key={String(r.id)}>
                   <p className='truncate text-[12px] font-medium sm:text-xs'>
@@ -118,7 +118,7 @@ export function CommentThreadList({
           {canComment && !root.resolved && (
             <div className='mt-1.5 flex gap-1.5'>
               <input
-                className='flex-1 rounded border px-2 py-1 text-[12px] sm:text-xs'
+                className='flex-1 rounded border border-gray-300 px-2 py-1 text-[12px] focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-200 sm:text-xs'
                 placeholder='Reply...'
                 value={replyDrafts[String(root.threadId || root.id)] || ''}
                 onChange={e =>

@@ -68,7 +68,10 @@ const InstructorDashboardPage = () => {
   }, [notes, selectedStudent, searchQuery]);
 
   return (
-    <div className='flex h-[90vh] w-screen min-w-[600px] flex-col bg-gray-100 p-6'>
+    <div className='flex min-h-screen w-screen min-w-[600px] flex-col bg-gradient-to-br from-blue-50 to-slate-100 p-6'>
+      <h1 className='mb-1 text-2xl font-bold text-gray-900'>Student Submissions</h1>
+      <p className='mb-6 text-sm text-gray-500'>Review and approve notes submitted by your students.</p>
+
       {/* Search + Filter Row */}
       <div className='mb-6 flex flex-col justify-center gap-4 sm:flex-row'>
         <input
@@ -76,13 +79,13 @@ const InstructorDashboardPage = () => {
           placeholder='Search notes...'
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className='w-full max-w-md rounded-lg border p-2 shadow-sm'
+          className='w-full max-w-md rounded-lg border border-gray-300 bg-white p-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200'
         />
 
         <select
           value={selectedStudent}
           onChange={e => setSelectedStudent(e.target.value)}
-          className='rounded-lg border p-2 shadow-sm'
+          className='rounded-lg border border-gray-300 bg-white p-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200'
         >
           <option value=''>All Students</option>
           {students.map(student => (

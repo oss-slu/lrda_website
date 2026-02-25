@@ -28,6 +28,7 @@ export default function Navbar() {
   const name = user?.name ?? null;
 
   const [isInstructor, setIsInstructor] = useState<boolean>(false);
+  const [isLinkedStudent, setIsLinkedStudent] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -60,6 +61,7 @@ export default function Navbar() {
           // Check if user is an instructor (has administrator role OR isInstructor flag)
           const isInstr = !!roles?.administrator || !!userData?.isInstructor;
           setIsInstructor(isInstr);
+          setIsLinkedStudent(!isInstr && !!userData?.parentInstructorId);
         }
       } catch (error) {
         console.error('Error checking instructor status:', error);
@@ -68,10 +70,16 @@ export default function Navbar() {
     checkInstructorStatus();
   }, [user]);
 
+  // Determine dashboard link based on role
+  const dashboardHref = isInstructor ? '/instructor-dashboard' : '/student-dashboard';
+
   // Define nav items
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes', authRequired: true },
+    ...(isInstructor || isLinkedStudent ?
+      [{ href: dashboardHref, label: 'Dashboard', authRequired: true }]
+    : []),
     { href: '/map', label: 'Map' },
     { href: '/stories', label: 'Stories' },
     { href: '/resources', label: 'Resources' },

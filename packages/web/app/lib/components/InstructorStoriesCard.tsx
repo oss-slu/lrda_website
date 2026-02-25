@@ -191,7 +191,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className='max-w-sm cursor-pointer rounded-lg border bg-white shadow-md transition hover:shadow-lg'>
+        <div className='max-w-sm cursor-pointer rounded-lg border border-gray-200 bg-white shadow-sm transition hover:border-blue-300 hover:shadow-md'>
           <div className='p-4'>
             <div className='mb-2 text-lg font-bold'>{note.title}</div>
             <div className='mb-2 flex items-center text-sm text-gray-500'>
