@@ -220,7 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
               className='w-full'
               onValueChange={togglePublished}
             >
-              <TabsList className='grid w-full grid-cols-2 bg-gray-800'>
+              <TabsList className='grid w-full grid-cols-2'>
                 <TabsTrigger value='unpublished' className='text-sm font-semibold'>
                   {viewMode === 'review' ? 'Unreviewed' : 'Unpublished'}
                 </TabsTrigger>

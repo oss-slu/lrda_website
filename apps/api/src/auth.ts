@@ -29,7 +29,7 @@ export const auth = betterAuth({
       isInstructor: {
         type: 'boolean',
         defaultValue: false,
-        input: true,
+        input: false,
       },
       pendingInstructorDescription: {
         type: 'string',

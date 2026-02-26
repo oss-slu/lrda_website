@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ interface SignupFormData {
   confirmPassword: string;
   role: 'none' | 'instructor' | 'student';
   instructorId?: string;
+  instructorDescription?: string;
 }
 
 const SignupPage = () => {
@@ -51,6 +53,7 @@ const SignupPage = () => {
       confirmPassword: '',
       role: 'none',
       instructorId: '',
+      instructorDescription: '',
     },
   });
 
@@ -106,6 +109,12 @@ const SignupPage = () => {
       return;
     }
 
+    // Validate instructor description
+    if (data.role === 'instructor' && !data.instructorDescription?.trim()) {
+      toast.error('Please provide a description of your teaching background');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -116,7 +125,9 @@ const SignupPage = () => {
         email: data.email,
         password: data.password,
         name: fullName,
-        ...(data.role === 'instructor' && { isInstructor: true }),
+        ...(data.role === 'instructor' && {
+          pendingInstructorDescription: data.instructorDescription?.trim(),
+        }),
         ...(data.role === 'student' && data.instructorId && { instructorId: data.instructorId }),
       });
 
@@ -134,7 +145,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className='flex h-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 px-4'>
+    <div className='flex min-h-full flex-col items-center justify-center overflow-y-auto bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-8'>
       {/* Signup Card */}
       <Card className='w-full max-w-md bg-white shadow-lg'>
         <div className='p-8'>
@@ -278,6 +289,33 @@ const SignupPage = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Instructor Description (Instructor Only) */}
+              {selectedRole === 'instructor' && (
+                <FormField
+                  control={form.control}
+                  name='instructorDescription'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='text-gray-700'>
+                        Describe Your Teaching Background
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Describe your teaching experience, expertise, and why you want to be an instructor...'
+                          {...field}
+                          className='min-h-[100px] border-gray-300'
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <p className='text-xs text-gray-500'>
+                        Your application will be reviewed by an administrator.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Instructor Selection (Student Only) */}
               {selectedRole === 'student' && (

@@ -23,24 +23,11 @@ app.use(
   }),
 );
 
-// Mount better-auth handler - use all() to catch all methods
-app.all('/api/auth/*', async c => {
-  // Clone the request to pass to auth handler
-  const response = await auth.handler(
-    new Request(c.req.raw.url, {
-      method: c.req.method,
-      headers: c.req.raw.headers,
-      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? 
-        c.req.raw.body : 
-        undefined,
-    })
-  );
-  return response;
-});
-
 // Server-side password strength validation for reset-password requests.
 // This checks the `newPassword` field and forwards the request to better-auth
 // if it passes validation. Returning a 400 for weak/missing passwords.
+// IMPORTANT: This MUST be registered before the catch-all auth handler so it
+// is matched first for POST /api/auth/reset-password.
 app.post('/api/auth/reset-password', async c => {
   try {
     const json = await c.req.json();
@@ -74,6 +61,21 @@ app.post('/api/auth/reset-password', async c => {
   } catch (err) {
     return c.json({ error: 'Invalid request' }, 400);
   }
+});
+
+// Mount better-auth handler - use all() to catch all methods
+app.all('/api/auth/*', async c => {
+  // Clone the request to pass to auth handler
+  const response = await auth.handler(
+    new Request(c.req.raw.url, {
+      method: c.req.method,
+      headers: c.req.raw.headers,
+      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ?
+        c.req.raw.body :
+        undefined,
+    })
+  );
+  return response;
 });
 
 // Mount API routes

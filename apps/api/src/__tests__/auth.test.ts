@@ -68,13 +68,20 @@ describe('Auth endpoints', () => {
   describe('POST /api/auth/sign-in/email', () => {
     it('should sign in existing user', async () => {
       // First create user
-      await request(app, 'POST', '/api/auth/sign-up/email', {
+      const signUpRes = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
           password: 'password123',
           name: 'Test Auth User',
         },
       });
+
+      // Verify email in DB (requireEmailVerification is enabled)
+      const signUpJson = signUpRes.json as { user: { id: string } };
+      await db
+        .update(user)
+        .set({ emailVerified: true })
+        .where(eq(user.id, signUpJson.user.id));
 
       // Then sign in
       const res = await request(app, 'POST', '/api/auth/sign-in/email', {

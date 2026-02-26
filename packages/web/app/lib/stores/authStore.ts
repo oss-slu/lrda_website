@@ -33,7 +33,6 @@ interface AuthState {
     email: string;
     password: string;
     name: string;
-    isInstructor?: boolean;
     pendingInstructorDescription?: string;
     instructorId?: string;
   }) => Promise<string>;
@@ -130,7 +129,6 @@ export const useAuthStore = create<AuthState>()(
         email: string;
         password: string;
         name: string;
-        isInstructor?: boolean;
         pendingInstructorDescription?: string;
         instructorId?: string;
       }): Promise<string> => {

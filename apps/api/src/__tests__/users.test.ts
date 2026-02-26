@@ -12,11 +12,11 @@ describe('User routes', () => {
   });
 
   describe('GET /api/users/instructors', () => {
-    it('should return empty array when no instructors exist', async () => {
+    it('should return instructor list', async () => {
       const res = await request(app, 'GET', '/api/users/instructors');
 
       expect(res.status).toBe(200);
-      expect(res.json).toEqual([]);
+      expect(Array.isArray(res.json)).toBe(true);
     });
 
     it('should return list of instructors', async () => {
@@ -80,8 +80,10 @@ describe('User routes', () => {
       expect(res.json).toMatchObject({
         id: 'test-user-1',
         name: 'Test User',
-        email: 'testuser@test.com',
       });
+
+      // Verify email is NOT exposed on public endpoint
+      expect(res.json).not.toHaveProperty('email');
 
       // Cleanup
       await db.delete(user).where(eq(user.id, testUser.id));

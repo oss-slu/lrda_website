@@ -56,11 +56,6 @@ module.exports = {
         permanent: true,
       },
 { source: '/lib/pages/StudentDashBoard', destination: '/student-dashboard', permanent: true },
-      {
-        source: '/lib/pages/AdminToInstructorApplication',
-        destination: '/admin-to-instructor',
-        permanent: true,
-      },
     ];
   },
 };

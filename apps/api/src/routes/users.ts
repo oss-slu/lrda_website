@@ -11,6 +11,15 @@ const UserSchema = z.object({
   name: z.string(),
   email: z.string(),
   image: z.string().nullable().optional(),
+  role: z.string(),
+  isInstructor: z.boolean(),
+  createdAt: z.string().or(z.date()),
+});
+
+const PublicUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string().nullable().optional(),
   isInstructor: z.boolean(),
   createdAt: z.string().or(z.date()),
 });
@@ -67,7 +76,7 @@ const getUserRoute = createRoute({
   },
   responses: {
     200: {
-      content: { 'application/json': { schema: UserSchema } },
+      content: { 'application/json': { schema: PublicUserSchema } },
       description: 'User by ID',
     },
     404: {
@@ -89,7 +98,6 @@ const updateMeRoute = createRoute({
           schema: z.object({
             name: z.string().optional(),
             image: z.string().nullable().optional(),
-            isInstructor: z.boolean().optional(),
             pendingInstructorDescription: z.string().nullable().optional(),
           }),
         },
@@ -118,7 +126,7 @@ const getInstructorsRoute = createRoute({
   tags: ['Users'],
   responses: {
     200: {
-      content: { 'application/json': { schema: z.array(UserSchema) } },
+      content: { 'application/json': { schema: z.array(PublicUserSchema) } },
       description: 'List of instructors',
     },
   },
@@ -223,6 +231,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
         name: result.name,
         email: result.email,
         image: result.image,
+        role: result.role,
         isInstructor: result.isInstructor,
         instructorId: result.instructorId,
         pendingInstructorDescription: result.pendingInstructorDescription,
@@ -313,7 +322,6 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
       columns: {
         id: true,
         name: true,
-        email: true,
         image: true,
         isInstructor: true,
         createdAt: true,
@@ -332,7 +340,6 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
       columns: {
         id: true,
         name: true,
-        email: true,
         image: true,
         isInstructor: true,
         createdAt: true,

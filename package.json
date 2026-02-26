@@ -7,7 +7,7 @@
     "dev:api": "pnpm --filter @lrda/api dev",
     "dev:full": "pnpm clear-ports && pnpm api:docker:up && sleep 2 && pnpm api:db:push && concurrently -k -n api,web -c blue,cyan \"pnpm dev:api\" \"sleep 3 && pnpm dev\"",
     "api:docker:up": "pnpm --filter @lrda/api docker:up",
-    "api:docker:down": "pnpm --filter @lrda/api docker:down",
+    "api:docker:down-v": "pnpm --filter @lrda/api docker:down-v",
     "api:db:generate": "pnpm --filter @lrda/api db:generate",
     "api:db:migrate": "pnpm --filter @lrda/api db:migrate",
     "api:db:push": "pnpm --filter @lrda/api db:push",

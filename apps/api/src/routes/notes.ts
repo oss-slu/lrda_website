@@ -138,8 +138,8 @@ const ListNotesQuerySchema = z.object({
     .string()
     .transform(v => v === 'true')
     .optional(),
-  limit: z.string().transform(Number).default('20'),
-  offset: z.string().transform(Number).default('0'),
+  limit: z.string().transform(Number).default('20').pipe(z.number().int().positive().max(100)),
+  offset: z.string().transform(Number).default('0').pipe(z.number().int().min(0)),
 });
 
 // Routes
@@ -311,14 +311,20 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   // GET /notes - list notes with filters
   .openapi(listNotesRoute, async c => {
     const query = c.req.valid('query');
+    const authUser = c.get('user');
     const conditions = [];
 
-    // Filter by published status if explicitly specified.
-    // Only default to published=true for global queries (no creatorId),
-    // so users can see their own unpublished drafts.
-    if (query.published !== undefined) {
-      conditions.push(eq(note.isPublished, query.published));
-    } else if (!query.creatorId) {
+    // Determine if the authenticated user is the owner of the queried notes
+    const isOwner = authUser && query.creatorId && authUser.id === query.creatorId;
+
+    if (isOwner) {
+      // Owners can optionally filter by published status to see their own drafts
+      if (query.published !== undefined) {
+        conditions.push(eq(note.isPublished, query.published));
+      }
+      // Otherwise show all their notes (published + drafts)
+    } else {
+      // Non-owners always see only published notes, regardless of query params
       conditions.push(eq(note.isPublished, true));
     }
 
@@ -368,6 +374,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   // GET /notes/:id - get single note
   .openapi(getNoteRoute, async c => {
     const { id } = c.req.valid('param');
+    const authUser = c.get('user');
 
     const result = await db.query.note.findFirst({
       where: eq(note.id, id),
@@ -379,6 +386,11 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     });
 
     if (!result) {
+      return c.json({ error: 'Note not found' }, 404);
+    }
+
+    // Unpublished notes are only visible to their creator
+    if (!result.isPublished && (!authUser || authUser.id !== result.creatorId)) {
       return c.json({ error: 'Note not found' }, 404);
     }
 
