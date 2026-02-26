@@ -2,11 +2,24 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
-// Mock auth store to prevent nanostores ESM import chain
+// Mock tooltip component
+jest.mock('../../components/tooltip', () => ({
+  TooltipProvider: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ children }: any) => <>{children}</>,
+  TooltipTrigger: ({ children, asChild }: any) => (asChild ? children : <span>{children}</span>),
+  TooltipContent: ({ children }: any) => <span>{children}</span>,
+}));
+
+// Mock auth store with instructor user (needed for isInstructorReview to take effect)
 jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
-      user: { uid: 'mockUserId', email: 'mock@example.com' },
+      user: {
+        uid: 'i1',
+        email: 'instructor@example.com',
+        isInstructor: true,
+        roles: { administrator: false, contributor: true },
+      },
       isLoggedIn: true,
       isLoading: false,
       isInitialized: true,
@@ -27,6 +40,6 @@ describe('PublishToggle', () => {
         isInstructorReview={true}
       />,
     );
-    expect(screen.getByText(/Approve|Publish/i)).toBeTruthy();
+    expect(screen.getByText('Approve')).toBeTruthy();
   });
 });

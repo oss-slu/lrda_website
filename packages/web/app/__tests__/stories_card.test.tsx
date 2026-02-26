@@ -116,15 +116,19 @@ describe('EnhancedNoteCard Component', () => {
     });
   });
 
-  it("displays 'Location not found' when API key is not provided but coordinates exist", async () => {
+  it('does not display location when API key is not provided but coordinates exist', async () => {
     delete process.env.NEXT_PUBLIC_MAP_KEY;
     mockFetchCreatorName.mockResolvedValue('Test Creator');
 
     render(<EnhancedNoteCard note={mockNote} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Location not found')).toBeInTheDocument();
+      expect(screen.getByText('Test Note Title')).toBeInTheDocument();
     });
+
+    // Location section should not be rendered when no API key is available
+    expect(screen.queryByText('Location not found')).not.toBeInTheDocument();
+    expect(screen.queryByText('San Francisco, CA, USA')).not.toBeInTheDocument();
   });
 
   describe('URL sanitization and string handling', () => {

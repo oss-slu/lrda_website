@@ -2,11 +2,24 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
-// Mock auth store to prevent nanostores ESM import chain
+// Mock tooltip component
+jest.mock('../../components/tooltip', () => ({
+  TooltipProvider: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ children }: any) => <>{children}</>,
+  TooltipTrigger: ({ children, asChild }: any) => (asChild ? children : <span>{children}</span>),
+  TooltipContent: () => null,
+}));
+
+// Mock auth store with instructor user
 jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
-      user: { uid: 'mockUserId', email: 'mock@example.com' },
+      user: {
+        uid: 'mockUserId',
+        email: 'mock@example.com',
+        isInstructor: true,
+        roles: { administrator: true, contributor: true },
+      },
       isLoggedIn: true,
       isLoading: false,
       isInitialized: true,
@@ -17,34 +30,44 @@ jest.mock('../lib/stores/authStore', () => ({
 
 describe('PublishToggle Component', () => {
   it('renders the publish button with correct initial state', () => {
-    render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
-    const publishButton = screen.getByText(/Publish/i);
+    render(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} onPublishClick={jest.fn()} />,
+    );
+    const publishButton = screen.getByText('Publish');
     expect(publishButton).toBeInTheDocument();
     expect(publishButton).toHaveClass('text-gray-700');
   });
 
   it('renders as published when isPublished is true', () => {
-    render(<PublishToggle isPublished={true} onPublishClick={jest.fn()} />);
-    const publishButton = screen.getByText(/Unpublish/i);
+    render(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={true} onPublishClick={jest.fn()} />,
+    );
+    const publishButton = screen.getByText('Unpublish');
     expect(publishButton).toBeInTheDocument();
     expect(publishButton).toHaveClass('text-green-600');
   });
 
   it('calls onPublishClick when clicked', async () => {
-    const onPublishClickMock = jest.fn().mockResolvedValue(undefined);
-    render(<PublishToggle isPublished={false} onPublishClick={onPublishClickMock} />);
-    const button = screen.getByText(/Publish/i);
+    const onPublishClickMock = jest.fn();
+    render(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} onPublishClick={onPublishClickMock} />,
+    );
+    const button = screen.getByRole('button');
     fireEvent.click(button);
     await waitFor(() => expect(onPublishClickMock).toHaveBeenCalledTimes(1));
   });
 
   it('updates correctly when isPublished prop changes', () => {
-    const { rerender } = render(<PublishToggle isPublished={false} onPublishClick={jest.fn()} />);
-    const button = screen.getByText(/Publish/i);
+    const { rerender } = render(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} onPublishClick={jest.fn()} />,
+    );
+    const button = screen.getByText('Publish');
     expect(button).toHaveClass('text-gray-700');
 
-    rerender(<PublishToggle isPublished={true} onPublishClick={jest.fn()} />);
-    const updatedButton = screen.getByText(/Unpublish/i);
+    rerender(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={true} onPublishClick={jest.fn()} />,
+    );
+    const updatedButton = screen.getByText('Unpublish');
     expect(updatedButton).toHaveClass('text-green-600');
   });
 });

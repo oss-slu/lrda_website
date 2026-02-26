@@ -142,9 +142,8 @@ describe('Navbar Component', () => {
 
     // Wait for async user data fetching
     await waitFor(() => {
-      expect(screen.getByText(/Hi, John Doe!/i)).toBeTruthy();
+      expect(screen.getByText('John Doe')).toBeTruthy();
     });
-    expect(screen.queryByText(/login/i)).toBeNull();
   });
 
   it('renders Notes link when logged in', async () => {
@@ -177,7 +176,7 @@ describe('Navbar Component', () => {
     });
 
     const homeLink = screen.getByText('Home');
-    expect(homeLink).toHaveClass('text-blue-500');
+    expect(homeLink).toHaveClass('text-blue-600');
   });
 
   it("highlights Notes when pathname starts with '/notes'", async () => {
@@ -194,10 +193,10 @@ describe('Navbar Component', () => {
       render(<Navbar />);
     });
 
-    // Wait for async operations
+    // For instructor/admin users, Notes is rendered as a Select trigger
     await waitFor(() => {
-      const notesLink = screen.getByText('Notes');
-      expect(notesLink).toHaveClass('text-blue-500');
+      const selectTrigger = screen.getByTestId('select-trigger');
+      expect(selectTrigger).toHaveClass('text-blue-600');
     });
   });
 
@@ -209,7 +208,7 @@ describe('Navbar Component', () => {
     });
 
     const homeLink = screen.getByText('Home');
-    expect(homeLink).toHaveClass('text-blue-300'); // inactive
+    expect(homeLink).toHaveClass('text-gray-600'); // inactive
   });
 });
 

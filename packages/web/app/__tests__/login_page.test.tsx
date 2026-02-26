@@ -37,21 +37,22 @@ describe('Login Page Component', () => {
 
   it('renders essential elements', () => {
     render(<Page />);
-    expect(screen.getByPlaceholderText('Email...')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Password...')).toBeInTheDocument();
-    expect(screen.getByText('Forgot Password?')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('m@example.com')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByText('Forgot your password?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
 
   it('captures username input', () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText('Email...'), { target: { value: 'testuser' } });
-    expect((screen.getByPlaceholderText('Email...') as HTMLInputElement).value).toBe('testuser');
+    fireEvent.change(screen.getByPlaceholderText('m@example.com'), { target: { value: 'testuser' } });
+    expect((screen.getByPlaceholderText('m@example.com') as HTMLInputElement).value).toBe('testuser');
   });
 
   it('captures password input', () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText('Password...'), { target: { value: 'testpass' } });
-    expect((screen.getByPlaceholderText('Password...') as HTMLInputElement).value).toBe('testpass');
+    const passwordInput = screen.getByLabelText('Password');
+    fireEvent.change(passwordInput, { target: { value: 'testpass' } });
+    expect((passwordInput as HTMLInputElement).value).toBe('testpass');
   });
 });

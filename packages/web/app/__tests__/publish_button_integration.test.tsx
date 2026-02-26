@@ -2,11 +2,24 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
 
-// Mock auth store to prevent nanostores ESM import chain
+// Mock tooltip component
+jest.mock('../../components/tooltip', () => ({
+  TooltipProvider: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ children }: any) => <>{children}</>,
+  TooltipTrigger: ({ children, asChild }: any) => (asChild ? children : <span>{children}</span>),
+  TooltipContent: () => null,
+}));
+
+// Mock auth store with instructor user
 jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
-      user: { uid: 'mockUserId', email: 'mock@example.com' },
+      user: {
+        uid: 'mockUserId',
+        email: 'mock@example.com',
+        isInstructor: true,
+        roles: { administrator: true, contributor: true },
+      },
       isLoggedIn: true,
       isLoading: false,
       isInitialized: true,
@@ -23,22 +36,26 @@ describe('PublishToggle Integration Test', () => {
     });
 
     const { rerender } = render(
-      <PublishToggle isPublished={isPublished} onPublishClick={onPublishClickMock} />,
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={isPublished} onPublishClick={onPublishClickMock} />,
     );
 
-    const toggle = screen.getByText(/Publish/i);
-    fireEvent.click(toggle);
+    const button = screen.getByRole('button');
+    fireEvent.click(button);
 
     await waitFor(() => expect(onPublishClickMock).toHaveBeenCalledTimes(1));
 
     // Simulate parent state change
-    rerender(<PublishToggle isPublished={true} onPublishClick={onPublishClickMock} />);
-    expect(screen.getByText(/Unpublish/i)).toBeInTheDocument();
+    rerender(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={true} onPublishClick={onPublishClickMock} />,
+    );
+    expect(screen.getByText('Unpublish')).toBeInTheDocument();
   });
 
   it('does not crash when onPublishClick is not provided', () => {
-    render(<PublishToggle isPublished={false} onPublishClick={async () => {}} />);
-    const button = screen.getByText(/Publish/i);
+    render(
+      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} />,
+    );
+    const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     fireEvent.click(button);
   });
