@@ -66,7 +66,14 @@ describe('CommentSidebar - permission gating', () => {
       roles: { contributor: true, administrator: false },
     };
 
-    render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => null} />);
+    render(
+      <CommentSidebar
+        noteId={'n1'}
+        isInstructor={false}
+        canComment={true}
+        getCurrentSelection={() => null}
+      />,
+    );
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();
     expect(screen.queryByText(/resolve/i)).toBeNull();
     expect(screen.queryByText(/delete/i)).toBeNull();
@@ -79,7 +86,14 @@ describe('CommentSidebar - permission gating', () => {
       roles: { contributor: false, administrator: true },
     };
 
-    render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => ({ from: 1, to: 2 })} />);
+    render(
+      <CommentSidebar
+        noteId={'n1'}
+        isInstructor={true}
+        canComment={true}
+        getCurrentSelection={() => ({ from: 1, to: 2 })}
+      />,
+    );
     expect(await screen.findByRole('button', { name: /add comment/i })).toBeTruthy();
     // Actual buttons appear when threads render; this test ensures no crash and gating configured
   });

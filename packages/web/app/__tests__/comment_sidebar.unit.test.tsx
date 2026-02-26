@@ -73,7 +73,14 @@ describe('CommentSidebar - students can comment', () => {
   });
 
   test('allows generic comment without selection', async () => {
-    render(<CommentSidebar noteId={'note-1'} getCurrentSelection={() => null} />);
+    render(
+      <CommentSidebar
+        noteId={'note-1'}
+        isInstructor={false}
+        canComment={true}
+        getCurrentSelection={() => null}
+      />,
+    );
 
     // Open add comment popover
     const addBtn = await screen.findByRole('button', { name: /add comment/i });

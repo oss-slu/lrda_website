@@ -21,9 +21,13 @@ interface NoteEditorCommentsProps {
 export function CommentSidebarPanel({
   noteId,
   rteRef,
+  isInstructor,
+  canComment,
 }: {
   noteId: string;
   rteRef: RefObject<RichTextEditorRef | null>;
+  isInstructor: boolean;
+  canComment: boolean;
 }) {
   const getCurrentSelection = () => {
     const editor = rteRef.current?.editor;
@@ -45,7 +49,12 @@ export function CommentSidebarPanel({
         maxSize={40}
         className='min-w-[280px] transition-[flex-basis] duration-200 ease-out md:min-w-[300px] md:border-l lg:min-w-[340px]'
       >
-        <CommentSidebar noteId={noteId} getCurrentSelection={getCurrentSelection} />
+        <CommentSidebar
+          noteId={noteId}
+          isInstructor={isInstructor}
+          canComment={canComment}
+          getCurrentSelection={getCurrentSelection}
+        />
       </ResizablePanel>
     </>
   );

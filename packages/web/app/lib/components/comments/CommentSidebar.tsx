@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Key } from 'react';
 import { Comment } from '@/app/types';
 import CommentPopover from '../CommentPopover';
-import { fetchUserById, fetchCreatorName } from '../../services';
+import { fetchCreatorName } from '../../services';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,13 +15,18 @@ import { CommentThreadList } from './CommentThreadList';
 
 interface CommentSidebarProps {
   noteId: string;
+  isInstructor: boolean;
+  canComment: boolean;
   getCurrentSelection?: () => { from: number; to: number } | null;
 }
 
-export default function CommentSidebar({ noteId, getCurrentSelection }: CommentSidebarProps) {
+export default function CommentSidebar({
+  noteId,
+  isInstructor,
+  canComment,
+  getCurrentSelection,
+}: CommentSidebarProps) {
   const [showPopover, setShowPopover] = useState(false);
-  const [isInstructor, setIsInstructor] = useState(false);
-  const [canComment, setCanComment] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [commentDraft, setCommentDraft] = useState<string>('');
 
@@ -35,44 +40,6 @@ export default function CommentSidebar({ noteId, getCurrentSelection }: CommentS
   // TanStack Query for comments with automatic polling
   const { data: comments = [], refetch } = useComments(noteId);
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
-
-  // Determine whether current user is an instructor or a student
-  useEffect(() => {
-    const checkInstructor = async () => {
-      const uid = authUser?.uid;
-      if (!uid) return;
-
-      const roles = authUser?.roles;
-
-      // Fetch userData to check isInstructor flag
-      let userData = null;
-      try {
-        userData = await fetchUserById(uid);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-
-      // Check if user is an instructor (has administrator role OR isInstructor flag in userData)
-      const flag = !!roles?.administrator || !!userData?.isInstructor;
-      setIsInstructor(flag);
-
-      // Check if user is a student (has contributor role but not administrator)
-      const isStudentRole = !!roles?.contributor && !roles?.administrator;
-
-      // For students, verify they have a parentInstructorId
-      let isStudentInTeacherStudentModel = false;
-      if (isStudentRole && userData) {
-        isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
-      }
-
-      // Allow commenting for administrators, instructors, or students in teacher-student relationship
-      setCanComment(
-        !!uid &&
-          (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel),
-      );
-    };
-    checkInstructor();
-  }, [authUser]);
 
   // Helper to resolve author display name
   const resolveAuthorName = async (authorId: string, fallback: string): Promise<string> => {

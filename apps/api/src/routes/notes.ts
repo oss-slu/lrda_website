@@ -138,7 +138,7 @@ const ListNotesQuerySchema = z.object({
     .string()
     .transform(v => v === 'true')
     .optional(),
-  limit: z.string().transform(Number).default('20').pipe(z.number().int().positive().max(100)),
+  limit: z.string().transform(Number).default('20').pipe(z.number().int().positive().max(200)),
   offset: z.string().transform(Number).default('0').pipe(z.number().int().min(0)),
 });
 

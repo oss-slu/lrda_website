@@ -77,7 +77,14 @@ jest.mock('../lib/utils/api_service', () => ({
 
 describe('CommentSidebar - per-thread reply drafts', () => {
   test('typing in one thread reply does not mirror in another', async () => {
-    render(<CommentSidebar noteId={'n1'} getCurrentSelection={() => ({ from: 1, to: 2 })} />);
+    render(
+      <CommentSidebar
+        noteId={'n1'}
+        isInstructor={true}
+        canComment={true}
+        getCurrentSelection={() => ({ from: 1, to: 2 })}
+      />,
+    );
 
     const replyInputs = await screen.findAllByPlaceholderText(/reply/i);
     expect(replyInputs.length).toBeGreaterThanOrEqual(2);

@@ -8,7 +8,7 @@ import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService, fetchUserById } from '../services';
+import { notesService } from '../services';
 import { usePersonalNotes, useStudentNotes, notesKeys } from '../hooks/queries/useNotes';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -25,9 +25,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
-  const { user } = useAuthStore(
+  const { user, isInitialized } = useAuthStore(
     useShallow(state => ({
       user: state.user,
+      isInitialized: state.isInitialized,
     })),
   );
 
@@ -36,17 +37,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [showPublished, setShowPublished] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
-  const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
 
-  // TanStack Query for personal notes
+  // Derive instructor status synchronously from auth store data.
+  // Previously this used an async fetchUserById call which was fragile on
+  // page refresh (same race condition fixed in useNotePermissions).
+  const isInstructor = useMemo(() => {
+    if (!user) return false;
+    return !!user.roles?.administrator || !!user.isInstructor;
+  }, [user]);
+
+  // TanStack Query for personal notes.
+  // Gate on isInitialized so the API call doesn't fire before the session
+  // cookie is re-validated on page refresh. Without this, the API treats
+  // the user as anonymous and returns only published notes.
   const { data: personalNotes = [] } = usePersonalNotes(
-    viewMode === 'my' ? (user?.uid ?? null) : null,
+    viewMode === 'my' && isInitialized ? (user?.uid ?? null) : null,
   );
 
   // TanStack Query for student notes (instructor review mode) with automatic polling
   const { data: studentNotes = [] } = useStudentNotes(
-    user?.uid ?? null,
+    isInitialized ? (user?.uid ?? null) : null,
     isInstructor && viewMode === 'review',
   );
 
@@ -101,30 +112,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       setIsCreatingNote(false);
     }
   };
-
-  // Initialize instructor role
-  useEffect(() => {
-    const initRoleFlags = async () => {
-      if (!user?.uid) {
-        setIsInstructor(false);
-        return;
-      }
-
-      const roles = user.roles;
-      const userId = user.uid;
-
-      let userData = null;
-      try {
-        userData = await fetchUserById(userId);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-
-      const isInstr = !!roles?.administrator || !!userData?.isInstructor;
-      setIsInstructor(isInstr);
-    };
-    initRoleFlags();
-  }, [user]);
 
   // Reset to showing "Unreviewed" when switching to review mode
   useEffect(() => {

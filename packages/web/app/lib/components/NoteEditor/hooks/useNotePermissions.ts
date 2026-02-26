@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { fetchUserById } from '@/app/lib/services';
 import { Note } from '@/app/types';
 
 interface UseNotePermissionsResult {
@@ -21,65 +20,50 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
     })),
   );
 
-  const [instructorId, setInstructorId] = useState<string | null>(null);
-  const [isStudent, setIsStudent] = useState<boolean>(false);
-  const [isInstructorUser, setIsInstructorUser] = useState<boolean>(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [canComment, setCanComment] = useState<boolean>(false);
+  // Derive all permissions synchronously from auth store data.
+  // Previously this hook made an async fetchUserById call which was both
+  // redundant (auth store already has the data) and fragile (fails on
+  // refresh before the session cookie is re-validated by the API).
+  return useMemo(() => {
+    const uid = authUser?.uid ?? null;
+    const roles = authUser?.roles;
 
-  const isViewingStudentNote = useMemo(() => {
-    return !!(isInstructorUser && userId && note?.creator && note.creator !== userId);
-  }, [isInstructorUser, userId, note?.creator]);
+    if (!uid) {
+      return {
+        userId: null,
+        instructorId: null,
+        isStudent: false,
+        isInstructorUser: false,
+        isViewingStudentNote: false,
+        isStudentViewingOwnNote: false,
+        canComment: false,
+      };
+    }
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- note?.creator is the correct minimal dependency
-  const isStudentViewingOwnNote = useMemo(() => {
-    return !!(isStudent && userId && note?.creator && note.creator === userId);
-  }, [isStudent, userId, note?.creator]);
+    const isInstr = !!roles?.administrator || !!authUser?.isInstructor;
 
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      const roles = authUser?.roles;
-      const fetchedUserId = authUser?.uid;
+    const isStudentRole = !!roles?.contributor && !roles?.administrator;
+    const isStudentInTeacherStudentModel =
+      isStudentRole && !!authUser?.parentInstructorId;
 
-      if (!fetchedUserId) {
-        return;
-      }
+    const canCommentValue =
+      !!roles?.administrator || !!authUser?.isInstructor || isStudentInTeacherStudentModel;
 
-      let userData = null;
-      try {
-        userData = await fetchUserById(fetchedUserId);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
+    const isViewingStudentNote = !!(isInstr && note?.creator && note.creator !== uid);
+    const isStudentViewingOwnNote = !!(
+      isStudentInTeacherStudentModel &&
+      note?.creator &&
+      note.creator === uid
+    );
 
-      const isInstr = !!roles?.administrator || !!userData?.isInstructor;
-      setIsInstructorUser(isInstr);
-      const isStudentRole = !!roles?.contributor && !roles?.administrator;
-
-      let isStudentInTeacherStudentModel = false;
-      if (isStudentRole && userData) {
-        isStudentInTeacherStudentModel = !!userData?.parentInstructorId;
-      }
-
-      setIsStudent(isStudentInTeacherStudentModel);
-      setUserId(fetchedUserId);
-      setInstructorId(isInstr ? fetchedUserId : null);
-
-      const canCommentValue =
-        !!fetchedUserId &&
-        (!!roles?.administrator || !!userData?.isInstructor || isStudentInTeacherStudentModel);
-      setCanComment(canCommentValue);
+    return {
+      userId: uid,
+      instructorId: isInstr ? uid : null,
+      isStudent: isStudentInTeacherStudentModel,
+      isInstructorUser: isInstr,
+      isViewingStudentNote,
+      isStudentViewingOwnNote,
+      canComment: canCommentValue,
     };
-    fetchUserDetails();
-  }, [authUser, note?.id, note?.creator]);
-
-  return {
-    userId,
-    instructorId,
-    isStudent,
-    isInstructorUser,
-    isViewingStudentNote,
-    isStudentViewingOwnNote,
-    canComment,
-  };
+  }, [authUser, note?.creator]);
 };

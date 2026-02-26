@@ -65,8 +65,14 @@ export default function NoteEditor({
   const [isAnyPopupOpen, setIsAnyPopupOpen] = useState<boolean>(false);
 
   // Hooks
-  const { userId, instructorId, isViewingStudentNote, isStudentViewingOwnNote, canComment } =
-    useNotePermissions(noteState.note);
+  const {
+    userId,
+    instructorId,
+    isInstructorUser,
+    isViewingStudentNote,
+    isStudentViewingOwnNote,
+    canComment,
+  } = useNotePermissions(noteState.note);
 
   useNoteSync({
     noteState,
@@ -374,7 +380,12 @@ export default function NoteEditor({
           </ResizablePanel>
 
           {showCommentSidebar && (
-            <CommentSidebarPanel noteId={noteState.note?.id as string} rteRef={rteRef} />
+            <CommentSidebarPanel
+              noteId={noteState.note?.id as string}
+              rteRef={rteRef}
+              isInstructor={isInstructorUser}
+              canComment={canComment}
+            />
           )}
         </ResizablePanelGroup>
       </div>
