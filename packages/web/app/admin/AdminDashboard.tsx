@@ -9,6 +9,7 @@ import {
   rejectApplication,
 } from '@/app/lib/services';
 import type { AdminUserData, PendingApplication, AdminStats } from '@/app/lib/services';
+import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -359,17 +360,17 @@ export default function AdminDashboard({
                               <TableCell className='text-gray-500'>{u.email}</TableCell>
                               <TableCell>
                                 <div className='flex flex-wrap gap-1'>
-                                  {u.role === 'admin' && (
+                                  {isAdminUser(u) && (
                                     <Badge variant='default' className='bg-purple-600 text-xs'>
                                       Admin
                                     </Badge>
                                   )}
-                                  {u.isInstructor && (
+                                  {isInstructorUser(u) && (
                                     <Badge variant='default' className='bg-blue-600 text-xs'>
                                       Instructor
                                     </Badge>
                                   )}
-                                  {u.role !== 'admin' && !u.isInstructor && (
+                                  {!isAdminUser(u) && !isInstructorUser(u) && (
                                     <Badge variant='secondary' className='text-xs'>
                                       User
                                     </Badge>

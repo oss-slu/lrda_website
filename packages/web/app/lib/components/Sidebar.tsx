@@ -7,7 +7,7 @@ import NoteListView from './note_listview';
 import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
-import { isInstructorUser, isAdminUser } from '../stores/authHelpers';
+import { hasInstructorAccess } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { notesService } from '../services';
 import { usePersonalNotes, useStudentNotes, notesKeys } from '../hooks/queries/useNotes';
@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
 
-  const isInstructor = isInstructorUser(user) || isAdminUser(user);
+  const isInstructor = hasInstructorAccess(user);
 
   // TanStack Query for personal notes.
   // Gate on isInitialized so the API call doesn't fire before the session

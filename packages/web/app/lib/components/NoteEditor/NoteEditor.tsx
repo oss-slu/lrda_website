@@ -208,7 +208,6 @@ export default function NoteEditor({
 
   const handlePublishClick = async () => {
     const creatorId = noteState.note?.creator || authUser?.id;
-    const isStudentRole = authUser?.role !== 'admin';
 
     const updatedNote: any = {
       ...noteState.note,
@@ -224,7 +223,7 @@ export default function NoteEditor({
       uid: noteState.note?.uid ?? '',
       creator: creatorId || '',
       published: !noteState.isPublished,
-      approvalRequested: isStudentRole ? false : noteState.approvalRequested,
+      approvalRequested: !isInstructorUser ? false : noteState.approvalRequested,
     };
 
     try {

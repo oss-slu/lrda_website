@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
-import { isInstructorUser, isAdminUser } from '../lib/stores/authHelpers';
+import { hasInstructorAccess } from '../lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStudents, notesService } from '../lib/services';
@@ -20,7 +20,7 @@ const InstructorDashboardPage = () => {
     })),
   );
 
-  const isInstructor = isInstructorUser(authUser) || isAdminUser(authUser);
+  const isInstructor = hasInstructorAccess(authUser);
 
   // Fetch students assigned to this instructor
   const { data: students = [] } = useQuery({

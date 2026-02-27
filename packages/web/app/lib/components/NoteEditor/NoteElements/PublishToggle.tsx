@@ -2,8 +2,8 @@
 import React from 'react';
 import { UploadIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip';
-import { useAuthStore } from '../../../stores/authStore';
-import { isInstructorUser, isAdminUser } from '../../../stores/authHelpers';
+import { useAuthStore } from '@/app/lib/stores/authStore';
+import { hasInstructorAccess } from '@/app/lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 interface PublishToggleProps {
@@ -33,7 +33,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
     })),
   );
 
-  const isInstructor = isInstructorUser(authUser) || isAdminUser(authUser);
+  const isInstructor = hasInstructorAccess(authUser);
   const isStudent = !isInstructor;
 
   const handlePublishClick = () => {
@@ -90,10 +90,10 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
               onClick={handlePublishClick}
             >
               <UploadIcon
-                className={`h-4 w-4 ${isPublished ? 'text-green-500' : 'text-gray-700 group-hover:text-green-500'}`}
+                className={`h-4 w-4 ${iconClass}`}
               />
               <span
-                className={`${isPublished ? 'text-green-600' : 'text-gray-700 group-hover:text-green-600'}`}
+                className={iconClass}
               >
                 {labelText}
               </span>

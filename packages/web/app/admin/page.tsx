@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getServerUser, fetchFromAPI } from '@/app/lib/auth/server';
+import { isAdminUser } from '@/app/lib/stores/authHelpers';
 import type { AdminUserData, PendingApplication, AdminStats } from '@/app/lib/services';
 import AdminDashboard from './AdminDashboard';
 
 export default async function AdminPage() {
   const user = await getServerUser();
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !isAdminUser(user)) {
     redirect('/');
   }
 

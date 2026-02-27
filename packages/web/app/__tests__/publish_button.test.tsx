@@ -36,7 +36,7 @@ describe('PublishToggle Component', () => {
     );
     const publishButton = screen.getByText('Publish');
     expect(publishButton).toBeInTheDocument();
-    expect(publishButton).toHaveClass('text-gray-700');
+    expect(publishButton).toHaveClass('text-black');
   });
 
   it('renders as published when isPublished is true', () => {
@@ -45,7 +45,7 @@ describe('PublishToggle Component', () => {
     );
     const publishButton = screen.getByText('Unpublish');
     expect(publishButton).toBeInTheDocument();
-    expect(publishButton).toHaveClass('text-green-600');
+    expect(publishButton).toHaveClass('text-green-500');
   });
 
   it('calls onPublishClick when clicked', async () => {
@@ -63,12 +63,12 @@ describe('PublishToggle Component', () => {
       <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} onPublishClick={jest.fn()} />,
     );
     const button = screen.getByText('Publish');
-    expect(button).toHaveClass('text-gray-700');
+    expect(button).toHaveClass('text-black');
 
     rerender(
       <PublishToggle noteId='test-note' userId='mockUserId' isPublished={true} onPublishClick={jest.fn()} />,
     );
     const updatedButton = screen.getByText('Unpublish');
-    expect(updatedButton).toHaveClass('text-green-600');
+    expect(updatedButton).toHaveClass('text-green-500');
   });
 });

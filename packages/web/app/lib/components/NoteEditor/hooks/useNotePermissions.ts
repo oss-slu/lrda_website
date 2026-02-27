@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
-import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
+import { hasInstructorAccess } from '@/app/lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { Note } from '@/app/types';
 
@@ -35,8 +35,7 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
     }
 
     const userId = authUser.id;
-    const isAdmin = isAdminUser(authUser);
-    const isInstr = isAdmin || isInstructorUser(authUser);
+    const isInstr = hasInstructorAccess(authUser);
     const isStudentRole = !isInstr;
     const isStudentInTeacherStudentModel = isStudentRole && !!authUser.instructorId;
 
