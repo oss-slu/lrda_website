@@ -360,8 +360,8 @@ async function syncNotes(fullSync = false) {
         title: rerumNote.title || null,
         text: rerumNote.BodyText || rerumNote.text || '',
         creatorId,
-        latitude: rerumNote.latitude || null,
-        longitude: rerumNote.longitude || null,
+        latitude: rerumNote.latitude ? parseFloat(rerumNote.latitude) || null : null,
+        longitude: rerumNote.longitude ? parseFloat(rerumNote.longitude) || null : null,
         // Validate booleans - some RERUM data has corrupted values (e.g., React events stored as published)
         isPublished: rerumNote.published === true,
         approvalRequested: rerumNote.approvalRequested === true,

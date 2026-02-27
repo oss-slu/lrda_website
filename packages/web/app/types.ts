@@ -80,8 +80,8 @@ export type Note = {
   media: NoteMedia[];
   audio: AudioMedia[];
   creator: string;
-  latitude: string;
-  longitude: string;
+  latitude: number | null;
+  longitude: number | null;
   published: boolean | undefined;
   approvalRequested?: boolean | undefined;
   tags: Tag[];
@@ -100,8 +100,8 @@ export type newNote = {
   media: NoteMedia[];
   audio: AudioMedia[];
   creator: string;
-  latitude: string;
-  longitude: string;
+  latitude: number | null;
+  longitude: number | null;
   published: boolean | undefined;
   approvalRequested?: boolean | undefined;
   tags: Tag[];

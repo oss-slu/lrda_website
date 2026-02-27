@@ -75,8 +75,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         media: [],
         audio: [],
         creator: userId,
-        latitude: '',
-        longitude: '',
+        latitude: null,
+        longitude: null,
         published: false,
         tags: [],
       };

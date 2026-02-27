@@ -39,7 +39,7 @@ export default function NoteEditorToolbar({
       Title: ${noteState.title}
       Content: ${plainTextContent}
       Tags: ${noteState.tags.map(tag => tag.label).join(', ')}
-      Location: ${noteState.latitude}, ${noteState.longitude}
+      Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}
       Time: ${noteState.time}
     `;
 
@@ -58,7 +58,7 @@ export default function NoteEditorToolbar({
               }),
               new Paragraph(`Content: ${plainTextContent}`),
               new Paragraph(`Tags: ${noteState.tags.map(tag => tag.label).join(', ')}`),
-              new Paragraph(`Location: ${noteState.latitude}, ${noteState.longitude}`),
+              new Paragraph(`Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}`),
               new Paragraph(`Time: ${noteState.time}`),
             ],
           },

@@ -66,8 +66,8 @@ describe('LocationPicker', () => {
       <LocationPicker
         onLocationChange={mockOnLocationChange}
         disabled={true}
-        lat='40.7128'
-        long='-74.0060'
+        lat={40.7128}
+        long={-74.006}
       />,
     );
 

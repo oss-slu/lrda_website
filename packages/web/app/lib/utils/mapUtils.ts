@@ -18,9 +18,8 @@ export function filterNotesByMapBounds(
   const sw = bounds.getSouthWest();
 
   return notes.filter(note => {
-    const lat = parseFloat(note.latitude);
-    const lng = parseFloat(note.longitude);
-    return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
+    if (note.latitude == null || note.longitude == null) return false;
+    return note.latitude >= sw.lat() && note.latitude <= ne.lat() && note.longitude >= sw.lng() && note.longitude <= ne.lng();
   });
 }
 

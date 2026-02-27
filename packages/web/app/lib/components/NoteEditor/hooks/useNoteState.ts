@@ -15,8 +15,8 @@ const useNoteState = (initialNote: Note | undefined) => {
   );
   const [time, setTime] = useState<Date>(initialNote?.time || new Date());
   const [audio, setAudio] = useState<AudioMedia[]>(initialNote?.audio || []);
-  const [longitude, setLongitude] = useState<string>(initialNote?.longitude || '');
-  const [latitude, setLatitude] = useState<string>(initialNote?.latitude || '');
+  const [longitude, setLongitude] = useState<number | null>(initialNote?.longitude ?? null);
+  const [latitude, setLatitude] = useState<number | null>(initialNote?.latitude ?? null);
   const [tags, setTags] = useState<Tag[]>(initialNote?.tags || []);
   const [isPublished, setIsPublished] = useState<boolean>(initialNote?.published || false);
   const [approvalRequested, setApprovalRequested] = useState<boolean>(

@@ -86,8 +86,8 @@ export const useNoteSync = ({
         initialNote.media.filter((item): item is PhotoMedia => item.type === 'image'),
       );
       handlers.setTime(initialNote.time || new Date());
-      handlers.setLongitude(initialNote.longitude || '');
-      handlers.setLatitude(initialNote.latitude || '');
+      handlers.setLongitude(initialNote.longitude ?? null);
+      handlers.setLatitude(initialNote.latitude ?? null);
       handlers.setTags(
         (initialNote.tags || []).map(tag =>
           typeof tag === 'string' ? { label: tag, origin: 'user' } : tag,

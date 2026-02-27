@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, numeric, jsonb, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, doublePrecision, jsonb, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { Tag, Comment as CommentType } from './types';
 
@@ -115,8 +115,8 @@ export const note = pgTable('note', {
   creatorId: text('creator_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
-  latitude: numeric('latitude', { precision: 10, scale: 8 }),
-  longitude: numeric('longitude', { precision: 11, scale: 8 }),
+  latitude: doublePrecision('latitude'),
+  longitude: doublePrecision('longitude'),
   isPublished: boolean('is_published').notNull().default(false),
   approvalRequested: boolean('approval_requested').notNull().default(false),
   tags: jsonb('tags').$type<Tag[]>().default([]),

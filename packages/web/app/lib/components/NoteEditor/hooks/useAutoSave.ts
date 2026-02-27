@@ -17,8 +17,8 @@ interface LastSavedSnapshot {
   tags: any[];
   published: boolean;
   approvalRequested?: boolean;
-  latitude?: string;
-  longitude?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   mediaFingerprint: string;
   audioFingerprint: string;
 }

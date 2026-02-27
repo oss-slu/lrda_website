@@ -152,7 +152,7 @@ export function useMapMarkers({
       );
 
       const popup = new Popup(
-        new google.maps.LatLng(parseFloat(note.latitude), parseFloat(note.longitude)),
+        new google.maps.LatLng(note.latitude!, note.longitude!),
         popupContent,
         isClick,
       );
@@ -211,15 +211,12 @@ export function useMapMarkers({
 
     // Create markers for each note
     filteredNotes.forEach(note => {
-      const lat = parseFloat(note.latitude);
-      const lng = parseFloat(note.longitude);
-
-      if (isNaN(lat) || isNaN(lng)) {
-        console.warn(`Skipping note ${note.id}: invalid coordinates`, note);
+      if (note.latitude == null || note.longitude == null) {
+        console.warn(`Skipping note ${note.id}: missing coordinates`, note);
         return;
       }
 
-      const position = new google.maps.LatLng(lat, lng);
+      const position = new google.maps.LatLng(note.latitude, note.longitude);
       const iconNode = createMarkerIcon();
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position,

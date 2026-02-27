@@ -78,14 +78,11 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
 
     const fetchLocation = async () => {
       const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
-      if (note.latitude && note.longitude && MAPS_API_KEY) {
-        const lat = parseFloat(note.latitude.toString());
-        const lng = parseFloat(note.longitude.toString());
-
-        const loc = await getCachedLocation(lat, lng, MAPS_API_KEY);
+      if (note.latitude != null && note.longitude != null && MAPS_API_KEY) {
+        const loc = await getCachedLocation(note.latitude, note.longitude, MAPS_API_KEY);
         setLocation(loc || 'Unknown Location');
       } else {
-        setLocation(note.latitude && note.longitude ? 'Unknown Location' : '');
+        setLocation(note.latitude != null && note.longitude != null ? 'Unknown Location' : '');
       }
     };
 

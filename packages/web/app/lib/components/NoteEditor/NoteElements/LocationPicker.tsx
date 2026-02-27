@@ -6,8 +6,8 @@ import { useGoogleMaps } from '@/app/lib/utils/GoogleMapsContext';
 import { getCachedLocation } from '@/app/lib/utils/location_cache';
 
 interface LocationPickerProps {
-  long?: string;
-  lat?: string;
+  long?: number | null;
+  lat?: number | null;
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
   disabled?: boolean; // Whether the location picker is disabled (read-only)
 }
@@ -18,9 +18,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   onLocationChange,
   disabled = false,
 }) => {
-  // Use lazy initializer to parse props on first render
-  const [longitude, setLongitude] = useState<number>(() => (long ? parseFloat(long) : 0) || 0);
-  const [latitude, setLatitude] = useState<number>(() => (lat ? parseFloat(lat) : 0) || 0);
+  // Use lazy initializer from props on first render
+  const [longitude, setLongitude] = useState<number>(() => long ?? 0);
+  const [latitude, setLatitude] = useState<number>(() => lat ?? 0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [locationName, setLocationName] = useState<string>(''); // City name from reverse geocoding
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -47,15 +47,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Sync when lat/long props change from parent (e.g., loading different note)
   useEffect(() => {
-    if (lat && long) {
-      const parsedLat = parseFloat(lat);
-      const parsedLong = parseFloat(long);
-
-      if (!isNaN(parsedLat) && !isNaN(parsedLong)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from props
-        setLatitude(prev => (prev !== parsedLat ? parsedLat : prev));
-        setLongitude(prev => (prev !== parsedLong ? parsedLong : prev));
-      }
+    if (lat != null && long != null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from props
+      setLatitude(prev => (prev !== lat ? lat : prev));
+      setLongitude(prev => (prev !== long ? long : prev));
     }
   }, [lat, long]);
 

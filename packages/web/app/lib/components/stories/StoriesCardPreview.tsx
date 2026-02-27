@@ -91,11 +91,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
   const isValidImageUrl =
     coverImage && !coverImage.startsWith('blob:') && !coverImage.startsWith('data:');
 
-  const hasValidCoordinates =
-    note.latitude &&
-    note.longitude &&
-    !isNaN(Number(note.latitude)) &&
-    !isNaN(Number(note.longitude));
+  const hasValidCoordinates = note.latitude != null && note.longitude != null;
 
   // Normalize and parse tags
   const normalizedTags = normalizeTags(note.tags);
@@ -116,7 +112,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
     if (hasValidCoordinates) {
       const apiKey = process.env.NEXT_PUBLIC_MAP_KEY;
       if (apiKey) {
-        getCachedLocation(Number(note.latitude), Number(note.longitude), apiKey)
+        getCachedLocation(note.latitude!, note.longitude!, apiKey)
           .then(loc => setLocation(loc))
           .catch(() => setLocation('Location unavailable'));
       }

@@ -38,8 +38,8 @@ export interface CreateNotePayload {
   title: string;
   text: string;
   creator: string;
-  latitude?: string;
-  longitude?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   media?: NoteMedia[];
   audio?: AudioMedia[];
   published?: boolean;

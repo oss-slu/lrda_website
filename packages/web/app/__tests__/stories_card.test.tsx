@@ -20,8 +20,8 @@ const mockNote: Note = {
     { label: 'important', origin: 'user' },
     { label: 'work', origin: 'user' },
   ] as Tag[],
-  latitude: '37.7749',
-  longitude: '-122.4194',
+  latitude: 37.7749,
+  longitude: -122.4194,
   published: true,
   uid: '123',
   media: [

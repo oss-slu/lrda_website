@@ -58,11 +58,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const noteText = String(note.text || (note as any).BodyText || '');
-  const hasValidCoordinates =
-    note.latitude &&
-    note.longitude &&
-    !isNaN(Number(note.latitude)) &&
-    !isNaN(Number(note.longitude));
+  const hasValidCoordinates = note.latitude != null && note.longitude != null;
   const tags: Tag[] = convertOldTags(note.tags);
 
   // Fetch creator name
@@ -79,7 +75,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     if (hasValidCoordinates) {
       const apiKey = process.env.NEXT_PUBLIC_MAP_KEY;
       if (apiKey) {
-        getCachedLocation(Number(note.latitude), Number(note.longitude), apiKey)
+        getCachedLocation(note.latitude!, note.longitude!, apiKey)
           .then(loc => setLocation(loc))
           .catch(() => setLocation('Location unavailable'));
       }

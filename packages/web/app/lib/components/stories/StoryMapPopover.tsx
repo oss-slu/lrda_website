@@ -6,8 +6,8 @@ import { MapPin } from 'lucide-react';
 
 interface StoryMapPopoverProps {
   location: string;
-  latitude: string | null | undefined;
-  longitude: string | null | undefined;
+  latitude: number | null | undefined;
+  longitude: number | null | undefined;
   children?: React.ReactNode;
   className?: string;
   triggerClassName?: string;
@@ -26,10 +26,9 @@ export const StoryMapPopover: React.FC<StoryMapPopoverProps> = ({
   const markerRef = useRef<any>(null);
   const { isMapsApiLoaded } = useGoogleMaps();
 
-  const hasValidCoordinates =
-    latitude && longitude && !isNaN(Number(latitude)) && !isNaN(Number(longitude));
-  const noteLat = hasValidCoordinates ? Number(latitude) : null;
-  const noteLng = hasValidCoordinates ? Number(longitude) : null;
+  const hasValidCoordinates = latitude != null && longitude != null;
+  const noteLat = hasValidCoordinates ? latitude : null;
+  const noteLng = hasValidCoordinates ? longitude : null;
 
   // Set up marker when map loads
   useEffect(() => {

@@ -131,10 +131,8 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
   const handleNoteSelection = useCallback(
     (note: CombinedResult) => {
       if (note.type === 'note') {
-        const lat = parseFloat(note.latitude);
-        const lng = parseFloat(note.longitude);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          onSearch(note.title, lat, lng, true);
+        if (note.latitude != null && note.longitude != null) {
+          onSearch(note.title, note.latitude, note.longitude, true);
           setSearchText(note.title);
           setIsDropdownVisible(false);
         }

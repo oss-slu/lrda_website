@@ -12,13 +12,13 @@ export const handleTitleChange = (
 };
 
 export const handleLocationChange = (
-  setLongitude: React.Dispatch<React.SetStateAction<string>>,
-  setLatitude: React.Dispatch<React.SetStateAction<string>>,
+  setLongitude: React.Dispatch<React.SetStateAction<number | null>>,
+  setLatitude: React.Dispatch<React.SetStateAction<number | null>>,
   newLongitude: number,
   newLatitude: number,
 ) => {
-  setLatitude(newLatitude.toString());
-  setLongitude(newLongitude.toString());
+  setLatitude(newLatitude);
+  setLongitude(newLongitude);
 };
 
 export const handleTimeChange = (

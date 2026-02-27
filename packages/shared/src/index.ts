@@ -4,8 +4,8 @@ import type { z } from 'zod';
 export * from './schemas';
 
 // -- Inferred types from schemas --
-// These are auto-derived from the Zod schemas above.
-// Do NOT define these manually -- add fields to the schema instead.
+// Do NOT define these manually. 
+// These are auto-derived from the imported Zod schemas above.
 
 import type {
   TagSchema,

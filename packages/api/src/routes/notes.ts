@@ -227,12 +227,12 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       conditions.push(eq(note.approvalRequested, query.approvalRequested));
     }
     if (query.minLat !== undefined && query.maxLat !== undefined) {
-      conditions.push(gte(note.latitude, query.minLat.toString()));
-      conditions.push(lte(note.latitude, query.maxLat.toString()));
+      conditions.push(gte(note.latitude, query.minLat));
+      conditions.push(lte(note.latitude, query.maxLat));
     }
     if (query.minLng !== undefined && query.maxLng !== undefined) {
-      conditions.push(gte(note.longitude, query.minLng.toString()));
-      conditions.push(lte(note.longitude, query.maxLng.toString()));
+      conditions.push(gte(note.longitude, query.minLng));
+      conditions.push(lte(note.longitude, query.maxLng));
     }
 
     // Handle search - search in title and text (not tags due to JSONB complexity)
@@ -301,8 +301,8 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
         title: body.title || null,
         text: body.text,
         creatorId: authUser.id,
-        latitude: body.latitude || null,
-        longitude: body.longitude || null,
+        latitude: body.latitude ?? null,
+        longitude: body.longitude ?? null,
         isPublished: body.isPublished,
         approvalRequested: body.approvalRequested,
         tags: body.tags || [],
