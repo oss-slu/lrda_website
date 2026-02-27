@@ -7,11 +7,8 @@
  * import { notesService, usersService } from '@/app/lib/services';
  */
 
-// Base clients
-export { HttpClient } from './base/http-client';
-export type { HttpClientConfig, ApiResponse, ApiError } from './base/http-client';
-
-export { RestClient, restClient, API_URL } from './base/rest-client';
+// API client
+export { fetchWithAuth, buildQueryString, API_URL } from './api';
 
 // Notes service
 export { notesService, NotesService } from './notes/notes.service';
@@ -83,5 +80,3 @@ export {
 } from './admin/admin.service';
 export type { AdminUserData, PendingApplication, AdminStats } from './admin/admin.service';
 
-// API utilities
-export { fetchWithAuth } from './api';

@@ -7,10 +7,10 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-import { Media } from '../models/media_class';
+import type { AnyMedia } from '../models/media_class';
 import ReactPlayer from 'react-player';
 
-export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
+export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) {
   return (
     <Carousel className='flex h-auto w-full items-center justify-center'>
       <CarouselContent>

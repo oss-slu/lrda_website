@@ -9,11 +9,11 @@ import {
 import { type CarouselApi } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 
-import { VideoType, PhotoType, Media } from '../models/media_class';
+import type { NoteMedia } from '../models/media_class';
 import Image from 'next/image';
 import ReactPlayer from 'react-player';
 
-export default function CompactCarousel({ mediaArray }: { mediaArray: Media[] }) {
+export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[] }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);

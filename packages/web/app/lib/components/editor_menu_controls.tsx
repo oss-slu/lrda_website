@@ -35,7 +35,7 @@ import {
 import { uploadMedia } from '../utils/s3_proxy';
 
 type EditorMenuControlsProps = {
-  onMediaUpload: (media: { type: string; uri: string }) => void;
+  onMediaUpload: (media: { type: 'image' | 'video' | 'audio'; uri: string }) => void;
 };
 
 export default function EditorMenuControls({ onMediaUpload }: EditorMenuControlsProps) {
@@ -46,7 +46,7 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
   // Unified upload handler
   async function handleFileUpload(file: File) {
     const fileType = file.type;
-    let mediaType = 'image';
+    let mediaType: 'image' | 'video' | 'audio' = 'image';
 
     if (fileType.startsWith('video/')) {
       mediaType = 'video';

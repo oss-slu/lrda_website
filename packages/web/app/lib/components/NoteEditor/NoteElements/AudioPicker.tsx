@@ -12,14 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AudioType } from '@/app/lib/models/media_class';
+import type { AudioMedia } from '@/app/lib/models/media_class';
 import { Input } from '@/components/ui/input';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadAudio } from '@/app/lib/utils/s3_proxy';
 
 type AudioPickerProps = {
-  audioArray: AudioType[];
-  setAudio?: React.Dispatch<React.SetStateAction<AudioType[]>>;
+  audioArray: AudioMedia[];
+  setAudio?: React.Dispatch<React.SetStateAction<AudioMedia[]>>;
   editable?: boolean;
 };
 
@@ -82,14 +82,13 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
     try {
       const location = await uploadAudio(file);
       if (location !== 'error') {
-        const newAudio = new AudioType({
+        const newAudio: AudioMedia = {
           type: 'audio',
           uuid: uuidv4(),
           uri: location,
           name: file.name,
-          isPlaying: false,
-          duration: '0:00', // Placeholder duration, as duration extraction isn't implemented
-        });
+          duration: '0:00',
+        };
 
         toast('Status Update', {
           description: 'Audio upload success!',

@@ -8,7 +8,7 @@ import TagManager from './NoteElements/TagManager';
 import EditorMenuControls from '../editor_menu_controls';
 import useExtensions from '@/app/lib/utils/use_extensions';
 import { tagsService } from '@/app/lib/services';
-import { PhotoType, VideoType, AudioType } from '@/app/lib/models/media_class';
+import type { PhotoMedia, VideoMedia, AudioMedia } from '@/app/lib/models/media_class';
 import CommentBubble from '../CommentBubble';
 import { handleTagsChange, handleEditorChange } from './handlers/noteHandlers';
 import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';
@@ -65,7 +65,7 @@ export default function NoteEditorContent({
     }
   };
 
-  const handleMediaUpload = (media: { type: string; uri: string }) => {
+  const handleMediaUpload = (media: { type: 'image' | 'video' | 'audio'; uri: string }) => {
     const editor = rteRef.current?.editor;
 
     if (media.type === 'image') {
@@ -87,22 +87,16 @@ export default function NoteEditorContent({
         editor.chain().focus().setImage(newImage.attrs).run();
       }
 
-      noteHandlers.setImages(prevImages => [
-        ...prevImages,
-        new PhotoType({
-          uuid: uuidv4(),
-          uri: media.uri,
-          type: 'image',
-        }),
-      ]);
+      const photo: PhotoMedia = { type: 'image', uuid: uuidv4(), uri: media.uri };
+      noteHandlers.setImages(prevImages => [...prevImages, photo]);
     } else if (media.type === 'video') {
-      const newVideo = new VideoType({
+      const newVideo: VideoMedia = {
+        type: 'video',
         uuid: uuidv4(),
         uri: media.uri,
-        type: 'video',
         thumbnail: '',
         duration: '0:00',
-      });
+      };
 
       noteHandlers.setVideos(prevVideos => [...prevVideos, newVideo]);
 
@@ -130,14 +124,13 @@ export default function NoteEditorContent({
           .run();
       }
     } else if (media.type === 'audio') {
-      const newAudio = new AudioType({
+      const newAudio: AudioMedia = {
+        type: 'audio',
         uuid: uuidv4(),
         uri: media.uri,
-        type: 'audio',
         duration: '0:00',
         name: `Audio Note ${noteState.audio.length + 1}`,
-        isPlaying: false,
-      });
+      };
 
       noteHandlers.setAudio(prevAudio => [...prevAudio, newAudio]);
     }

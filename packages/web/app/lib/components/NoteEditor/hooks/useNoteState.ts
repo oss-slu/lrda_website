@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Note, Tag } from '@/app/types';
-import { AudioType, VideoType, PhotoType } from '@/app/lib/models/media_class';
+import type { AudioMedia, VideoMedia, PhotoMedia } from '@/app/lib/models/media_class';
 
 const useNoteState = (initialNote: Note | undefined) => {
   const [note, setNote] = useState<Note | undefined>(initialNote);
   const [editorContent, setEditorContent] = useState<string>(initialNote?.text || '');
   const [title, setTitle] = useState<string>(initialNote?.title || '');
   const initialMedia = initialNote?.media || [];
-  const [images, setImages] = useState<PhotoType[]>(
-    initialMedia.filter(item => item.getType() === 'image') as PhotoType[],
+  const [images, setImages] = useState<PhotoMedia[]>(
+    initialMedia.filter((item): item is PhotoMedia => item.type === 'image'),
   );
-  const [videos, setVideos] = useState<VideoType[]>(
-    initialMedia.filter(item => item.getType() === 'video') as VideoType[],
+  const [videos, setVideos] = useState<VideoMedia[]>(
+    initialMedia.filter((item): item is VideoMedia => item.type === 'video'),
   );
   const [time, setTime] = useState<Date>(initialNote?.time || new Date());
-  const [audio, setAudio] = useState<AudioType[]>(initialNote?.audio || []);
+  const [audio, setAudio] = useState<AudioMedia[]>(initialNote?.audio || []);
   const [longitude, setLongitude] = useState<string>(initialNote?.longitude || '');
   const [latitude, setLatitude] = useState<string>(initialNote?.latitude || '');
   const [tags, setTags] = useState<Tag[]>(initialNote?.tags || []);

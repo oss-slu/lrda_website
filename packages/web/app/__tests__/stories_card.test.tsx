@@ -4,7 +4,7 @@ import { render, screen, waitFor, within, fireEvent, cleanup, act } from '@testi
 import moxios from 'moxios';
 import EnhancedNoteCard from '../lib/components/stories_card';
 import { Note, Tag } from '@/app/types';
-import { PhotoType, AudioType } from '../lib/models/media_class';
+import type { PhotoMedia, AudioMedia } from '../lib/models/media_class';
 
 // Mock the environment variable for the Google Maps API key
 process.env.NEXT_PUBLIC_MAP_KEY = 'test_api_key';
@@ -25,17 +25,16 @@ const mockNote: Note = {
   published: true,
   uid: '123',
   media: [
-    new PhotoType({ uuid: 'test-uuid', type: 'image', uri: 'https://example.com/image.jpg' }),
+    { type: 'image', uuid: 'test-uuid', uri: 'https://example.com/image.jpg' } satisfies PhotoMedia,
   ],
   audio: [
-    new AudioType({
-      uuid: 'test-uuid',
+    {
       type: 'audio',
+      uuid: 'test-uuid',
       uri: 'https://example.com/audio.mp3',
       name: 'Test Audio',
       duration: '0',
-      isPlaying: false,
-    }),
+    } satisfies AudioMedia,
   ],
 };
 

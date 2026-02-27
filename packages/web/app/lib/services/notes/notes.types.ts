@@ -7,7 +7,7 @@
  */
 
 import type { Tag } from '@lrda/shared';
-import type { VideoType, PhotoType, AudioType } from '@/app/lib/models/media_class';
+import type { NoteMedia, AudioMedia } from '@/app/lib/models/media_class';
 
 // Re-export shared API types so existing imports keep working
 export type { NoteResponse as ApiNoteData, MediaResponse as ApiMediaData, AudioResponse as ApiAudioData } from '@lrda/shared';
@@ -40,8 +40,8 @@ export interface CreateNotePayload {
   creator: string;
   latitude?: string;
   longitude?: string;
-  media?: (VideoType | PhotoType)[];
-  audio?: AudioType[];
+  media?: NoteMedia[];
+  audio?: AudioMedia[];
   published?: boolean;
   tags?: Tag[];
   time?: Date;

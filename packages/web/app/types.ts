@@ -1,15 +1,10 @@
 import type { CommentData } from './lib/services/comments/comments.types';
 import type { Tag, CommentPosition } from '@lrda/shared';
-import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
+import type { NoteMedia, AudioMedia } from './lib/models/media_class';
 
 // Re-export shared types so existing imports from '@/app/types' keep working
 export type { Tag, CommentPosition };
 
-export type MediaData = {
-  uuid: string;
-  type: string;
-  uri: string;
-};
 
 export type Comment = CommentData;
 
@@ -52,8 +47,8 @@ export type Note = {
   title: string;
   text: string;
   time: Date;
-  media: (VideoType | PhotoType)[];
-  audio: AudioType[];
+  media: NoteMedia[];
+  audio: AudioMedia[];
   creator: string;
   latitude: string;
   longitude: string;
@@ -72,8 +67,8 @@ export type newNote = {
   title: string;
   text: string;
   time: Date;
-  media: (VideoType | PhotoType)[];
-  audio: AudioType[];
+  media: NoteMedia[];
+  audio: AudioMedia[];
   creator: string;
   latitude: string;
   longitude: string;

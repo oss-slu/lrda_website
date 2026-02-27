@@ -2,7 +2,7 @@ import { useEffect, useRef, useMemo, RefObject, MutableRefObject } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { usePersonalNotes } from '@/app/lib/hooks/queries/useNotes';
 import { Note, newNote } from '@/app/types';
-import { PhotoType, VideoType } from '@/app/lib/models/media_class';
+import type { PhotoMedia, VideoMedia } from '@/app/lib/models/media_class';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
 import type { RichTextEditorRef } from 'mui-tiptap';
 
@@ -83,7 +83,7 @@ export const useNoteSync = ({
       handlers.setEditorContent(initialNote.text || '');
       handlers.setTitle(initialNote.title || '');
       handlers.setImages(
-        (initialNote.media.filter(item => item.getType() === 'image') as PhotoType[]) || [],
+        initialNote.media.filter((item): item is PhotoMedia => item.type === 'image'),
       );
       handlers.setTime(initialNote.time || new Date());
       handlers.setLongitude(initialNote.longitude || '');
@@ -98,7 +98,7 @@ export const useNoteSync = ({
       handlers.setApprovalRequested(initialNote.approvalRequested || false);
       handlers.setCounter(prevCounter => prevCounter + 1);
       handlers.setVideos(
-        (initialNote.media.filter(item => item.getType() === 'video') as VideoType[]) || [],
+        initialNote.media.filter((item): item is VideoMedia => item.type === 'video'),
       );
 
       lastSyncedNoteRef.current = '';
@@ -179,11 +179,11 @@ export const useNoteSync = ({
         }
 
         const storeImages = (storeNote.media || []).filter(
-          (item: any) => item.getType?.() === 'image',
-        ) as PhotoType[];
+          (item): item is PhotoMedia => item.type === 'image',
+        );
         const storeVideos = (storeNote.media || []).filter(
-          (item: any) => item.getType?.() === 'video',
-        ) as VideoType[];
+          (item): item is VideoMedia => item.type === 'video',
+        );
         if (JSON.stringify(storeImages) !== JSON.stringify(images)) {
           handlers.setImages(storeImages);
         }

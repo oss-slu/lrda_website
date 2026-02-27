@@ -6,8 +6,8 @@
  */
 
 import type { Note } from '@/app/types';
-import { restClient } from '../base/rest-client';
-import { VideoType, PhotoType, AudioType } from '@/app/lib/models/media_class';
+import { fetchWithAuth, buildQueryString } from '../api';
+import type { VideoMedia, PhotoMedia, AudioMedia } from '@/app/lib/models/media_class';
 import type {
   NoteQueryOptions,
   CreateNotePayload,
@@ -41,9 +41,9 @@ class NotesService {
       params.sort = sort;
     }
 
-    const queryString = restClient.buildQueryString(params);
-    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
-    return response.data.map(this.transformApiNote);
+    const qs = buildQueryString(params);
+    const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
+    return (data ?? []).map(this.transformApiNote);
   }
 
   /**
@@ -73,25 +73,19 @@ class NotesService {
    * This makes a single request that fetches all student notes in one DB query.
    */
   async fetchByStudents(instructorId: string): Promise<Note[]> {
-    const response = await restClient.get<ApiNoteData[]>(
+    const data = await fetchWithAuth<ApiNoteData[]>(
       `/api/notes/students/${instructorId}?approvalRequested=true`,
     );
-    return response.data.map(this.transformApiNote);
+    return (data ?? []).map(this.transformApiNote);
   }
 
   /**
    * Fetch notes for a specific user.
    */
   async fetchUserNotes(userId: string, limit = 150, skip = 0): Promise<Note[]> {
-    const params = {
-      creatorId: userId,
-      limit,
-      offset: skip,
-    };
-
-    const queryString = restClient.buildQueryString(params);
-    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
-    return response.data.map(this.transformApiNote);
+    const qs = buildQueryString({ creatorId: userId, limit, offset: skip });
+    const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
+    return (data ?? []).map(this.transformApiNote);
   }
 
   /**
@@ -99,15 +93,10 @@ class NotesService {
    */
   async create(note: CreateNotePayload): Promise<ApiNoteData> {
     const payload = this.transformNoteToApi(note);
-    const response = await restClient.post<ApiNoteData>('/api/notes', payload);
-
-    if (!response.ok) {
-      const error = new Error(`Failed to create note: ${response.status}`);
-      console.error('[NotesService] Create failed:', response.data);
-      throw error;
-    }
-
-    return response.data;
+    return fetchWithAuth<ApiNoteData>('/api/notes', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   }
 
   /**
@@ -115,29 +104,17 @@ class NotesService {
    */
   async update(note: Note): Promise<ApiNoteData> {
     const payload = this.transformNoteToApi(note);
-    const response = await restClient.patch<ApiNoteData>(`/api/notes/${note.id}`, payload);
-
-    if (!response.ok) {
-      const error = new Error(`Failed to update note: ${response.status}`);
-      console.error('[NotesService] Update failed:', response.data);
-      throw error;
-    }
-
-    return response.data;
+    return fetchWithAuth<ApiNoteData>(`/api/notes/${note.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
   }
 
   /**
    * Delete a note.
    */
   async delete(id: string): Promise<boolean> {
-    const response = await restClient.delete<void>(`/api/notes/${id}`);
-
-    if (!response.ok && response.status !== 204) {
-      const error = new Error(`Failed to delete note: ${response.status}`);
-      console.error('[NotesService] Delete failed:', response.data);
-      throw error;
-    }
-
+    await fetchWithAuth<void>(`/api/notes/${id}`, { method: 'DELETE' });
     return true;
   }
 
@@ -145,15 +122,9 @@ class NotesService {
    * Query notes with custom parameters.
    */
   async query(queryObj: Record<string, unknown>, limit = 150, skip = 0): Promise<Note[]> {
-    const params = {
-      ...queryObj,
-      limit,
-      offset: skip,
-    };
-
-    const queryString = restClient.buildQueryString(params);
-    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
-    return response.data.map(this.transformApiNote);
+    const qs = buildQueryString({ ...queryObj, limit, offset: skip });
+    const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
+    return (data ?? []).map(this.transformApiNote);
   }
 
   /**
@@ -175,42 +146,39 @@ class NotesService {
       params.published = true;
     }
 
-    const queryString = restClient.buildQueryString(params);
-    const response = await restClient.get<ApiNoteData[]>(`/api/notes${queryString}`);
-    return response.data.map(this.transformApiNote);
+    const qs = buildQueryString(params);
+    const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
+    return (data ?? []).map(this.transformApiNote);
   }
 
   /**
    * Transform API note data to internal Note format.
    */
   private transformApiNote = (data: ApiNoteData): Note => {
-    const transformedMedia = (data.media || []).map((m: ApiMediaData) => {
+    const transformedMedia = (data.media || []).map((m: ApiMediaData): VideoMedia | PhotoMedia => {
       if (m.type === 'video') {
-        return new VideoType({
+        return {
+          type: 'video',
           uuid: m.uuid || m.id,
           uri: m.uri,
-          type: 'video',
           thumbnail: m.thumbnailUri || '',
           duration: '',
-        });
+        };
       }
-      return new PhotoType({
+      return {
+        type: 'image',
         uuid: m.uuid || m.id,
         uri: m.uri,
-        type: 'image',
-      });
+      };
     });
 
-    const transformedAudio = (data.audio || []).map((a: ApiAudioData) => {
-      return new AudioType({
-        uuid: a.uuid || a.id,
-        uri: a.uri,
-        type: 'audio',
-        duration: a.duration || '',
-        name: a.name || '',
-        isPlaying: false,
-      });
-    });
+    const transformedAudio: AudioMedia[] = (data.audio || []).map((a: ApiAudioData) => ({
+      type: 'audio' as const,
+      uuid: a.uuid || a.id,
+      uri: a.uri,
+      duration: a.duration || '',
+      name: a.name || '',
+    }));
 
     return {
       id: data.id,
@@ -245,7 +213,7 @@ class NotesService {
       media: note.media?.map(m => ({
         type: m.type,
         uri: m.uri,
-        thumbnailUri: (m as any).thumbnail,
+        thumbnailUri: m.type === 'video' ? m.thumbnail : undefined,
         uuid: m.uuid,
       })),
       audio: note.audio?.map(a => ({

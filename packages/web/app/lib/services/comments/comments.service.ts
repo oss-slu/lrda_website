@@ -5,7 +5,7 @@
  * Uses the REST API backend (Hono/PostgreSQL).
  */
 
-import { restClient } from '../base/rest-client';
+import { fetchWithAuth } from '../api';
 import type { CommentData, ApiCommentData, ResolveThreadResult } from './comments.types';
 
 class CommentsService {
@@ -14,8 +14,8 @@ class CommentsService {
    */
   async fetchForNote(noteId: string): Promise<CommentData[]> {
     try {
-      const response = await restClient.get<ApiCommentData[]>(`/api/comments/note/${noteId}`);
-      return response.data.map(this.transformComment);
+      const data = await fetchWithAuth<ApiCommentData[]>(`/api/comments/note/${noteId}`);
+      return (data ?? []).map(this.transformComment);
     } catch (error) {
       console.error('Error fetching comments:', error);
       return [];
@@ -27,45 +27,34 @@ class CommentsService {
    * Accepts the app's Comment type for compatibility.
    */
   async create(comment: CommentData): Promise<ApiCommentData> {
-    const payload = {
-      noteId: comment.noteId,
-      text: comment.text,
-      position: comment.position || null,
-      threadId: comment.threadId || null,
-      parentId: comment.parentId || null,
-    };
-
-    const response = await restClient.post<ApiCommentData>('/api/comments', payload);
-
-    if (!response.ok) {
-      throw new Error('Failed to create comment');
-    }
-
-    return response.data;
+    return fetchWithAuth<ApiCommentData>('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify({
+        noteId: comment.noteId,
+        text: comment.text,
+        position: comment.position || null,
+        threadId: comment.threadId || null,
+        parentId: comment.parentId || null,
+      }),
+    });
   }
 
   /**
    * Resolve all comments in a thread.
    */
   async resolveThread(threadId: string): Promise<ResolveThreadResult> {
-    const response = await restClient.post<ResolveThreadResult>(
+    return fetchWithAuth<ResolveThreadResult>(
       `/api/comments/thread/${threadId}/resolve`,
-      {},
+      { method: 'POST' },
     );
-
-    if (!response.ok) {
-      throw new Error('Failed to resolve thread');
-    }
-
-    return response.data;
   }
 
   /**
    * Delete a comment (hard delete).
    */
   async delete(commentId: string): Promise<boolean> {
-    const response = await restClient.delete<void>(`/api/comments/${commentId}`);
-    return response.status === 204 || response.ok;
+    await fetchWithAuth<void>(`/api/comments/${commentId}`, { method: 'DELETE' });
+    return true;
   }
 
   /**
@@ -84,13 +73,10 @@ class CommentsService {
     if (updates.text !== undefined) payload.text = updates.text;
     if (updates.resolved !== undefined) payload.isResolved = updates.resolved;
 
-    const response = await restClient.patch<ApiCommentData>(`/api/comments/${commentId}`, payload);
-
-    if (!response.ok) {
-      throw new Error('Failed to update comment');
-    }
-
-    return response.data;
+    return fetchWithAuth<ApiCommentData>(`/api/comments/${commentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
   }
 
   /**
