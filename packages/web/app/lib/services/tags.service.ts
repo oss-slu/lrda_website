@@ -10,47 +10,43 @@ interface TagsResponse {
   error?: string;
 }
 
-class TagsService {
-  /**
-   * Generate tags for note content using AI.
-   * @param noteContent - The text content to generate tags for
-   * @returns Array of tag strings
-   * @throws Error if tag generation fails
-   */
-  async generateTags(noteContent: string): Promise<string[]> {
-    try {
-      const response = await fetch('/api/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteContent }),
-      });
+/**
+ * Generate tags for note content using AI.
+ * @param noteContent - The text content to generate tags for
+ * @returns Array of tag strings
+ */
+async function generateTags(noteContent: string): Promise<string[]> {
+  try {
+    const response = await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ noteContent }),
+    });
 
-      const data: TagsResponse = await response.json();
+    const data: TagsResponse = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate tags');
-      }
-
-      return data.tags;
-    } catch (error) {
-      console.error('Error generating tags:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to generate tags');
     }
-  }
 
-  /**
-   * Generate tags for multiple notes.
-   * @param noteContents - Array of note text contents
-   * @returns Array of tag strings (combined from all notes)
-   */
-  async generateTagsForMultiple(noteContents: string[]): Promise<string[]> {
-    const combined = noteContents.join('\n');
-    return this.generateTags(combined);
+    return data.tags;
+  } catch (error) {
+    console.error('Error generating tags:', error);
+    throw error;
   }
 }
 
-// Export singleton instance
-export const tagsService = new TagsService();
+/**
+ * Generate tags for multiple notes.
+ * @param noteContents - Array of note text contents
+ * @returns Array of tag strings (combined from all notes)
+ */
+async function generateTagsForMultiple(noteContents: string[]): Promise<string[]> {
+  const combined = noteContents.join('\n');
+  return generateTags(combined);
+}
 
-// Export class for testing
-export { TagsService };
+export const tagsService = {
+  generateTags,
+  generateTagsForMultiple,
+};

@@ -11,7 +11,7 @@
 export { fetchWithAuth, buildQueryString, API_URL } from './api';
 
 // Notes service
-export { notesService, NotesService } from './notes.service';
+export { notesService } from './notes.service';
 export type {
   NoteQueryOptions,
   CreateNotePayload,
@@ -35,7 +35,7 @@ export type {
 } from './users.types';
 
 // Comments service
-export { commentsService, CommentsService } from './comments.service';
+export { commentsService } from './comments.service';
 export type {
   CommentData,
   CommentPosition,
@@ -62,13 +62,12 @@ export type {
 // Media service
 export {
   mediaService,
-  MediaService,
   getVideoThumbnail,
   getVideoDuration,
 } from './media.service';
 
 // Tags service
-export { tagsService, TagsService } from './tags.service';
+export { tagsService } from './tags.service';
 
 // Admin service
 export {
