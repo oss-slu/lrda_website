@@ -20,8 +20,7 @@ export interface MockAuthState {
   login: jest.Mock;
   logout: jest.Mock;
   signup: jest.Mock;
-  refreshUser: jest.Mock;
-  isAdmin: jest.Mock;
+  initialize: jest.Mock;
 }
 
 export const createMockAuthState = (overrides: Partial<MockAuthState> = {}): MockAuthState => ({
@@ -32,8 +31,7 @@ export const createMockAuthState = (overrides: Partial<MockAuthState> = {}): Moc
   login: jest.fn().mockResolvedValue('success'),
   logout: jest.fn().mockResolvedValue(undefined),
   signup: jest.fn().mockResolvedValue(undefined),
-  refreshUser: jest.fn().mockResolvedValue(undefined),
-  isAdmin: jest.fn().mockReturnValue(false),
+  initialize: jest.fn(),
   ...overrides,
 });
 

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuthStore } from '../stores/authStore';
+import { isInstructorUser, isAdminUser } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { useComments, useCommentMutations } from '../hooks/queries/useComments';
 import { CommentThreadList } from './comments/CommentThreadList';
@@ -58,8 +59,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const { data: comments = [] } = useComments(noteId);
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
-  // Derive role from auth store -- use isInstructor field, not roles.administrator
-  const isInstructor = !!authUser?.isInstructor || authUser?.role === 'admin';
+  const isInstructor = isInstructorUser(authUser) || isAdminUser(authUser);
   const isStudent = !isInstructor;
   const canComment = !!authUser?.id;
 

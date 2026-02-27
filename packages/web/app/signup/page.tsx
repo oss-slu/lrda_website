@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/stores/authStore';
+import { useShallow } from 'zustand/react/shallow';
 import { fetchInstructors } from '../lib/services';
 import StrengthIndicator from '@/components/ui/strength-indicator';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,9 @@ const SignupPage = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuthStore();
+  const { signup } = useAuthStore(
+    useShallow(state => ({ signup: state.signup })),
+  );
 
   const form = useForm<SignupFormData>({
     defaultValues: {

@@ -47,8 +47,7 @@ jest.mock('../lib/stores/authStore', () => ({
       login: jest.fn().mockResolvedValue('success'),
       logout: jest.fn().mockResolvedValue(undefined),
       signup: jest.fn().mockResolvedValue(undefined),
-      refreshUser: jest.fn().mockResolvedValue(undefined),
-      isAdmin: jest.fn().mockReturnValue(false),
+      initialize: jest.fn(),
     };
     return selector ? selector(mockAuthState) : mockAuthState;
   }),

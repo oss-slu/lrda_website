@@ -3,6 +3,7 @@ import React from 'react';
 import { UploadIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip';
 import { useAuthStore } from '../../../stores/authStore';
+import { isInstructorUser, isAdminUser } from '../../../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 interface PublishToggleProps {
@@ -32,8 +33,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
     })),
   );
 
-  // Compute isStudent: a user is NOT a student if they are an instructor or admin
-  const isInstructor = !!authUser?.isInstructor || authUser?.role === 'admin';
+  const isInstructor = isInstructorUser(authUser) || isAdminUser(authUser);
   const isStudent = !isInstructor;
 
   const handlePublishClick = () => {

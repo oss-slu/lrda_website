@@ -28,6 +28,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
+import { isInstructorUser, isAdminUser } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 export default function Navbar() {
@@ -60,7 +61,7 @@ export default function Navbar() {
     }
   };
 
-  const isInstructor = user?.role === 'admin' || !!user?.isInstructor;
+  const isInstructor = isInstructorUser(user) || isAdminUser(user);
   const isLinkedStudent = !isInstructor && !!user?.instructorId;
 
   const dashboardHref = isInstructor ? '/instructor-dashboard' : '/student-dashboard';

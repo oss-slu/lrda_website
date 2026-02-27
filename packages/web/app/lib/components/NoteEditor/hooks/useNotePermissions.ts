@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
+import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { Note } from '@/app/types';
 
@@ -34,12 +35,12 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
     }
 
     const userId = authUser.id;
-    const isAdmin = authUser.role === 'admin';
-    const isInstr = isAdmin || authUser.isInstructor;
-    const isStudentRole = !isAdmin && !authUser.isInstructor;
+    const isAdmin = isAdminUser(authUser);
+    const isInstr = isAdmin || isInstructorUser(authUser);
+    const isStudentRole = !isInstr;
     const isStudentInTeacherStudentModel = isStudentRole && !!authUser.instructorId;
 
-    const canCommentValue = isAdmin || authUser.isInstructor || isStudentInTeacherStudentModel;
+    const canCommentValue = isInstr || isStudentInTeacherStudentModel;
 
     const isViewingStudentNote = !!(isInstr && note?.creator && note.creator !== userId);
     const isStudentViewingOwnNote = !!(

@@ -7,6 +7,7 @@ import NoteListView from './note_listview';
 import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
+import { isInstructorUser, isAdminUser } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { notesService } from '../services';
 import { usePersonalNotes, useStudentNotes, notesKeys } from '../hooks/queries/useNotes';
@@ -39,13 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
 
-  // Derive instructor status synchronously from auth store data.
-  // Previously this used an async fetchUserById call which was fragile on
-  // page refresh (same race condition fixed in useNotePermissions).
-  const isInstructor = useMemo(() => {
-    if (!user) return false;
-    return user.role === 'admin' || user.isInstructor;
-  }, [user]);
+  const isInstructor = isInstructorUser(user) || isAdminUser(user);
 
   // TanStack Query for personal notes.
   // Gate on isInitialized so the API call doesn't fire before the session

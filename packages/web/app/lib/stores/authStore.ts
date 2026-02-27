@@ -16,12 +16,6 @@ interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
 
-  // Getters
-  getId: () => string | null;
-  getName: () => string | null;
-  isInstructor: () => boolean;
-  isAdmin: () => boolean;
-
   // Actions
   login: (email: string, password: string) => Promise<string>;
   signup: (data: {
@@ -42,11 +36,6 @@ export const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       isLoading: true,
       isInitialized: false,
-
-      getId: () => get().user?.id ?? null,
-      getName: () => get().user?.name ?? null,
-      isInstructor: () => get().user?.isInstructor ?? false,
-      isAdmin: () => get().user?.role === 'admin',
 
       login: async (email: string, password: string): Promise<string> => {
         set({ isLoading: true });
@@ -186,10 +175,3 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// Initialize auth when module loads (client-side only)
-if (typeof window !== 'undefined') {
-  // Delay initialization to ensure everything is ready
-  setTimeout(() => {
-    useAuthStore.getState().initialize();
-  }, 0);
-}
