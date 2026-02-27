@@ -17,6 +17,7 @@
 
 import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { eq } from 'drizzle-orm';
@@ -110,6 +111,18 @@ async function fetchAllFirebaseUsers() {
   return allUsers;
 }
 
+// Fetch Firestore user document (for fields not in Firebase Auth)
+async function fetchFirestoreUser(uid: string): Promise<Record<string, unknown> | null> {
+  try {
+    const firestore = getFirestore();
+    const doc = await firestore.collection('users').doc(uid).get();
+    return doc.exists ? (doc.data() as Record<string, unknown>) : null;
+  } catch (error) {
+    log('warn', `Failed to fetch Firestore doc for ${uid}`, error);
+    return null;
+  }
+}
+
 // Sync users to PostgreSQL
 async function syncUsers() {
   log('info', 'Starting user sync from Firebase...');
@@ -130,13 +143,44 @@ async function syncUsers() {
         continue;
       }
 
-      // Extract custom claims for instructor status
-      const isInstructor = fbUser.customClaims?.instructor === true;
-      const isAdmin = fbUser.customClaims?.admin === true;
+      // Fetch Firestore doc for instructor/student fields
+      // These live in Firestore, not Firebase Auth custom claims:
+      //   - isInstructor (boolean)
+      //   - parentInstructorId (student's instructor UID)
+      //   - pendingInstructorDescription (instructor application text)
+      const firestoreData = await fetchFirestoreUser(fbUser.uid);
+
+      // isInstructor: check Firestore first (source of truth), fall back to custom claims
+      const isInstructor =
+        firestoreData?.isInstructor === true ||
+        fbUser.customClaims?.instructor === true;
+
+      // Admin: check custom claims first, fall back to Firestore roles
+      const firestoreRoles = firestoreData?.roles as Record<string, boolean> | undefined;
+      const isAdmin =
+        fbUser.customClaims?.admin === true ||
+        firestoreRoles?.administrator === true;
+
+      // parentInstructorId in Firestore -> instructorId in PostgreSQL
+      const instructorId =
+        typeof firestoreData?.parentInstructorId === 'string'
+          ? firestoreData.parentInstructorId
+          : null;
+
+      const pendingInstructorDescription =
+        typeof firestoreData?.pendingInstructorDescription === 'string'
+          ? firestoreData.pendingInstructorDescription
+          : null;
+
+      // Use Firestore name if available (may have full name vs Auth displayName)
+      const name =
+        (typeof firestoreData?.name === 'string' && firestoreData.name) ||
+        fbUser.displayName ||
+        fbUser.email.split('@')[0];
 
       const userData = {
         id: fbUser.uid,
-        name: fbUser.displayName || fbUser.email.split('@')[0],
+        name,
         email: fbUser.email,
         emailVerified: fbUser.emailVerified,
         image: fbUser.photoURL || null,
@@ -144,7 +188,8 @@ async function syncUsers() {
         updatedAt: new Date(),
         role: isAdmin ? 'admin' : 'user',
         isInstructor,
-        // Note: instructorId would need to be synced separately if stored elsewhere
+        instructorId,
+        pendingInstructorDescription,
       };
 
       // Check if user exists
@@ -154,10 +199,20 @@ async function syncUsers() {
 
       if (DRY_RUN) {
         if (existing) {
-          log('info', `[DRY RUN] Would update user: ${fbUser.uid} (${fbUser.email})`);
+          log('info', `[DRY RUN] Would update user: ${fbUser.uid} (${fbUser.email})`, {
+            isInstructor,
+            isAdmin,
+            instructorId,
+            pendingInstructorDescription: pendingInstructorDescription ? '(set)' : null,
+          });
           updated++;
         } else {
-          log('info', `[DRY RUN] Would create user: ${fbUser.uid} (${fbUser.email})`);
+          log('info', `[DRY RUN] Would create user: ${fbUser.uid} (${fbUser.email})`, {
+            isInstructor,
+            isAdmin,
+            instructorId,
+            pendingInstructorDescription: pendingInstructorDescription ? '(set)' : null,
+          });
           created++;
         }
       } else {
