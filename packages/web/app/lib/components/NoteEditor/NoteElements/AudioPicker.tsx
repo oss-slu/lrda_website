@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AudioPlayer from 'react-h5-audio-player';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { toast } from 'sonner';
@@ -24,25 +24,36 @@ type AudioPickerProps = {
 };
 
 const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
-  const [currentIdx, setCurrentIdx] = useState(0); // Current index of the selected audio
-  const [curRec, setCurRec] = useState<string | undefined>(); // Current audio URI
-  const [placeVal, setPlaceVal] = useState<string>('No Recordings'); // Placeholder text for the select dropdown
-  const audioPlayerRef = useRef<any>(null); // Reference to the audio player
+  // Stable key that changes when the array changes, used to reset selection state
+  const arrayKey = useMemo(() => audioArray.map(a => a.uuid).join(','), [audioArray]);
 
+  return (
+    <AudioPickerInner
+      key={arrayKey}
+      audioArray={audioArray}
+      setAudio={setAudio}
+      editable={editable}
+    />
+  );
+};
+
+const AudioPickerInner: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [curRec, setCurRec] = useState<string | undefined>();
+  const audioPlayerRef = useRef<any>(null);
+
+  const placeVal = audioArray.length >= 1 ? 'Select Recording' : 'No Recordings';
+
+  // Pause player on unmount (triggered by key change from outer component)
   useEffect(() => {
-    // Reset state when audioArray changes
-    if (audioArray.length >= 1) {
-      setPlaceVal('Select Recording');
-    } else {
-      setPlaceVal('No Recordings');
-    }
-    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
-      audioPlayerRef.current.audio.current.pause();
-      audioPlayerRef.current.audio.current.currentTime = 0;
-    }
-    setCurRec(undefined);
-    setCurrentIdx(0);
-  }, [audioArray]);
+    const player = audioPlayerRef.current;
+    return () => {
+      if (player?.audio?.current) {
+        player.audio.current.pause();
+        player.audio.current.currentTime = 0;
+      }
+    };
+  }, []);
 
   // Handle the selection of an audio recording
   const handleSelectChange = (selectedURI: string) => {
@@ -80,26 +91,22 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
     });
 
     try {
-      const location = await uploadAudio(file);
-      if (location !== 'error') {
-        const newAudio: AudioMedia = {
-          type: 'audio',
-          uuid: uuidv4(),
-          uri: location,
-          name: file.name,
-          duration: '0:00',
-        };
+      const uri = await uploadAudio(file);
+      const newAudio: AudioMedia = {
+        type: 'audio',
+        uuid: uuidv4(),
+        uri,
+        name: file.name,
+        duration: '0:00',
+      };
 
-        toast('Status Update', {
-          description: 'Audio upload success!',
-          duration: 4000,
-        });
+      toast('Status Update', {
+        description: 'Audio upload success!',
+        duration: 4000,
+      });
 
-        if (setAudio) {
-          setAudio(prev => [...prev, newAudio]);
-        }
-      } else {
-        throw new Error('Upload failed');
+      if (setAudio) {
+        setAudio(prev => [...prev, newAudio]);
       }
     } catch (error) {
       console.error('Audio upload failed:', error);

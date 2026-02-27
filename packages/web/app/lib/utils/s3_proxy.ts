@@ -12,61 +12,49 @@ async function performHeicToJpgConversion(uri: string) {
 }
 
 async function uploadMedia(file: File, mediaType: string): Promise<string> {
-  console.log('uploadMedia - Input file:', file);
-
   const data = new FormData();
   const uniqueName = `media-${Date.now()}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
-
   data.append('file', file, uniqueName);
 
-  return fetch(S3_PROXY_PREFIX + 'uploadFile', {
+  const resp = await fetch(S3_PROXY_PREFIX + 'uploadFile', {
     method: 'POST',
     mode: 'cors',
     body: data,
-  })
-    .then(resp => {
-      console.log('uploadMedia - Server response status:', resp.status);
-      if (resp.ok) {
-        const location = resp.headers.get('Location');
-        console.log('uploadMedia - Uploaded successfully, Location:', location);
-        return location;
-      } else {
-        console.log('uploadMedia - Server response body:', resp.body);
-      }
-    })
-    .catch(err => {
-      console.error('uploadMedia - Error:', err);
-      return err;
-    });
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Media upload failed: ${resp.status}`);
+  }
+
+  const location = resp.headers.get('Location');
+  if (!location) {
+    throw new Error('No Location header in upload response');
+  }
+
+  return location;
 }
 
 async function uploadAudio(file: File): Promise<string> {
-  console.log('uploadAudio - Input file:', file);
-
   const data = new FormData();
   const uniqueName = `media-${Date.now()}.mp3`;
-
   data.append('file', file, uniqueName);
 
-  return fetch(`${S3_PROXY_PREFIX}uploadFile`, {
+  const resp = await fetch(`${S3_PROXY_PREFIX}uploadFile`, {
     method: 'POST',
     mode: 'cors',
     body: data,
-  })
-    .then(resp => {
-      console.log('uploadAudio - Server response status:', resp.status);
-      if (resp.ok) {
-        const location = resp.headers.get('Location');
-        console.log('uploadAudio - Uploaded successfully, Location:', location);
-        return location;
-      } else {
-        console.log('uploadAudio - Server response body:', resp.body);
-      }
-    })
-    .catch(err => {
-      console.error('uploadAudio - Error:', err);
-      return err;
-    });
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Audio upload failed: ${resp.status}`);
+  }
+
+  const location = resp.headers.get('Location');
+  if (!location) {
+    throw new Error('No Location header in upload response');
+  }
+
+  return location;
 }
 
 export { convertHeicToJpg, uploadMedia, uploadAudio };
