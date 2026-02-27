@@ -2,7 +2,7 @@ import { useEffect, useRef, useMemo, RefObject, MutableRefObject } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { usePersonalNotes } from '@/app/lib/hooks/queries/useNotes';
 import { Note, newNote } from '@/app/types';
-import type { PhotoMedia, VideoMedia } from '@/app/lib/models/media_class';
+import type { PhotoMedia, VideoMedia } from '@/app/types';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
 import type { RichTextEditorRef } from 'mui-tiptap';
 

@@ -21,7 +21,7 @@ import {
   filterNotesByTitleAndTags,
   Location,
 } from '../lib/utils/mapUtils';
-import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from '../lib/constants/mapConstants';
+import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from '../lib/utils/mapConstants';
 
 interface Refs {
   [key: string]: HTMLElement | undefined;

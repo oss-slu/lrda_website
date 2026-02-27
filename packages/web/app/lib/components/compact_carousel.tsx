@@ -9,7 +9,7 @@ import {
 import { type CarouselApi } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 
-import type { NoteMedia } from '../models/media_class';
+import type { NoteMedia } from '@/app/types';
 import Image from 'next/image';
 import ReactPlayer from 'react-player';
 

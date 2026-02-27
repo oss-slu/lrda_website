@@ -4,7 +4,7 @@ import { render, screen, waitFor, within, fireEvent, cleanup, act } from '@testi
 import moxios from 'moxios';
 import EnhancedNoteCard from '../lib/components/stories_card';
 import { Note, Tag } from '@/app/types';
-import type { PhotoMedia, AudioMedia } from '../lib/models/media_class';
+import type { PhotoMedia, AudioMedia } from '@/app/types';
 
 // Mock the environment variable for the Google Maps API key
 process.env.NEXT_PUBLIC_MAP_KEY = 'test_api_key';

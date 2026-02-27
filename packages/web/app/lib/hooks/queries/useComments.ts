@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CommentData } from '../../services/comments/comments.types';
+import type { CommentData } from '../../services/comments.types';
 import { commentsService, fetchCreatorName } from '../../services';
 
 // Query key factory for comments

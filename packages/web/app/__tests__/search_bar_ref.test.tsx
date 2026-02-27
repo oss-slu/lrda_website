@@ -1,9 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import React, { RefObject } from 'react';
 
-jest.mock('../lib/utils/api_service');
-jest.mock('intro.js'); // Mock intro.js to control its behavior
-
 // Define the SearchComponent with the correct typing for searchBarRef
 function SearchComponent({ searchBarRef }: { searchBarRef: RefObject<HTMLInputElement> }) {
   return <input type='text' placeholder='Search' ref={searchBarRef} />;

@@ -18,9 +18,9 @@ This codebase is on a **migration branch** moving off **both** the legacy RERUM 
 2. During the transition:
    - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs on the server** to keep the mobile app's RERUM data in sync with the new PostgreSQL backend
    - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
-3. Once the mobile app is also migrated, the sync scripts, RERUM client, and `firebase-admin` dependency can be removed
+3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
 
-**Do not delete** the RERUM sync scripts, Firebase sync script, `firebase-admin` dependency, or `packages/web/app/lib/services/base/rerum-client.ts` -- they are all needed for the migration period.
+**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period. Note: the web package's RERUM client was already removed (it was unused -- the API package's sync scripts have their own RERUM logic).
 
 ### Packages
 
@@ -102,16 +102,13 @@ lrda_website/
 
 ### File Organization
 
-- **Components**:
-  - Custom components: `app/lib/components/`
-  - shadcn/ui components: `components/ui/`
-- **Utilities**: `app/lib/utils/`
-- **Data Models**: `app/lib/models/`
+- **Components**: `app/lib/components/` (custom), `components/ui/` (shadcn/ui)
+- **Utilities and Constants**: `app/lib/utils/`
+- **Types**: `app/types.ts` (central type definitions including media types)
 - **Zustand Stores**: `app/lib/stores/`
-- **Pages/Route Handlers**: `app/lib/pages/`
-- **Hooks**: `app/lib/hooks/`
-- **Configuration**: `app/lib/config/`
-- **Constants**: `app/lib/constants/`
+- **Hooks**: `app/lib/hooks/` (query hooks in `hooks/queries/`)
+- **Services**: `app/lib/services/` (flat structure -- `notes.service.ts`, `comments.types.ts`, etc.)
+- **Auth**: `app/lib/auth/` (Better Auth client/server)
 - **API Routes**: `packages/api/src/routes/`
 - **API DB Schema**: `packages/api/src/db/schema.ts`
 

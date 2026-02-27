@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Note, Tag } from '@/app/types';
-import type { AudioMedia, VideoMedia, PhotoMedia } from '@/app/lib/models/media_class';
+import type { AudioMedia, VideoMedia, PhotoMedia } from '@/app/types';
 
 const useNoteState = (initialNote: Note | undefined) => {
   const [note, setNote] = useState<Note | undefined>(initialNote);

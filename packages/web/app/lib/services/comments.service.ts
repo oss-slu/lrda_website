@@ -5,7 +5,7 @@
  * Uses the REST API backend (Hono/PostgreSQL).
  */
 
-import { fetchWithAuth } from '../api';
+import { fetchWithAuth } from './api';
 import type { CommentData, ApiCommentData, ResolveThreadResult } from './comments.types';
 
 class CommentsService {

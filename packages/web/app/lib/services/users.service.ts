@@ -6,7 +6,7 @@
  */
 
 import type { UserProfile, UpdateProfileOptions, InstructorInfo } from './users.types';
-import { fetchWithAuth } from '../api';
+import { fetchWithAuth } from './api';
 
 /**
  * Fetch the current authenticated user's profile.

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { AudioMedia } from '@/app/lib/models/media_class';
+import type { AudioMedia } from '@/app/types';
 import { Input } from '@/components/ui/input';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadAudio } from '@/app/lib/utils/s3_proxy';

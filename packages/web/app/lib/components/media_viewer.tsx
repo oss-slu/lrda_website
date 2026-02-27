@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-import type { AnyMedia } from '../models/media_class';
+import type { AnyMedia } from '@/app/types';
 import ReactPlayer from 'react-player';
 
 export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) {

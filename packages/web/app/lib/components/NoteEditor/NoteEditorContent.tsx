@@ -8,7 +8,7 @@ import TagManager from './NoteElements/TagManager';
 import EditorMenuControls from '../editor_menu_controls';
 import useExtensions from '@/app/lib/utils/use_extensions';
 import { tagsService } from '@/app/lib/services';
-import type { PhotoMedia, VideoMedia, AudioMedia } from '@/app/lib/models/media_class';
+import type { PhotoMedia, VideoMedia, AudioMedia } from '@/app/types';
 import CommentBubble from '../CommentBubble';
 import { handleTagsChange, handleEditorChange } from './handlers/noteHandlers';
 import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';

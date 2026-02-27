@@ -1,25 +1,12 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import RegisterButton from '../lib/components/register_button';
-import { validateEmail, validateFirstName, validateLastName } from '../lib/utils/validation';
-
 test('Register button is clickable when not in a loading state', () => {
   const { getByText } = render(<RegisterButton />);
   const button = getByText('Register');
   expect(button).not.toHaveAttribute('disabled'); // Check that the button is not disabled
   fireEvent.click(button);
   // You can add assertions here to test the button's behavior when clicked
-});
-
-test('Validation functions for E-mail, first and last name are valid with input and invalid when empty', () => {
-  expect(validateEmail('mail@example.com')).toBeTruthy(); //These should probably be changed to test input on the register button itself.
-  expect(validateEmail('')).toBeFalsy();
-
-  expect(validateFirstName('firstName')).toBeTruthy();
-  expect(validateFirstName('')).toBeFalsy();
-
-  expect(validateLastName('lastName')).toBeTruthy();
-  expect(validateLastName('')).toBeFalsy();
 });
 
 test('Register button is disabled when in a loading state', () => {

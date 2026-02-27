@@ -6,7 +6,7 @@
  */
 
 import type { StudentInfo, ApprovalNoteData } from './instructor.types';
-import { fetchWithAuth } from '../api';
+import { fetchWithAuth } from './api';
 
 /**
  * Fetch all students assigned to an instructor.

@@ -7,7 +7,7 @@
  * Types are derived from shared Zod schemas in @lrda/shared.
  */
 
-import { fetchWithAuth } from '../api';
+import { fetchWithAuth } from './api';
 import type { AdminUser, PendingApplication, Stats } from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility

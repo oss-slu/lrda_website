@@ -64,20 +64,6 @@ jest.mock('../lib/stores/authStore', () => ({
   }),
 }));
 
-jest.mock('../lib/utils/api_service', () => ({
-  __esModule: true,
-  default: {
-    fetchCreatorName: async () => 'Instructor',
-    fetchUserData: async () => ({
-      id: 'inst-1',
-      name: 'Instructor',
-      email: 'instructor@example.com',
-      role: 'admin',
-      isInstructor: true,
-    }),
-  },
-}));
-
 describe('CommentSidebar - per-thread reply drafts', () => {
   test('typing in one thread reply does not mirror in another', async () => {
     render(

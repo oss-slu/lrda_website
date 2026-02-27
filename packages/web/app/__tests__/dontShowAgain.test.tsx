@@ -44,11 +44,6 @@ jest.mock('intro.js', () => {
   };
 });
 
-// Mock the API service to avoid actual network calls
-jest.mock('../lib/utils/api_service', () => ({
-  fetchPublishedNotes: jest.fn(() => Promise.resolve([])),
-}));
-
 // Mock the geolocation API
 beforeEach(() => {
   jest.clearAllMocks();

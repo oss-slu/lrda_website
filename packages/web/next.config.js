@@ -31,14 +31,6 @@ module.exports = {
     return config;
   },
   turbopack: {},
-  async rewrites() {
-    return [
-      {
-        source: '/api/generateTags',
-        destination: '/api_service/generateTags',
-      },
-    ];
-  },
   async redirects() {
     return [
       { source: '/lib/pages/map', destination: '/map', permanent: true },

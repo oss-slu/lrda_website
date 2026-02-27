@@ -7,7 +7,7 @@ import Navbar from './lib/components/navbar';
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next/appDir';
 import { Toaster } from '@/components/ui/sonner';
 import { GoogleMapsProvider } from './lib/utils/GoogleMapsContext';
-import QueryProvider from './lib/providers/QueryProvider';
+import QueryProvider from './lib/components/QueryProvider';
 import { AuthProvider } from './lib/components/AuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });

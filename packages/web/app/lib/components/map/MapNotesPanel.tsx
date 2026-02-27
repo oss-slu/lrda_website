@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
 import NoteCard from '../note_card';
-import { PANEL_WIDTH } from '../../constants/mapConstants';
+import { PANEL_WIDTH } from '../../utils/mapConstants';
 import { cn } from '@/lib/utils';
 
 interface Refs {

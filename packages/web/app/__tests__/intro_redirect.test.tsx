@@ -17,7 +17,6 @@ jest.mock('../lib/stores/authStore', () => ({
   }),
 }));
 
-jest.mock('../lib/utils/api_service');
 jest.mock('intro.js'); // Mock intro.js to control its behavior
 
 // Mock next/navigation
