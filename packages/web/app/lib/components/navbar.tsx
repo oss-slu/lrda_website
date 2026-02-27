@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, User, LogOut } from 'lucide-react';
@@ -29,7 +29,6 @@ import { cn } from '@/lib/utils';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { fetchUserById } from '../services';
 
 export default function Navbar() {
   const { user, isLoggedIn, logout } = useAuthStore(
@@ -41,8 +40,6 @@ export default function Navbar() {
   );
   const name = user?.name ?? null;
 
-  const [isInstructor, setIsInstructor] = useState<boolean>(false);
-  const [isLinkedStudent, setIsLinkedStudent] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const pathname = usePathname();
@@ -63,25 +60,8 @@ export default function Navbar() {
     }
   };
 
-  useEffect(() => {
-    const checkInstructorStatus = async () => {
-      if (!user?.uid) return;
-      try {
-        const roles = user.roles;
-        const userId = user.uid;
-
-        if (userId) {
-          const userData = await fetchUserById(userId);
-          const isInstr = !!roles?.administrator || !!userData?.isInstructor;
-          setIsInstructor(isInstr);
-          setIsLinkedStudent(!isInstr && !!userData?.parentInstructorId);
-        }
-      } catch (error) {
-        console.error('Error checking instructor status:', error);
-      }
-    };
-    checkInstructorStatus();
-  }, [user]);
+  const isInstructor = user?.role === 'admin' || !!user?.isInstructor;
+  const isLinkedStudent = !isInstructor && !!user?.instructorId;
 
   const dashboardHref = isInstructor ? '/instructor-dashboard' : '/student-dashboard';
 

@@ -8,28 +8,6 @@ import type { UserProfile as AppUserProfile } from '@/app/types';
 export type UserProfile = AppUserProfile;
 
 /**
- * User roles in the system (legacy format).
- */
-export interface UserRoles {
-  administrator: boolean;
-  contributor: boolean;
-}
-
-/**
- * Legacy user data structure for backward compatibility.
- * @deprecated Use UserProfile instead
- */
-export interface UserData {
-  uid: string;
-  name: string;
-  email?: string;
-  roles: UserRoles;
-  isInstructor?: boolean;
-  students?: string[];
-  parentInstructorId?: string;
-}
-
-/**
  * Options for updating a user profile.
  */
 export interface UpdateProfileOptions {

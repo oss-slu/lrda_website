@@ -29,7 +29,7 @@ const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
         id: uuidv4(),
         noteId,
         text: comment,
-        authorId: user.uid,
+        authorId: user.id,
         authorName: user.name,
         createdAt: new Date().toISOString(),
       });

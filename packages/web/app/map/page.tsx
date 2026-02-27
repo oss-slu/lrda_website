@@ -99,7 +99,7 @@ const Page = () => {
     isPending: isPersonalPending,
     isError: isPersonalError,
     error: personalError,
-  } = usePersonalMapNotes(authUser?.uid ?? null);
+  } = usePersonalMapNotes(authUser?.id ?? null);
 
   // Derived loading and error states based on current view
   const notesLoading = isGlobalView ? isGlobalPending : isPersonalPending;

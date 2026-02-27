@@ -8,10 +8,10 @@ jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
       user: {
-        uid: 'test-user-id',
+        id: 'test-user-id',
         name: 'Test User',
         email: 'test@example.com',
-        roles: { administrator: false, contributor: true },
+        role: 'user',
         isInstructor: false,
       },
       isLoggedIn: true,
@@ -41,7 +41,6 @@ jest.mock('../lib/stores/notesStore', () => ({
 // Mock services - inline to avoid hoisting issues
 jest.mock('../lib/services', () => ({
   fetchMe: jest.fn().mockResolvedValue(null),
-  fetchUserById: jest.fn().mockResolvedValue(null),
   fetchProfileById: jest.fn().mockResolvedValue(null),
   fetchInstructors: jest.fn().mockResolvedValue([]),
   updateProfile: jest.fn().mockResolvedValue({}),

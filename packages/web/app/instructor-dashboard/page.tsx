@@ -23,23 +23,23 @@ const InstructorDashboardPage = () => {
 
   // Fetch students assigned to this instructor
   const { data: students = [] } = useQuery({
-    queryKey: ['instructor-students', authUser?.uid],
+    queryKey: ['instructor-students', authUser?.id],
     queryFn: async () => {
-      if (!authUser?.uid) return [];
-      return fetchStudents(authUser.uid);
+      if (!authUser?.id) return [];
+      return fetchStudents(authUser.id);
     },
-    enabled: !!authUser?.uid && isInstructor,
+    enabled: !!authUser?.id && isInstructor,
   });
 
   // Fetch student notes using the dedicated backend endpoint
   // fetchByStudents finds students server-side, so we don't need studentIds here
   const { data: notes = [], isLoading: notesLoading } = useQuery({
-    queryKey: ['instructor-notes', authUser?.uid],
+    queryKey: ['instructor-notes', authUser?.id],
     queryFn: async () => {
-      if (!authUser?.uid) return [];
-      return notesService.fetchByStudents(authUser.uid);
+      if (!authUser?.id) return [];
+      return notesService.fetchByStudents(authUser.id);
     },
-    enabled: !!authUser?.uid && isInstructor,
+    enabled: !!authUser?.id && isInstructor,
   });
 
   // Filter notes by selected student and search query
@@ -89,7 +89,7 @@ const InstructorDashboardPage = () => {
         >
           <option value=''>All Students</option>
           {students.map(student => (
-            <option key={student.uid} value={student.uid}>
+            <option key={student.id} value={student.id}>
               {student.name}
             </option>
           ))}

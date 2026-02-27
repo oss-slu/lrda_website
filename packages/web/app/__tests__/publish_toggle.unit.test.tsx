@@ -15,10 +15,11 @@ jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
       user: {
-        uid: 'i1',
+        id: 'i1',
+        name: 'Instructor',
         email: 'instructor@example.com',
+        role: 'user',
         isInstructor: true,
-        roles: { administrator: false, contributor: true },
       },
       isLoggedIn: true,
       isLoading: false,

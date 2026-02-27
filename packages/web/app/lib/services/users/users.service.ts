@@ -5,8 +5,7 @@
  * All data is stored in PostgreSQL via the Hono API backend.
  */
 
-import type { UserProfile, UserData, UpdateProfileOptions, InstructorInfo } from './users.types';
-import { toUserData } from '@/app/types';
+import type { UserProfile, UpdateProfileOptions, InstructorInfo } from './users.types';
 import { fetchWithAuth } from '../api';
 
 /**
@@ -17,20 +16,6 @@ export async function fetchMe(): Promise<UserProfile | null> {
     return await fetchWithAuth<UserProfile>('/api/users/me');
   } catch (error) {
     console.warn('Failed to fetch current user:', error);
-    return null;
-  }
-}
-
-/**
- * Fetch user by ID.
- * Returns legacy UserData format for backward compatibility.
- */
-export async function fetchUserById(id: string): Promise<UserData | null> {
-  try {
-    const profile = await fetchWithAuth<UserProfile>(`/api/users/${id}`);
-    return toUserData(profile);
-  } catch (error) {
-    console.warn('Failed to fetch user by ID:', error);
     return null;
   }
 }

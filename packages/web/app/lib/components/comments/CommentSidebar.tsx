@@ -57,7 +57,7 @@ export default function CommentSidebar({
     if (!trimmed) return;
 
     const selection = getCurrentSelection ? getCurrentSelection() : null;
-    const authorId = authUser?.uid ?? '';
+    const authorId = authUser?.id ?? '';
     const fallbackAuthor = authUser?.name ?? '';
     const authorDisplay = await resolveAuthorName(authorId, fallbackAuthor);
 
@@ -95,7 +95,7 @@ export default function CommentSidebar({
     const trimmed = (replyDrafts[threadId] || '').trim();
     if (!trimmed) return;
 
-    const authorId = authUser?.uid ?? '';
+    const authorId = authUser?.id ?? '';
     const fallbackAuthor = authUser?.name ?? '';
     const authorDisplay = await resolveAuthorName(authorId, fallbackAuthor);
 

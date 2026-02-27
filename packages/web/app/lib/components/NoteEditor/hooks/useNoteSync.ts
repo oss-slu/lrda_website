@@ -25,8 +25,8 @@ export const useNoteSync = ({
   // Only subscribe when viewing own notes (not when instructor views student notes).
   const user = useAuthStore(state => state.user);
   const noteCreator = noteState.note?.creator;
-  const isOwnNote = !noteCreator || noteCreator === user?.uid;
-  const { data: notes = [] } = usePersonalNotes(isOwnNote ? (user?.uid ?? null) : null);
+  const isOwnNote = !noteCreator || noteCreator === user?.id;
+  const { data: notes = [] } = usePersonalNotes(isOwnNote ? (user?.id ?? null) : null);
 
   const lastSyncedNoteRef = useRef<string>('');
 

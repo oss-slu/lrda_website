@@ -20,15 +20,8 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
     })),
   );
 
-  // Derive all permissions synchronously from auth store data.
-  // Previously this hook made an async fetchUserById call which was both
-  // redundant (auth store already has the data) and fragile (fails on
-  // refresh before the session cookie is re-validated by the API).
   return useMemo(() => {
-    const uid = authUser?.uid ?? null;
-    const roles = authUser?.roles;
-
-    if (!uid) {
+    if (!authUser) {
       return {
         userId: null,
         instructorId: null,
@@ -40,25 +33,24 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
       };
     }
 
-    const isInstr = !!roles?.administrator || !!authUser?.isInstructor;
+    const userId = authUser.id;
+    const isAdmin = authUser.role === 'admin';
+    const isInstr = isAdmin || authUser.isInstructor;
+    const isStudentRole = !isAdmin && !authUser.isInstructor;
+    const isStudentInTeacherStudentModel = isStudentRole && !!authUser.instructorId;
 
-    const isStudentRole = !!roles?.contributor && !roles?.administrator;
-    const isStudentInTeacherStudentModel =
-      isStudentRole && !!authUser?.parentInstructorId;
+    const canCommentValue = isAdmin || authUser.isInstructor || isStudentInTeacherStudentModel;
 
-    const canCommentValue =
-      !!roles?.administrator || !!authUser?.isInstructor || isStudentInTeacherStudentModel;
-
-    const isViewingStudentNote = !!(isInstr && note?.creator && note.creator !== uid);
+    const isViewingStudentNote = !!(isInstr && note?.creator && note.creator !== userId);
     const isStudentViewingOwnNote = !!(
       isStudentInTeacherStudentModel &&
       note?.creator &&
-      note.creator === uid
+      note.creator === userId
     );
 
     return {
-      userId: uid,
-      instructorId: isInstr ? uid : null,
+      userId,
+      instructorId: isInstr ? userId : null,
       isStudent: isStudentInTeacherStudentModel,
       isInstructorUser: isInstr,
       isViewingStudentNote,

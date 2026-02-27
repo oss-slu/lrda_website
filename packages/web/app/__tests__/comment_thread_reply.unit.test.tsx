@@ -50,9 +50,11 @@ jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn(selector => {
     const mockState = {
       user: {
-        uid: 'inst-1',
+        id: 'inst-1',
         name: 'Instructor',
-        roles: { contributor: false, administrator: true },
+        email: 'instructor@example.com',
+        role: 'admin',
+        isInstructor: true,
       },
       isLoggedIn: true,
       isLoading: false,
@@ -67,10 +69,11 @@ jest.mock('../lib/utils/api_service', () => ({
   default: {
     fetchCreatorName: async () => 'Instructor',
     fetchUserData: async () => ({
-      uid: 'inst-1',
+      id: 'inst-1',
       name: 'Instructor',
+      email: 'instructor@example.com',
+      role: 'admin',
       isInstructor: true,
-      roles: { contributor: false, administrator: true },
     }),
   },
 }));

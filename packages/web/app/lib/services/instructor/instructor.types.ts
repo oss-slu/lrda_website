@@ -6,13 +6,13 @@
  * Basic student information.
  */
 export interface StudentInfo {
-  uid: string;
+  id: string;
   name: string;
   email: string;
 }
 
 /**
- * Media item for serialization to Firestore.
+ * Serialized media item for API payloads.
  */
 export interface SerializedMediaItem {
   uuid: string;
@@ -25,7 +25,7 @@ export interface SerializedMediaItem {
 }
 
 /**
- * Audio item for serialization to Firestore.
+ * Serialized audio item for API payloads.
  */
 export interface SerializedAudioItem {
   uuid: string;
@@ -37,7 +37,7 @@ export interface SerializedAudioItem {
 }
 
 /**
- * Approval request data stored in Firestore.
+ * Approval request data.
  */
 export interface ApprovalRequestData {
   status: 'pending' | 'approved' | 'rejected';

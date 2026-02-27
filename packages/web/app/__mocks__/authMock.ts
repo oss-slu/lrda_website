@@ -1,17 +1,15 @@
 /**
  * Shared auth mock for tests.
- * Use this to mock the authStore in tests instead of Firebase.
+ * Use this to mock the authStore in tests.
  */
 
 export interface MockUser {
-  uid: string;
+  id: string;
   name: string;
   email: string;
-  roles?: {
-    administrator?: boolean;
-    contributor?: boolean;
-  };
+  role?: 'user' | 'admin';
   isInstructor?: boolean;
+  instructorId?: string | null;
 }
 
 export interface MockAuthState {
@@ -40,35 +38,26 @@ export const createMockAuthState = (overrides: Partial<MockAuthState> = {}): Moc
 });
 
 export const mockLoggedInUser: MockUser = {
-  uid: 'test-user-id',
+  id: 'test-user-id',
   name: 'Test User',
   email: 'test@example.com',
-  roles: {
-    administrator: false,
-    contributor: true,
-  },
+  role: 'user',
   isInstructor: false,
 };
 
 export const mockAdminUser: MockUser = {
-  uid: 'admin-user-id',
+  id: 'admin-user-id',
   name: 'Admin User',
   email: 'admin@example.com',
-  roles: {
-    administrator: true,
-    contributor: true,
-  },
+  role: 'admin',
   isInstructor: true,
 };
 
 export const mockInstructorUser: MockUser = {
-  uid: 'instructor-user-id',
+  id: 'instructor-user-id',
   name: 'Instructor User',
   email: 'instructor@example.com',
-  roles: {
-    administrator: false,
-    contributor: true,
-  },
+  role: 'user',
   isInstructor: true,
 };
 

@@ -11,14 +11,16 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 
 ### Migration Context
 
-This codebase is on a **migration branch** moving off the legacy RERUM backend to a new PostgreSQL + Hono API, targeting a full AWS deployment. The production site still uses RERUM. There is a companion **mobile app** (`lrda_mobile`) that also still uses the RERUM backend.
+This codebase is on a **migration branch** moving off **both** the legacy RERUM backend **and** Firebase Auth to a new PostgreSQL + Hono API with Better Auth, targeting a full AWS deployment. **Production still uses RERUM and Firebase.** There is a companion **mobile app** (`lrda_mobile`) that also still uses RERUM and Firebase.
 
 **Migration plan:**
-1. This web app migrates first (RERUM -> PostgreSQL/Hono)
-2. During the transition, RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs on the server** to keep the mobile app's RERUM data in sync with the new PostgreSQL backend
-3. Once the mobile app is also migrated, the sync scripts and RERUM client can be removed
+1. This web app migrates first (RERUM + Firebase -> PostgreSQL/Hono + Better Auth)
+2. During the transition:
+   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs on the server** to keep the mobile app's RERUM data in sync with the new PostgreSQL backend
+   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
+3. Once the mobile app is also migrated, the sync scripts, RERUM client, and `firebase-admin` dependency can be removed
 
-**Do not delete** the RERUM sync scripts or `packages/web/app/lib/services/base/rerum-client.ts` -- they are needed for the migration period.
+**Do not delete** the RERUM sync scripts, Firebase sync script, `firebase-admin` dependency, or `packages/web/app/lib/services/base/rerum-client.ts` -- they are all needed for the migration period.
 
 ### Packages
 

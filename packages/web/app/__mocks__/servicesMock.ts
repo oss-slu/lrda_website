@@ -7,19 +7,10 @@ export const mockUserProfile = {
   id: 'test-user-id',
   name: 'Test User',
   email: 'test@example.com',
+  role: 'user' as const,
   isInstructor: false,
   createdAt: new Date().toISOString(),
-};
-
-export const mockUserData = {
-  uid: 'test-user-id',
-  name: 'Test User',
-  email: 'test@example.com',
-  isInstructor: false,
-  roles: {
-    administrator: false,
-    contributor: true,
-  },
+  updatedAt: new Date().toISOString(),
 };
 
 export const mockInstructors = [
@@ -42,7 +33,6 @@ export const mockInstructors = [
  */
 export const createUserServiceMocks = () => ({
   fetchMe: jest.fn().mockResolvedValue(mockUserProfile),
-  fetchUserById: jest.fn().mockResolvedValue(mockUserData),
   fetchProfileById: jest.fn().mockResolvedValue(mockUserProfile),
   fetchInstructors: jest.fn().mockResolvedValue(mockInstructors),
   updateProfile: jest.fn().mockResolvedValue(mockUserProfile),
@@ -54,7 +44,7 @@ export const createUserServiceMocks = () => ({
  * Creates mocks for admin service functions.
  */
 export const createAdminServiceMocks = () => ({
-  fetchAllUsers: jest.fn().mockResolvedValue([mockUserData]),
+  fetchAllUsers: jest.fn().mockResolvedValue([mockUserProfile]),
   fetchPendingApplications: jest.fn().mockResolvedValue([]),
   getAdminStats: jest.fn().mockResolvedValue({
     totalUsers: 10,

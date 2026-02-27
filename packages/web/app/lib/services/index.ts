@@ -25,7 +25,6 @@ export type {
 // Users service
 export {
   fetchMe,
-  fetchUserById,
   fetchProfileById,
   fetchInstructors,
   updateProfile,
@@ -33,8 +32,6 @@ export {
   fetchCreatorName,
 } from './users/users.service';
 export type {
-  UserData,
-  UserRoles,
   UserProfile,
   UpdateProfileOptions,
   InstructorInfo,

@@ -87,7 +87,7 @@ export default function NoteEditor({
     noteHandlers,
     isNewNote,
     isViewingStudentNote,
-    authUserId: authUser?.uid,
+    authUserId: authUser?.id,
     lastEditTimeRef,
   });
 
@@ -161,7 +161,7 @@ export default function NoteEditor({
         tags: noteState.tags,
         audio: noteState.audio,
         id: noteState.note?.id || '',
-        creator: noteState.note?.creator || authUser?.uid,
+        creator: noteState.note?.creator || authUser?.id,
         approvalRequested: updatedApprovalStatus,
         instructorId: instructorId || null,
         published: false,
@@ -207,9 +207,8 @@ export default function NoteEditor({
   };
 
   const handlePublishClick = async () => {
-    const creatorId = noteState.note?.creator || authUser?.uid;
-    const roles = authUser?.roles;
-    const isStudentRole = !!roles?.contributor && !roles?.administrator;
+    const creatorId = noteState.note?.creator || authUser?.id;
+    const isStudentRole = authUser?.role !== 'admin';
 
     const updatedNote: any = {
       ...noteState.note,
@@ -258,7 +257,7 @@ export default function NoteEditor({
 
   const handleDeleteNote = async (): Promise<boolean> => {
     const noteId = noteState.note?.id;
-    const creatorId = noteState.note?.creator || authUser?.uid;
+    const creatorId = noteState.note?.creator || authUser?.id;
 
     if (!noteId) {
       toast('Error', {

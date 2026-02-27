@@ -3,17 +3,15 @@
  *
  * These tests verify that:
  * 1. Student permissions (canComment, isStudentViewingOwnNote) work using
- *    only auth store data -- no fetchUserById API call needed.
- * 2. Permissions work even when fetchUserById would fail (e.g., on refresh
- *    before session is re-validated).
+ *    only auth store data -- no API call needed.
+ * 2. Permissions work even on refresh before session is re-validated.
  */
 import { renderHook, waitFor } from '@testing-library/react';
 import { useNotePermissions } from '../lib/components/NoteEditor/hooks/useNotePermissions';
 import type { Note } from '@/app/types';
 
-// Mock services -- fetchUserById returns null (simulating API failure on refresh)
+// Mock services
 jest.mock('../lib/services', () => ({
-  fetchUserById: jest.fn().mockResolvedValue(null),
   fetchCreatorName: jest.fn().mockResolvedValue('Unknown'),
 }));
 
@@ -52,14 +50,15 @@ describe('useNotePermissions - store-based permissions', () => {
     mockAuthState.isLoggedIn = false;
   });
 
-  test('student with parentInstructorId can comment on own note (no API call needed)', async () => {
-    // Student has parentInstructorId in their auth store data
+  test('student with instructorId can comment on own note (no API call needed)', async () => {
+    // Student has instructorId in their auth store data
     mockAuthState.user = {
-      uid: 'student-1',
+      id: 'student-1',
       name: 'Student User',
-      roles: { contributor: true, administrator: false },
+      email: 'student@example.com',
+      role: 'user',
       isInstructor: false,
-      parentInstructorId: 'instructor-1',
+      instructorId: 'instructor-1',
     };
     mockAuthState.isLoggedIn = true;
 
@@ -71,7 +70,7 @@ describe('useNotePermissions - store-based permissions', () => {
       expect(result.current.userId).toBe('student-1');
     });
 
-    // These should be true even when fetchUserById returns null
+    // These should be true based on auth store data alone
     expect(result.current.isStudent).toBe(true);
     expect(result.current.canComment).toBe(true);
     expect(result.current.isStudentViewingOwnNote).toBe(true);
@@ -80,9 +79,10 @@ describe('useNotePermissions - store-based permissions', () => {
 
   test('instructor can comment on student note', async () => {
     mockAuthState.user = {
-      uid: 'instructor-1',
+      id: 'instructor-1',
       name: 'Instructor User',
-      roles: { contributor: true, administrator: false },
+      email: 'instructor@example.com',
+      role: 'user',
       isInstructor: true,
     };
     mockAuthState.isLoggedIn = true;
@@ -103,9 +103,10 @@ describe('useNotePermissions - store-based permissions', () => {
 
   test('admin can comment', async () => {
     mockAuthState.user = {
-      uid: 'admin-1',
+      id: 'admin-1',
       name: 'Admin User',
-      roles: { contributor: true, administrator: true },
+      email: 'admin@example.com',
+      role: 'admin',
       isInstructor: false,
     };
     mockAuthState.isLoggedIn = true;
@@ -122,13 +123,14 @@ describe('useNotePermissions - store-based permissions', () => {
     expect(result.current.canComment).toBe(true);
   });
 
-  test('student without parentInstructorId cannot comment', async () => {
+  test('student without instructorId cannot comment', async () => {
     mockAuthState.user = {
-      uid: 'student-2',
+      id: 'student-2',
       name: 'Standalone Student',
-      roles: { contributor: true, administrator: false },
+      email: 'standalone@example.com',
+      role: 'user',
       isInstructor: false,
-      // No parentInstructorId
+      // No instructorId
     };
     mockAuthState.isLoggedIn = true;
 

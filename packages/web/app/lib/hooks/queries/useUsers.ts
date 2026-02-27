@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserById, fetchCreatorName } from '../../services';
-import { UserData } from '@/app/types';
+import { fetchProfileById, fetchCreatorName } from '../../services';
+import type { UserProfile } from '@/app/types';
 
 // Query key factory for users
 export const userKeys = {
@@ -14,9 +14,9 @@ export const userKeys = {
 export function useUserData(userId: string | null) {
   return useQuery({
     queryKey: userKeys.detail(userId ?? ''),
-    queryFn: async (): Promise<UserData | null> => {
+    queryFn: async (): Promise<UserProfile | null> => {
       if (!userId) return null;
-      return await fetchUserById(userId);
+      return await fetchProfileById(userId);
     },
     enabled: !!userId,
   });

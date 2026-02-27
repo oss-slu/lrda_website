@@ -33,7 +33,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
   );
 
   // Compute isStudent: a user is NOT a student if they are an instructor or admin
-  const isInstructor = !!authUser?.isInstructor || !!authUser?.roles?.administrator;
+  const isInstructor = !!authUser?.isInstructor || authUser?.role === 'admin';
   const isStudent = !isInstructor;
 
   const handlePublishClick = () => {

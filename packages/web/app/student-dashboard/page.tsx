@@ -45,15 +45,15 @@ const StudentDashboardPage: React.FC = () => {
 
   // Fetch notes with pending feedback
   const { data: notes = [], isLoading } = useQuery({
-    queryKey: ['student-feedback', authUser?.uid],
+    queryKey: ['student-feedback', authUser?.id],
     queryFn: async () => {
-      if (!authUser?.uid) return [];
+      if (!authUser?.id) return [];
 
       // Fetch notes created by this student that have approval requested
-      const fetched = await notesService.fetchUserNotes(authUser.uid, 150, 0);
+      const fetched = await notesService.fetchUserNotes(authUser.id, 150, 0);
       return fetched.filter(note => !!note.approvalRequested && !note.published);
     },
-    enabled: !!authUser?.uid,
+    enabled: !!authUser?.id,
   });
 
   // Filter notes by search query (title only -- comments are fetched separately)

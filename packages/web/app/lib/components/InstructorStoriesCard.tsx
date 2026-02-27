@@ -59,9 +59,9 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
   // Derive role from auth store -- use isInstructor field, not roles.administrator
-  const isInstructor = !!authUser?.isInstructor || !!authUser?.roles?.administrator;
+  const isInstructor = !!authUser?.isInstructor || authUser?.role === 'admin';
   const isStudent = !isInstructor;
-  const canComment = !!authUser?.uid;
+  const canComment = !!authUser?.id;
 
   // Sanitize HTML content
   useEffect(() => {
@@ -103,7 +103,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         id: uuidv4(),
         noteId,
         text: trimmed,
-        authorId: authUser?.uid ?? '',
+        authorId: authUser?.id ?? '',
         authorName: authUser?.name ?? '',
         createdAt: new Date().toISOString(),
         position: null,
@@ -128,7 +128,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         id: uuidv4(),
         noteId,
         text: trimmed,
-        authorId: authUser?.uid ?? '',
+        authorId: authUser?.id ?? '',
         authorName: authUser?.name ?? '',
         createdAt: new Date().toISOString(),
         position: null,

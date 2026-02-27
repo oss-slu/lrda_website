@@ -35,7 +35,7 @@ export default function Notes() {
   };
 
   const handleNoteDeleted = () => {
-    const userId = user?.uid ?? '';
+    const userId = user?.id ?? '';
     const currentNotes = queryClient.getQueryData<Note[]>(notesKeys.personal(userId)) ?? [];
     setSelectedNote(currentNotes[0] || undefined);
     setSelectedNoteId(currentNotes[0]?.id || null);

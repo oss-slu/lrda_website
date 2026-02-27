@@ -23,7 +23,7 @@ export async function fetchStudents(instructorId: string): Promise<StudentInfo[]
 
     // Map API response to StudentInfo format
     return students.map(s => ({
-      uid: s.id,
+      id: s.id,
       name: s.name,
       email: s.email,
     }));

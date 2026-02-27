@@ -40,9 +40,10 @@ jest.mock('../lib/stores/authStore', () => ({
   useAuthStore: jest.fn(selector => {
     const mockState = {
       user: {
-        uid: 'student-1',
+        id: 'student-1',
         name: 'Student User',
-        roles: { contributor: true, administrator: false },
+        email: 'student@example.com',
+        role: 'user',
       },
       isLoggedIn: true,
       isLoading: false,
@@ -54,17 +55,6 @@ jest.mock('../lib/stores/authStore', () => ({
 
 jest.mock('../lib/services', () => ({
   fetchCreatorName: async () => 'Student User',
-  fetchUserById: async (uid: string) => {
-    if (uid === 'student-1') {
-      return {
-        uid: 'student-1',
-        name: 'Student User',
-        parentInstructorId: 'instructor-1',
-        roles: { contributor: true, administrator: false },
-      };
-    }
-    return null;
-  },
 }));
 
 describe('CommentSidebar - students can comment', () => {

@@ -41,7 +41,6 @@ jest.mock('@tanstack/react-query', () => ({
 // Mock services
 jest.mock('../lib/services', () => ({
   fetchMe: jest.fn().mockResolvedValue(null),
-  fetchUserById: jest.fn().mockResolvedValue(null),
   fetchProfileById: jest.fn().mockResolvedValue(null),
   fetchInstructors: jest.fn().mockResolvedValue([]),
   updateProfile: jest.fn().mockResolvedValue({}),
@@ -72,11 +71,12 @@ jest.mock('../lib/stores/notesStore', () => ({
 // Configurable auth state for tests
 const mockAuthState: Record<string, any> = {
   user: {
-    uid: 'student-1',
+    id: 'student-1',
     name: 'Student User',
-    roles: { contributor: true, administrator: false },
+    email: 'student@example.com',
+    role: 'user',
     isInstructor: false,
-    parentInstructorId: 'instructor-1',
+    instructorId: 'instructor-1',
   },
   isLoggedIn: true,
   isLoading: false,
@@ -95,11 +95,12 @@ describe('Sidebar - auth initialization gate', () => {
     mockUseStudentNotes.mockClear();
     mockAuthState.isInitialized = true;
     mockAuthState.user = {
-      uid: 'student-1',
+      id: 'student-1',
       name: 'Student User',
-      roles: { contributor: true, administrator: false },
+      email: 'student@example.com',
+      role: 'user',
       isInstructor: false,
-      parentInstructorId: 'instructor-1',
+      instructorId: 'instructor-1',
     };
     mockAuthState.isLoggedIn = true;
   });

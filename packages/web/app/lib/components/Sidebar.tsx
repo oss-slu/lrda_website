@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // page refresh (same race condition fixed in useNotePermissions).
   const isInstructor = useMemo(() => {
     if (!user) return false;
-    return !!user.roles?.administrator || !!user.isInstructor;
+    return user.role === 'admin' || user.isInstructor;
   }, [user]);
 
   // TanStack Query for personal notes.
@@ -52,17 +52,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // cookie is re-validated on page refresh. Without this, the API treats
   // the user as anonymous and returns only published notes.
   const { data: personalNotes = [] } = usePersonalNotes(
-    viewMode === 'my' && isInitialized ? (user?.uid ?? null) : null,
+    viewMode === 'my' && isInitialized ? (user?.id ?? null) : null,
   );
 
   // TanStack Query for student notes (instructor review mode) with automatic polling
   const { data: studentNotes = [] } = useStudentNotes(
-    isInitialized ? (user?.uid ?? null) : null,
+    isInitialized ? (user?.id ?? null) : null,
     isInstructor && viewMode === 'review',
   );
 
   const handleAddNote = async () => {
-    const userId = user?.uid;
+    const userId = user?.id;
     if (!userId) {
       console.error('User ID is null - cannot create a new note');
       return;

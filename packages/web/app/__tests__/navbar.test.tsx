@@ -18,10 +18,10 @@ const mockAuthState = {
 
 // Define mockLoggedInUser for use in tests
 const mockLoggedInUser = {
-  uid: 'test-user-id',
+  id: 'test-user-id',
   name: 'Test User',
   email: 'test@example.com',
-  roles: { administrator: false, contributor: true },
+  role: 'user',
   isInstructor: false,
 };
 
@@ -57,7 +57,6 @@ jest.mock('../lib/stores/notesStore', () => ({
 // Mock services - inline to avoid hoisting issues
 jest.mock('../lib/services', () => ({
   fetchMe: jest.fn().mockResolvedValue(null),
-  fetchUserById: jest.fn().mockResolvedValue(null),
   fetchProfileById: jest.fn().mockResolvedValue(null),
   fetchInstructors: jest.fn().mockResolvedValue([]),
   updateProfile: jest.fn().mockResolvedValue({}),
@@ -151,7 +150,7 @@ describe('Navbar Component', () => {
     mockAuthState.user = {
       ...mockLoggedInUser,
       name: 'John Doe',
-      roles: { administrator: true, contributor: true },
+      role: 'admin',
     };
     mockAuthState.isLoggedIn = true;
 
@@ -185,7 +184,7 @@ describe('Navbar Component', () => {
     mockAuthState.user = {
       ...mockLoggedInUser,
       name: 'John Doe',
-      roles: { administrator: true, contributor: true },
+      role: 'admin',
     };
     mockAuthState.isLoggedIn = true;
 

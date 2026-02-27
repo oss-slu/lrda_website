@@ -34,41 +34,6 @@ export type UserProfile = {
   } | null;
 };
 
-// Legacy type alias for backward compatibility during migration
-// Components using UserData will continue to work
-export type UserData = {
-  uid: string; // Maps to UserProfile.id
-  name: string;
-  email?: string;
-  students?: string[];
-  roles: {
-    administrator: boolean;
-    contributor: boolean;
-  };
-  isInstructor?: boolean;
-  parentInstructorId?: string; // Maps to UserProfile.instructorId
-};
-
-// Helper to convert UserProfile to legacy UserData format
-export function toUserData(profile: UserProfile): UserData {
-  return {
-    uid: profile.id,
-    name: profile.name,
-    email: profile.email,
-    roles: {
-      administrator: profile.role === 'admin',
-      contributor: true, // All users can contribute
-    },
-    isInstructor: profile.isInstructor,
-    parentInstructorId: profile.instructorId ?? undefined,
-  };
-}
-
-// Helper to check if user is admin
-export function isAdmin(profile: UserProfile | null): boolean {
-  return profile?.role === 'admin';
-}
-
 // Session type from better-auth
 export type AuthSession = {
   token: string;

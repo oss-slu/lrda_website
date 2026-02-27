@@ -18,25 +18,6 @@ jest.mock('../lib/hooks/queries/useComments', () => ({
 // API Service stable mock - using new function-based services
 jest.mock('../lib/services', () => ({
   fetchCreatorName: async () => 'User',
-  fetchUserById: async (uid: string) => {
-    if (uid === 'student-1') {
-      return {
-        uid: 'student-1',
-        name: 'Student',
-        parentInstructorId: 'instructor-1',
-        roles: { contributor: true, administrator: false },
-      };
-    }
-    if (uid === 'inst-1') {
-      return {
-        uid: 'inst-1',
-        name: 'Instructor',
-        isInstructor: true,
-        roles: { contributor: false, administrator: true },
-      };
-    }
-    return null;
-  },
 }));
 
 // Mock auth store with configurable state per test
@@ -61,9 +42,10 @@ describe('CommentSidebar - permission gating', () => {
 
   test('student cannot see Resolve/Delete buttons', async () => {
     mockAuthState.user = {
-      uid: 'student-1',
+      id: 'student-1',
       name: 'Student',
-      roles: { contributor: true, administrator: false },
+      email: 'student@example.com',
+      role: 'user',
     };
 
     render(
@@ -81,9 +63,10 @@ describe('CommentSidebar - permission gating', () => {
 
   test('instructor sees Resolve/Delete buttons (when threads exist)', async () => {
     mockAuthState.user = {
-      uid: 'inst-1',
+      id: 'inst-1',
       name: 'Instructor',
-      roles: { contributor: false, administrator: true },
+      email: 'instructor@example.com',
+      role: 'admin',
     };
 
     render(
