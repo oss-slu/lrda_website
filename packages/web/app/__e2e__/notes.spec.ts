@@ -5,8 +5,8 @@ import { test, expect } from '@playwright/test';
  *
  * This test verifies the basic notes page functionality:
  * - Notes page loads correctly
- * - Page has content and is accessible
- * - Basic page structure is present
+ * - Page structure is present (resizable panels)
+ * - Navigation bar is visible
  *
  * Test Strategy: Focus on notes page structure and basic page presence
  * without testing note creation, editing, or complex user interactions.
@@ -26,20 +26,11 @@ test.describe('Notes Page', () => {
     const hasContent = (await page.locator('div').count()) > 0;
     expect(hasContent).toBeTruthy();
 
-    // Verify page is interactive (has some elements)
-    const hasElements = (await page.locator('*').count()) > 10;
-    expect(hasElements).toBeTruthy();
+    // Navigation should be visible
+    await expect(page.locator('nav')).toBeVisible();
 
-    // Check for specific content that should be visible
-    const pageTitle = page.locator('h1, h2, h3, h4, h5, h6').first();
-    if ((await pageTitle.count()) > 0) {
-      await expect(pageTitle).toBeVisible();
-    }
-
-    // Check for navigation or main content area
-    const mainContent = page.locator('main, [role="main"], .main, #main').first();
-    if ((await mainContent.count()) > 0) {
-      await expect(mainContent).toBeVisible();
-    }
+    // Page should have resizable panel structure
+    const separator = page.locator('[role="separator"]').first();
+    await expect(separator).toBeVisible();
   });
 });

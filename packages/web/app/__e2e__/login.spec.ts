@@ -19,26 +19,26 @@ test.describe('Login Page', () => {
     // Wait for page to load
     await page.waitForLoadState('domcontentloaded');
 
-    // Check that login heading is present
-    await expect(page.locator('h1:has-text("Login")')).toBeVisible();
+    // Check that login heading is present (shadcn CardTitle renders as h3)
+    await expect(page.locator('h3:has-text("Login to your account")')).toBeVisible();
 
-    // Verify username input field is present
-    const usernameInput = page.locator('input[placeholder="Email..."]');
-    await expect(usernameInput).toBeVisible();
+    // Verify email input field is present
+    const emailInput = page.locator('#email');
+    await expect(emailInput).toBeVisible();
 
     // Verify password input field is present
-    const passwordInput = page.locator('input[placeholder="Password..."]');
+    const passwordInput = page.locator('#password');
     await expect(passwordInput).toBeVisible();
 
-    // Check for login button (use nth(1) to get the form button, not navigation)
-    const loginButton = page.locator('button:has-text("Login")').nth(1);
+    // Check for login submit button
+    const loginButton = page.locator('button[type="submit"]:has-text("Login")');
     await expect(loginButton).toBeVisible();
 
     // Check for forgot password link
-    await expect(page.locator('a:has-text("Forgot Password?")')).toBeVisible();
+    await expect(page.locator('a:has-text("Forgot your password?")')).toBeVisible();
 
-    // Check for register link
-    await expect(page.locator('a:has-text("Register")')).toBeVisible();
+    // Check for sign up link (use exact match to avoid matching nav "Sign Up" link too)
+    await expect(page.getByRole('link', { name: 'Sign up', exact: true })).toBeVisible();
 
     // Verify form validation by attempting to submit empty form
     await loginButton.click();
@@ -46,9 +46,7 @@ test.describe('Login Page', () => {
     // Wait for any validation messages (if they exist)
     await page.waitForTimeout(500);
 
-    // Check if there are any validation messages or errors
-    const hasValidation =
-      (await page.locator('[role="alert"], .error, .validation-error, [data-error]').count()) > 0;
-    // Note: This test passes regardless of validation behavior to maintain simplicity
+    // The form uses HTML5 required attributes, so the browser handles validation
+    // We just ensure the page doesn't crash on empty submission
   });
 });

@@ -28,8 +28,8 @@ test.describe('Navigation', () => {
     await expect(page.locator('nav a:has-text("Map")').first()).toBeVisible();
     await expect(page.locator('nav a:has-text("Stories")').first()).toBeVisible();
 
-    // Check for login button
-    await expect(page.locator('button:has-text("Login")')).toBeVisible();
+    // Check for login link (rendered as <a> via shadcn Button asChild + Link)
+    await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
   });
 
   test('should display Resources page with properly formatted citations', async ({ page }) => {

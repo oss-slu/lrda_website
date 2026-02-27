@@ -34,8 +34,8 @@ test.describe('Home Page', () => {
     await expect(page.locator('nav a:has-text("Map")').first()).toBeVisible();
     await expect(page.locator('nav a:has-text("Stories")').first()).toBeVisible();
 
-    // Check for login button
-    await expect(page.locator('button:has-text("Login")')).toBeVisible();
+    // Check for login link (rendered as <a> via shadcn Button asChild + Link)
+    await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 
     // Verify page has content (generic divs)
     const hasContent = (await page.locator('div').count()) > 0;

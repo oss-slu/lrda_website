@@ -140,23 +140,15 @@ test.describe('Stories Page', () => {
     await page.waitForTimeout(3000);
 
     // Check for search input
-    const searchInput = page.locator(
-      'input[type="text"][placeholder*="Search"], input[type="text"][placeholder*="search"]',
-    );
-    const searchCount = await searchInput.count();
+    const searchInput = page.getByPlaceholder('Search stories...');
+    await expect(searchInput).toBeVisible();
 
-    // Search bar should be present
-    if (searchCount > 0) {
-      await expect(searchInput.first()).toBeVisible();
-    }
+    // Check for sort dropdown trigger (shadcn Select, not native <select>)
+    // The stories page has user filter and sort dropdowns using shadcn Select
+    const selectTriggers = page.locator('button[role="combobox"]');
+    const triggerCount = await selectTriggers.count();
 
-    // Check for user filter dropdown
-    const userFilter = page.locator('select');
-    const filterCount = await userFilter.count();
-
-    // Filter dropdown may or may not be present depending on data
-    if (filterCount > 0) {
-      await expect(userFilter.first()).toBeVisible();
-    }
+    // At least one dropdown trigger should be present (sort order)
+    expect(triggerCount).toBeGreaterThan(0);
   });
 });
