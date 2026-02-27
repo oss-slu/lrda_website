@@ -1,16 +1,5 @@
 const S3_PROXY_PREFIX = process.env.NEXT_PUBLIC_S3_PROXY_PREFIX;
 
-async function convertHeicToJpg(uri: string) {
-  console.log('Converting HEIC to JPG...');
-  const convertedImageUri = await performHeicToJpgConversion(uri);
-  console.log('Converted image URI: ', convertedImageUri);
-  return convertedImageUri;
-}
-
-async function performHeicToJpgConversion(uri: string) {
-  return uri;
-}
-
 async function uploadMedia(file: File, mediaType: string): Promise<string> {
   const data = new FormData();
   const uniqueName = `media-${Date.now()}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
@@ -57,4 +46,4 @@ async function uploadAudio(file: File): Promise<string> {
   return location;
 }
 
-export { convertHeicToJpg, uploadMedia, uploadAudio };
+export { uploadMedia, uploadAudio };

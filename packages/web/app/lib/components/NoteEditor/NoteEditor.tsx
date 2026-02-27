@@ -42,7 +42,8 @@ export default function NoteEditor({
 
   // Editor session key - changes when switching to a different note
   const noteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
-  const editorSessionKey = noteId ? `note-${noteId}` : `new-${++newNoteSessionCounter}`;
+  const sessionCounterRef = useRef(++newNoteSessionCounter);
+  const editorSessionKey = noteId ? `note-${noteId}` : `new-${sessionCounterRef.current}`;
 
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
