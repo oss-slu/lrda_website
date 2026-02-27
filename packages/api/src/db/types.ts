@@ -31,5 +31,5 @@ export interface Comment {
   position?: CommentPosition | null;
   threadId?: string | null;
   parentId?: string | null;
-  resolved?: boolean;
+  isResolved: boolean;
 }

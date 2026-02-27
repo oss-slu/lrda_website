@@ -7,7 +7,20 @@ description: 'Core coding standards, architecture patterns, and conventions for 
 
 ## Project Overview
 
-This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Firebase for authentication and data, Google Maps for mapping, and supports rich text editing with media uploads.
+This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
+
+### Migration Context
+
+This codebase is on a **migration branch** moving off the legacy RERUM backend to a new PostgreSQL + Hono API, targeting a full AWS deployment. The production site still uses RERUM. There is a companion **mobile app** (`lrda_mobile`) that also still uses the RERUM backend.
+
+**Migration plan:**
+1. This web app migrates first (RERUM -> PostgreSQL/Hono)
+2. During the transition, RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs on the server** to keep the mobile app's RERUM data in sync with the new PostgreSQL backend
+3. Once the mobile app is also migrated, the sync scripts and RERUM client can be removed
+
+**Do not delete** the RERUM sync scripts or `packages/web/app/lib/services/base/rerum-client.ts` -- they are needed for the migration period.
+
+### Packages
 
 This is a **monorepo** containing:
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { authClient } from '@/app/lib/auth/client';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -76,11 +77,19 @@ export default function ResetPasswordPage() {
             )}
 
             <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white" disabled={loading}>
-              {loading ? 'Resetting…' : 'Reset password'}
+              {loading ? 'Resetting...' : 'Reset password'}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

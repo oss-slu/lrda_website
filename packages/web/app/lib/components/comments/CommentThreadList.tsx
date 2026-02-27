@@ -1,6 +1,5 @@
 'use client';
 
-import type { Key } from 'react';
 import type { CommentData } from '@/app/lib/services/comments/comments.types';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +11,7 @@ interface CommentThreadListProps {
   onReplyDraftChange: (threadId: string, value: string) => void;
   onReply: (threadId: string) => void;
   onResolveThread: (threadId: string) => void;
-  onDeleteComment: (commentId: Key | null | undefined) => void;
+  onDeleteComment: (commentId: string) => void;
 }
 
 export function CommentThreadList({
@@ -28,10 +27,10 @@ export function CommentThreadList({
   const threads = comments
     .filter(c => !c.parentId)
     .map(root => {
-      const tid = String(root.threadId || root.id);
+      const tid = root.threadId || root.id;
       return {
         root: { ...root, threadId: tid },
-        replies: comments.filter(r => String(r.parentId) === tid),
+        replies: comments.filter(r => r.parentId === tid),
       };
     });
 
@@ -43,13 +42,13 @@ export function CommentThreadList({
     <div className='space-y-2.5 sm:space-y-3'>
       {threads.map(({ root, replies }) => (
         <div
-          key={String(root.id)}
+          key={root.id}
           className='space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 sm:p-2.5'
         >
           <div className='flex items-start justify-between'>
             <div className='min-w-0'>
               <p className='truncate text-[13px] font-semibold sm:text-sm'>
-                {String(root.authorName)}
+                {root.authorName}
                 {root.resolved && (
                   <span className='ml-2 text-xs text-green-600'>(Resolved)</span>
                 )}
@@ -68,7 +67,7 @@ export function CommentThreadList({
                     size='sm'
                     className='h-7 px-2 text-xs'
                     variant='secondary'
-                    onClick={() => onResolveThread(String(root.threadId))}
+                    onClick={() => onResolveThread(root.threadId)}
                   >
                     Resolve
                   </Button>
@@ -88,9 +87,9 @@ export function CommentThreadList({
           {replies.length > 0 && (
             <div className='ml-2 space-y-1.5 border-l-2 border-blue-200 pl-2 sm:ml-3 sm:pl-3'>
               {replies.map(r => (
-                <div key={String(r.id)}>
+                <div key={r.id}>
                   <p className='truncate text-[12px] font-medium sm:text-xs'>
-                    {String(r.authorName)}
+                    {r.authorName}
                   </p>
                   <p className='whitespace-pre-wrap break-words text-[12px] text-gray-700 sm:text-xs'>
                     {r.text}
@@ -120,15 +119,15 @@ export function CommentThreadList({
               <input
                 className='flex-1 rounded border border-gray-300 px-2 py-1 text-[12px] focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-200 sm:text-xs'
                 placeholder='Reply...'
-                value={replyDrafts[String(root.threadId || root.id)] || ''}
+                value={replyDrafts[root.threadId || root.id] || ''}
                 onChange={e =>
-                  onReplyDraftChange(String(root.threadId || root.id), e.target.value)
+                  onReplyDraftChange(root.threadId || root.id, e.target.value)
                 }
               />
               <Button
                 size='sm'
                 className='h-7 px-2 text-xs'
-                onClick={() => onReply(String(root.threadId || root.id))}
+                onClick={() => onReply(root.threadId || root.id)}
               >
                 Reply
               </Button>

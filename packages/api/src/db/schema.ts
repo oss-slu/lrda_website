@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, numeric, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, numeric, jsonb, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { Tag, Comment as CommentType } from './types';
 
@@ -200,7 +200,7 @@ export const comment = pgTable('comment', {
   text: text('text').notNull(),
   position: jsonb('position').$type<{ from: number; to: number } | null>(),
   threadId: text('thread_id'),
-  parentId: text('parent_id').references((): any => comment.id, { onDelete: 'cascade' }),
+  parentId: text('parent_id').references((): AnyPgColumn => comment.id, { onDelete: 'cascade' }),
   isResolved: boolean('is_resolved').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

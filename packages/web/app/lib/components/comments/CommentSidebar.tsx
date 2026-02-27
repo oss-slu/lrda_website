@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import type { Key } from 'react';
 import { Comment } from '@/app/types';
 import CommentPopover from '../CommentPopover';
 import { fetchCreatorName } from '../../services';
@@ -66,12 +65,9 @@ export default function CommentSidebar({
     const newComment: Comment = {
       id: uuidv4(),
       noteId,
-      uid: authorId,
       text: trimmed,
-      author: authorDisplay,
       authorId,
       authorName: authorDisplay,
-      role: isInstructor ? 'instructor' : 'student',
       createdAt: new Date().toISOString(),
       position: selection,
       threadId,
@@ -106,16 +102,13 @@ export default function CommentSidebar({
     const reply: Comment = {
       id: uuidv4(),
       noteId,
-      uid: authorId,
       text: trimmed,
-      author: authorDisplay,
       authorId,
       authorName: authorDisplay,
-      role: isInstructor ? 'instructor' : 'student',
       createdAt: new Date().toISOString(),
       position: null,
       threadId,
-      parentId: String(threadId),
+      parentId: threadId,
       resolved: false,
     };
 
@@ -127,10 +120,9 @@ export default function CommentSidebar({
     await resolveThread.mutateAsync(threadId);
   };
 
-  const handleDeleteComment = async (commentId?: Key | null | undefined) => {
-    const id = String(commentId || '');
-    if (!id) return;
-    await deleteComment.mutateAsync(id);
+  const handleDeleteComment = async (commentId: string) => {
+    if (!commentId) return;
+    await deleteComment.mutateAsync(commentId);
   };
 
   return (

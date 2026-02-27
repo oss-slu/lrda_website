@@ -1,4 +1,3 @@
-import { Key, ReactNode } from 'react';
 import type { CommentData } from './lib/services/comments/comments.types';
 import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
 
@@ -13,22 +12,7 @@ export type MediaData = {
   uri: string;
 };
 
-/**
- * Comment type aligned with the PostgreSQL comment table.
- * Legacy fields are kept for backward compatibility but deprecated.
- */
-export type Comment = CommentData & {
-  /** @deprecated Use authorId instead */
-  uid?: string;
-  /** @deprecated Use authorName instead */
-  author?: string;
-  /** @deprecated Not stored in PostgreSQL backend */
-  role?: 'instructor' | 'student';
-  /** @deprecated Use delete instead of soft-delete */
-  archived?: boolean;
-  /** Overridden to allow Key type for React rendering */
-  id?: Key | null | undefined;
-};
+export type Comment = CommentData;
 
 // New UserProfile type matching PostgreSQL schema (via better-auth)
 export type UserProfile = {

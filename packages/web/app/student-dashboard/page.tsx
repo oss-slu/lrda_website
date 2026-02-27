@@ -22,8 +22,8 @@ function StudentNotePreview({ note }: { note: Note }) {
         <h4 className='mb-2 text-sm font-semibold text-blue-900'>Recent Feedback:</h4>
         {preview.length > 0 ?
           preview.map(c => (
-            <div key={String(c.id)} className='mb-1 text-xs text-gray-700'>
-              <span className='font-medium'>{String(c.authorName)}:</span>{' '}
+            <div key={c.id} className='mb-1 text-xs text-gray-700'>
+              <span className='font-medium'>{c.authorName}:</span>{' '}
               {c.text.length > 100 ? c.text.slice(0, 100) + '...' : c.text}
             </div>
           ))

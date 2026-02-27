@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { commentsService } from '@/app/lib/services';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 
@@ -25,6 +26,7 @@ const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
 
     try {
       await commentsService.create({
+        id: uuidv4(),
         noteId,
         text: comment,
         authorId: user.uid,

@@ -1,22 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
 
-const ConfirmPage = () => {
+function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
-
-  useEffect(() => {
-    // Get email from URL params
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
-    }
-  }, [searchParams]);
+  const emailParam = searchParams.get('email');
+  const email = emailParam ? decodeURIComponent(emailParam) : '';
 
   const handleGoToLogin = () => {
     router.push('/login');
@@ -51,6 +44,12 @@ const ConfirmPage = () => {
       </Card>
     </div>
   );
-};
+}
 
-export default ConfirmPage;
+export default function ConfirmPage() {
+  return (
+    <Suspense>
+      <ConfirmContent />
+    </Suspense>
+  );
+}

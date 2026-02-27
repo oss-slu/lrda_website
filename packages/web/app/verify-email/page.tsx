@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { authClient } from '@/app/lib/auth/client';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -79,7 +80,7 @@ export default function VerifyEmailPage() {
                 <CheckCircle className='h-12 w-12 text-green-600' />
               </div>
               <p className='text-center text-sm font-medium text-green-600'>
-                ✓ Email verified successfully!
+                Email verified successfully!
               </p>
               <p className='text-center text-sm text-gray-600'>Redirecting to login...</p>
             </div>
@@ -110,7 +111,7 @@ export default function VerifyEmailPage() {
                   )}
 
                   <Button type='submit' className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white' disabled={loading || !token}>
-                    {loading ? 'Verifying…' : 'Verify email'}
+                    {loading ? 'Verifying...' : 'Verify email'}
                   </Button>
 
                   <div className='flex flex-col gap-2 pt-2'>
@@ -138,5 +139,13 @@ export default function VerifyEmailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

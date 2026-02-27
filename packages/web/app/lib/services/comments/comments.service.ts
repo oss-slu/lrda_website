@@ -5,7 +5,6 @@
  * Uses the REST API backend (Hono/PostgreSQL).
  */
 
-import { Comment } from '@/app/types';
 import { restClient } from '../base/rest-client';
 import type { CommentData, ApiCommentData, ResolveThreadResult } from './comments.types';
 
@@ -27,7 +26,7 @@ class CommentsService {
    * Create a new comment.
    * Accepts the app's Comment type for compatibility.
    */
-  async create(comment: Comment | CommentData): Promise<ApiCommentData> {
+  async create(comment: CommentData): Promise<ApiCommentData> {
     const payload = {
       noteId: comment.noteId,
       text: comment.text,
@@ -105,11 +104,11 @@ class CommentsService {
       authorId: item.authorId,
       authorName: item.authorName,
       createdAt: new Date(item.createdAt).toISOString(),
+      updatedAt: item.updatedAt,
       position: item.position ? { from: item.position.from, to: item.position.to } : null,
       threadId: item.threadId || null,
       parentId: item.parentId || null,
       resolved: item.isResolved,
-      archived: false, // No longer using archive
     };
   }
 }

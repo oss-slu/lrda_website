@@ -2,8 +2,6 @@
  * Type definitions for the Comments service.
  */
 
-import type { ReactNode } from 'react';
-
 /**
  * Position within text content for inline comments.
  */
@@ -16,18 +14,17 @@ export interface CommentPosition {
  * Comment data structure.
  */
 export interface CommentData {
-  id?: string;
+  id: string;
   noteId: string;
   text: string;
   authorId: string;
-  authorName: string | ReactNode;
-  author?: string;
+  authorName: string;
   createdAt: string;
+  updatedAt?: string;
   position?: CommentPosition | null;
   threadId?: string | null;
   parentId?: string | null;
   resolved?: boolean;
-  archived?: boolean;
 }
 
 /**
