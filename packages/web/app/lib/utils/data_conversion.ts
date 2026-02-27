@@ -15,8 +15,8 @@ export default class DataConversion {
       let time = new Date(message.__rerum.createdAt);
       if (message.time === undefined) {
         time = new Date(message.__rerum.createdAt);
-        var date = new Date();
-        var offsetInHours = date.getTimezoneOffset() / 60;
+        const date = new Date();
+        const offsetInHours = date.getTimezoneOffset() / 60;
         time.setHours(time.getHours() - offsetInHours);
       } else {
         time = new Date(message.time);

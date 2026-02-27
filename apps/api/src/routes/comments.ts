@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { ErrorSchema } from '../schemas/common';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db';
 import { comment, note } from '../db/schema';
@@ -24,10 +25,6 @@ const CommentSchema = z.object({
   isResolved: z.boolean(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
-});
-
-const ErrorSchema = z.object({
-  error: z.string(),
 });
 
 // Input schemas

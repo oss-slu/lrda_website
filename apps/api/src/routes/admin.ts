@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { ErrorSchema } from '../schemas/common';
 import { eq, isNotNull, and, ne } from 'drizzle-orm';
 import { db } from '../db';
 import { user } from '../db/schema';
@@ -30,10 +31,6 @@ const StatsSchema = z.object({
   totalAdmins: z.number(),
   totalInstructors: z.number(),
   pendingApplications: z.number(),
-});
-
-const ErrorSchema = z.object({
-  error: z.string(),
 });
 
 const SuccessSchema = z.object({

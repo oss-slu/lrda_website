@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { ErrorSchema } from '../schemas/common';
 import { eq, and, gte, lte, desc, inArray, or, ilike, asc } from 'drizzle-orm';
 import { db } from '../db';
 import { note, media, audio, user } from '../db/schema';
@@ -50,10 +51,6 @@ const NoteSchema = z.object({
 const NoteWithRelationsSchema = NoteSchema.extend({
   media: z.array(MediaSchema).optional(),
   audio: z.array(AudioSchema).optional(),
-});
-
-const ErrorSchema = z.object({
-  error: z.string(),
 });
 
 // Input schemas

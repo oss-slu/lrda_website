@@ -14,7 +14,7 @@ async function performHeicToJpgConversion(uri: string) {
 async function uploadMedia(file: File, mediaType: string): Promise<string> {
   console.log('uploadMedia - Input file:', file);
 
-  let data = new FormData();
+  const data = new FormData();
   const uniqueName = `media-${Date.now()}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
 
   data.append('file', file, uniqueName);
@@ -43,7 +43,7 @@ async function uploadMedia(file: File, mediaType: string): Promise<string> {
 async function uploadAudio(file: File): Promise<string> {
   console.log('uploadAudio - Input file:', file);
 
-  let data = new FormData();
+  const data = new FormData();
   const uniqueName = `media-${Date.now()}.mp3`;
 
   data.append('file', file, uniqueName);

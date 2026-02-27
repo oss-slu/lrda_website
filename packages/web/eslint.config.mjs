@@ -37,8 +37,8 @@ export default defineConfig([
       '@next/next/no-img-element': 'off',
 
       // General JS rules
-      'no-var': 'off',
-      'prefer-const': 'off',
+      'no-var': 'error',
+      'prefer-const': 'error',
     },
   },
 

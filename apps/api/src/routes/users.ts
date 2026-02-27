@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { ErrorSchema } from '../schemas/common';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { user } from '../db/schema';
@@ -36,10 +37,6 @@ const UserDetailSchema = UserSchema.extend({
     })
     .nullable()
     .optional(),
-});
-
-const ErrorSchema = z.object({
-  error: z.string(),
 });
 
 // Routes

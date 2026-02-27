@@ -173,7 +173,7 @@ export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): stri
   } = options;
 
   // Pre-process: strip blob/data URLs if requested
-  let processed = stripBlobUrls ? stripBlobAndDataUrls(dirty) : dirty;
+  const processed = stripBlobUrls ? stripBlobAndDataUrls(dirty) : dirty;
 
   // Build allowed tags list based on options
   const allowedTags = [...DEFAULT_ALLOWED_TAGS];
