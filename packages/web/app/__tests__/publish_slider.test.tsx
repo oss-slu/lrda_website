@@ -84,11 +84,11 @@ jest.mock('../lib/services', () => ({
 }));
 
 describe('Publish and Unpublish Notes Slider', () => {
-  let mockPush;
+  let mockPush: jest.Mock;
 
   beforeEach(() => {
     mockPush = jest.fn();
-    useRouter.mockImplementation(() => ({
+    (useRouter as jest.Mock).mockImplementation(() => ({
       push: mockPush,
     }));
   });

@@ -17,12 +17,12 @@ jest.mock('next/router', () => ({
 }));
 
 // Track the userId passed to usePersonalNotes
-const mockUsePersonalNotes = jest.fn(() => ({ data: [] }));
-const mockUseStudentNotes = jest.fn(() => ({ data: [] }));
+const mockUsePersonalNotes = jest.fn((_userId?: any) => ({ data: [] }));
+const mockUseStudentNotes = jest.fn((_instructorId?: any) => ({ data: [] }));
 
 jest.mock('../lib/hooks/queries/useNotes', () => ({
-  usePersonalNotes: (...args: any[]) => mockUsePersonalNotes(...args),
-  useStudentNotes: (...args: any[]) => mockUseStudentNotes(...args),
+  usePersonalNotes: mockUsePersonalNotes,
+  useStudentNotes: mockUseStudentNotes,
   notesKeys: {
     all: ['notes'],
     personal: (userId: string) => ['notes', 'personal', userId],

@@ -25,7 +25,10 @@ const mockGeolocation = {
   getCurrentPosition: jest.fn(),
 };
 
-global.navigator.geolocation = mockGeolocation as any;
+Object.defineProperty(global.navigator, 'geolocation', {
+  value: mockGeolocation,
+  writable: true,
+});
 
 describe('LocationPicker Component', () => {
   beforeEach(() => {

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import React, { RefObject } from 'react';
 
 // Define the SearchComponent with the correct typing for searchBarRef
-function SearchComponent({ searchBarRef }: { searchBarRef: RefObject<HTMLInputElement> }) {
+function SearchComponent({ searchBarRef }: { searchBarRef: RefObject<HTMLInputElement | null> }) {
   return <input type='text' placeholder='Search' ref={searchBarRef} />;
 }
 

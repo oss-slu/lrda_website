@@ -28,25 +28,32 @@ describe('LocationPicker', () => {
   const originalGeolocation = navigator.geolocation;
 
   beforeEach(() => {
-    navigator.geolocation = {
-      getCurrentPosition: jest.fn().mockImplementation(success =>
-        Promise.resolve(
-          success({
-            coords: {
-              latitude: 50,
-              longitude: 30,
-            },
-          }),
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: jest.fn().mockImplementation(success =>
+          Promise.resolve(
+            success({
+              coords: {
+                latitude: 50,
+                longitude: 30,
+              },
+            }),
+          ),
         ),
-      ),
-      watchPosition: jest.fn(),
-      clearWatch: jest.fn(),
-    };
+        watchPosition: jest.fn(),
+        clearWatch: jest.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
   afterEach(() => {
-    // Restore the original navigator.geolocation
-    navigator.geolocation = originalGeolocation;
+    Object.defineProperty(navigator, 'geolocation', {
+      value: originalGeolocation,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it('renders without crashing', () => {

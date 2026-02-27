@@ -45,7 +45,7 @@ describe('MapPage Tour', () => {
       start: jest.fn(), // Mock start function without any behavior
       oncomplete: jest.fn(), // Mock oncomplete function without any behavior
     };
-    (introJs as jest.Mock).mockReturnValue(mockIntroJsInstance); // Make introJs return the mock instance
+    (introJs as unknown as jest.Mock).mockReturnValue(mockIntroJsInstance); // Make introJs return the mock instance
     // Render the MapPage component
     render(
       <TestQueryWrapper>

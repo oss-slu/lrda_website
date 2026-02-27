@@ -203,7 +203,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   // GET /notes - list notes with filters
   .openapi(listNotesRoute, async c => {
     const query = c.req.valid('query');
-    const authUser = c.get('user');
+    const authUser = c.get('user') as AppEnv['Variables']['user'];
     const conditions = [];
 
     // Determine if the authenticated user is the owner of the queried notes
@@ -266,7 +266,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   // GET /notes/:id - get single note
   .openapi(getNoteRoute, async c => {
     const { id } = c.req.valid('param');
-    const authUser = c.get('user');
+    const authUser = c.get('user') as AppEnv['Variables']['user'];
 
     const result = await db.query.note.findFirst({
       where: eq(note.id, id),

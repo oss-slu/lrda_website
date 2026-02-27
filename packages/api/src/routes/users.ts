@@ -200,7 +200,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
         name: result.name,
         email: result.email,
         image: result.image,
-        role: result.role,
+        role: result.role ?? 'user',
         isInstructor: result.isInstructor,
         instructorId: result.instructorId,
         pendingInstructorDescription: result.pendingInstructorDescription,
@@ -230,17 +230,33 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'User not found' }, 404);
     }
 
+    // Re-fetch with instructor relation for full response
+    const result = await db.query.user.findFirst({
+      where: eq(user.id, authUser.id),
+      with: {
+        instructor: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
     return c.json(
       {
-        id: updated.id,
-        name: updated.name,
-        email: updated.email,
-        image: updated.image,
-        isInstructor: updated.isInstructor,
-        instructorId: updated.instructorId,
-        pendingInstructorDescription: updated.pendingInstructorDescription,
-        createdAt: updated.createdAt,
-        updatedAt: updated.updatedAt,
+        id: result!.id,
+        name: result!.name,
+        email: result!.email,
+        image: result!.image,
+        role: result!.role ?? 'user',
+        isInstructor: result!.isInstructor,
+        instructorId: result!.instructorId,
+        pendingInstructorDescription: result!.pendingInstructorDescription,
+        createdAt: result!.createdAt,
+        updatedAt: result!.updatedAt,
+        instructor: result!.instructor,
       },
       200,
     );
@@ -352,10 +368,14 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
         name: true,
         email: true,
         image: true,
+        role: true,
         isInstructor: true,
         createdAt: true,
       },
     });
 
-    return c.json(students, 200);
+    return c.json(
+      students.map(s => ({ ...s, role: s.role ?? 'user' })),
+      200,
+    );
   });

@@ -57,7 +57,7 @@ describe('convertToJpeg', () => {
       result = 'data:image/png;base64,fake';
       onload: Function = () => {};
       onerror: Function = () => {};
-      readAsDataURL = mockReadAsDataURL.mockImplementation(function () {
+      readAsDataURL = mockReadAsDataURL.mockImplementation(function (this: MockFileReader) {
         setTimeout(() => {
           this.onload({ target: { result: this.result } });
         }, 0);
@@ -87,7 +87,7 @@ describe('convertToJpeg', () => {
           mockImageInstance.onload?.();
         }, 0);
       },
-      onload: null,
+      onload: null as (() => void) | null,
       width: 100,
       height: 100,
     };
