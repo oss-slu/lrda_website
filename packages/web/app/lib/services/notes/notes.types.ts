@@ -1,9 +1,16 @@
 /**
  * Type definitions for the Notes service.
+ *
+ * API response types (NoteResponse, MediaResponse, AudioResponse) are
+ * auto-derived from the shared Zod schemas in @lrda/shared.
+ * Only frontend-specific types are defined here.
  */
 
-import type { Tag, Comment } from '@/app/types';
+import type { Tag } from '@lrda/shared';
 import type { VideoType, PhotoType, AudioType } from '@/app/lib/models/media_class';
+
+// Re-export shared API types so existing imports keep working
+export type { NoteResponse as ApiNoteData, MediaResponse as ApiMediaData, AudioResponse as ApiAudioData } from '@lrda/shared';
 
 /**
  * Options for querying notes.
@@ -46,51 +53,4 @@ export interface CreateNotePayload {
  */
 export interface UpdateNotePayload extends CreateNotePayload {
   id: string;
-}
-
-/**
- * Media data from API.
- */
-export interface ApiMediaData {
-  id: string;
-  noteId: string;
-  type: string;
-  uri: string;
-  thumbnailUri?: string | null;
-  uuid?: string | null;
-  createdAt: string;
-}
-
-/**
- * Audio data from API.
- */
-export interface ApiAudioData {
-  id: string;
-  noteId: string;
-  uri: string;
-  name?: string | null;
-  duration?: string | null;
-  uuid?: string | null;
-  createdAt: string;
-}
-
-/**
- * Note data from REST API.
- */
-export interface ApiNoteData {
-  id: string;
-  title: string | null;
-  text: string;
-  creatorId: string;
-  latitude: string | null;
-  longitude: string | null;
-  isPublished: boolean;
-  approvalRequested: boolean;
-  tags: Tag[] | null;
-  time: string;
-  createdAt: string;
-  updatedAt: string;
-  media?: ApiMediaData[];
-  audio?: ApiAudioData[];
-  comments?: Comment[];
 }

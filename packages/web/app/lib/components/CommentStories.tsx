@@ -32,6 +32,7 @@ const CommentStories: React.FC<CommentStoriesProps> = ({ noteId }) => {
         authorId: user.id,
         authorName: user.name,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
 
       setSubmittedComment(comment);

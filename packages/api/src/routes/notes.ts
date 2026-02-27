@@ -1,123 +1,18 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { ErrorSchema } from '../schemas/common';
+import {
+  ErrorSchema,
+  NoteResponseSchema,
+  CreateNoteInputSchema,
+  UpdateNoteInputSchema,
+} from '@lrda/shared';
 import { eq, and, gte, lte, desc, inArray, or, ilike, asc } from 'drizzle-orm';
 import { db } from '../db';
 import { note, media, audio, user } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../types';
 
-// Schemas
-
-const TagSchema = z.object({
-  label: z.string(),
-  origin: z.enum(['user', 'ai']),
-});
-
-const MediaSchema = z.object({
-  id: z.string(),
-  noteId: z.string(),
-  type: z.string(),
-  uri: z.string(),
-  thumbnailUri: z.string().nullable().optional(),
-  uuid: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()),
-});
-
-const AudioSchema = z.object({
-  id: z.string(),
-  noteId: z.string(),
-  uri: z.string(),
-  name: z.string().nullable().optional(),
-  duration: z.string().nullable().optional(),
-  uuid: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()),
-});
-
-const NoteSchema = z.object({
-  id: z.string(),
-  title: z.string().nullable().optional(),
-  text: z.string(),
-  creatorId: z.string(),
-  latitude: z.string().nullable().optional(),
-  longitude: z.string().nullable().optional(),
-  isPublished: z.boolean(),
-  approvalRequested: z.boolean(),
-  tags: z.array(TagSchema).nullable().optional(),
-  time: z.string().or(z.date()),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
-
-const NoteWithRelationsSchema = NoteSchema.extend({
-  media: z.array(MediaSchema).optional(),
-  audio: z.array(AudioSchema).optional(),
-});
-
-// Input schemas
-
-const CreateNoteInputSchema = z.object({
-  title: z.string().optional(),
-  text: z.string().default(''),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
-  isPublished: z.boolean().default(false),
-  approvalRequested: z.boolean().default(false),
-  tags: z.array(TagSchema).optional(),
-  time: z.string().optional(),
-  media: z
-    .array(
-      z.object({
-        type: z.string(),
-        uri: z.string(),
-        thumbnailUri: z.string().optional(),
-        uuid: z.string().optional(),
-      }),
-    )
-    .optional(),
-  audio: z
-    .array(
-      z.object({
-        uri: z.string(),
-        name: z.string().optional(),
-        duration: z.string().optional(),
-        uuid: z.string().optional(),
-      }),
-    )
-    .optional(),
-});
-
-const UpdateNoteInputSchema = z.object({
-  title: z.string().optional(),
-  text: z.string().optional(),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
-  isPublished: z.boolean().optional(),
-  approvalRequested: z.boolean().optional(),
-  tags: z.array(TagSchema).optional(),
-  time: z.string().optional(),
-  media: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        type: z.string(),
-        uri: z.string(),
-        thumbnailUri: z.string().optional(),
-        uuid: z.string().optional(),
-      }),
-    )
-    .optional(),
-  audio: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        uri: z.string(),
-        name: z.string().optional(),
-        duration: z.string().optional(),
-        uuid: z.string().optional(),
-      }),
-    )
-    .optional(),
-});
+// Alias for backward compatibility in route definitions
+const NoteWithRelationsSchema = NoteResponseSchema;
 
 const ListNotesQuerySchema = z.object({
   published: z

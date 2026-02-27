@@ -1,10 +1,9 @@
 import type { CommentData } from './lib/services/comments/comments.types';
+import type { Tag, CommentPosition } from '@lrda/shared';
 import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
 
-export interface Tag {
-  label: string;
-  origin: 'user' | 'ai';
-}
+// Re-export shared types so existing imports from '@/app/types' keep working
+export type { Tag, CommentPosition };
 
 export type MediaData = {
   uuid: string;
@@ -14,7 +13,8 @@ export type MediaData = {
 
 export type Comment = CommentData;
 
-// New UserProfile type matching PostgreSQL schema (via better-auth)
+// Re-export UserProfile derived from shared UserDetailSchema
+// Kept as a named export for backward compatibility with existing imports
 export type UserProfile = {
   id: string;
   name: string;
@@ -26,7 +26,6 @@ export type UserProfile = {
   pendingInstructorDescription?: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
-  // Populated relation
   instructor?: {
     id: string;
     name: string;
@@ -59,7 +58,7 @@ export type Note = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
-  approvalRequested?: boolean | undefined; // New field for approval request
+  approvalRequested?: boolean | undefined;
   tags: Tag[];
   uid: string;
   comments?: Comment[];
@@ -79,7 +78,7 @@ export type newNote = {
   latitude: string;
   longitude: string;
   published: boolean | undefined;
-  approvalRequested?: boolean | undefined; // New field for approval request
+  approvalRequested?: boolean | undefined;
   tags: Tag[];
 };
 

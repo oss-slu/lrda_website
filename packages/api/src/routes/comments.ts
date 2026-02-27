@@ -1,46 +1,15 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { ErrorSchema } from '../schemas/common';
+import {
+  ErrorSchema,
+  CommentSchema,
+  CreateCommentInputSchema,
+  UpdateCommentInputSchema,
+} from '@lrda/shared';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db';
 import { comment, note } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../types';
-
-// Schemas
-
-const CommentPositionSchema = z.object({
-  from: z.number(),
-  to: z.number(),
-});
-
-const CommentSchema = z.object({
-  id: z.string(),
-  noteId: z.string(),
-  authorId: z.string(),
-  authorName: z.string(),
-  text: z.string(),
-  position: CommentPositionSchema.nullable().optional(),
-  threadId: z.string().nullable().optional(),
-  parentId: z.string().nullable().optional(),
-  isResolved: z.boolean(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-});
-
-// Input schemas
-
-const CreateCommentInputSchema = z.object({
-  noteId: z.string(),
-  text: z.string(),
-  position: CommentPositionSchema.nullable().optional(),
-  threadId: z.string().nullable().optional(),
-  parentId: z.string().nullable().optional(),
-});
-
-const UpdateCommentInputSchema = z.object({
-  text: z.string().optional(),
-  isResolved: z.boolean().optional(),
-});
 
 // Routes
 

@@ -226,7 +226,6 @@ class NotesService {
       approvalRequested: data.approvalRequested,
       tags: data.tags || [],
       uid: data.creatorId,
-      comments: data.comments,
     };
   };
 

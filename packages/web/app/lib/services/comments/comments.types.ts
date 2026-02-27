@@ -1,17 +1,17 @@
 /**
  * Type definitions for the Comments service.
+ *
+ * API response types (CommentResponse, CommentPosition) are auto-derived
+ * from the shared Zod schemas in @lrda/shared.
+ * Only frontend-specific types are defined here.
  */
 
-/**
- * Position within text content for inline comments.
- */
-export interface CommentPosition {
-  from: number;
-  to: number;
-}
+// Re-export shared types
+export type { CommentPosition, CommentResponse as ApiCommentData } from '@lrda/shared';
 
 /**
- * Comment data structure.
+ * Frontend comment data structure.
+ * Uses `resolved` instead of the API's `isResolved` (field name alignment is a follow-up).
  */
 export interface CommentData {
   id: string;
@@ -20,28 +20,11 @@ export interface CommentData {
   authorId: string;
   authorName: string;
   createdAt: string;
-  updatedAt?: string;
-  position?: CommentPosition | null;
+  updatedAt: string;
+  position?: { from: number; to: number } | null;
   threadId?: string | null;
   parentId?: string | null;
   resolved?: boolean;
-}
-
-/**
- * Comment data from REST API.
- */
-export interface ApiCommentData {
-  id: string;
-  noteId: string;
-  authorId: string;
-  authorName: string;
-  text: string;
-  position?: CommentPosition | null;
-  threadId?: string | null;
-  parentId?: string | null;
-  isResolved: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
@@ -54,4 +37,4 @@ export interface ResolveThreadResult {
 
 // Legacy type alias for backward compatibility
 /** @deprecated Use ApiCommentData instead */
-export type RerumCommentData = ApiCommentData;
+export type RerumCommentData = import('@lrda/shared').CommentResponse;

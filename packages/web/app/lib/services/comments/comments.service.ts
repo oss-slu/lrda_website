@@ -104,7 +104,7 @@ class CommentsService {
       authorId: item.authorId,
       authorName: item.authorName,
       createdAt: new Date(item.createdAt).toISOString(),
-      updatedAt: item.updatedAt,
+      updatedAt: new Date(item.updatedAt).toISOString(),
       position: item.position ? { from: item.position.from, to: item.position.to } : null,
       threadId: item.threadId || null,
       parentId: item.parentId || null,

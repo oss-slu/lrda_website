@@ -3,35 +3,17 @@
  *
  * Handles admin-specific operations including fetching all users,
  * pending instructor applications, and system statistics.
+ *
+ * Types are derived from shared Zod schemas in @lrda/shared.
  */
 
 import { fetchWithAuth } from '../api';
+import type { AdminUser, PendingApplication, Stats } from '@lrda/shared';
 
-export interface AdminUserData {
-  id: string;
-  name: string;
-  email: string;
-  image?: string | null;
-  role?: string | null;
-  isInstructor: boolean;
-  pendingInstructorDescription?: string | null;
-  createdAt: Date | string;
-}
-
-export interface PendingApplication {
-  id: string;
-  name: string;
-  email: string;
-  description: string;
-  createdAt: Date | string;
-}
-
-export interface AdminStats {
-  totalUsers: number;
-  totalAdmins: number;
-  totalInstructors: number;
-  pendingApplications: number;
-}
+// Re-export shared types with legacy aliases for backward compatibility
+export type AdminUserData = AdminUser;
+export type { PendingApplication };
+export type AdminStats = Stats;
 
 /**
  * Fetch all users from the API.

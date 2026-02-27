@@ -2,11 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { XIcon, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-
-interface Tag {
-  label: string;
-  origin: 'user' | 'ai';
-}
+import type { Tag } from '@lrda/shared';
 
 // Define the props for the TagManager component
 interface TagManagerProps {

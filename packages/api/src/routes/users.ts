@@ -1,43 +1,15 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { ErrorSchema } from '../schemas/common';
+import {
+  ErrorSchema,
+  UserSchema,
+  PublicUserSchema,
+  UserDetailSchema,
+} from '@lrda/shared';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { user } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
 import type { AppEnv } from '../types';
-
-// Schemas
-const UserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  image: z.string().nullable().optional(),
-  role: z.string(),
-  isInstructor: z.boolean(),
-  createdAt: z.string().or(z.date()),
-});
-
-const PublicUserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  image: z.string().nullable().optional(),
-  isInstructor: z.boolean(),
-  createdAt: z.string().or(z.date()),
-});
-
-const UserDetailSchema = UserSchema.extend({
-  instructorId: z.string().nullable().optional(),
-  pendingInstructorDescription: z.string().nullable().optional(),
-  updatedAt: z.string().or(z.date()),
-  instructor: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-    })
-    .nullable()
-    .optional(),
-});
 
 // Routes
 

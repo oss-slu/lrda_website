@@ -1,42 +1,16 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { ErrorSchema } from '../schemas/common';
+import {
+  ErrorSchema,
+  SuccessSchema,
+  AdminUserSchema,
+  PendingApplicationSchema,
+  StatsSchema,
+} from '@lrda/shared';
 import { eq, isNotNull, and, ne } from 'drizzle-orm';
 import { db } from '../db';
 import { user } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import type { AppEnv } from '../types';
-
-// Schemas
-const AdminUserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  image: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
-  isInstructor: z.boolean(),
-  pendingInstructorDescription: z.string().nullable().optional(),
-  createdAt: z.string().or(z.date()),
-});
-
-const PendingApplicationSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  description: z.string(),
-  createdAt: z.string().or(z.date()),
-});
-
-const StatsSchema = z.object({
-  totalUsers: z.number(),
-  totalAdmins: z.number(),
-  totalInstructors: z.number(),
-  pendingApplications: z.number(),
-});
-
-const SuccessSchema = z.object({
-  success: z.boolean(),
-  message: z.string().optional(),
-});
 
 // Routes
 const getAllUsersRoute = createRoute({
