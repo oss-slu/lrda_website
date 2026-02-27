@@ -44,14 +44,10 @@ jest.mock('../lib/services', () => ({
   fetchCreatorName: (...args: unknown[]) => mockFetchCreatorName(...args),
 }));
 
-// Mock DOMPurify
-const mockDOMPurify = {
-  default: {
-    sanitize: jest.fn((html: string) => html),
-  },
-};
-
-jest.mock('dompurify', () => mockDOMPurify, { virtual: true });
+// Mock DOMPurify -- sanitize.ts imports it statically
+jest.mock('dompurify', () => ({
+  sanitize: jest.fn((html: string) => html),
+}));
 
 // Mock date formatting
 jest
@@ -132,8 +128,6 @@ describe('EnhancedNoteCard Component', () => {
 
   describe('URL sanitization and string handling', () => {
     beforeEach(() => {
-      // Reset DOMPurify mock before each test
-      mockDOMPurify.default.sanitize.mockImplementation((html: string) => html);
       // Use real timers for these tests
       jest.useRealTimers();
     });
@@ -224,11 +218,11 @@ describe('EnhancedNoteCard Component', () => {
     });
 
     it('handles non-string noteText values by converting to string', async () => {
-      const noteWithNonStringText: Note = {
+      const noteWithNonStringText = {
         ...mockNote,
-        text: null as any,
-        BodyText: 12345 as any, // Non-string value
-      };
+        text: null,
+        BodyText: 12345, // Non-string legacy field
+      } as unknown as Note;
       mockFetchCreatorName.mockResolvedValue('Test Creator');
 
       render(<EnhancedNoteCard note={noteWithNonStringText} />);

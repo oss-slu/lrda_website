@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin, FileAudio, Tags } from 'lucide-react';
 import {
@@ -17,6 +17,7 @@ import { getCachedLocation } from '../../utils/location_cache';
 import AudioPicker from '@/app/lib/components/NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from '../media_viewer';
 import { StoryMapPopover } from './StoryMapPopover';
+import { sanitizeHtml } from '../../utils/sanitize';
 
 interface StoryDetailDialogProps {
   note: Note;
@@ -45,22 +46,6 @@ function formatTime(date: string | number | Date) {
   return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
-/**
- * Safely checks if a URL belongs to a trusted domain
- */
-const isTrustedDomain = (url: string, allowedDomains: string[]): boolean => {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
-    return allowedDomains.some(domain => {
-      const domainLower = domain.toLowerCase();
-      return hostname === domainLower || hostname.endsWith('.' + domainLower);
-    });
-  } catch {
-    return false;
-  }
-};
-
 // Convert old tags (strings) to the new format
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   if (!Array.isArray(tags)) return [];
@@ -71,9 +56,8 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
   const [creator, setCreator] = useState<string>('Loading...');
   const [location, setLocation] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [sanitizedText, setSanitizedText] = useState<string>('');
 
-  const noteText = note.text || (note as any).BodyText || '';
+  const noteText = String(note.text || (note as any).BodyText || '');
   const hasValidCoordinates =
     note.latitude &&
     note.longitude &&
@@ -102,146 +86,11 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     }
   }, [note.latitude, note.longitude, hasValidCoordinates]);
 
-  // Load and sanitize content
-  useEffect(() => {
-    if (typeof window !== 'undefined' && noteText) {
-      import('dompurify')
-        .then(DOMPurify => {
-          let cleanedText = String(noteText || '');
-
-          // Remove blob and data URLs
-          const imgBlobDataRegex = new RegExp(
-            '<img[^>]*src\\s*=\\s*["\'](blob:|data:)[^"\']*["\'][^>]*>',
-            'gi',
-          );
-          cleanedText = cleanedText.replace(imgBlobDataRegex, '');
-
-          const hrefBlobDataRegex = new RegExp(
-            'href=["\'](blob:|data:|javascript:)[^"\']*["\']',
-            'gi',
-          );
-          cleanedText = cleanedText.replace(hrefBlobDataRegex, '');
-
-          let sanitized = DOMPurify.default.sanitize(cleanedText);
-
-          // Process HTML content
-          if (typeof document !== 'undefined') {
-            try {
-              const tempDiv = document.createElement('div');
-              sanitized = sanitized.replace(/src=["'](blob:|data:)[^"']*["']/gi, '');
-              sanitized = sanitized.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, '');
-              tempDiv.innerHTML = sanitized;
-
-              // Handle images
-              const images = tempDiv.querySelectorAll('img');
-              images.forEach(img => {
-                const src = img.getAttribute('src');
-                if (src && (src.startsWith('blob:') || src.startsWith('data:'))) {
-                  img.removeAttribute('src');
-                  img.setAttribute('alt', 'Image not available');
-                  img.style.display = 'none';
-                }
-              });
-
-              // Handle video links
-              const links = tempDiv.querySelectorAll('a');
-              links.forEach(link => {
-                const href = link.getAttribute('href');
-                const linkText = link.textContent || '';
-
-                if (
-                  href &&
-                  (href.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i) ||
-                    linkText.toLowerCase().includes('video') ||
-                    href.includes('video'))
-                ) {
-                  const isDirectVideoFile = href.match(
-                    /\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i,
-                  );
-                  const isTrustedVideoHost =
-                    href.startsWith('http') &&
-                    isTrustedDomain(href, [
-                      'youtube.com',
-                      'www.youtube.com',
-                      'youtu.be',
-                      'vimeo.com',
-                      'player.vimeo.com',
-                    ]);
-                  const isVideoUrl = isDirectVideoFile || isTrustedVideoHost;
-
-                  if (isVideoUrl) {
-                    const videoWrapper = document.createElement('div');
-                    videoWrapper.className = 'video-wrapper my-4';
-                    videoWrapper.style.cssText =
-                      'width: 100%; max-width: 100%; margin: 1rem auto; display: block;';
-
-                    if (
-                      isTrustedDomain(href, [
-                        'youtube.com',
-                        'www.youtube.com',
-                        'youtu.be',
-                        'vimeo.com',
-                        'player.vimeo.com',
-                      ])
-                    ) {
-                      const iframe = document.createElement('iframe');
-                      let embedUrl = href;
-                      try {
-                        const urlObj = new URL(href);
-                        const hostname = urlObj.hostname.toLowerCase();
-
-                        if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
-                          const videoId = urlObj.searchParams.get('v');
-                          if (videoId) {
-                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                          }
-                        } else if (hostname === 'youtu.be') {
-                          const videoId = urlObj.pathname.slice(1).split('?')[0];
-                          if (videoId) {
-                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                          }
-                        } else if (hostname === 'vimeo.com' || hostname === 'www.vimeo.com') {
-                          const videoId = urlObj.pathname.slice(1).split('?')[0];
-                          if (videoId) {
-                            embedUrl = `https://player.vimeo.com/video/${videoId}`;
-                          }
-                        }
-                      } catch {
-                        return;
-                      }
-                      iframe.src = embedUrl;
-                      iframe.frameBorder = '0';
-                      iframe.allow =
-                        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                      iframe.allowFullscreen = true;
-                      iframe.style.cssText =
-                        'width: 100%; max-width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; display: block;';
-                      videoWrapper.appendChild(iframe);
-                    } else {
-                      const video = document.createElement('video');
-                      video.src = href;
-                      video.controls = true;
-                      video.style.cssText =
-                        'width: 100%; max-width: 100%; height: auto; max-height: 500px; border-radius: 0.5rem; display: block; object-fit: contain;';
-                      videoWrapper.appendChild(video);
-                    }
-
-                    link.parentNode?.replaceChild(videoWrapper, link);
-                  }
-                }
-              });
-
-              sanitized = tempDiv.innerHTML;
-            } catch (error) {
-              console.warn('Error processing HTML content:', error);
-            }
-          }
-
-          setSanitizedText(sanitized);
-        })
-        .catch(() => setSanitizedText(noteText));
-    }
-  }, [noteText]);
+  // Sanitize content using centralized utility (synchronous -- no effect needed)
+  const sanitizedText = useMemo(
+    () => (noteText ? sanitizeHtml(noteText, { allowVideo: true, allowIframes: true }) : null),
+    [noteText],
+  );
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -311,11 +160,11 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
 
         {/* Content */}
         <ScrollArea className='min-h-0 flex-1 px-6'>
-          {noteText ?
+          {sanitizedText !== null ?
             <div
               id='note-content'
               className='prose prose-sm mt-4 max-w-none pb-4 text-base [&_.video-wrapper]:my-4 [&_.video-wrapper]:block [&_.video-wrapper]:w-full [&_.video-wrapper]:max-w-full [&_iframe]:my-4 [&_iframe]:block [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:max-w-full [&_iframe]:rounded-lg [&_img]:mx-auto [&_img]:my-4 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_video]:my-4 [&_video]:block [&_video]:h-auto [&_video]:max-h-[500px] [&_video]:w-full [&_video]:max-w-full [&_video]:rounded-lg [&_video]:object-contain'
-              dangerouslySetInnerHTML={{ __html: sanitizedText || noteText }}
+              dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
           : <p className='mt-4 pb-4 text-gray-500'>No content available.</p>}
         </ScrollArea>
