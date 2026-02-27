@@ -11,10 +11,8 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 
 This is a **monorepo** containing:
 
-- **API app** (`apps/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL (port 3002). This is the backend the web frontend talks to.
+- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL (port 3002). This is the backend the web frontend talks to.
 - **Web package** (`packages/web/`): Next.js App Router application
-- **Server package** (`packages/server/`): Legacy RERUM-based Express.js server (port 3001). Not the primary API.
-- **lrda-server-core package** (`packages/lrda-server-core/`): RERUM framework library consumed by `packages/server/`
 
 ## Architecture
 
@@ -22,18 +20,15 @@ This is a **monorepo** containing:
 
 ```
 lrda_website/
-├── apps/
-│   └── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
-│       └── src/
-│           ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
-│           ├── db/         # Drizzle schema and db connection
-│           └── middleware/  # Auth middleware
 ├── packages/
-│   ├── web/                # Next.js App Router application
-│   │   ├── app/            # Pages, components, hooks, stores
-│   │   └── components/     # shadcn/ui components
-│   ├── server/             # Legacy Express.js server (RERUM-based)
-│   └── lrda-server-core/   # RERUM framework library
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
+│   │   └── src/
+│   │       ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│   │       ├── db/         # Drizzle schema and db connection
+│   │       └── middleware/  # Auth middleware
+│   └── web/                # Next.js App Router application
+│       ├── app/            # Pages, components, hooks, stores
+│       └── components/     # shadcn/ui components
 └── public/                 # Static assets
 ```
 
@@ -41,13 +36,13 @@ lrda_website/
 
 - **Package Manager**: pnpm (v10.20.0)
 - **Node Version**: >=24.9.0
-- **Workspace**: pnpm workspaces with packages in `apps/` and `packages/`
+- **Workspace**: pnpm workspaces with packages in `packages/`
 
 **Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
 
-- `pnpm --filter server dev` - Run server in dev mode
-- `pnpm --filter lrda-server-core test` - Test server core package
-- `pnpm --filter . <command>` - Run command in root/web package
+- `pnpm --filter @lrda/api dev` - Run API server in dev mode
+- `pnpm --filter web dev` - Run web app in dev mode
+- `pnpm --filter . <command>` - Run command in root package
 
 ## Tech Stack
 
@@ -65,7 +60,7 @@ lrda_website/
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
 
-### Backend (Primary -- `apps/api/`)
+### Backend (`packages/api/`)
 
 - **Server Framework**: Hono (with `@hono/zod-openapi`)
 - **ORM**: Drizzle ORM
@@ -73,13 +68,6 @@ lrda_website/
 - **Authentication**: Better Auth (session-based with cookies)
 - **Storage**: S3-compatible storage for media
 - **API Documentation**: OpenAPI/Scalar
-
-### Backend (Legacy -- `packages/server/`)
-
-- **Server Framework**: Express.js
-- **Core Library**: RERUM API framework (lrda-server-core)
-- **Database**: MongoDB
-- **Authentication**: Firebase Admin SDK
 
 ### Testing
 
@@ -109,10 +97,8 @@ lrda_website/
 - **Hooks**: `app/lib/hooks/`
 - **Configuration**: `app/lib/config/`
 - **Constants**: `app/lib/constants/`
-- **API Routes (primary)**: `apps/api/src/routes/`
-- **API DB Schema**: `apps/api/src/db/schema.ts`
-- **Legacy Server Routes**: `packages/server/`
-- **Legacy Server Controllers**: `packages/lrda-server-core/controllers/`
+- **API Routes**: `packages/api/src/routes/`
+- **API DB Schema**: `packages/api/src/db/schema.ts`
 
 ### Import Guidelines
 
@@ -204,7 +190,7 @@ pnpm install
 
 # Development
 pnpm dev                              # Next.js dev server
-pnpm --filter server dev              # Express server dev
+pnpm dev:api                          # API server dev
 
 # Testing
 pnpm test                             # Run all tests
@@ -213,31 +199,21 @@ pnpm test:e2e                         # Playwright e2e tests
 
 # Building
 pnpm build                            # Build Next.js app
-pnpm --filter server build            # Build server (if applicable)
 
 # Linting
 pnpm lint                             # ESLint
 pnpm lint:fix                         # ESLint with auto-fix
 
-# Firebase Emulators
-pnpm firebase:emulators               # Start Firebase emulators
-pnpm dev:emulators                    # Next.js with emulators
-
-# Docker (MongoDB)
-pnpm docker:up                        # Start MongoDB container
-pnpm docker:down                      # Stop MongoDB container
+# Docker (PostgreSQL)
+pnpm api:docker:up                    # Start PostgreSQL container
+pnpm api:docker:down-v                # Stop PostgreSQL container
 ```
 
 ### Running Full Stack
 
-1. Start PostgreSQL (for `apps/api`)
-2. Start API server: `pnpm --filter api dev`
-3. Start Next.js app: `pnpm dev`
-
-Legacy stack (if needed):
-1. Start MongoDB: `pnpm docker:up`
-2. Start server core: `pnpm --filter lrda-server-core start`
-3. Start Express server: `pnpm --filter server dev`
+1. Start PostgreSQL: `pnpm api:docker:up`
+2. Push DB schema: `pnpm api:db:push`
+3. Start everything: `pnpm dev:full` (or separately: `pnpm dev:api` and `pnpm dev`)
 
 ## Testing Guidelines
 

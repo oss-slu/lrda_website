@@ -31,7 +31,7 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2(prettier@3.7.4)
 
-  apps/api:
+  packages/api:
     dependencies:
       '@hono/zod-openapi':
         specifier: ^0.18.4
