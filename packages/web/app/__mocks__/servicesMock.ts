@@ -61,6 +61,4 @@ export const createAdminServiceMocks = () => ({
  */
 export const createInstructorServiceMocks = () => ({
   fetchStudents: jest.fn().mockResolvedValue([]),
-  requestApproval: jest.fn().mockRejectedValue(new Error('Not implemented')),
-  sendInstructorNotification: jest.fn().mockResolvedValue(true),
 });

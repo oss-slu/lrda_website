@@ -6,6 +6,7 @@ import { useAuthStore } from '../lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
 import { notesService } from '../lib/services';
+import { notesKeys } from '../lib/hooks/queries/useNotes';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCommentPreview } from '../lib/hooks/queries/useComments';
@@ -45,7 +46,7 @@ const StudentDashboardPage: React.FC = () => {
 
   // Fetch notes with pending feedback
   const { data: notes = [], isLoading } = useQuery({
-    queryKey: ['student-feedback', authUser?.id],
+    queryKey: notesKeys.pendingFeedback(authUser?.id ?? ''),
     queryFn: async () => {
       if (!authUser?.id) return [];
 

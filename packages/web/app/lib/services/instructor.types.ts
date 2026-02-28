@@ -36,29 +36,3 @@ export interface SerializedAudioItem {
   isPlaying?: boolean;
 }
 
-/**
- * Approval request data.
- */
-export interface ApprovalRequestData {
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: Date;
-  title?: string;
-  text?: string;
-  creator?: string;
-  media?: SerializedMediaItem[];
-  audio?: SerializedAudioItem[];
-  [key: string]: unknown;
-}
-
-/**
- * Note data passed to requestApproval.
- */
-export interface ApprovalNoteData {
-  instructorId: string;
-  title?: string;
-  text?: string;
-  creator?: string;
-  media?: unknown[];
-  audio?: unknown[];
-  [key: string]: unknown;
-}

@@ -7,6 +7,7 @@ import { hasInstructorAccess } from '../lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStudents, notesService } from '../lib/services';
+import { notesKeys } from '../lib/hooks/queries/useNotes';
 import InstructorEnhancedNoteCard from '../lib/components/InstructorStoriesCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -35,7 +36,7 @@ const InstructorDashboardPage = () => {
   // Fetch student notes using the dedicated backend endpoint
   // fetchByStudents finds students server-side, so we don't need studentIds here
   const { data: notes = [], isLoading: notesLoading } = useQuery({
-    queryKey: ['instructor-notes', authUser?.id],
+    queryKey: notesKeys.pendingReview(authUser?.id ?? ''),
     queryFn: async () => {
       if (!authUser?.id) return [];
       return notesService.fetchByStudents(authUser.id);

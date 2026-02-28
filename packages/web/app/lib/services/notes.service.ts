@@ -146,7 +146,7 @@ async function fetchPublished(
  */
 async function fetchByStudents(instructorId: string): Promise<Note[]> {
   const data = await fetchWithAuth<ApiNoteData[]>(
-    `/api/notes/students/${instructorId}?approvalRequested=true`,
+    `/api/notes/students/${instructorId}`,
   );
   return (data ?? []).map(transformApiNote);
 }

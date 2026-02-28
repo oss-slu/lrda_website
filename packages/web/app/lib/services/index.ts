@@ -46,15 +46,9 @@ export type {
 } from './comments.types';
 
 // Instructor service
-export {
-  fetchStudents,
-  requestApproval,
-  sendNotification as sendInstructorNotification,
-} from './instructor.service';
+export { fetchStudents } from './instructor.service';
 export type {
   StudentInfo,
-  ApprovalNoteData,
-  ApprovalRequestData,
   SerializedMediaItem,
   SerializedAudioItem,
 } from './instructor.types';

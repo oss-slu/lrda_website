@@ -500,10 +500,10 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     }
 
     // Build conditions
-    const conditions = [inArray(note.creatorId, studentIds), eq(note.isPublished, false)];
+    const conditions = [inArray(note.creatorId, studentIds)];
 
-    if (query.approvalRequested) {
-      conditions.push(eq(note.approvalRequested, true));
+    if (query.approvalRequested !== undefined) {
+      conditions.push(eq(note.approvalRequested, query.approvalRequested));
     }
 
     const results = await db.query.note.findMany({

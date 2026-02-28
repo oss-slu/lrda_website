@@ -35,3 +35,4 @@ infrastructure/*.tfstate.*
 infrastructure/tfplan
 infrastructure/terraform.tfvars
 infrastructure/*.backup
+docs/audits/*

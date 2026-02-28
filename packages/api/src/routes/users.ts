@@ -356,8 +356,8 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'User is not an instructor' }, 404);
     }
 
-    // Only allow instructors to view their own students
-    if (authUser.id !== id) {
+    // Only allow instructors to view their own students (admins can view any)
+    if (authUser.id !== id && authUser.role !== 'admin') {
       return c.json({ error: 'You can only view your own students' }, 403);
     }
 

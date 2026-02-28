@@ -9,7 +9,7 @@ import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '@/app/lib/hooks/queries/useNotes';
-import { notesService, requestApproval } from '@/app/lib/services';
+import { notesService } from '@/app/lib/services';
 import { Note, newNote } from '@/app/types';
 
 import useNoteState from './hooks/useNoteState';
@@ -169,23 +169,6 @@ export default function NoteEditor({
       };
 
       await notesService.update(updatedNote);
-
-      if (updatedApprovalStatus && instructorId) {
-        await requestApproval({
-          instructorId: instructorId,
-          title: updatedNote.title || '',
-          text: updatedNote.text || '',
-          creator: updatedNote.creator || '',
-          noteId: updatedNote.id || '',
-          time: updatedNote.time || new Date(),
-          latitude: updatedNote.latitude ?? null,
-          longitude: updatedNote.longitude ?? null,
-          tags: updatedNote.tags || [],
-          media: updatedNote.media || [],
-          audio: updatedNote.audio || [],
-          approvalRequested: true,
-        });
-      }
 
       noteHandlers.setApprovalRequested(updatedApprovalStatus);
 

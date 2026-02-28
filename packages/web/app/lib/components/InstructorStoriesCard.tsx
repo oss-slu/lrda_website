@@ -18,6 +18,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useComments, useCommentMutations } from '../hooks/queries/useComments';
 import { CommentThreadList } from './comments/CommentThreadList';
 import { useQueryClient } from '@tanstack/react-query';
+import { notesKeys } from '../hooks/queries/useNotes';
 
 // Utility functions
 const formatDate = (date: string | number | Date) =>
@@ -143,8 +144,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   };
 
   const invalidateNoteQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ['instructor-notes'] });
-    queryClient.invalidateQueries({ queryKey: ['student-feedback'] });
+    queryClient.invalidateQueries({ queryKey: notesKeys.all });
   };
 
   // Approve: publish the note
