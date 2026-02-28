@@ -5,11 +5,7 @@ export { default as NoteEditor } from './NoteEditor';
 export { default as NoteEditorHeader } from './NoteEditorHeader';
 export { default as NoteEditorToolbar } from './NoteEditorToolbar';
 export { default as NoteEditorContent } from './NoteEditorContent';
-export {
-  default as NoteEditorComments,
-  CommentSidebarPanel,
-  CommentToggleButton,
-} from './NoteEditorComments';
+export { CommentSidebarPanel } from './NoteEditorComments';
 
 // Hooks
 export { default as useNoteState } from './hooks/useNoteState';

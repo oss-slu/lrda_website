@@ -1,16 +1,16 @@
-import { useEffect, useRef, useMemo, RefObject, MutableRefObject } from 'react';
+import { useEffect, useRef, useMemo, MutableRefObject } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { usePersonalNotes } from '@/app/lib/hooks/queries/useNotes';
 import { Note, newNote } from '@/app/types';
 import type { PhotoMedia, VideoMedia } from '@/app/types';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
-import type { RichTextEditorRef } from 'mui-tiptap';
+import type { Editor } from '@tiptap/core';
 
 interface UseNoteSyncOptions {
   noteState: NoteStateType;
   noteHandlers: NoteHandlersType;
   initialNote: Note | newNote | undefined;
-  rteRef: RefObject<RichTextEditorRef | null>;
+  editor: Editor | null;
   lastEditTimeRef: MutableRefObject<number>;
 }
 
@@ -18,7 +18,7 @@ export const useNoteSync = ({
   noteState,
   noteHandlers,
   initialNote,
-  rteRef,
+  editor,
   lastEditTimeRef,
 }: UseNoteSyncOptions) => {
   // Get personal notes from TanStack Query instead of Zustand store.
@@ -158,7 +158,6 @@ export const useNoteSync = ({
         }
         if (storeNoteText !== editorContent && timeSinceLastEdit > 5000) {
           handlers.setEditorContent(storeNoteText);
-          const editor = rteRef.current?.editor;
           if (editor) {
             const currentHtml = editor.getHTML();
             if (currentHtml !== storeNoteText) {
@@ -214,13 +213,12 @@ export const useNoteSync = ({
     images,
     videos,
     audio,
-    rteRef,
+    editor,
     lastEditTimeRef,
   ]);
 
   // Watch for external content changes and update editor
   useEffect(() => {
-    const editor = rteRef.current?.editor;
     if (!editor) return;
 
     const currentEditorContent = editor.getHTML();
@@ -232,7 +230,7 @@ export const useNoteSync = ({
         editor.commands.setContent(stateContent);
       }
     }
-  }, [editorContent, rteRef, lastEditTimeRef]);
+  }, [editorContent, editor, lastEditTimeRef]);
 
   // Focus at start only when switching to a different note
   const initialNoteIdRef = useRef<string | undefined>(
@@ -244,7 +242,6 @@ export const useNoteSync = ({
     const previousInitialId = initialNoteIdRef.current;
 
     if (currentInitialId !== previousInitialId || previousInitialId === undefined) {
-      const editor = rteRef.current?.editor;
       if (editor) {
         const t = setTimeout(() => editor.chain().focus('start').run(), 0);
         initialNoteIdRef.current = currentInitialId;
@@ -252,7 +249,7 @@ export const useNoteSync = ({
       }
     }
     initialNoteIdRef.current = currentInitialId;
-  }, [initialNote, rteRef]);
+  }, [initialNote, editor]);
 
   return {
     currentNoteId,

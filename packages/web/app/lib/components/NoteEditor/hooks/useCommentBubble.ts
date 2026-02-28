@@ -1,5 +1,5 @@
-import { useState, useEffect, RefObject } from 'react';
-import type { RichTextEditorRef } from 'mui-tiptap';
+import { useState, useEffect, useRef } from 'react';
+import type { Editor } from '@tiptap/core';
 
 interface CommentBubblePosition {
   top: number;
@@ -13,14 +13,14 @@ interface UseCommentBubbleResult {
 }
 
 interface UseCommentBubbleOptions {
-  rteRef: RefObject<RichTextEditorRef | null>;
+  editor: Editor | null;
   canComment: boolean;
   isViewingStudentNote: boolean;
   isStudentViewingOwnNote: boolean;
 }
 
 export const useCommentBubble = ({
-  rteRef,
+  editor,
   canComment,
   isViewingStudentNote,
   isStudentViewingOwnNote,
@@ -30,10 +30,12 @@ export const useCommentBubble = ({
     null,
   );
 
+  const showCommentBubbleRef = useRef(showCommentBubble);
+  // eslint-disable-next-line react-hooks/refs -- intentional pattern to avoid stale closure in scroll handler
+  showCommentBubbleRef.current = showCommentBubble;
+
   useEffect(() => {
-    const editor = rteRef.current?.editor;
     if (!editor || !canComment || (!isViewingStudentNote && !isStudentViewingOwnNote)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- early return to hide bubble when conditions not met
       setShowCommentBubble(false);
       return;
     }
@@ -74,7 +76,7 @@ export const useCommentBubble = ({
     };
 
     const handleScroll = () => {
-      if (showCommentBubble) {
+      if (showCommentBubbleRef.current) {
         updateBubblePosition();
       }
     };
@@ -107,7 +109,7 @@ export const useCommentBubble = ({
         scrollContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [rteRef, canComment, isViewingStudentNote, isStudentViewingOwnNote, showCommentBubble]);
+  }, [editor, canComment, isViewingStudentNote, isStudentViewingOwnNote]);
 
   return {
     showCommentBubble,
