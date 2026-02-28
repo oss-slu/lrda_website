@@ -25,8 +25,8 @@ Reference plan for setting up CI/CD, zero-downtime deploys, database backups, an
 1. **Nginx port mismatch**: Proxies to `localhost:3001` but API runs on port `3002`
 2. **Nginx health path wrong**: `/health` -> `localhost:3001/health` should be `/api/health` -> `localhost:3002/api/health`
 3. **No Bun installed**: `user-data.sh` installs Node.js but the API needs Bun
-4. **No graceful shutdown**: `Bun.serve()` has no SIGTERM/SIGINT handlers -- in-flight requests get dropped
-5. **Health check always 200**: Returns HTTP 200 even when database is disconnected (should be 503)
+4. ~~**No graceful shutdown**: `Bun.serve()` has no SIGTERM/SIGINT handlers -- in-flight requests get dropped~~ **FIXED**
+5. ~~**Health check always 200**: Returns HTTP 200 even when database is disconnected (should be 503)~~ **FIXED**
 6. **No PM2 config**: PM2 is installed but no `ecosystem.config.cjs` exists
 7. **No deploy pipeline**: CI only runs tests, no deployment step
 8. **No DB backups**: No `pg_dump` cron, no backup strategy
@@ -358,10 +358,10 @@ Optionally: Create GitHub Environments (`staging`, `production`) with required r
 
 ## Implementation Order
 
-1. `packages/api/src/lib/shutdown-state.ts` -- create (no deps)
-2. `packages/api/src/db/index.ts` -- add `closePool()` (no deps)
-3. `packages/api/src/routes/health.ts` -- fix status codes (depends on 1)
-4. `packages/api/src/index.ts` -- add graceful shutdown (depends on 1, 2)
+1. ~~`packages/api/src/lib/shutdown-state.ts` -- create (no deps)~~ **DONE**
+2. ~~`packages/api/src/db/index.ts` -- add `closePool()` (no deps)~~ **DONE**
+3. ~~`packages/api/src/routes/health.ts` -- fix status codes (depends on 1)~~ **DONE**
+4. ~~`packages/api/src/index.ts` -- add graceful shutdown (depends on 1, 2)~~ **DONE**
 5. `packages/api/ecosystem.config.cjs` -- create PM2 config (no deps)
 6. `scripts/deploy.sh` -- create deploy script (depends on 5)
 7. `scripts/backup-db.sh` -- create backup script (no deps)
@@ -369,7 +369,7 @@ Optionally: Create GitHub Environments (`staging`, `production`) with required r
 9. `.github/workflows/ci-cd.yml` + `.github/workflows/deploy.yml` -- CI/CD (depends on all above)
 10. `infrastructure/versions.tf` -- Terraform state backend (independent)
 
-Steps 1-4 can be developed and tested locally. Steps 5-10 take effect when the EC2 is provisioned.
+Steps 1-4 are complete and can be tested locally. Steps 5-10 take effect when the EC2 is provisioned.
 
 ---
 

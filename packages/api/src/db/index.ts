@@ -20,3 +20,7 @@ export async function testConnection(): Promise<boolean> {
     return false;
   }
 }
+
+export async function closePool(): Promise<void> {
+  await pool.end();
+}

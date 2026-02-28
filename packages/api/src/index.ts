@@ -3,6 +3,8 @@ import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
 import { env } from './env';
 import { logger } from './lib/logger';
+import { setShuttingDown } from './lib/shutdown-state';
+import { closePool } from './db';
 import { routes } from './routes';
 import { auth } from './auth';
 import type { AppEnv } from './types';
@@ -140,5 +142,25 @@ const server = Bun.serve({
 
 logger.info(`API server running at http://${server.hostname}:${server.port}`);
 logger.info(`API docs available at http://${server.hostname}:${server.port}/docs`);
+
+// Graceful shutdown
+let shuttingDown = false;
+
+async function gracefulShutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  setShuttingDown(true);
+
+  logger.info(`Received ${signal}, starting graceful shutdown...`);
+
+  server.stop();
+  await closePool();
+
+  logger.info('Graceful shutdown complete.');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export { app };

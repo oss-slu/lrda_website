@@ -1,5 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { testConnection } from '../db';
+import { isShuttingDown } from '../lib/shutdown-state';
 import type { AppEnv } from '../types';
 
 const HealthResponseSchema = z.object({
@@ -19,20 +20,30 @@ const getHealthRoute = createRoute({
           schema: HealthResponseSchema,
         },
       },
-      description: 'Health check response',
+      description: 'Service healthy',
+    },
+    503: {
+      content: {
+        'application/json': {
+          schema: HealthResponseSchema,
+        },
+      },
+      description: 'Service unhealthy or shutting down',
     },
   },
 });
 
 export const healthRoutes = new OpenAPIHono<AppEnv>().openapi(getHealthRoute, async c => {
-  const dbConnected = await testConnection();
+  const shuttingDown = isShuttingDown();
+  const dbConnected = shuttingDown ? false : await testConnection();
+  const healthy = dbConnected && !shuttingDown;
 
   return c.json(
     {
-      status: dbConnected ? ('healthy' as const) : ('unhealthy' as const),
+      status: healthy ? ('healthy' as const) : ('unhealthy' as const),
       timestamp: new Date().toISOString(),
       database: dbConnected ? ('connected' as const) : ('disconnected' as const),
     },
-    200,
+    healthy ? 200 : 503,
   );
 });
