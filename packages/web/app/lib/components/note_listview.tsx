@@ -5,15 +5,41 @@ import { extractTextFromHtml } from '../utils/sanitize';
 import { FileText, Search, Loader2 } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import { fetchCreatorName } from '../services';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+
+type NoteStatus = 'published' | 'pending' | 'returned' | 'draft';
+
+function getNoteStatus(note: Note): NoteStatus {
+  if (note.published) return 'published';
+  if (note.isReturned) return 'returned';
+  if (note.approvalRequested) return 'pending';
+  return 'draft';
+}
+
+const statusConfig: Record<NoteStatus, { label: string; className: string }> = {
+  published: {
+    label: 'Published',
+    className: 'bg-green-100 text-green-700 border-transparent',
+  },
+  pending: {
+    label: 'Pending',
+    className: 'bg-yellow-100 text-yellow-700 border-transparent',
+  },
+  returned: {
+    label: 'Returned',
+    className: 'bg-orange-100 text-orange-700 border-transparent',
+  },
+  draft: {
+    label: 'Draft',
+    className: 'bg-gray-100 text-gray-600 border-transparent',
+  },
+};
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
   isSearching?: boolean;
-  viewMode?: 'my' | 'review';
-  isInstructor?: boolean;
 };
 
 const BATCH_SIZE = 15;
@@ -22,8 +48,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   notes,
   onNoteSelect,
   isSearching = false,
-  viewMode = 'my',
-  isInstructor = false,
 }) => {
   const { selectedNoteId, setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
@@ -34,7 +58,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   const [fresh, setFresh] = useState(true);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,35 +68,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({
       setFresh(false);
     }
   }, [notes, onNoteSelect, fresh, setSelectedNoteId]);
-
-  // Fetch creator names for instructors in review mode
-  useEffect(() => {
-    const fetchCreatorNames = async () => {
-      if (viewMode === 'review' && isInstructor) {
-        const names: Record<string, string> = {};
-        const uniqueCreators = Array.from(
-          new Set(notes.map(note => note.creator).filter(Boolean) as string[]),
-        );
-
-        await Promise.all(
-          uniqueCreators.map(async creatorId => {
-            try {
-              const name = await fetchCreatorName(creatorId);
-              names[creatorId] = name || 'Unknown User';
-            } catch {
-              names[creatorId] = 'Unknown User';
-            }
-          }),
-        );
-
-        setCreatorNames(names);
-      } else {
-        setCreatorNames({});
-      }
-    };
-
-    fetchCreatorNames();
-  }, [notes, viewMode, isInstructor]);
 
   // Infinite scroll with IntersectionObserver
   const loadMore = useCallback(() => {
@@ -165,6 +159,8 @@ const NoteListView: React.FC<NoteListViewProps> = ({
           noteTextContent = 'Empty note';
         }
         const isSelected = note.id === selectedNoteId;
+        const status = getNoteStatus(note);
+        const badge = statusConfig[status];
 
         return (
           <div
@@ -185,11 +181,11 @@ const NoteListView: React.FC<NoteListViewProps> = ({
                   {handleGetTime(note.time)}
                 </span>
               </div>
-              {viewMode === 'review' && isInstructor && note.creator && (
-                <p className='text-xs font-medium text-blue-600'>
-                  {creatorNames[note.creator] || 'Loading...'}
-                </p>
-              )}
+              <div className='flex items-center gap-2'>
+                <Badge className={badge.className}>
+                  {badge.label}
+                </Badge>
+              </div>
               <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>
                 {noteTextContent}
               </p>

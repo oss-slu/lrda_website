@@ -46,6 +46,7 @@ export interface CreateNotePayload {
   tags?: Tag[];
   time?: Date;
   approvalRequested?: boolean;
+  isReturned?: boolean;
 }
 
 /**

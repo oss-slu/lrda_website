@@ -207,11 +207,13 @@ export default function NoteEditor({
       const updatedNote = buildNotePayload({
         approvalRequested: updatedApprovalStatus,
         published: false,
+        isReturned: false,
       });
 
       await notesService.update(updatedNote);
 
       noteHandlers.setApprovalRequested(updatedApprovalStatus);
+      noteHandlers.setIsReturned(false);
 
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 

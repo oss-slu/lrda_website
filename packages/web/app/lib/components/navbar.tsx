@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,15 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { hasInstructorAccess } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
@@ -41,16 +33,8 @@ export default function Navbar() {
   );
   const name = user?.name ?? null;
 
-  const [selectOpen, setSelectOpen] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const pathname = usePathname();
-  const router = useRouter();
-  const { viewMode, setViewMode } = useNotesStore(
-    useShallow(state => ({
-      viewMode: state.viewMode,
-      setViewMode: state.setViewMode,
-    })),
-  );
 
   const handleLogout = async () => {
     try {
@@ -62,15 +46,12 @@ export default function Navbar() {
   };
 
   const isInstructor = hasInstructorAccess(user);
-  const isLinkedStudent = !isInstructor && !!user?.instructorId;
-
-  const dashboardHref = isInstructor ? '/instructor-dashboard' : '/student-dashboard';
 
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes', authRequired: true },
-    ...(isInstructor || isLinkedStudent
-      ? [{ href: dashboardHref, label: 'Dashboard', authRequired: true }]
+    ...(isInstructor
+      ? [{ href: '/instructor-dashboard', label: 'Dashboard', authRequired: true }]
       : []),
     { href: '/map', label: 'Map' },
     { href: '/stories', label: 'Stories' },
@@ -87,46 +68,6 @@ export default function Navbar() {
         ? 'bg-blue-50 text-blue-600'
         : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
     );
-
-  // Instructor Notes select for desktop
-  const renderNotesSelect = () => (
-    <Select
-      value={viewMode}
-      open={selectOpen}
-      onOpenChange={open => {
-        if (open && !pathname.startsWith('/notes')) {
-          router.push('/notes');
-          setSelectOpen(false);
-          return;
-        }
-        setSelectOpen(open);
-      }}
-      onValueChange={value => {
-        setViewMode(value as 'my' | 'review');
-        setSelectOpen(false);
-        if (!pathname.startsWith('/notes')) {
-          router.push('/notes');
-        }
-      }}
-    >
-      <SelectTrigger
-        className={cn(
-          'h-auto w-auto cursor-pointer border-none bg-transparent px-3 py-1.5 text-sm font-medium shadow-none transition-colors focus:ring-0 focus:ring-offset-0 rounded-md',
-          isActive('/notes')
-            ? 'bg-blue-50 text-blue-600'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
-        )}
-      >
-        <SelectValue>
-          <span>Notes</span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value='my'>My Notes</SelectItem>
-        <SelectItem value='review'>Students Notes</SelectItem>
-      </SelectContent>
-    </Select>
-  );
 
   // Mobile nav link (closes sheet on click)
   const renderMobileLink = (item: { href: string; label: string }) => (
@@ -145,42 +86,6 @@ export default function Navbar() {
     </Link>
   );
 
-  // Mobile instructor notes: two separate links for "My Notes" and "Students Notes"
-  const renderMobileNotesLinks = () => (
-    <div className='space-y-1'>
-      <button
-        onClick={() => {
-          setViewMode('my');
-          setMobileOpen(false);
-          router.push('/notes');
-        }}
-        className={cn(
-          'block w-full text-left rounded-md px-3 py-2 text-sm font-medium transition-colors',
-          isActive('/notes') && viewMode === 'my'
-            ? 'text-blue-500'
-            : 'text-blue-300 hover:text-blue-500',
-        )}
-      >
-        My Notes
-      </button>
-      <button
-        onClick={() => {
-          setViewMode('review');
-          setMobileOpen(false);
-          router.push('/notes');
-        }}
-        className={cn(
-          'block w-full text-left rounded-md px-3 py-2 text-sm font-medium transition-colors',
-          isActive('/notes') && viewMode === 'review'
-            ? 'text-blue-500'
-            : 'text-blue-300 hover:text-blue-500',
-        )}
-      >
-        Students Notes
-      </button>
-    </div>
-  );
-
   return (
     <nav className='sticky top-0 z-50 flex w-full items-center justify-between bg-white border-b border-gray-200 px-6 py-3'>
       {/* Mobile hamburger */}
@@ -197,10 +102,7 @@ export default function Navbar() {
       {/* Desktop links */}
       <div className='hidden md:flex items-center gap-1'>
         {navItems.map(item =>
-          (!item.authRequired || name) &&
-          (item.href === '/notes' && isInstructor ? (
-            <div key={item.href}>{renderNotesSelect()}</div>
-          ) : (
+          (!item.authRequired || name) && (
             <Link
               key={item.href}
               href={item.href}
@@ -209,7 +111,7 @@ export default function Navbar() {
             >
               {item.label}
             </Link>
-          )),
+          ),
         )}
       </div>
 
@@ -263,10 +165,7 @@ export default function Navbar() {
           </SheetHeader>
           <nav className='flex flex-col gap-1 mt-4'>
             {navItems.map(item =>
-              (!item.authRequired || name) &&
-              (item.href === '/notes' && isInstructor
-                ? <div key={item.href}>{renderMobileNotesLinks()}</div>
-                : renderMobileLink(item)),
+              (!item.authRequired || name) && renderMobileLink(item),
             )}
           </nav>
           <div className='mt-auto pt-6 border-t border-gray-200'>

@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
  *
  * This test verifies the basic notes page functionality:
  * - Notes page loads correctly
- * - Page structure is present (resizable panels)
+ * - Fixed-width sidebar + editor layout is present
  * - Navigation bar is visible
  *
  * Test Strategy: Focus on notes page structure and basic page presence
@@ -29,8 +29,8 @@ test.describe('Notes Page', () => {
     // Navigation should be visible
     await expect(page.locator('nav')).toBeVisible();
 
-    // Page should have resizable panel structure
-    const separator = page.locator('[role="separator"]').first();
-    await expect(separator).toBeVisible();
+    // Page should have fixed-width sidebar with border separator
+    const sidebar = page.locator('.border-r.border-gray-200').first();
+    await expect(sidebar).toBeVisible();
   });
 });

@@ -57,6 +57,7 @@ function transformApiNote(data: ApiNoteData): Note {
     longitude: data.longitude ?? null,
     published: data.isPublished,
     approvalRequested: data.approvalRequested,
+    isReturned: data.isReturned,
     tags: data.tags || [],
     uid: data.creatorId,
   };
@@ -73,6 +74,7 @@ function transformNoteToApi(note: Note | CreateNotePayload): Record<string, unkn
     longitude: note.longitude ?? undefined,
     isPublished: note.published ?? false,
     approvalRequested: note.approvalRequested ?? false,
+    isReturned: note.isReturned ?? false,
     tags: note.tags || [],
     time: note.time ? new Date(note.time).toISOString() : undefined,
     media: note.media?.map(m => ({

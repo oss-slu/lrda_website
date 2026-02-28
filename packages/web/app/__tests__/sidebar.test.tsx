@@ -36,14 +36,12 @@ jest.mock('../lib/stores/notesStore', () => ({
   useNotesStore: Object.assign(
     jest.fn((selector?: (state: any) => any) => {
       const mockStore = {
-        viewMode: 'my',
         selectedNoteId: null,
         setSelectedNoteId: jest.fn(),
-        setViewMode: jest.fn(),
       };
       return selector ? selector(mockStore) : mockStore;
     }),
-    { getState: jest.fn(() => ({ selectedNoteId: null, viewMode: 'my' })) },
+    { getState: jest.fn(() => ({ selectedNoteId: null })) },
   ),
 }));
 

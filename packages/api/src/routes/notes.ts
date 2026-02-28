@@ -385,6 +385,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     if (body.longitude !== undefined) updateData.longitude = body.longitude;
     if (body.isPublished !== undefined) updateData.isPublished = body.isPublished;
     if (body.approvalRequested !== undefined) updateData.approvalRequested = body.approvalRequested;
+    if (body.isReturned !== undefined) updateData.isReturned = body.isReturned;
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.time !== undefined) updateData.time = new Date(body.time);
 

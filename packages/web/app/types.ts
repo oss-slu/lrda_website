@@ -84,6 +84,7 @@ export type Note = {
   longitude: number | null;
   published: boolean | undefined;
   approvalRequested?: boolean | undefined;
+  isReturned?: boolean | undefined;
   tags: Tag[];
   uid: string;
   comments?: Comment[];

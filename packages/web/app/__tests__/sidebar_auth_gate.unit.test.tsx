@@ -9,20 +9,14 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Sidebar from '../lib/components/Sidebar';
-import { usePersonalNotes, useStudentNotes } from '../lib/hooks/queries/useNotes';
 
 // Mock next/router
 jest.mock('next/router', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn() })),
 }));
 
-// Track the userId passed to usePersonalNotes
-const mockUsePersonalNotes = jest.fn((_userId?: any) => ({ data: [] }));
-const mockUseStudentNotes = jest.fn((_instructorId?: any) => ({ data: [] }));
-
 jest.mock('../lib/hooks/queries/useNotes', () => ({
-  usePersonalNotes: mockUsePersonalNotes,
-  useStudentNotes: mockUseStudentNotes,
+  usePersonalNotes: jest.fn((_userId?: any) => ({ data: [] })),
   notesKeys: {
     all: ['notes'],
     personal: (userId: string) => ['notes', 'personal', userId],
@@ -57,14 +51,12 @@ jest.mock('../lib/stores/notesStore', () => ({
   useNotesStore: Object.assign(
     jest.fn((selector?: (state: any) => any) => {
       const mockStore = {
-        viewMode: 'my',
         selectedNoteId: null,
         setSelectedNoteId: jest.fn(),
-        setViewMode: jest.fn(),
       };
       return selector ? selector(mockStore) : mockStore;
     }),
-    { getState: jest.fn(() => ({ selectedNoteId: null, viewMode: 'my' })) },
+    { getState: jest.fn(() => ({ selectedNoteId: null })) },
   ),
 }));
 
@@ -89,10 +81,13 @@ jest.mock('../lib/stores/authStore', () => ({
   }),
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { usePersonalNotes } = require('../lib/hooks/queries/useNotes');
+const mockUsePersonalNotes = usePersonalNotes as jest.Mock;
+
 describe('Sidebar - auth initialization gate', () => {
   beforeEach(() => {
     mockUsePersonalNotes.mockClear();
-    mockUseStudentNotes.mockClear();
     mockAuthState.isInitialized = true;
     mockAuthState.user = {
       id: 'student-1',

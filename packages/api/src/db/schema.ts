@@ -119,6 +119,7 @@ export const note = pgTable('note', {
   longitude: doublePrecision('longitude'),
   isPublished: boolean('is_published').notNull().default(false),
   approvalRequested: boolean('approval_requested').notNull().default(false),
+  isReturned: boolean('is_returned').notNull().default(false),
   tags: jsonb('tags').$type<Tag[]>().default([]),
   time: timestamp('time').notNull().defaultNow(),
   createdAt: timestamp('created_at').notNull().defaultNow(),

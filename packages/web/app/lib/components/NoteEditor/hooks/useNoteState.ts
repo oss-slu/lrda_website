@@ -22,6 +22,9 @@ const useNoteState = (initialNote: Note | undefined) => {
   const [approvalRequested, setApprovalRequested] = useState<boolean>(
     initialNote?.approvalRequested || false,
   );
+  const [isReturned, setIsReturned] = useState<boolean>(
+    initialNote?.isReturned || false,
+  );
   const [counter, setCounter] = useState<number>(0);
 
   return {
@@ -37,6 +40,7 @@ const useNoteState = (initialNote: Note | undefined) => {
       tags,
       isPublished,
       approvalRequested,
+      isReturned,
       videos,
       counter,
     },
@@ -53,6 +57,7 @@ const useNoteState = (initialNote: Note | undefined) => {
       setVideos,
       setIsPublished,
       setApprovalRequested,
+      setIsReturned,
       setCounter,
     },
   };

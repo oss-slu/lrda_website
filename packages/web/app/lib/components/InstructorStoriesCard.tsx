@@ -156,6 +156,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         id: noteId,
         published: true,
         approvalRequested: false,
+        isReturned: false,
       });
       toast.success('Note approved and published!');
       invalidateNoteQueries();
@@ -176,6 +177,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         id: noteId,
         published: false,
         approvalRequested: false,
+        isReturned: true,
       });
       toast.success('Approval request declined.');
       invalidateNoteQueries();

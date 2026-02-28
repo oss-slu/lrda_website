@@ -45,10 +45,7 @@ jest.mock('../lib/stores/authStore', () => ({
 // Mock useNotesStore
 jest.mock('../lib/stores/notesStore', () => ({
   useNotesStore: jest.fn((selector?: (state: any) => any) => {
-    const mockStore = {
-      viewMode: 'my',
-      setViewMode: jest.fn(),
-    };
+    const mockStore = {};
     return selector ? selector(mockStore) : mockStore;
   }),
 }));
@@ -191,10 +188,10 @@ describe('Navbar Component', () => {
       render(<Navbar />);
     });
 
-    // For instructor/admin users, Notes is rendered as a Select trigger
+    // Notes is rendered as a regular link for all users
     await waitFor(() => {
-      const selectTrigger = screen.getByTestId('select-trigger');
-      expect(selectTrigger).toHaveClass('text-blue-600');
+      const notesLink = screen.getAllByText(/Notes/i)[0];
+      expect(notesLink).toHaveClass('text-blue-600');
     });
   });
 

@@ -38,6 +38,7 @@ export const NoteSchema = z.object({
   longitude: z.number().nullable().optional(),
   isPublished: z.boolean(),
   approvalRequested: z.boolean(),
+  isReturned: z.boolean(),
   tags: z.array(TagSchema).nullable().optional(),
   time: z.string().or(z.date()),
   createdAt: z.string().or(z.date()),
@@ -85,6 +86,7 @@ export const UpdateNoteInputSchema = z.object({
   longitude: z.number().nullable().optional(),
   isPublished: z.boolean().optional(),
   approvalRequested: z.boolean().optional(),
+  isReturned: z.boolean().optional(),
   tags: z.array(TagSchema).optional(),
   time: z.string().optional(),
   media: z
