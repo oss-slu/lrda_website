@@ -3,6 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { db } from './db';
 import { env } from './env';
+import { sendVerificationEmail, sendPasswordResetEmail } from './lib/email';
 
 // Parse trusted origins from environment variable or use defaults
 const getTrustedOrigins = (): string[] => {
@@ -48,23 +49,18 @@ export const auth = betterAuth({
     requireEmailVerification: true, // Require email verification before login
 
     sendResetPassword: async data => {
-      console.log(`✓ Password reset link generated for ${data.user.email}`);
-      console.log(`Reset URL: ${data.url}`);
+      await sendPasswordResetEmail(data.user.email, data.url);
     },
   },
   emailVerification: {
     autoSignInAfterVerification: false,
     sendVerificationEmail: async data => {
-      // Extract token from the verification URL
+      // Extract token from the verification URL and build a web-app URL
       const url = new URL(data.url);
       const token = url.searchParams.get('token');
+      const verificationUrl = `${env.WEB_URL}/verify-email?token=${token}`;
 
-      // Construct the web app verification URL
-      const webAppUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
-      const verificationUrl = `${webAppUrl}/verify-email?token=${token}`;
-
-      console.log(`✓ Verification email sent to ${data.user.email}`);
-      console.log(`Verification URL: ${verificationUrl}`);
+      await sendVerificationEmail(data.user.email, verificationUrl);
     },
   },
   session: {

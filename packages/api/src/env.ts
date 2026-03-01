@@ -8,6 +8,9 @@ const EnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string(),
   BETTER_AUTH_URL: z.string().default('http://localhost:3002'),
   CORS_ORIGINS: z.string().optional(),
+  WEB_URL: z.string().default('http://localhost:3000'),
+  RESEND_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().default('noreply@wherereligion.org'),
 });
 
 type Env = z.infer<typeof EnvSchema>;
