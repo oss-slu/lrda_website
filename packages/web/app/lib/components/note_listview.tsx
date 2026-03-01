@@ -34,7 +34,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (notes.length > 0 && fresh) {
+    if (notes.length > 0 && fresh && notes[0]) {
       onNoteSelect(notes[0], false);
       setSelectedNoteId(notes[0].id);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- mark as initialized after first note selection
@@ -60,7 +60,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
 
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           loadMore();
         }
       },

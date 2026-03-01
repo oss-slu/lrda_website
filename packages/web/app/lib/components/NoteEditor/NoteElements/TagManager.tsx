@@ -97,7 +97,8 @@ const TagManager: React.FC<TagManagerProps> = ({
       setTagInput('');
     }
     if (event.key === 'Backspace' && tagInput === '' && tags.length > 0) {
-      removeTag(tags[tags.length - 1].label);
+      const lastTag = tags[tags.length - 1];
+      if (lastTag) removeTag(lastTag.label);
     }
   };
 

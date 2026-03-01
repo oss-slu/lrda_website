@@ -18,7 +18,7 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
           },
         }),
         mutationCache: new MutationCache({
-          onError: (error, variables, context, mutation) => {
+          onError: (error, variables, _context, mutation) => {
             console.error('[MutationCache] Mutation error:', {
               mutationKey: mutation.options.mutationKey,
               error: error instanceof Error ? error.message : error,

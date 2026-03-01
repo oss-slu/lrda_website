@@ -63,7 +63,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           try {
             const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);
             // Extract city name from formatted address (usually first part before comma)
-            const cityName = location.split(',')[0].trim();
+            const cityName = (location.split(',')[0] ?? '').trim();
             setLocationName(cityName || location || '');
           } catch (error) {
             console.error('Error fetching location name:', error);
@@ -107,17 +107,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       </div>
     );
   }
-
-  // Handle search result click
-  const handleSearch = (address: string, lat?: number, lng?: number) => {
-    if (lat != null && lng != null) {
-      setLatitude(lat);
-      setLongitude(lng);
-      onLocationChange(lng, lat);
-      mapRef.current?.panTo({ lat, lng });
-      mapRef.current?.setZoom(10);
-    }
-  };
 
   // Handle marker drag event
   const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {

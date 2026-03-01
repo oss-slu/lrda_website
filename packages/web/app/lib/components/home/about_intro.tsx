@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import Link from 'next/link';
 

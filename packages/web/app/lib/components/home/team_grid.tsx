@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import TeamCard from './team_card';
 import ContributorCard from './contributor_card';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';

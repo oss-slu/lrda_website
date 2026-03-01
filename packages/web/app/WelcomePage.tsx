@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import Image from 'next/image';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { IconLink } from './lib/components/IconLink';

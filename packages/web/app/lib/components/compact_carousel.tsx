@@ -7,8 +7,6 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { type CarouselApi } from '@/components/ui/carousel';
-import { Card, CardContent } from '@/components/ui/card';
-
 import type { NoteMedia } from '@/app/types';
 import Image from 'next/image';
 import ReactPlayer from 'react-player';

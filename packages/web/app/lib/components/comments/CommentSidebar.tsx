@@ -37,7 +37,7 @@ export default function CommentSidebar({
   );
 
   // TanStack Query for comments with automatic polling
-  const { data: comments = [], refetch } = useComments(noteId);
+  const { data: comments = [] } = useComments(noteId);
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
   // Helper to resolve author display name

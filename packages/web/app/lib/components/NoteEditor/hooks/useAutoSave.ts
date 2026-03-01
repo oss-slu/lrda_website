@@ -17,6 +17,7 @@ interface LastSavedSnapshot {
   tags: any[];
   published: boolean;
   approvalRequested?: boolean;
+  isReturned?: boolean;
   latitude?: number | null;
   longitude?: number | null;
   mediaFingerprint: string;
@@ -57,6 +58,7 @@ export const useAutoSave = ({
     tags,
     isPublished,
     approvalRequested,
+    isReturned,
     images,
     videos,
     audio,
@@ -78,6 +80,7 @@ export const useAutoSave = ({
       tags,
       published: isPublished,
       approvalRequested,
+      isReturned,
       latitude,
       longitude,
       mediaFingerprint: mediaFingerprint([...images, ...videos]),
@@ -106,6 +109,7 @@ export const useAutoSave = ({
       last.text !== editorContent ||
       last.published !== isPublished ||
       last.approvalRequested !== approvalRequested ||
+      last.isReturned !== isReturned ||
       last.latitude !== latitude ||
       last.longitude !== longitude ||
       JSON.stringify(last.tags) !== JSON.stringify(tags) ||
@@ -137,6 +141,7 @@ export const useAutoSave = ({
         title: title || 'Untitled',
         published: isPublished,
         approvalRequested: approvalRequested || false,
+        isReturned: isReturned || false,
         time: time,
         longitude: longitude,
         latitude: latitude,
@@ -172,6 +177,7 @@ export const useAutoSave = ({
           tags: tags,
           published: isPublished,
           approvalRequested: approvalRequested,
+          isReturned: isReturned,
           latitude: latitude,
           longitude: longitude,
           mediaFingerprint: currentMediaFp,
@@ -200,6 +206,7 @@ export const useAutoSave = ({
     isPublished,
     noteId,
     approvalRequested,
+    isReturned,
     isViewingStudentNote,
     time,
     images,

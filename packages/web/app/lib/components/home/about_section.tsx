@@ -1,4 +1,3 @@
-import React from 'react';
 import AboutIntro from './about_intro';
 import TeamGrid from './team_grid';
 

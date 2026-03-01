@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, User, LogOut } from 'lucide-react';
@@ -24,10 +24,9 @@ import { hasInstructorAccess } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 export default function Navbar() {
-  const { user, isLoggedIn, logout } = useAuthStore(
+  const { user, logout } = useAuthStore(
     useShallow(state => ({
       user: state.user,
-      isLoggedIn: state.isLoggedIn,
       logout: state.logout,
     })),
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 

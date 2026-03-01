@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
@@ -19,9 +19,8 @@ import {
   filterNotesByMapBounds,
   filterNotesByQuery,
   filterNotesByTitleAndTags,
-  Location,
 } from '../lib/utils/mapUtils';
-import { MAP_WIDTH_WITH_PANEL, PANEL_WIDTH } from '../lib/utils/mapConstants';
+import { MAP_WIDTH_WITH_PANEL } from '../lib/utils/mapConstants';
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
@@ -36,7 +35,6 @@ const Page = () => {
     locationFound,
     isPanelOpen,
     activeNote,
-    hoveredNoteId,
     modalNote,
     isNoteSelectedFromSearch,
     isGlobalView,
@@ -59,7 +57,6 @@ const Page = () => {
       locationFound: state.locationFound,
       isPanelOpen: state.isPanelOpen,
       activeNote: state.activeNote,
-      hoveredNoteId: state.hoveredNoteId,
       modalNote: state.modalNote,
       isNoteSelectedFromSearch: state.isNoteSelectedFromSearch,
       isGlobalView: state.isGlobalView,
@@ -145,7 +142,7 @@ const Page = () => {
   }, []);
 
   // Location hook
-  const { handleSetLocation, triggerMapResize } = useMapLocation({
+  const { handleSetLocation } = useMapLocation({
     mapRef,
     locationFound,
     setMapCenter,

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -40,7 +40,6 @@ interface SignupFormData {
 
 const SignupPage = () => {
   const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([]);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuthStore(
@@ -83,15 +82,6 @@ const SignupPage = () => {
       loadInstructors();
     }
   }, [selectedRole]);
-
-  const calculatePasswordStrength = (password: string): number => {
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[!@#$%^&*]/.test(password)) strength += 25;
-    return strength;
-  };
 
   const onSubmit = async (data: SignupFormData) => {
     // Validate password strength
@@ -233,7 +223,6 @@ const SignupPage = () => {
                         disabled={isLoading}
                         onChange={e => {
                           field.onChange(e);
-                          setPasswordStrength(calculatePasswordStrength(e.target.value));
                         }}
                       />
                     </FormControl>

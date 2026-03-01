@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import { RichTextEditorProvider } from 'mui-tiptap';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -157,9 +157,10 @@ export default function NoteEditor({
             if (dispatch) {
               const endPos = tr.doc.content.size;
               const paragraphNodeForNewLine = editor.schema.node('paragraph');
-              const textNode = editor.schema.text(videoLink, [
-                editor.schema.marks.link.create({ href: media.uri }),
-              ]);
+              const linkMark = editor.schema.marks.link;
+              const textNode = editor.schema.text(videoLink, linkMark ? [
+                linkMark.create({ href: media.uri }),
+              ] : []);
               const paragraphNodeForLink = editor.schema.node('paragraph', null, [textNode]);
               const transaction = tr
                 .insert(endPos, paragraphNodeForNewLine)

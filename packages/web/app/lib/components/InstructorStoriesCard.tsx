@@ -61,7 +61,6 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
   const isInstructor = hasInstructorAccess(authUser);
-  const isStudent = !isInstructor;
   const canComment = !!authUser?.id;
 
   // Sanitize HTML content

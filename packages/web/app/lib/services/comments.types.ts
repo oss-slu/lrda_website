@@ -34,7 +34,3 @@ export interface ResolveThreadResult {
   success: boolean;
   updatedCount: number;
 }
-
-// Legacy type alias for backward compatibility
-/** @deprecated Use ApiCommentData instead */
-export type RerumCommentData = import('@lrda/shared').CommentResponse;

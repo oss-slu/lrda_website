@@ -1,6 +1,5 @@
 'use client';
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Note } from '@/app/types';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import EnhancedClickableNote from '../lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -62,7 +61,7 @@ const StoriesPage = () => {
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },

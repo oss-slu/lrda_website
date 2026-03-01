@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { CloudUpload, CheckCircle2, Loader2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 interface AutoSaveIndicatorProps {
   isSaving: boolean;

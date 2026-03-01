@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@mui/material';
 import {
@@ -6,8 +6,6 @@ import {
   MenuButtonBlockquote,
   MenuButtonBold,
   MenuButtonBulletedList,
-  MenuButtonCode,
-  MenuButtonCodeBlock,
   MenuButtonEditLink,
   MenuButtonHighlightColor,
   MenuButtonHorizontalRule,

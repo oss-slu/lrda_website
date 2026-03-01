@@ -68,14 +68,14 @@ const AudioPickerInner: React.FC<AudioPickerProps> = ({ audioArray, setAudio, ed
   const handleIncrementRecs = () => {
     const nextIdx = (currentIdx + 1) % audioArray.length;
     setCurrentIdx(nextIdx);
-    setCurRec(audioArray[nextIdx].uri);
+    setCurRec(audioArray[nextIdx]?.uri);
   };
 
   // Navigate to the previous recording in the array
   const handleDecrementRecs = () => {
     const prevIdx = (currentIdx - 1 + audioArray.length) % audioArray.length;
     setCurrentIdx(prevIdx);
-    setCurRec(audioArray[prevIdx].uri);
+    setCurRec(audioArray[prevIdx]?.uri);
   };
 
   // Unified upload handler for audio files

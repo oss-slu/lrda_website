@@ -16,7 +16,6 @@ import { HorizontalRule } from '@tiptap/extension-horizontal-rule';
 import { Italic } from '@tiptap/extension-italic';
 import { Link } from '@tiptap/extension-link';
 import { ListItem } from '@tiptap/extension-list-item';
-import { Mention } from '@tiptap/extension-mention';
 import { OrderedList } from '@tiptap/extension-ordered-list';
 import { Paragraph } from '@tiptap/extension-paragraph';
 import { Placeholder } from '@tiptap/extension-placeholder';
@@ -40,52 +39,6 @@ import {
   ResizableImage,
   TableImproved,
 } from 'mui-tiptap';
-
-import { Node } from '@tiptap/core';
-
-const LazyImage = Node.create({
-  name: 'image',
-
-  addAttributes() {
-    return {
-      src: {},
-      alt: {
-        default: null,
-      },
-      title: {
-        default: null,
-      },
-      loading: {
-        default: 'lazy',
-      },
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'img[src][loading="lazy"]',
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['img', HTMLAttributes];
-  },
-
-  addCommands() {
-    return {
-      setImage:
-        options =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
-  },
-});
 
 export type UseExtensionsOptions = {
   /** Placeholder hint to show in the text input area before a user types a message. */

@@ -53,7 +53,7 @@ interface MapState {
 const DEFAULT_CENTER: Location = { lat: 38.005984, lng: -24.334449 };
 const DEFAULT_ZOOM = 2;
 
-export const useMapStore = create<MapState>()((set, get) => ({
+export const useMapStore = create<MapState>()((set) => ({
   // Initial state
   mapCenter: DEFAULT_CENTER,
   mapZoom: DEFAULT_ZOOM,

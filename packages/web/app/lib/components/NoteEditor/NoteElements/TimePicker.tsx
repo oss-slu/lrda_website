@@ -4,7 +4,6 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { CaptionProps } from 'react-day-picker';
 
 interface TimePickerProps {
   initialDate?: Date; // Now optional — will fall back to today if not provided
@@ -16,11 +15,6 @@ function formatDateTime(date: Date) {
   if (!date) return 'Pick a date';
   return `${date.toDateString()}`;
 }
-
-type CustomCaptionProps = CaptionProps & {
-  onMonthChange?: (date: Date) => void;
-  onDayClick?: (date: Date) => void;
-};
 
 function CaptionDropdowns(props: any) {
   const { displayMonth, onMonthChange, onDayClick } = props;
@@ -100,7 +94,9 @@ export default function TimePicker({
   };
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const [hours, minutes] = event.target.value.split(':').map(Number);
+    const parts = event.target.value.split(':').map(Number);
+    const hours = parts[0] ?? 0;
+    const minutes = parts[1] ?? 0;
     const updatedDate = new Date(date);
     updatedDate.setHours(hours, minutes);
     setDate(updatedDate);

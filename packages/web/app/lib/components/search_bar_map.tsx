@@ -31,7 +31,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
   const [loading, setLoading] = useState(false);
 
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const dropdownRef = useRef<HTMLUListElement>(null);
   const prevSearchTextRef = useRef('');
 
   // Initialize autocomplete service when Google Maps API is loaded

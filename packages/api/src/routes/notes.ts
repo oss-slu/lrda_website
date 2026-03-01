@@ -345,7 +345,10 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       },
     });
 
-    return c.json(result!, 201);
+    if (!result) {
+      throw new Error('Failed to retrieve created note');
+    }
+    return c.json(result, 201);
   })
 
   // PATCH /notes/:id - update note
@@ -439,7 +442,10 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       },
     });
 
-    return c.json(result!, 200);
+    if (!result) {
+      throw new Error('Failed to retrieve updated note');
+    }
+    return c.json(result, 200);
   })
 
   // DELETE /notes/:id - delete note

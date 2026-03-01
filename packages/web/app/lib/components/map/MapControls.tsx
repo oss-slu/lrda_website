@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { UserIcon, Plus, Minus, Users, Crosshair } from 'lucide-react';
 import SearchBarMap from '../search_bar_map';
 import { Note } from '@/app/types';

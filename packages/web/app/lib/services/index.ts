@@ -41,8 +41,6 @@ export type {
   CommentPosition,
   ApiCommentData,
   ResolveThreadResult,
-  // Legacy alias
-  RerumCommentData,
 } from './comments.types';
 
 // Instructor service
