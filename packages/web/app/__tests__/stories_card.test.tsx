@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, waitFor, within, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 // @ts-expect-error -- moxios doesn't have type declarations
 import moxios from 'moxios';
 import EnhancedNoteCard from '../lib/components/stories_card';

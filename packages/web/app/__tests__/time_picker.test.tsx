@@ -1,4 +1,3 @@
-import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import TimePicker from '../lib/components/NoteEditor/NoteElements/TimePicker';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CommentSidebar from '../lib/components/comments/CommentSidebar';
 

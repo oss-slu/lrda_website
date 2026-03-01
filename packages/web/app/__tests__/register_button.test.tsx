@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import RegisterButton from '../lib/components/register_button';
 test('Register button is clickable when not in a loading state', () => {

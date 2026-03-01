@@ -1,7 +1,6 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Page from '../login/page';
-import { createMockAuthState, mockLoggedInUser } from '../__mocks__/authMock';
+import { createMockAuthState } from '../__mocks__/authMock';
 
 // Create mock auth state
 const mockAuthState = createMockAuthState();

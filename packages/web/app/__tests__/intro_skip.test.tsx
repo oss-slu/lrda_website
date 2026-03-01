@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import React from 'react';
 
 // TestComponent renders a button with the styles we want to test.
 const TestComponent = () => {

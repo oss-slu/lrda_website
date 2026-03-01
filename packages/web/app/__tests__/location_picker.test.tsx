@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import LocationPicker from '../lib/components/NoteEditor/NoteElements/LocationPicker';
 import '@testing-library/jest-dom';

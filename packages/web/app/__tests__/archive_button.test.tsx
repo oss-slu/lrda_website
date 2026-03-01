@@ -1,5 +1,3 @@
-import { toast } from 'sonner';
-
 // Mock notesService
 const mockNotesServiceDelete = jest.fn();
 jest.mock('../lib/services', () => ({

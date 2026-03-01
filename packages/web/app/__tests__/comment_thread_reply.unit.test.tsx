@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CommentSidebar from '../lib/components/comments/CommentSidebar';
 
@@ -78,7 +77,7 @@ describe('CommentSidebar - per-thread reply drafts', () => {
     const replyInputs = await screen.findAllByPlaceholderText(/reply/i);
     expect(replyInputs.length).toBeGreaterThanOrEqual(2);
 
-    fireEvent.change(replyInputs[0], { target: { value: 'Reply A' } });
+    fireEvent.change(replyInputs[0]!, { target: { value: 'Reply A' } });
     expect((replyInputs[0] as HTMLInputElement).value).toBe('Reply A');
     expect((replyInputs[1] as HTMLInputElement).value).toBe('');
   });

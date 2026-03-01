@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 // @ts-expect-error -- using app/ alias path for test
@@ -88,8 +87,8 @@ jest.mock('app/lib/hooks/queries/useUsers', () => ({
 jest.mock('app/lib/utils/data_conversion', () => ({
   __esModule: true,
   default: { convertMediaTypes: (arr: any[]) => arr },
-  format12hourTime: (d: any) => 'time',
-  formatDateTime: (d: any) => 'date time',
+  format12hourTime: (_d: any) => 'time',
+  formatDateTime: (_d: any) => 'date time',
 }));
 
 // Silence toasts in tests

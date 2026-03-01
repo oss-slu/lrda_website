@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, waitFor, act, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Page from '../map/page';

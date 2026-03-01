@@ -6,8 +6,7 @@
  *    notes disappearing on refresh when the API treats the user as anonymous).
  * 2. usePersonalNotes fires correctly once auth is initialized.
  */
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import Sidebar from '../lib/components/Sidebar';
 
 // Mock next/router

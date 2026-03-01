@@ -1,6 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import MapPage from '../map/page'; // Import the MapPage component
-import NotePage from '../notes/page';
 import introJs from 'intro.js'; // Mock intro.js
 import { createTestWrapper } from './utils/testQueryClient';
 

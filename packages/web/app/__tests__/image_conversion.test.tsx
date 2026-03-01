@@ -82,7 +82,7 @@ describe('convertToJpeg', () => {
 
     // Mock Image
     const mockImageInstance = {
-      set src(val: string) {
+      set src(_val: string) {
         setTimeout(() => {
           mockImageInstance.onload?.();
         }, 0);

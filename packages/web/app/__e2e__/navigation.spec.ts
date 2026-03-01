@@ -150,7 +150,7 @@ test.describe('Navigation', () => {
         // Verify the new page URL matches expected URL
         // Note: Some URLs may redirect, so we check if the URL starts with the expected domain
         const newPageUrl = newPage.url();
-        const expectedDomain = new URL(expectedUrl).hostname;
+        const expectedDomain = new URL(expectedUrl ?? '').hostname;
         const actualDomain = new URL(newPageUrl).hostname;
 
         // Allow for redirects but verify we're on the correct domain
