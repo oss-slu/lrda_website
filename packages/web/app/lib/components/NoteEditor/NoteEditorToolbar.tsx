@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, RefObject } from 'react';
-import { Download } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Document, Packer, Paragraph } from 'docx';
 import { toast } from 'sonner';
@@ -77,34 +77,56 @@ export default function NoteEditorToolbar({
     toast(`Your note has been downloaded as ${fileType.toUpperCase()}`);
   };
 
+  const dateDisplay =
+    noteState.time instanceof Date && !isNaN(noteState.time.getTime())
+      ? noteState.time.toDateString()
+      : 'No date';
+  const locationDisplay =
+    noteState.latitude && noteState.longitude
+      ? `${noteState.latitude.toFixed(4)}, ${noteState.longitude.toFixed(4)}`
+      : 'No location';
+
   return (
     <>
-      <div ref={dateRef}>
-        <TimePicker
-          initialDate={noteState.time || new Date()}
-          onTimeChange={newDate => {
-            handleTimeChange(noteHandlers.setTime, newDate);
-            onTimeChange();
-          }}
-          disabled={isViewingStudentNote}
-        />
-      </div>
-      <div ref={locationRef}>
-        <LocationPicker
-          long={noteState.longitude}
-          lat={noteState.latitude}
-          onLocationChange={(newLong, newLat) => {
-            handleLocationChange(
-              noteHandlers.setLongitude,
-              noteHandlers.setLatitude,
-              newLong,
-              newLat,
-            );
-            onLocationChange();
-          }}
-          disabled={isViewingStudentNote}
-        />
-      </div>
+      {isViewingStudentNote ? (
+        <>
+          <span className='inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-600'>
+            <CalendarIcon className='h-4 w-4 text-gray-400' />
+            {dateDisplay}
+          </span>
+          <span className='inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-600'>
+            <MapPin className='h-4 w-4 text-gray-400' />
+            {locationDisplay}
+          </span>
+        </>
+      ) : (
+        <>
+          <div ref={dateRef}>
+            <TimePicker
+              initialDate={noteState.time || new Date()}
+              onTimeChange={newDate => {
+                handleTimeChange(noteHandlers.setTime, newDate);
+                onTimeChange();
+              }}
+            />
+          </div>
+          <div ref={locationRef}>
+            <LocationPicker
+              long={noteState.longitude}
+              lat={noteState.latitude}
+              onLocationChange={(newLong, newLat) => {
+                handleLocationChange(
+                  noteHandlers.setLongitude,
+                  noteHandlers.setLatitude,
+                  newLong,
+                  newLat,
+                );
+                onLocationChange();
+              }}
+            />
+          </div>
+        </>
+      )}
       <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
         <PopoverTrigger asChild>
           <button

@@ -15,8 +15,9 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { sql } from 'drizzle-orm';
+import { hashPassword } from 'better-auth/crypto';
 import * as schema from '../db/schema';
-import { users, notes, media, audio, comments } from './fixtures/seed-data';
+import { users, notes, media, audio, comments, SEED_PASSWORD } from './fixtures/seed-data';
 
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
@@ -50,11 +51,12 @@ async function seed() {
     if (DRY_RUN) {
       log('info', 'DRY RUN - No changes will be written');
       log('info', 'Would truncate ALL tables and insert:');
-      log('info', `  Users:    ${users.length}`);
+      log('info', `  Users:    ${users.length} (with account records for login)`);
       log('info', `  Notes:    ${notes.length}`);
       log('info', `  Media:    ${media.length}`);
       log('info', `  Audio:    ${audio.length}`);
       log('info', `  Comments: ${comments.length}`);
+      log('info', `  Shared password: ${SEED_PASSWORD}`);
       log('info', 'Run with --yolo to apply changes');
       return;
     }
@@ -78,6 +80,21 @@ async function seed() {
       await db.insert(schema.user).values(students);
     }
     log('info', `  Inserted ${users.length} users`);
+
+    // Create account records so users can log in with email + password.
+    // Better Auth requires an 'account' row with providerId='credential'
+    // and a hashed password for email/password authentication.
+    log('info', 'Creating account records (hashing password)...');
+    const hashedPassword = await hashPassword(SEED_PASSWORD);
+    const accounts = users.map((u) => ({
+      id: `${u.id}-credential`,
+      accountId: u.id,
+      providerId: 'credential',
+      userId: u.id,
+      password: hashedPassword,
+    }));
+    await db.insert(schema.account).values(accounts);
+    log('info', `  Inserted ${accounts.length} account records (password: ${SEED_PASSWORD})`);
 
     log('info', 'Inserting notes...');
     await db.insert(schema.note).values(notes);

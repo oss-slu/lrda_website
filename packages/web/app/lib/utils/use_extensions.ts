@@ -199,6 +199,7 @@ export default function useExtensions({
       HeadingWithAnchor,
       TextAlign.configure({
         types: ['heading', 'paragraph', 'image'],
+        defaultAlignment: 'left',
       }),
       TextStyle,
       Color,

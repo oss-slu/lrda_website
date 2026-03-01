@@ -214,6 +214,7 @@ export default function NoteEditor({
 
       noteHandlers.setApprovalRequested(updatedApprovalStatus);
       noteHandlers.setIsReturned(false);
+      lastEditTimeRef.current = Date.now();
 
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 
@@ -244,6 +245,7 @@ export default function NoteEditor({
       noteHandlers.setIsPublished(updatedNote.published ?? false);
       noteHandlers.setApprovalRequested(updatedNote.approvalRequested ?? false);
       noteHandlers.setNote(updatedNote);
+      lastEditTimeRef.current = Date.now();
 
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 
@@ -331,61 +333,64 @@ export default function NoteEditor({
             />
 
             <div className='ml-auto flex shrink-0 items-center gap-2'>
-              <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
+              {!isViewingStudentNote && (
+                <>
+                  <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
 
-              <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
+                  <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
 
-              <PublishToggle
-                id='publish-toggle-button'
-                isPublished={Boolean(noteState.isPublished)}
-                isApprovalRequested={noteState.approvalRequested || false}
-                noteId={noteState.note?.id || ''}
-                userId={userId}
-                instructorId={instructorId}
-                onPublishClick={handlePublishClick}
-                onRequestApprovalClick={handleRequestApprovalClick}
-                isInstructorReview={isViewingStudentNote}
-              />
+                  <PublishToggle
+                    id='publish-toggle-button'
+                    isPublished={Boolean(noteState.isPublished)}
+                    isApprovalRequested={noteState.approvalRequested || false}
+                    noteId={noteState.note?.id || ''}
+                    userId={userId}
+                    instructorId={instructorId}
+                    onPublishClick={handlePublishClick}
+                    onRequestApprovalClick={handleRequestApprovalClick}
+                    isInstructorReview={isViewingStudentNote}
+                  />
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    disabled={!noteState.note?.id || isSaving || isViewingStudentNote}
-                    className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                    title={
-                      isViewingStudentNote ? 'Cannot delete student notes'
-                      : !noteState.note?.id ?
-                        'Please wait for note to save before deleting'
-                      : 'Delete this note'
-                    }
-                    ref={deleteRef}
-                  >
-                    <FileX2 className='h-4 w-4' />
-                    <span>Delete</span>
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete this note.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={async () => {
-                        const success = await handleDeleteNote();
-                        if (success && onNoteDeleted) {
-                          onNoteDeleted();
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        disabled={!noteState.note?.id || isSaving}
+                        className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                        title={
+                          !noteState.note?.id ?
+                            'Please wait for note to save before deleting'
+                          : 'Delete this note'
                         }
-                      }}
-                    >
-                      Continue
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                        ref={deleteRef}
+                      >
+                        <FileX2 className='h-4 w-4' />
+                        <span>Delete</span>
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete this note.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            const success = await handleDeleteNote();
+                            if (success && onNoteDeleted) {
+                              onNoteDeleted();
+                            }
+                          }}
+                        >
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
 
               {noteId &&
                 canComment &&

@@ -3,9 +3,15 @@
  *
  * All IDs are deterministic so the script is idempotent.
  * Foreign key references are consistent across entities.
+ *
+ * All seed users share the same password: "Password123!"
+ * This meets the server-side strength requirement (uppercase, lowercase, number, special char, 8+ chars).
  */
 
 import type { Tag } from '../../db/types';
+
+// Shared password for all seed users (meets strength requirements)
+export const SEED_PASSWORD = 'Test111!';
 
 // ============================================
 // Users
