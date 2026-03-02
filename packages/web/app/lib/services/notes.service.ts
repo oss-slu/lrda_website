@@ -55,6 +55,7 @@ function transformApiNote(data: ApiNoteData): Note {
     creator: data.creatorId,
     latitude: data.latitude ?? null,
     longitude: data.longitude ?? null,
+    locationName: data.locationName ?? null,
     published: data.isPublished,
     approvalRequested: data.approvalRequested,
     isReturned: data.isReturned,

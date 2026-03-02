@@ -8,21 +8,25 @@ import { getCachedLocation } from '@/app/lib/utils/location_cache';
 interface LocationPickerProps {
   long?: number | null;
   lat?: number | null;
+  locationName?: string;
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
-  disabled?: boolean; // Whether the location picker is disabled (read-only)
+  onLocationNameChange?: (name: string) => void;
+  disabled?: boolean;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   long,
   lat,
+  locationName: initialLocationName,
   onLocationChange,
+  onLocationNameChange,
   disabled = false,
 }) => {
   // Use lazy initializer from props on first render
   const [longitude, setLongitude] = useState<number>(() => long ?? 0);
   const [latitude, setLatitude] = useState<number>(() => lat ?? 0);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [locationName, setLocationName] = useState<string>(''); // City name from reverse geocoding
+  const [locationName, setLocationName] = useState<string>(initialLocationName || '');
   const mapRef = useRef<google.maps.Map | null>(null);
   const isLoaded = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +43,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         setLatitude(lat);
         setLongitude(lng);
         onLocationChange(lng, lat);
+        setLocationName('');
+        onLocationNameChange?.('');
         mapRef.current?.panTo({ lat, lng });
         mapRef.current?.setZoom(12);
       }
@@ -57,17 +63,24 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   // Fetch city name from coordinates using reverse geocoding
   useEffect(() => {
     const fetchLocationName = async () => {
+      if (initialLocationName) {
+        setLocationName(initialLocationName);
+        onLocationNameChange?.(initialLocationName);
+        return;
+      }
       if (latitude && longitude && latitude !== 0 && longitude !== 0) {
         const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
         if (MAPS_API_KEY) {
           try {
             const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);
-            // Extract city name from formatted address (usually first part before comma)
             const cityName = (location.split(',')[0] ?? '').trim();
-            setLocationName(cityName || location || '');
+            const name = cityName || location || '';
+            setLocationName(name);
+            onLocationNameChange?.(name);
           } catch (error) {
             console.error('Error fetching location name:', error);
             setLocationName('');
+            onLocationNameChange?.('');
           }
         }
       } else {
@@ -76,7 +89,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     };
 
     fetchLocationName();
-  }, [latitude, longitude]);
+  }, [latitude, longitude, initialLocationName]);
 
   // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {
@@ -116,7 +129,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     if (lat != null && lng != null) {
       setLatitude(lat);
       setLongitude(lng);
-      onLocationChange(lng, lat); // Notify parent component of location change
+      onLocationChange(lng, lat);
+      setLocationName('');
+      onLocationNameChange?.('');
       mapRef.current?.setZoom(12);
     }
   };

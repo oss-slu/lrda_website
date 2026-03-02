@@ -114,7 +114,9 @@ export default function NoteEditorToolbar({
             <LocationPicker
               long={noteState.longitude}
               lat={noteState.latitude}
+              locationName={noteState.locationName}
               onLocationChange={(newLong, newLat) => {
+                noteHandlers.setLocationName('');
                 handleLocationChange(
                   noteHandlers.setLongitude,
                   noteHandlers.setLatitude,
@@ -123,6 +125,7 @@ export default function NoteEditorToolbar({
                 );
                 onLocationChange();
               }}
+              onLocationNameChange={noteHandlers.setLocationName}
             />
           </div>
         </>

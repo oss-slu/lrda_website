@@ -82,6 +82,7 @@ export type Note = {
   creator: string;
   latitude: number | null;
   longitude: number | null;
+  locationName?: string | null;
   published: boolean | undefined;
   approvalRequested?: boolean | undefined;
   isReturned?: boolean | undefined;
@@ -103,6 +104,7 @@ export type newNote = {
   creator: string;
   latitude: number | null;
   longitude: number | null;
+  locationName?: string | null;
   published: boolean | undefined;
   approvalRequested?: boolean | undefined;
   tags: Tag[];
