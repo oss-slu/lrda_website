@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import * as ReactDOM from 'react-dom/client';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -47,6 +48,8 @@ export function useMapMarkers({
   const popupHoveredRef = useRef(false);
   // Use ref instead of state to avoid re-render loops
   const markersRef = useRef(new Map<string, google.maps.marker.AdvancedMarkerElement>());
+
+  const router = useRouter();
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -138,7 +141,7 @@ export function useMapMarkers({
       }
 
       if (isClick) {
-        setModalNote(note);
+        router.push(`/notes/${note.id}`);
         currentPopupNoteIdRef.current = null;
         return;
       }

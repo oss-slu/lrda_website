@@ -10,6 +10,7 @@ import { db } from '../db';
 import { note, media, audio, user } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../types';
+import { reverseGeocode } from '../lib/geocode';
 
 // Alias for backward compatibility in route definitions
 const NoteWithRelationsSchema = NoteResponseSchema;
@@ -294,6 +295,15 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
+    // Reverse geocode to get a human-readable address if coords are provided
+    let computedLocation: string | null = null;
+    if (body.latitude != null && body.longitude != null) {
+      computedLocation = await reverseGeocode(body.latitude, body.longitude);
+    }
+    if (!computedLocation && body.locationName) {
+      computedLocation = body.locationName;
+    }
+
     // Create the note
     const [createdNote] = await db
       .insert(note)
@@ -303,6 +313,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
         creatorId: authUser.id,
         latitude: body.latitude ?? null,
         longitude: body.longitude ?? null,
+        locationName: computedLocation,
         isPublished: body.isPublished,
         approvalRequested: body.approvalRequested,
         tags: body.tags || [],
@@ -391,6 +402,20 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     if (body.isReturned !== undefined) updateData.isReturned = body.isReturned;
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.time !== undefined) updateData.time = new Date(body.time);
+
+    // Re-geocode if coordinates changed
+    if (body.latitude !== undefined || body.longitude !== undefined) {
+      const lat = body.latitude ?? existingNote.latitude;
+      const lng = body.longitude ?? existingNote.longitude;
+      if (lat != null && lng != null) {
+        updateData.locationName = await reverseGeocode(lat, lng);
+      } else {
+        updateData.locationName = null;
+      }
+    }
+    if (updateData.locationName == null && body.locationName) {
+      updateData.locationName = body.locationName;
+    }
 
     // Update the note
     await db.update(note).set(updateData).where(eq(note.id, id));

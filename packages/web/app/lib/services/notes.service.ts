@@ -55,6 +55,7 @@ function transformApiNote(data: ApiNoteData): Note {
     creator: data.creatorId,
     latitude: data.latitude ?? null,
     longitude: data.longitude ?? null,
+    locationName: data.locationName ?? null,
     published: data.isPublished,
     approvalRequested: data.approvalRequested,
     isReturned: data.isReturned,
@@ -225,11 +226,24 @@ async function fetchMessages(
   return (data ?? []).map(transformApiNote);
 }
 
+/**
+ * Fetch a single note by ID.
+ */
+async function fetchById(id: string): Promise<Note | null> {
+  try {
+    const data = await fetchWithAuth<ApiNoteData>(`/api/notes/${id}`);
+    return data ? transformApiNote(data) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const notesService = {
   fetchAll,
   fetchPublished,
   fetchByStudents,
   fetchUserNotes,
+  fetchById,
   create,
   update,
   delete: deleteNote,

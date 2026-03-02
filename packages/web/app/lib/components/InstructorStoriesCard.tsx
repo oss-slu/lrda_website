@@ -77,6 +77,10 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
       .catch(() => setCreatorName('Unknown'));
 
     const fetchLocation = async () => {
+      if (note.locationName) {
+        setLocation(note.locationName);
+        return;
+      }
       const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
       if (note.latitude != null && note.longitude != null && MAPS_API_KEY) {
         const loc = await getCachedLocation(note.latitude, note.longitude, MAPS_API_KEY);
@@ -87,7 +91,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     };
 
     fetchLocation();
-  }, [note.creator, note.latitude, note.longitude]);
+  }, [note.creator, note.latitude, note.longitude, note.locationName]);
 
   // Comment submission via the real comments API
   const handleSubmitComment = async () => {

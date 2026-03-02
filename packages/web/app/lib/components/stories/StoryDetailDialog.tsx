@@ -70,8 +70,12 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     }
   }, [note.creator]);
 
-  // Fetch location
+  // Use stored location name or fall back to reverse geocoding
   useEffect(() => {
+    if (note.locationName) {
+      setLocation(note.locationName);
+      return;
+    }
     if (hasValidCoordinates) {
       const apiKey = process.env.NEXT_PUBLIC_MAP_KEY;
       if (apiKey) {
@@ -80,7 +84,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
           .catch(() => setLocation('Location unavailable'));
       }
     }
-  }, [note.latitude, note.longitude, hasValidCoordinates]);
+  }, [note.latitude, note.longitude, note.locationName, hasValidCoordinates]);
 
   // Sanitize content using centralized utility (synchronous -- no effect needed)
   const sanitizedText = useMemo(

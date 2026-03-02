@@ -85,6 +85,7 @@ export const notes = [
     creatorId: 'seed-student-001',
     latitude: 37.7912,
     longitude: -122.4131,
+    locationName: 'Grace Cathedral, San Francisco, CA',
     isPublished: true,
     approvalRequested: false,
     tags: [
@@ -103,6 +104,7 @@ export const notes = [
     creatorId: 'seed-student-002',
     latitude: 40.7719,
     longitude: -73.9576,
+    locationName: 'Islamic Cultural Center of New York, NY',
     isPublished: true,
     approvalRequested: false,
     tags: [

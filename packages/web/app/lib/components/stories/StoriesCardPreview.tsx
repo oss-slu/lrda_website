@@ -107,8 +107,12 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
     }
   }, [note.creator]);
 
-  // Fetch location using reverse geocoding
+  // Use stored location name or fall back to reverse geocoding
   useEffect(() => {
+    if (note.locationName) {
+      setLocation(note.locationName);
+      return;
+    }
     if (hasValidCoordinates) {
       const apiKey = process.env.NEXT_PUBLIC_MAP_KEY;
       if (apiKey) {
@@ -117,7 +121,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
           .catch(() => setLocation('Location unavailable'));
       }
     }
-  }, [note.latitude, note.longitude, hasValidCoordinates]);
+  }, [note.latitude, note.longitude, note.locationName, hasValidCoordinates]);
 
   return (
     <div

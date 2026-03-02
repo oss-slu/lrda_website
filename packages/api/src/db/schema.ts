@@ -117,6 +117,7 @@ export const note = pgTable('note', {
     .references(() => user.id, { onDelete: 'cascade' }),
   latitude: doublePrecision('latitude'),
   longitude: doublePrecision('longitude'),
+  locationName: text('location_name'),
   isPublished: boolean('is_published').notNull().default(false),
   approvalRequested: boolean('approval_requested').notNull().default(false),
   isReturned: boolean('is_returned').notNull().default(false),
