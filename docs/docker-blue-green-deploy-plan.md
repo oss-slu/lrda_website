@@ -13,22 +13,25 @@ The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to tes
 ### Production (EC2)
 
 ```
-                     [Nginx (native, systemd)]
-                       port 80/443 + SSL
-                            |
-                    upstream lrda_api
-                            |
-               +------------+------------+
-               |                         |
-      [lrda-api-blue]          [lrda-api-green]
-       Docker :3002              Docker :3003
-               |                         |
-               +------------+------------+
-                            |
-                   [PostgreSQL 16 (native)]
-                        port 5432
+  GitHub Actions (CI)                        EC2 (t3.small)
+  +-----------------------+
+  | test -> build image   |     docker pull   [Nginx (native, systemd)]
+  | -> push to GHCR       | ----SSH----->       port 80/443 + SSL
+  +-----------------------+                          |
+                                             upstream lrda_api
+                                                     |
+                                        +------------+------------+
+                                        |                         |
+                               [lrda-api-blue]          [lrda-api-green]
+                                Docker :3002              Docker :3003
+                                        |                         |
+                                        +------------+------------+
+                                                     |
+                                            [PostgreSQL 16 (native)]
+                                                 port 5432
 ```
 
+- Docker images are built in GitHub Actions (7GB RAM) and pushed to GHCR -- the t3.small (2GB RAM) only pulls pre-built images
 - PostgreSQL runs natively via systemd (already set up by user-data.sh)
 - Nginx runs natively for certbot SSL management
 - Only the API runs in Docker containers (blue on port 3002, green on port 3003)
@@ -57,14 +60,16 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to EC2
 - `upstream-green.conf` active + `upstream-blue.conf.disabled` = Green serving traffic
 
 **Deploy flow:**
-1. Determine which color is currently active
-2. Pull latest code, build new Docker image
-3. Run DB migrations from temporary container
-4. Start inactive color container on its port
-5. Health check new container directly (bypasses Nginx, hits container port)
-6. If healthy: write new upstream file, rename old to `.disabled`, reload Nginx
-7. Stop old container
-8. If unhealthy: stop new container, keep old running, rollback code. Zero downtime.
+1. GitHub Actions builds Docker image and pushes to GHCR (tagged `sha-<commit>` + `latest`)
+2. GitHub Actions SSHs into EC2 and runs `deploy.sh <image_tag>`
+3. deploy.sh determines which color is currently active
+4. Pull pre-built image from GHCR (no build on EC2 -- saves RAM/CPU)
+5. Run DB migrations from temporary container
+6. Start inactive color container on its port
+7. Health check new container directly (bypasses Nginx, hits container port)
+8. If healthy: write new upstream file, rename old to `.disabled`, reload Nginx
+9. Stop old container
+10. If unhealthy: stop new container, keep old running. Zero downtime.
 
 **Why this approach:**
 - `nginx reload` is graceful -- new workers fork with new config while old workers finish existing connections. No dropped requests.
@@ -77,46 +82,57 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to EC2
 
 ### 1. `packages/api/Dockerfile`
 
-Multi-stage Bun build:
+Three-stage Bun build (deps cached separately for faster CI rebuilds):
 
 ```dockerfile
-# ---- Build Stage ----
-FROM oven/bun:1 AS builder
+# ---- Stage 1: Install dependencies ----
+FROM oven/bun:1 AS deps
 
 WORKDIR /app
 
-# Copy workspace configuration
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+# Copy workspace configuration + package.json files only (cache layer)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
-# Install pnpm and all dependencies (devDependencies needed for build)
-RUN bun install -g pnpm && pnpm install --frozen-lockfile
+# Bun reads pnpm-lock.yaml natively -- no pnpm needed
+RUN bun install --frozen-lockfile
 
-# Copy source code
+# ---- Stage 2: Build ----
+FROM oven/bun:1 AS build
+
+WORKDIR /app
+
+# Copy installed node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/api/node_modules ./packages/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy source (shared package exports raw .ts, needed at bundle time)
 COPY packages/shared/ packages/shared/
 COPY packages/api/ packages/api/
 
-# Build the API (produces dist/index.js -- single 2.2MB bundle)
+# Bundle into a single file targeting Bun runtime
 WORKDIR /app/packages/api
-RUN bun run build
+RUN bun build src/index.ts --outdir dist --target bun
 
-# ---- Runtime Stage ----
+# ---- Stage 3: Runtime (slim) ----
 FROM oven/bun:1-slim AS runtime
 
 WORKDIR /app
 
 # Copy the bundled output
-COPY --from=builder /app/packages/api/dist/ ./dist/
+COPY --from=build /app/packages/api/dist/ ./dist/
 
 # Copy migration files and drizzle config (needed for drizzle-kit migrate)
-COPY --from=builder /app/packages/api/src/db/migrations/ ./src/db/migrations/
-COPY --from=builder /app/packages/api/drizzle.config.ts ./
+COPY --from=build /app/packages/api/src/db/migrations/ ./src/db/migrations/
+COPY --from=build /app/packages/api/drizzle.config.ts ./
 
-# Copy package files for drizzle-kit
-COPY --from=builder /app/packages/api/package.json ./
-COPY --from=builder /app/packages/api/node_modules/ ./node_modules/
+# pg has native deps that Bun can't bundle -- copy node_modules for runtime
+COPY --from=deps /app/packages/api/package.json ./
+COPY --from=deps /app/packages/api/node_modules/ ./node_modules/
 
+USER bun
 ENV NODE_ENV=production
 EXPOSE 3002
 
@@ -266,20 +282,22 @@ API containers only (PG + Nginx are native on EC2):
 # Production EC2 deployment
 # PostgreSQL and Nginx run natively on the host.
 # Only the API containers are managed by Docker.
+#
+# Images are pre-built in CI and pushed to GHCR.
+# IMAGE_TAG is set by deploy.sh before running docker compose.
+# Uses network_mode: host so containers bind directly to host ports
+# and can reach PostgreSQL on localhost:5432 without bridge networking.
 
 services:
   api-blue:
-    image: lrda-api:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/api:${IMAGE_TAG:-latest}
     container_name: lrda-api-blue
     restart: unless-stopped
-    ports:
-      - "3002:3002"
+    network_mode: host
     env_file:
       - .env
     environment:
       PORT: 3002
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
@@ -288,28 +306,25 @@ services:
       retries: 3
 
   api-green:
-    image: lrda-api:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/api:${IMAGE_TAG:-latest}
     container_name: lrda-api-green
     restart: unless-stopped
-    ports:
-      - "3003:3002"
+    network_mode: host
     env_file:
       - .env
     environment:
-      PORT: 3002
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      PORT: 3003
     profiles:
       - green
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3003/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       start_period: 5s
       retries: 3
 ```
 
-The `.env` file on EC2 uses `DATABASE_URL=postgresql://lrda_app:<password>@host.docker.internal:5432/lrda_<env>`. The `extra_hosts` directive maps `host.docker.internal` to the Docker host gateway, allowing containers to reach native PostgreSQL.
+With `network_mode: host`, each container binds directly to the host's network stack. Blue listens on host port 3002, green on 3003. PostgreSQL is reachable at `localhost:5432` with no extra networking config. The `.env` file on EC2 uses `DATABASE_URL=postgresql://lrda_app:<password>@localhost:5432/lrda_<env>` -- same as a non-Docker setup.
 
 ### 6. `infrastructure/nginx/local.conf`
 
@@ -335,12 +350,17 @@ server {
 
 ### 7. `scripts/deploy.sh`
 
-Blue/green deploy script (runs on EC2 via SSH from GitHub Actions):
+Blue/green deploy script (runs on EC2 via SSH from GitHub Actions).
+Takes an image tag as argument -- the image is pre-built in CI and pulled from GHCR.
 
 ```bash
 #!/usr/bin/env bash
 # Blue/green deploy script for LRDA API
+# Usage: deploy.sh <image_tag>
+# Example: deploy.sh sha-abc1234
 set -euo pipefail
+
+IMAGE_TAG="${1:?Usage: deploy.sh <image_tag>}"
 
 APP_DIR="/home/ubuntu/lrda"
 COMPOSE_FILE="${APP_DIR}/docker-compose.prod.yml"
@@ -372,24 +392,23 @@ else
 fi
 
 log "Active: ${ACTIVE} (:${ACTIVE_PORT}), deploying to: ${INACTIVE} (:${INACTIVE_PORT})"
+log "Image tag: ${IMAGE_TAG}"
 
-# ---- Pull latest code ----
-PREV_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "none")
-log "Current commit: ${PREV_COMMIT}"
-git fetch origin main
-git reset --hard origin/main
-log "Updated to: $(git rev-parse HEAD)"
+# ---- Pull pre-built image from GHCR ----
+# GITHUB_REPOSITORY is set by the CI/CD pipeline (e.g., "owner/repo")
+export IMAGE_TAG
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set}"
 
-# ---- Build Docker image ----
-log "Building Docker image..."
-docker build -t lrda-api:latest -f packages/api/Dockerfile .
+FULL_IMAGE="ghcr.io/${GITHUB_REPOSITORY}/api:${IMAGE_TAG}"
+log "Pulling image: ${FULL_IMAGE}"
+docker pull "${FULL_IMAGE}"
 
 # ---- Run database migrations ----
 log "Running database migrations..."
 docker run --rm \
+    --network host \
     --env-file "${APP_DIR}/.env" \
-    --add-host=host.docker.internal:host-gateway \
-    lrda-api:latest \
+    "${FULL_IMAGE}" \
     bun x drizzle-kit migrate
 
 # ---- Start inactive container ----
@@ -418,9 +437,6 @@ done
 if [ "${HEALTHY}" = "false" ]; then
     log "FAILED -- ${INACTIVE} not healthy. Keeping ${ACTIVE} running."
     docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
-    if [ "${PREV_COMMIT}" != "none" ]; then
-        git reset --hard "${PREV_COMMIT}"
-    fi
     exit 1
 fi
 
@@ -454,11 +470,11 @@ if [ "${ACTIVE}" != "none" ]; then
     docker compose -f "${COMPOSE_FILE}" stop "api-${ACTIVE}"
 fi
 
-# ---- Cleanup ----
-docker image prune -f --filter "until=24h" 2>/dev/null || true
+# ---- Cleanup old images ----
+docker image prune -f --filter "until=168h" 2>/dev/null || true
 
 log "Deploy complete. Active: ${INACTIVE} on :${INACTIVE_PORT}"
-log "Commit: $(git rev-parse HEAD)"
+log "Image: ${FULL_IMAGE}"
 ```
 
 ### 8. `scripts/backup-db.sh`
@@ -516,25 +532,70 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/ci-cd.yml
 
+  build-and-push:
+    name: Build & Push Docker Image
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/api
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
     name: Deploy to ${{ github.event.inputs.environment }}
-    needs: tests
+    needs: build-and-push
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
 
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-
       - name: Deploy via SSH
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ubuntu@${{ secrets.EC2_HOST }} \
-            'bash /home/ubuntu/lrda/scripts/deploy.sh 2>&1'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            export GITHUB_REPOSITORY="${{ github.repository }}"
+            export IMAGE_TAG="sha-${{ github.sha }}"
+            sudo -E /home/ubuntu/lrda/deploy.sh "${IMAGE_TAG}"
+          script_stop: true
         timeout-minutes: 10
 
       - name: Verify deployment externally
@@ -547,10 +608,6 @@ jobs:
             exit 1
           fi
           echo "External health check passed."
-
-      - name: Cleanup
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
 ```
 
 ---
@@ -567,11 +624,14 @@ Key changes:
 - **Fix**: Health path `/health` -> `/api/health`
 - **Fix**: Comment "proxy to Fastify" -> "proxy to Hono"
 - **Add**: Nginx upstream config file: `upstream-blue.conf` in `/etc/nginx/conf.d/`
-- **Add**: PostgreSQL `pg_hba.conf` entry for Docker bridge (`172.17.0.0/16`)
-- **Add**: PostgreSQL `listen_addresses` to include `172.17.0.1` (Docker bridge)
-- **Add**: `.env` with all required vars (`DATABASE_URL` using `host.docker.internal`, `BETTER_AUTH_SECRET`, `CORS_ORIGINS`)
+- **Remove CORS headers from Nginx**: The Hono CORS middleware in `src/index.ts` already handles CORS. Having Nginx also set `Access-Control-Allow-*` headers causes duplicate headers.
+- **Add**: `.env` with all required vars (`DATABASE_URL` using `localhost`, `BETTER_AUTH_SECRET`, `CORS_ORIGINS`)
+- **Add**: Copy `deploy.sh` and `docker-compose.prod.yml` to `/home/ubuntu/lrda/`
+- **Remove**: No git clone needed on EC2 -- images are pre-built in CI and pulled from GHCR
 - **Add**: Backup cron: `0 3 * * *`
 - **Add**: Directories: `/home/ubuntu/lrda/logs`, `/home/ubuntu/backups/db`
+
+Note: With `network_mode: host`, containers access PostgreSQL at `localhost:5432` directly. No `pg_hba.conf` or `listen_addresses` changes needed beyond the existing `127.0.0.1/32` entry.
 
 ### 11. `infrastructure/variables.tf` + `infrastructure/main.tf`
 
@@ -597,6 +657,7 @@ Key changes:
 | `EC2_SSH_PRIVATE_KEY` | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
 | `EC2_HOST` | Elastic IP of EC2 instance | `54.123.45.67` |
 | `API_DOMAIN` | API domain for external health checks | `api-staging.wherereligion.org` |
+| `GHCR_TOKEN` | PAT with `read:packages` scope for EC2 to pull from GHCR | `ghp_...` |
 | `AWS_ACCESS_KEY_ID` | (already exists) | -- |
 | `AWS_SECRET_ACCESS_KEY` | (already exists) | -- |
 | `DB_PASSWORD` | (already exists) | -- |
@@ -657,15 +718,19 @@ docker compose -f docker-compose.prod-local.yml --profile green down -v
 
 ### Phase 3: EC2 first deploy
 ```bash
-ssh ubuntu@<ip> 'bash /home/ubuntu/lrda/scripts/deploy.sh'
+# Push image to GHCR first (or use GH Actions), then:
+ssh ubuntu@<ip> 'export GITHUB_REPOSITORY=<owner>/<repo> && \
+  docker login ghcr.io && \
+  sudo -E /home/ubuntu/lrda/deploy.sh sha-<commit>'
 curl https://api-staging.wherereligion.org/api/health  # 200
 docker ps  # lrda-api-blue running
 ```
 
 ### Phase 4: Blue/green swap
 ```bash
-# Run deploy again -- should swap to green
-ssh ubuntu@<ip> 'bash /home/ubuntu/lrda/scripts/deploy.sh'
+# Deploy again with a new image tag -- should swap to green
+ssh ubuntu@<ip> 'export GITHUB_REPOSITORY=<owner>/<repo> && \
+  sudo -E /home/ubuntu/lrda/deploy.sh sha-<new-commit>'
 docker ps  # lrda-api-green running, blue stopped
 ```
 
@@ -679,6 +744,9 @@ Watch: tests -> SSH deploy -> external health check
 
 ## Notes
 
+- **Graceful shutdown is already implemented.** The API handles SIGTERM/SIGINT in `src/index.ts`: it marks itself as shutting down (causing `/api/health` to return 503), stops `Bun.serve()`, and closes the DB connection pool. This means `docker compose stop` (which sends SIGTERM) will drain in-flight requests before the container exits. The deploy script's drain sleep is a safety buffer on top of this.
 - **DB migrations are forward-only.** If a migration breaks the app, code rollback happens but schema stays at the new version. Manual intervention needed. Mitigation: always write backward-compatible migrations.
 - **Docker image size:** Bun base ~150MB + bundled API ~2.2MB + drizzle-kit deps. Final image ~250MB. Two containers during deploy use ~200MB RAM total. t3.small (2GB) has plenty of headroom.
 - **Certbot compatibility:** Certbot modifies the Nginx server block for SSL. The upstream config is in separate files (`/etc/nginx/conf.d/`), so certbot changes don't interfere with blue/green switching.
+- **CORS is handled by the API, not Nginx.** The Hono CORS middleware in `src/index.ts` manages `Access-Control-Allow-*` headers based on `CORS_ORIGINS` env var. The Nginx config should NOT add its own CORS headers (the current `user-data.sh` does, which needs to be fixed).
+- **`network_mode: host` trade-off:** Using host networking is simpler (no port mapping, no bridge config for PostgreSQL) but means containers can't use the same port simultaneously. Blue gets 3002, green gets 3003 -- they must use different `PORT` env values.
