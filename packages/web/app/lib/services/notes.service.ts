@@ -226,11 +226,24 @@ async function fetchMessages(
   return (data ?? []).map(transformApiNote);
 }
 
+/**
+ * Fetch a single note by ID.
+ */
+async function fetchById(id: string): Promise<Note | null> {
+  try {
+    const data = await fetchWithAuth<ApiNoteData>(`/api/notes/${id}`);
+    return data ? transformApiNote(data) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const notesService = {
   fetchAll,
   fetchPublished,
   fetchByStudents,
   fetchUserNotes,
+  fetchById,
   create,
   update,
   delete: deleteNote,
