@@ -344,6 +344,7 @@ export default function NoteEditor({
                     id='publish-toggle-button'
                     isPublished={Boolean(noteState.isPublished)}
                     isApprovalRequested={noteState.approvalRequested || false}
+                    isReturned={noteState.isReturned || false}
                     noteId={noteState.note?.id || ''}
                     userId={userId}
                     instructorId={instructorId}
@@ -412,7 +413,7 @@ export default function NoteEditor({
                       {isCommentSidebarOpen ?
                         <X className='h-4 w-4' />
                       : <MessageSquare className='h-4 w-4' />}
-                      <span>Comments</span>
+                      <span>{isCommentSidebarOpen ? 'Close' : 'Comments'}</span>
                     </button>
                   </>
                 )}

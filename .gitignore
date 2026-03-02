@@ -36,3 +36,4 @@ infrastructure/tfplan
 infrastructure/terraform.tfvars
 infrastructure/*.backup
 docs/audits/*
+docs/issues/*

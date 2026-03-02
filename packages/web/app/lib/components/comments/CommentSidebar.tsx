@@ -92,7 +92,7 @@ export default function CommentSidebar({
     } catch {}
   };
 
-  const handleReply = async (threadId: string) => {
+  const handleReply = async (threadId: string, rootCommentId: string) => {
     const trimmed = (replyDrafts[threadId] || '').trim();
     if (!trimmed) return;
 
@@ -110,7 +110,7 @@ export default function CommentSidebar({
       updatedAt: new Date().toISOString(),
       position: null,
       threadId,
-      parentId: threadId,
+      parentId: rootCommentId,
       resolved: false,
     };
 

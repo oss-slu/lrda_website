@@ -9,7 +9,7 @@ interface CommentThreadListProps {
   canComment: boolean;
   replyDrafts: Record<string, string>;
   onReplyDraftChange: (threadId: string, value: string) => void;
-  onReply: (threadId: string) => void;
+  onReply: (threadId: string, rootCommentId: string) => void;
   onResolveThread: (threadId: string) => void;
   onDeleteComment: (commentId: string) => void;
 }
@@ -30,7 +30,7 @@ export function CommentThreadList({
       const tid = root.threadId || root.id;
       return {
         root: { ...root, threadId: tid },
-        replies: comments.filter(r => r.parentId === tid),
+        replies: comments.filter(r => r.parentId === root.id),
       };
     });
 
@@ -127,7 +127,7 @@ export function CommentThreadList({
               <Button
                 size='sm'
                 className='h-7 px-2 text-xs'
-                onClick={() => onReply(root.threadId || root.id)}
+                onClick={() => onReply(root.threadId || root.id, root.id)}
               >
                 Reply
               </Button>
