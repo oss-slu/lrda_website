@@ -656,7 +656,7 @@ Note: With `network_mode: host`, containers access PostgreSQL at `localhost:5432
 |--------|-------------|---------|
 | `EC2_SSH_PRIVATE_KEY` | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
 | `EC2_HOST` | Elastic IP of EC2 instance | `54.123.45.67` |
-| `API_DOMAIN` | API domain for external health checks | `api-staging.wherereligion.org` |
+| `API_DOMAIN` | API domain for external health checks | `api-staging.wheresreligion.org` |
 | `GHCR_TOKEN` | PAT with `read:packages` scope for EC2 to pull from GHCR | `ghp_...` |
 | `AWS_ACCESS_KEY_ID` | (already exists) | -- |
 | `AWS_SECRET_ACCESS_KEY` | (already exists) | -- |
@@ -722,7 +722,7 @@ docker compose -f docker-compose.prod-local.yml --profile green down -v
 ssh ubuntu@<ip> 'export GITHUB_REPOSITORY=<owner>/<repo> && \
   docker login ghcr.io && \
   sudo -E /home/ubuntu/lrda/deploy.sh sha-<commit>'
-curl https://api-staging.wherereligion.org/api/health  # 200
+curl https://api-staging.wheresreligion.org/api/health  # 200
 docker ps  # lrda-api-blue running
 ```
 

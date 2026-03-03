@@ -89,7 +89,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     };
 
     fetchLocationName();
-  }, [latitude, longitude, initialLocationName]);
+  }, [latitude, longitude, initialLocationName, onLocationNameChange]);
 
   // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {

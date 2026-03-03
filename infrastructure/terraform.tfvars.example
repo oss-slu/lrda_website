@@ -6,12 +6,12 @@
 aws_region = "us-east-1"
 
 # Environment: "staging" or "production"
-# staging uses: api-staging.wherereligion.org
-# production uses: api.wherereligion.org
+# staging uses: api-staging.wheresreligion.org
+# production uses: api.wheresreligion.org
 environment = "staging"
 
 # Your domain name
-domain_name = "wherereligion.org"
+domain_name = "wheresreligion.org"
 
 # EC2 instance type (t3.small is sufficient for API-only workload)
 instance_type = "t3.small"

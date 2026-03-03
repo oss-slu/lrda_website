@@ -344,7 +344,7 @@ aws dynamodb create-table \
 |--------|-------------|---------|
 | `EC2_SSH_PRIVATE_KEY` | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
 | `EC2_HOST` | Elastic IP of EC2 instance | `54.123.45.67` |
-| `API_DOMAIN` | API domain for health checks | `api-staging.wherereligion.org` |
+| `API_DOMAIN` | API domain for health checks | `api-staging.wheresreligion.org` |
 | `AWS_ACCESS_KEY_ID` | (already exists) | -- |
 | `AWS_SECRET_ACCESS_KEY` | (already exists) | -- |
 | `DB_PASSWORD` | (already exists) | -- |
@@ -396,7 +396,7 @@ curl -v http://localhost:3002/api/health        # expect 503
 1. Push all changes to main
 2. GitHub Actions > Deploy API > Run workflow > staging
 3. Watch: tests pass -> SSH deploy -> external health check
-4. `curl https://api-staging.wherereligion.org/api/health` returns 200
+4. `curl https://api-staging.wheresreligion.org/api/health` returns 200
 
 **Backups:**
 ```bash

@@ -10,7 +10,7 @@ const EnvSchema = z.object({
   CORS_ORIGINS: z.string().optional(),
   WEB_URL: z.string().default('http://localhost:3000'),
   RESEND_API_KEY: z.string().default(''),
-  EMAIL_FROM: z.string().default('noreply@wherereligion.org'),
+  EMAIL_FROM: z.string().default('noreply@wheresreligion.org'),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
 });
 

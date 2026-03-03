@@ -165,7 +165,7 @@ export function useMapMarkers({
       popup.setMap(map);
     };
 
-    // Handle marker click
+    // Handle marker click -- navigate to dedicated note page
     const handleMarkerClick = (note: Note) => {
       if (currentPopupRef.current) {
         currentPopupRef.current.setMap(null);
@@ -173,12 +173,7 @@ export function useMapMarkers({
         currentPopupNoteIdRef.current = null;
       }
 
-      setModalNote(note);
-      setActiveNote(note);
-
-      if (isPanelOpen) {
-        scrollToNoteTile(note.id);
-      }
+      router.push(`/notes/${note.id}`);
     };
 
     // Attach events to marker
@@ -259,6 +254,7 @@ export function useMapMarkers({
     scrollToNoteTile,
     startPopupCloseTimer,
     createMarkerIcon,
+    router,
   ]);
 
   return {

@@ -69,8 +69,8 @@ chmod 600 /home/ubuntu/lrda/.env
 
 # Configure Nginx for API-only (frontend is on Vercel)
 # server_name is environment-aware:
-#   staging:    api-staging.wherereligion.org
-#   production: api.wherereligion.org
+#   staging:    api-staging.wheresreligion.org
+#   production: api.wheresreligion.org
 # Note: Terraform variables use ${var}, Nginx variables use $var (escaped as $$var in Terraform templatefile)
 cat > /etc/nginx/sites-available/lrda << NGINX
 server {
@@ -87,8 +87,8 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
 
         # CORS headers for frontend on different domain
-        # Staging: https://staging.wherereligion.org
-        # Production: https://wherereligion.org
+        # Staging: https://staging.wheresreligion.org
+        # Production: https://wheresreligion.org
         add_header Access-Control-Allow-Origin "https://${frontend_origin}" always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;

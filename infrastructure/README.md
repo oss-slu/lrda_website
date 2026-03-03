@@ -6,7 +6,7 @@ Terraform configuration for provisioning the LRDA API server infrastructure on A
 
 This Terraform configuration creates:
 
-- **EC2 Instance**: Ubuntu 24.04 LTS running the Fastify API server
+- **EC2 Instance**: Ubuntu 24.04 LTS running the Hono API server
 - **Security Group**: SSH (restricted to your IP), HTTP, and HTTPS access
 - **Elastic IP**: Static public IP address for DNS
 - **PostgreSQL 16**: Database installed on the EC2 instance
@@ -102,7 +102,7 @@ Note this IP - you'll use it in the configuration.
    ```hcl
    aws_region      = "us-east-1"
    environment     = "staging"
-   domain_name     = "wherereligion.org"
+   domain_name     = "wheresreligion.org"
    instance_type   = "t3.small"
    ssh_allowed_ips = ["YOUR_IP/32"]  # Replace with your IP
    db_password     = "your_secure_password"  # Use a strong password
@@ -166,8 +166,8 @@ terraform destroy
 After `terraform apply` completes:
 
 1. **Update DNS**: Add an A record pointing your API subdomain to the Elastic IP
-   - Staging: `api-staging.wherereligion.org` -> `<elastic-ip>`
-   - Production: `api.wherereligion.org` -> `<elastic-ip>`
+   - Staging: `api-staging.wheresreligion.org` -> `<elastic-ip>`
+   - Production: `api.wheresreligion.org` -> `<elastic-ip>`
 
 2. **SSH into the server**:
 
@@ -179,7 +179,7 @@ After `terraform apply` completes:
 3. **Set up SSL certificate**:
 
    ```bash
-   sudo certbot --nginx -d api-staging.wherereligion.org
+   sudo certbot --nginx -d api-staging.wheresreligion.org
    ```
 
 4. **Verify setup**:
@@ -210,7 +210,7 @@ Configure these secrets in your repository settings (Settings > Secrets and vari
 | `AWS_ACCESS_KEY_ID`     | IAM user access key          | `AKIA...`                 |
 | `AWS_SECRET_ACCESS_KEY` | IAM user secret key          | `wJalr...`                |
 | `DB_PASSWORD`           | PostgreSQL database password | `strong_password_123`     |
-| `DOMAIN_NAME`           | Your domain name             | `wherereligion.org`       |
+| `DOMAIN_NAME`           | Your domain name             | `wheresreligion.org`       |
 | `SSH_ALLOWED_IPS`       | JSON array of allowed IPs    | `["1.2.3.4/32"]`          |
 | `KEY_PAIR_NAME`         | EC2 key pair name            | `lrda-staging-keypair`    |
 | `TF_ENVIRONMENT`        | (Optional) Environment name  | `staging` or `production` |
@@ -223,8 +223,8 @@ This configuration supports two environments:
 
 | Environment | API Subdomain                 | Frontend Origin           |
 | ----------- | ----------------------------- | ------------------------- |
-| staging     | api-staging.wherereligion.org | staging.wherereligion.org |
-| production  | api.wherereligion.org         | wherereligion.org         |
+| staging     | api-staging.wheresreligion.org | staging.wheresreligion.org |
+| production  | api.wheresreligion.org         | wheresreligion.org         |
 
 Switch environments by changing the `environment` variable in `terraform.tfvars`.
 
