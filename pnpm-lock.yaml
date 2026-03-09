@@ -83,8 +83,22 @@ importers:
         specifier: 24.9.2
         version: 24.9.2
       '@types/pg':
+<<<<<<< HEAD
         specifier: ^8.18.0
         version: 8.18.0
+=======
+        specifier: ^8.11.14
+        version: 8.16.0
+      bun-types:
+        specifier: ^1.2.8
+        version: 1.3.6
+      concurrently:
+        specifier: ^9.0.0
+        version: 9.2.1
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
+>>>>>>> bad393ce (Added indexing to database for foreign key columns. Tested as well.)
       drizzle-kit:
         specifier: ^0.31.9
         version: 0.31.9
@@ -3747,6 +3761,7 @@ packages:
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
 
+<<<<<<< HEAD
   domelementtype@2.3.0:
     resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
 
@@ -3762,6 +3777,14 @@ packages:
 
   drizzle-kit@0.31.9:
     resolution: {integrity: sha512-GViD3IgsXn7trFyBUUHyTFBpH/FsHTxYJ66qdbVggxef4UBPHRYxQaRzYLTuekYnk9i5FIEL9pbBIwMqX/Uwrg==}
+=======
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
+    engines: {node: '>=12'}
+
+  drizzle-kit@0.31.8:
+    resolution: {integrity: sha512-O9EC/miwdnRDY10qRxM8P3Pg8hXe3LyU4ZipReKOgTwn4OqANmftj8XJz1UPUAS6NMHf0E2htjsbQujUTkncCg==}
+>>>>>>> bad393ce (Added indexing to database for foreign key columns. Tested as well.)
     hasBin: true
 
   drizzle-orm@0.45.1:
@@ -9674,6 +9697,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
+<<<<<<< HEAD
   domutils@3.2.2:
     dependencies:
       dom-serializer: 2.0.0
@@ -9681,6 +9705,11 @@ snapshots:
       domhandler: 5.0.3
 
   drizzle-kit@0.31.9:
+=======
+  dotenv@17.3.1: {}
+
+  drizzle-kit@0.31.8:
+>>>>>>> bad393ce (Added indexing to database for foreign key columns. Tested as well.)
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
