@@ -51,22 +51,22 @@ resource "aws_security_group" "lrda_web" {
     cidr_blocks = var.ssh_allowed_ips
   }
 
-  # HTTP (for Let's Encrypt validation and redirect)
+  # HTTP - Cloudflare IPs only (all traffic proxied through CF)
   ingress {
-    description = "HTTP"
+    description = "HTTP from Cloudflare"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = data.cloudflare_ip_ranges.cloudflare.ipv4_cidrs
   }
 
-  # HTTPS
+  # HTTPS - Cloudflare IPs only
   ingress {
-    description = "HTTPS"
+    description = "HTTPS from Cloudflare"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = data.cloudflare_ip_ranges.cloudflare.ipv4_cidrs
   }
 
   # All outbound traffic

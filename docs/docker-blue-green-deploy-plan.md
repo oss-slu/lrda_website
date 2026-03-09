@@ -2,7 +2,7 @@
 
 ## Context
 
-The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to test the production topology locally. The existing `user-data.sh` has known bugs (wrong port, no Bun, PM2 instead of Docker). This plan containerizes the API, adds blue/green zero-downtime deploys on the single EC2 instance, creates a local Docker Compose stack that mirrors production, and wires up a manual-dispatch GitHub Actions deploy workflow.
+The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to test the production topology locally. This plan containerizes the API, adds blue/green zero-downtime deploys on the single EC2 instance, creates a local Docker Compose stack that mirrors production, and wires up a manual-dispatch GitHub Actions deploy workflow. SSL is handled by Cloudflare Origin CA (configured via OpenTofu in `infrastructure/cloudflare.tf`), not certbot.
 
 **Cost impact:** $0 additional -- Docker CE is free, same single EC2 instance.
 
@@ -16,7 +16,7 @@ The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to tes
   GitHub Actions (CI)                        EC2 (t3.small)
   +-----------------------+
   | test -> build image   |     docker pull   [Nginx (native, systemd)]
-  | -> push to GHCR       | ----SSH----->       port 80/443 + SSL
+  | -> push to GHCR       | ----SSH----->       port 80/443 + Cloudflare Origin CA SSL
   +-----------------------+                          |
                                              upstream lrda_api
                                                      |
@@ -33,7 +33,7 @@ The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to tes
 
 - Docker images are built in GitHub Actions (7GB RAM) and pushed to GHCR -- the t3.small (2GB RAM) only pulls pre-built images
 - PostgreSQL runs natively via systemd (already set up by user-data.sh)
-- Nginx runs natively for certbot SSL management
+- Nginx runs natively with Cloudflare Origin CA cert for SSL
 - Only the API runs in Docker containers (blue on port 3002, green on port 3003)
 - At any given time, only one container serves traffic; the other is stopped or being deployed
 
@@ -618,12 +618,14 @@ jobs:
 
 Key changes:
 - **Remove**: Node.js installation, PM2 installation, PM2 systemd setup
+- **Remove**: certbot installation -- SSL handled by Cloudflare Origin CA (cert generated via OpenTofu, installed post-deploy)
 - **Add**: Docker CE installation (`docker-ce docker-ce-cli containerd.io docker-compose-plugin`)
 - **Add**: `usermod -aG docker ubuntu` (allow non-root Docker)
-- **Fix**: Nginx proxy port `3001` -> `3002`
-- **Fix**: Health path `/health` -> `/api/health`
-- **Fix**: Comment "proxy to Fastify" -> "proxy to Hono"
+- ~~**Fix**: Nginx proxy port `3001` -> `3002`~~ **DONE**
+- ~~**Fix**: Health path `/health` -> `/api/health`~~ **DONE**
+- ~~**Fix**: Comment "proxy to Fastify" -> "proxy to Hono"~~ **DONE**
 - **Add**: Nginx upstream config file: `upstream-blue.conf` in `/etc/nginx/conf.d/`
+- **Add**: Nginx SSL config using `/etc/ssl/cloudflare/origin.pem` and `origin-key.pem`
 - **Remove CORS headers from Nginx**: The Hono CORS middleware in `src/index.ts` already handles CORS. Having Nginx also set `Access-Control-Allow-*` headers causes duplicate headers.
 - **Add**: `.env` with all required vars (`DATABASE_URL` using `localhost`, `BETTER_AUTH_SECRET`, `CORS_ORIGINS`)
 - **Add**: Copy `deploy.sh` and `docker-compose.prod.yml` to `/home/ubuntu/lrda/`
@@ -647,6 +649,7 @@ Note: With `network_mode: host`, containers access PostgreSQL at `localhost:5432
 ### 13. `docs/aws-deploy-plan.md`
 
 - Update to reflect Docker-based approach replacing PM2
+- ~~Update SSL references from Let's Encrypt/certbot to Cloudflare Origin CA~~ **DONE**
 
 ---
 
@@ -747,6 +750,6 @@ Watch: tests -> SSH deploy -> external health check
 - **Graceful shutdown is already implemented.** The API handles SIGTERM/SIGINT in `src/index.ts`: it marks itself as shutting down (causing `/api/health` to return 503), stops `Bun.serve()`, and closes the DB connection pool. This means `docker compose stop` (which sends SIGTERM) will drain in-flight requests before the container exits. The deploy script's drain sleep is a safety buffer on top of this.
 - **DB migrations are forward-only.** If a migration breaks the app, code rollback happens but schema stays at the new version. Manual intervention needed. Mitigation: always write backward-compatible migrations.
 - **Docker image size:** Bun base ~150MB + bundled API ~2.2MB + drizzle-kit deps. Final image ~250MB. Two containers during deploy use ~200MB RAM total. t3.small (2GB) has plenty of headroom.
-- **Certbot compatibility:** Certbot modifies the Nginx server block for SSL. The upstream config is in separate files (`/etc/nginx/conf.d/`), so certbot changes don't interfere with blue/green switching.
+- **SSL:** Cloudflare Origin CA cert (15-year, no renewal). Generated via OpenTofu (`infrastructure/cloudflare.tf`), installed on EC2 at `/etc/ssl/cloudflare/`. The upstream config is in separate files (`/etc/nginx/conf.d/`), so SSL config doesn't interfere with blue/green switching.
 - **CORS is handled by the API, not Nginx.** The Hono CORS middleware in `src/index.ts` manages `Access-Control-Allow-*` headers based on `CORS_ORIGINS` env var. The Nginx config should NOT add its own CORS headers (the current `user-data.sh` does, which needs to be fixed).
 - **`network_mode: host` trade-off:** Using host networking is simpler (no port mapping, no bridge config for PostgreSQL) but means containers can't use the same port simultaneously. Blue gets 3002, green gets 3003 -- they must use different `PORT` env values.

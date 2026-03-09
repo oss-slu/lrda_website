@@ -2,7 +2,7 @@
 
 Reference plan for setting up CI/CD, zero-downtime deploys, database backups, and production hardening for the LRDA API on AWS EC2.
 
-**Architecture:** Single EC2 (API + PostgreSQL) + Netlify (frontend). No ALB, no ECS, no Fargate. $0 additional cost beyond the existing EC2.
+**Architecture:** Single EC2 (API + PostgreSQL) + Cloudflare Workers (frontend via `@opennextjs/cloudflare`). Cloudflare proxies API traffic, Origin CA cert for SSL. No ALB, no ECS, no Fargate. $0 additional cost beyond the existing EC2.
 
 ---
 
@@ -12,7 +12,7 @@ Reference plan for setting up CI/CD, zero-downtime deploys, database backups, an
 |-----------|------|-------|
 | Runtime | Bun | API is built and runs on Bun, not Node |
 | Process Manager | PM2 (fork mode) | Bun doesn't support Node cluster mode |
-| Reverse Proxy | Nginx | SSL via Let's Encrypt/Certbot |
+| Reverse Proxy | Nginx | SSL via Cloudflare Origin CA (15-year cert, no renewal) |
 | Deploy Trigger | GitHub Actions (manual) | `workflow_dispatch` with environment choice |
 | DB Migrations | Auto on deploy | `drizzle-kit migrate` runs during each deploy |
 | DB Backups | Nightly cron | `pg_dump` to local disk, 7-day retention, optional S3 |
@@ -22,8 +22,8 @@ Reference plan for setting up CI/CD, zero-downtime deploys, database backups, an
 
 ## Current Issues to Fix
 
-1. **Nginx port mismatch**: Proxies to `localhost:3001` but API runs on port `3002`
-2. **Nginx health path wrong**: `/health` -> `localhost:3001/health` should be `/api/health` -> `localhost:3002/api/health`
+1. ~~**Nginx port mismatch**: Proxies to `localhost:3001` but API runs on port `3002`~~ **FIXED in user-data.sh**
+2. ~~**Nginx health path wrong**: `/health` -> `localhost:3001/health` should be `/api/health` -> `localhost:3002/api/health`~~ **FIXED in user-data.sh**
 3. **No Bun installed**: `user-data.sh` installs Node.js but the API needs Bun
 4. ~~**No graceful shutdown**: `Bun.serve()` has no SIGTERM/SIGINT handlers -- in-flight requests get dropped~~ **FIXED**
 5. ~~**Health check always 200**: Returns HTTP 200 even when database is disconnected (should be 503)~~ **FIXED**
@@ -302,9 +302,11 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 ### 9. `infrastructure/scripts/user-data.sh`
 
 - Add Bun installation: `sudo -u ubuntu bash -c 'curl -fsSL https://bun.sh/install | bash'`
-- Fix Nginx `proxy_pass` from `localhost:3001` to `localhost:3002`
-- Fix Nginx health location to `/api/health` -> `localhost:3002/api/health`
-- Fix comment "proxy to Fastify" -> "proxy to Hono"
+- ~~Fix Nginx `proxy_pass` from `localhost:3001` to `localhost:3002`~~ **DONE**
+- ~~Fix Nginx health location to `/api/health` -> `localhost:3002/api/health`~~ **DONE**
+- ~~Fix comment "proxy to Fastify" -> "proxy to Hono"~~ **DONE**
+- ~~Remove certbot, use Cloudflare Origin CA cert~~ **DONE** (cert generated via OpenTofu, installed post-deploy)
+- ~~Nginx listens on 443 with SSL using Origin CA cert paths~~ **DONE**
 - Add `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGINS` to the `.env` file
 - Move `.env` creation to `packages/api/.env` (Bun loads `.env` from CWD, PM2 sets CWD to this dir)
 - Add backup cron: `0 3 * * *`

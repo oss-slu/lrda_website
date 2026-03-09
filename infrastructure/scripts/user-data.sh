@@ -30,8 +30,8 @@ apt-get install -y nginx
 # Install PM2
 npm install -g pm2
 
-# Install certbot
-apt-get install -y certbot python3-certbot-nginx
+# Create directory for Cloudflare Origin CA cert
+mkdir -p /etc/ssl/cloudflare
 
 # Configure PostgreSQL
 sudo -u postgres psql << EOF
@@ -67,17 +67,34 @@ EOF
 chown ubuntu:ubuntu /home/ubuntu/lrda/.env
 chmod 600 /home/ubuntu/lrda/.env
 
-# Configure Nginx for API-only (frontend is on Vercel)
+# Configure Nginx for API-only (frontend is on Cloudflare Workers)
 # server_name is environment-aware:
 #   staging:    api-staging.wheresreligion.org
 #   production: api.wheresreligion.org
-# Note: Terraform variables use ${var}, Nginx variables use $var (escaped as $$var in Terraform templatefile)
+#
+# SSL: Cloudflare Origin CA cert. Install cert/key after terraform apply:
+#   terraform output -raw origin_ca_certificate > /etc/ssl/cloudflare/origin.pem
+#   terraform output -raw origin_ca_private_key > /etc/ssl/cloudflare/origin-key.pem
+#
+# Note: Terraform templatefile uses $${var}, Nginx uses $var (escaped as \$var)
 cat > /etc/nginx/sites-available/lrda << NGINX
+# Redirect HTTP to HTTPS (Cloudflare also does this, but belt-and-suspenders)
 server {
     listen 80;
     server_name ${api_subdomain}.${domain_name};
+    return 301 https://\$host\$request_uri;
+}
 
-    # API routes - proxy to Fastify
+server {
+    listen 443 ssl;
+    server_name ${api_subdomain}.${domain_name};
+
+    # Cloudflare Origin CA certificate
+    ssl_certificate     /etc/ssl/cloudflare/origin.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/origin-key.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    # API routes - proxy to Hono
     location / {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
@@ -86,9 +103,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
 
-        # CORS headers for frontend on different domain
-        # Staging: https://staging.wheresreligion.org
-        # Production: https://wheresreligion.org
+        # CORS headers for frontend on Cloudflare Workers
         add_header Access-Control-Allow-Origin "https://${frontend_origin}" always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
@@ -123,6 +138,9 @@ systemctl enable pm2-ubuntu
 
 echo "LRDA server setup complete!"
 echo "Next steps:"
-echo "1. Point DNS to this server's IP"
-echo "2. Run: sudo certbot --nginx -d ${api_subdomain}.${domain_name}"
-echo "3. Deploy application code"
+echo "1. Install Origin CA cert from Terraform outputs:"
+echo "   terraform output -raw origin_ca_certificate | sudo tee /etc/ssl/cloudflare/origin.pem"
+echo "   terraform output -raw origin_ca_private_key | sudo tee /etc/ssl/cloudflare/origin-key.pem"
+echo "   sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem"
+echo "   sudo nginx -t && sudo systemctl reload nginx"
+echo "2. Deploy application code"

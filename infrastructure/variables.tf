@@ -41,3 +41,25 @@ variable "key_pair_name" {
   description = "Name of existing EC2 key pair for SSH access"
   type        = string
 }
+
+# -----------------------------------------------------------------------------
+# Cloudflare Variables
+# -----------------------------------------------------------------------------
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token (or set CLOUDFLARE_API_TOKEN env var)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID (Dashboard -> Overview -> right sidebar)"
+  type        = string
+}
+
+variable "create_api_dns" {
+  description = "Create API DNS record pointing to AWS (set true after EC2 is deployed)"
+  type        = bool
+  default     = false
+}

@@ -8,13 +8,13 @@ Migrate domain, DNS, frontend hosting, and SSL off GoDaddy/Netlify/Let's Encrypt
 
 | Component | Current Provider | Details |
 |-----------|-----------------|---------|
-| Domain registration | GoDaddy | `wheresreligion.org` |
-| Nameservers | GoDaddy | `ns69.domaincontrol.com`, `ns70.domaincontrol.com` |
+| Domain registration | ~~GoDaddy~~ **Cloudflare** | `wheresreligion.org` -- **DONE** |
+| Nameservers | ~~GoDaddy~~ **Cloudflare** | **DONE** |
 | Frontend hosting | Netlify | Next.js via `@netlify/plugin-nextjs` |
 | API hosting | AWS EC2 (planned) | Hono + PostgreSQL, Docker blue/green deploy |
 | SSL (frontend) | Netlify (automatic) | -- |
-| SSL (API) | Let's Encrypt (planned) | certbot + auto-renewal cron |
-| DNS records | GoDaddy | `A wheresreligion.org -> 75.2.60.5`, `CNAME www -> wheresreligion.netlify.app` |
+| SSL (API) | Not yet set up | -- |
+| DNS records | Cloudflare | Managed via OpenTofu (`infrastructure/cloudflare.tf`) |
 | Email | None | No MX/SPF/DKIM records |
 
 ## Target State
@@ -90,83 +90,31 @@ The RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`) run server-side on
 
 ## Migration Steps
 
-### Phase 1: Domain Transfer to Cloudflare (Days 1-7)
+### Phase 1: Domain Transfer to Cloudflare -- DONE
 
-Everything keeps working during the transfer -- DNS continues resolving normally.
-
-1. **Add domain to Cloudflare** (free plan)
-   - Cloudflare scans existing records automatically
-   - Verify scanned records match: `A wheresreligion.org -> 75.2.60.5`, `CNAME www -> wheresreligion.netlify.app`
-   - Set both records to **DNS only** (grey cloud) initially -- Netlify manages its own SSL/CDN
-
-2. **Point nameservers to Cloudflare**
-   - In GoDaddy: change nameservers to the two Cloudflare assigns (e.g., `ada.ns.cloudflare.com`, `bob.ns.cloudflare.com`)
-   - Propagation: usually minutes, up to 48 hours
-
-3. **Unlock domain at GoDaddy**
-   - Domain Settings > Domain Lock > Off
-   - Get the auth/EPP transfer code
-
-4. **Initiate transfer in Cloudflare Registrar**
-   - Pay ~$10-12 for 1-year extension
-   - Approve transfer via email from GoDaddy
-   - Transfer completes in 5-7 days
+Domain transferred from GoDaddy to Cloudflare Registrar. Nameservers point to Cloudflare. Zone settings and DNS are managed via OpenTofu in `infrastructure/cloudflare.tf`.
 
 ### Phase 2: API SSL -- Cloudflare Origin Certificate (replaces Let's Encrypt)
 
 Do this when standing up the EC2 instance. Eliminates certbot entirely.
 
-1. **Generate Origin Certificate in Cloudflare dashboard**
-   - SSL/TLS > Origin Server > Create Certificate
-   - Hostnames: `api.wheresreligion.org`, `api-staging.wheresreligion.org`
-   - Validity: 15 years
-   - Save the certificate and private key
+**All of this is now codified in OpenTofu** (`infrastructure/cloudflare.tf`):
+- Origin CA cert is generated via `tls_private_key` + `tls_cert_request` + `cloudflare_origin_ca_certificate` resources
+- Hostnames: `api.wheresreligion.org`, `api-staging.wheresreligion.org`
+- 15-year validity, no renewal needed
+- SSL mode set to `strict` via `cloudflare_zone_setting`
+- API DNS records gated behind `create_api_dns` variable (set `true` when EC2 is deployed)
+- EC2 security group restricts ports 80/443 to Cloudflare IPs only (`data.cloudflare_ip_ranges`)
 
-2. **Store cert/key as secrets**
-   - Add `CF_ORIGIN_CERT` and `CF_ORIGIN_KEY` to GitHub Secrets (or Terraform variables)
+**After `tofu apply`**, install the cert on EC2:
+```bash
+tofu output -raw origin_ca_certificate | sudo tee /etc/ssl/cloudflare/origin.pem
+tofu output -raw origin_ca_private_key | sudo tee /etc/ssl/cloudflare/origin-key.pem
+sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem
+sudo nginx -t && sudo systemctl reload nginx
+```
 
-3. **Install on EC2 via `user-data.sh`**
-   - Write cert to `/etc/ssl/cloudflare/origin.pem`
-   - Write key to `/etc/ssl/cloudflare/origin-key.pem`
-
-4. **Configure Nginx** to use the origin cert instead of certbot:
-   ```nginx
-   server {
-       listen 443 ssl;
-       server_name api.wheresreligion.org api-staging.wheresreligion.org;
-
-       ssl_certificate     /etc/ssl/cloudflare/origin.pem;
-       ssl_certificate_key /etc/ssl/cloudflare/origin-key.pem;
-
-       location / {
-           include /etc/nginx/conf.d/upstream-*.conf;
-           proxy_pass http://lrda_api;
-           proxy_http_version 1.1;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
-   ```
-
-5. **Set Cloudflare SSL mode to "Full (Strict)"**
-   - SSL/TLS > Overview > Full (Strict)
-   - Cloudflare trusts its own origin certs
-
-6. **Add DNS records for API subdomains** (orange cloud / proxied):
-   - `A api.wheresreligion.org -> <EC2 Elastic IP>` (proxied)
-   - `A api-staging.wheresreligion.org -> <EC2 Elastic IP>` (proxied)
-
-7. **Optional: Restrict EC2 ingress to Cloudflare IPs only**
-   - Update security group to allow 80/443 only from [Cloudflare IP ranges](https://www.cloudflare.com/ips/)
-   - Prevents direct access to EC2, all traffic must go through Cloudflare
-
-#### What to remove from `user-data.sh`
-- certbot installation (`apt install certbot python3-certbot-nginx`)
-- certbot certificate request (`certbot --nginx -d ...`)
-- certbot auto-renewal cron
-- Port 80 Let's Encrypt challenge location block
+The `user-data.sh` already configures Nginx to use these cert paths and listen on 443 with SSL. No certbot needed.
 
 ### Phase 3: Frontend -- Netlify to Cloudflare Workers
 
@@ -275,16 +223,15 @@ Final DNS state in Cloudflare:
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `packages/web/package.json` | Add `preview`/`deploy` scripts, add `@opennextjs/cloudflare` + `wrangler`, remove `sharp` |
-| `packages/web/.gitignore` | Add `.open-next` |
-| `infrastructure/scripts/user-data.sh` | Remove certbot, add origin cert install |
-| `infrastructure/variables.tf` | Add `cf_origin_cert` and `cf_origin_key` variables |
-| `infrastructure/main.tf` | Pass origin cert vars to `user-data.sh` templatefile |
-| `infrastructure/README.md` | Update SSL section for Cloudflare origin cert |
-| `docs/aws-deploy-plan.md` | Update SSL section |
-| `docs/docker-blue-green-deploy-plan.md` | Update SSL section |
+| File | Change | Status |
+|------|--------|--------|
+| `packages/web/package.json` | Add `preview`/`deploy` scripts, add `@opennextjs/cloudflare` + `wrangler`, remove `sharp` + `@netlify/plugin-nextjs` | TODO |
+| `packages/web/.gitignore` | Add `.open-next` | TODO |
+| `infrastructure/cloudflare.tf` | Zone settings, Origin CA, DNS, rulesets | DONE |
+| `infrastructure/versions.tf` | Add Cloudflare + TLS providers | DONE |
+| `infrastructure/variables.tf` | Add `cloudflare_api_token`, `cloudflare_account_id`, `create_api_dns` | DONE |
+| `infrastructure/main.tf` | Restrict security group to Cloudflare IPs | DONE |
+| `infrastructure/scripts/user-data.sh` | Remove certbot, add Origin CA cert paths, SSL in Nginx | DONE |
 
 ## Files to Delete
 
@@ -297,10 +244,9 @@ Final DNS state in Cloudflare:
 
 ## Verification Checklist
 
-### After Phase 1 (Domain Transfer)
-- [ ] `dig wheresreligion.org NS` returns Cloudflare nameservers
-- [ ] `wheresreligion.org` and `www.wheresreligion.org` still load the Netlify site
-- [ ] Cloudflare dashboard shows the domain as Active
+### After Phase 1 (Domain Transfer) -- DONE
+- [x] `dig wheresreligion.org NS` returns Cloudflare nameservers
+- [x] Cloudflare dashboard shows the domain as Active
 
 ### After Phase 2 (API SSL)
 - [ ] `curl https://api-staging.wheresreligion.org/api/health` returns 200
