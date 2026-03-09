@@ -15,6 +15,13 @@
       "when": 1772479126262,
       "tag": "0001_aspiring_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773034724992,
+      "tag": "0002_massive_ogun",
+      "breakpoints": true
     }
   ]
 }
