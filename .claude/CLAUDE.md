@@ -11,23 +11,23 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 
 ### Migration Context
 
-This codebase is on a **migration branch** moving off **both** the legacy RERUM backend **and** Firebase Auth to a new PostgreSQL + Hono API with Better Auth, targeting a full AWS deployment. **Production still uses RERUM and Firebase.** There is a companion **mobile app** (`lrda_mobile`) that also still uses RERUM and Firebase.
+This codebase is on a **migration branch** moving off **both** the legacy RERUM backend **and** Firebase Auth to a new Cloudflare-hosted stack: Hono API on Workers with D1 (SQLite) and Better Auth. **Production still uses RERUM and Firebase.** There is a companion **mobile app** (`lrda_mobile`) that also still uses RERUM and Firebase.
 
 **Migration plan:**
-1. This web app migrates first (RERUM + Firebase -> PostgreSQL/Hono + Better Auth)
+1. This web app migrates first (RERUM + Firebase -> D1/Hono + Better Auth on Cloudflare)
 2. During the transition:
-   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs on the server** to keep the mobile app's RERUM data in sync with the new PostgreSQL backend
-   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
+   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs** to keep the mobile app's RERUM data in sync with the new D1 backend
+   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into D1
 3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
 
-**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period. Note: the web package's RERUM client was already removed (it was unused -- the API package's sync scripts have their own RERUM logic).
+**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period.
 
 ### Packages
 
 This is a **monorepo** containing:
 
-- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL (port 3002). This is the backend the web frontend talks to.
-- **Web package** (`packages/web/`): Next.js App Router application
+- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + Cloudflare D1 (port 8787 via `wrangler dev`). This is the backend the web frontend talks to.
+- **Web package** (`packages/web/`): Next.js App Router application, deployed to Cloudflare Workers via `@opennextjs/cloudflare`.
 
 ## Architecture
 
@@ -36,21 +36,24 @@ This is a **monorepo** containing:
 ```
 lrda_website/
 ├── packages/
-│   ├── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
-│   │   └── src/
-│   │       ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
-│   │       ├── db/         # Drizzle schema and db connection
-│   │       └── middleware/  # Auth middleware
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + D1)
+│   │   ├── src/
+│   │   │   ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│   │   │   ├── db/         # Drizzle schema and D1 db factory
+│   │   │   └── middleware/  # Auth + DB middleware
+│   │   ├── drizzle/        # Generated SQL migrations (not in src/)
+│   │   └── wrangler.jsonc  # Cloudflare Workers config
 │   └── web/                # Next.js App Router application
 │       ├── app/            # Pages, components, hooks, stores
-│       └── components/     # shadcn/ui components
+│       ├── components/     # shadcn/ui components
+│       └── wrangler.jsonc  # Cloudflare Workers config (OpenNext)
 └── public/                 # Static assets
 ```
 
 ### Package Management
 
 - **Package Manager**: pnpm (v10.20.0)
-- **Node Version**: >=24.9.0
+- **Node Version**: >=24.0.0
 - **Workspace**: pnpm workspaces with packages in `packages/`
 
 **Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
@@ -74,15 +77,23 @@ lrda_website/
 - **Data Fetching**: TanStack React Query (@tanstack/react-query)
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
+- **Deployment**: Cloudflare Workers via `@opennextjs/cloudflare`
 
 ### Backend (`packages/api/`)
 
+- **Runtime**: Cloudflare Workers
 - **Server Framework**: Hono (with `@hono/zod-openapi`)
-- **ORM**: Drizzle ORM
-- **Database**: PostgreSQL
+- **ORM**: Drizzle ORM (SQLite dialect)
+- **Database**: Cloudflare D1 (SQLite)
 - **Authentication**: Better Auth (session-based with cookies)
-- **Storage**: S3-compatible storage for media
 - **API Documentation**: OpenAPI/Scalar
+
+### Key Patterns (Workers)
+
+- **Per-request DB**: `createDb(c.env.DB)` in `dbMiddleware` -- no module-level singleton
+- **Per-request Auth**: `createAuth(c.env, db)` in middleware and auth handlers
+- **OpenAPIHono type erasure**: `openapi()` handlers erase `Env` generics; use `getDb(c)` and `getEnv(c)` helpers from `routes/helpers.ts`
+- **Env bindings**: Typed via `worker-configuration.d.ts` global `Env` interface
 
 ### Testing
 
@@ -201,8 +212,13 @@ export function ExampleComponent({ title, onAction }: ExampleProps) {
 pnpm install
 
 # Development
-pnpm dev                              # Next.js dev server
-pnpm dev:api                          # API server dev
+pnpm dev                              # Start API + web together
+pnpm dev:api                          # API server only (wrangler dev, port 8787)
+pnpm dev:web                          # Web app only (Next.js, port 3000)
+
+# Database
+pnpm api:db:migrate                   # Apply D1 migrations locally
+pnpm api:db:generate                  # Generate migrations from schema changes
 
 # Testing
 pnpm test                             # Run all tests
@@ -215,17 +231,12 @@ pnpm build                            # Build Next.js app
 # Linting
 pnpm lint                             # ESLint
 pnpm lint:fix                         # ESLint with auto-fix
-
-# Docker (PostgreSQL)
-pnpm api:docker:up                    # Start PostgreSQL container
-pnpm api:docker:down-v                # Stop PostgreSQL container
 ```
 
 ### Running Full Stack
 
-1. Start PostgreSQL: `pnpm api:docker:up`
-2. Push DB schema: `pnpm api:db:push`
-3. Start everything: `pnpm dev:full` (or separately: `pnpm dev:api` and `pnpm dev`)
+1. Apply migrations: `pnpm api:db:migrate`
+2. Start everything: `pnpm dev`
 
 ## Testing Guidelines
 

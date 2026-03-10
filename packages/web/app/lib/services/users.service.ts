@@ -2,7 +2,7 @@
  * Users Service
  *
  * Handles user data operations via the API.
- * All data is stored in PostgreSQL via the Hono API backend.
+ * All data is stored in D1 via the Hono API backend.
  */
 
 import type { UserProfile, UpdateProfileOptions, InstructorInfo } from './users.types';

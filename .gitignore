@@ -40,3 +40,4 @@ docs/issues/*
 
 # Cloudflare
 **/.wrangler
+.open-next

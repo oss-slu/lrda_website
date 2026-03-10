@@ -8,19 +8,19 @@ This is the **Where's Religion?** desktop web application - a monorepo for docum
 
 ```
 lrda_website/
-├── apps/
-│   └── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL, port 3002)
-│       └── src/
-│           ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
-│           ├── db/         # Drizzle schema and db connection
-│           └── middleware/  # Auth middleware
 ├── packages/
-│   ├── web/                # Next.js App Router application
-│   ├── server/             # Legacy Express.js server (RERUM-based, port 3001)
-│   └── lrda-server-core/   # RERUM framework library
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + D1 on Cloudflare Workers)
+│   │   ├── src/
+│   │   │   ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│   │   │   ├── db/         # Drizzle schema and D1 db factory
+│   │   │   └── middleware/  # Auth + DB middleware
+│   │   ├── drizzle/        # Generated SQL migrations
+│   │   └── wrangler.jsonc  # Cloudflare Workers config
+│   └── web/                # Next.js App Router application
+│       └── wrangler.jsonc  # Cloudflare Workers config (OpenNext)
 ```
 
-The **primary backend** is `apps/api/` (Hono + Drizzle + PostgreSQL). The frontend (`packages/web/`) talks to it via `NEXT_PUBLIC_API_URL`. When looking for API endpoints, always check `apps/api/src/routes/` first. `packages/server/` is legacy.
+The **primary backend** is `packages/api/` (Hono + Drizzle + Cloudflare D1). The frontend (`packages/web/`) talks to it via `NEXT_PUBLIC_API_URL` (port 8787 locally). When looking for API endpoints, always check `packages/api/src/routes/` first.
 
 ## Tech Stack
 
@@ -35,14 +35,15 @@ The **primary backend** is `apps/api/` (Hono + Drizzle + PostgreSQL). The fronte
 - **Data Fetching**: TanStack React Query
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
+- **Deployment**: Cloudflare Workers via @opennextjs/cloudflare
 
-### Backend (`apps/api/`)
+### Backend (`packages/api/`)
 
+- **Runtime**: Cloudflare Workers
 - **Server Framework**: Hono (with `@hono/zod-openapi`)
-- **ORM**: Drizzle ORM
-- **Database**: PostgreSQL
+- **ORM**: Drizzle ORM (SQLite dialect)
+- **Database**: Cloudflare D1 (SQLite)
 - **Authentication**: Better Auth (session-based with cookies)
-- **Storage**: S3-compatible storage for media
 - **API Documentation**: OpenAPI/Scalar
 
 ### General
@@ -66,11 +67,9 @@ The **primary backend** is `apps/api/` (Hono + Drizzle + PostgreSQL). The fronte
 - Use the `@/` alias for imports from the project root.
 - Frontend components: `packages/web/app/lib/components/` or `packages/web/components/ui/` (shadcn).
 - Frontend utilities: `packages/web/app/lib/utils/`.
-- Data models: `packages/web/app/lib/models/`.
 - Zustand stores: `packages/web/app/lib/stores/`.
-- Page components: `packages/web/app/lib/pages/`.
-- API routes (primary): `apps/api/src/routes/`.
-- API DB schema: `apps/api/src/db/schema.ts`.
+- API routes: `packages/api/src/routes/`.
+- API DB schema: `packages/api/src/db/schema.ts`.
 
 ## Styling Guidelines
 

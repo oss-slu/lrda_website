@@ -1,6 +1,6 @@
 # The Where's Religion? Web Application
 
-Where's Religion? is a colaborative platform designed for diverse users with interests in sharing media and notes about their respective encounters with "religion" in everyday places.
+Where's Religion? is a collaborative platform designed for diverse users with interests in sharing media and notes about their respective encounters with "religion" in everyday places.
 
 Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)
 
@@ -15,8 +15,8 @@ pnpm install
 # Set up environment files
 pnpm setup
 
-# Start everything (Docker, Firebase emulators, backend, frontend)
-pnpm dev:full
+# Start everything (API + frontend)
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
@@ -27,9 +27,8 @@ Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
 This is a monorepo with the following packages:
 
-- `packages/web/` - Next.js web application
-- `packages/server/` - Express.js REST API server (located at `server/` root)
-- `packages/lrda-server-core/` - RERUM framework-based server core library
+- `packages/api/` - Hono REST API on Cloudflare Workers (D1 database)
+- `packages/web/` - Next.js web application on Cloudflare Workers (via OpenNext)
 
 ## We Are Using
 

@@ -1,12 +1,12 @@
 # LRDA API
 
-REST API server for the Where's Religion? application, built with Hono, Drizzle ORM, and PostgreSQL.
+REST API server for the Where's Religion? application, built with Hono, Drizzle ORM, and Cloudflare D1.
 
 ## Tech Stack
 
-- **Runtime**: Bun
+- **Runtime**: Cloudflare Workers
 - **Framework**: Hono with OpenAPI/Zod validation
-- **Database**: PostgreSQL 17
+- **Database**: Cloudflare D1 (SQLite)
 - **ORM**: Drizzle
 - **Authentication**: better-auth (session-based)
 - **Documentation**: Scalar API Reference
@@ -17,78 +17,60 @@ REST API server for the Where's Religion? application, built with Hono, Drizzle 
 # 1. Install dependencies
 pnpm install
 
-# 2. Start PostgreSQL
-pnpm docker:up
-
-# 3. Copy environment file
+# 2. Copy environment file
 cp .env.example .env
 
-# 4. Push database schema
-pnpm db:push
+# 3. Apply database migrations
+pnpm db:migrate
 
-# 5. Start dev server
+# 4. Start dev server
 pnpm dev
 ```
 
-The API will be available at `http://localhost:3002` with docs at `http://localhost:3002/docs`.
+The API will be available at `http://localhost:8787` with docs at `http://localhost:8787/docs`.
 
 ## Environment Variables
 
-| Variable             | Description                       | Default                 |
-| -------------------- | --------------------------------- | ----------------------- |
-| `NODE_ENV`           | Environment mode                  | `development`           |
-| `PORT`               | Server port                       | `3002`                  |
-| `DATABASE_URL`       | PostgreSQL connection string      | Required                |
-| `BETTER_AUTH_SECRET` | Auth secret key                   | Required                |
-| `BETTER_AUTH_URL`    | Auth callback URL                 | `http://localhost:3002` |
-| `CORS_ORIGINS`       | Allowed origins (comma-separated) | `*` in dev              |
-| `RERUM_API_URL`      | RERUM API URL for sync scripts    | Optional                |
-| `LOG_LEVEL`          | Pino log level                    | `debug`                 |
+Secrets are stored in `.env` (read automatically by wrangler). Non-secret vars are in `wrangler.jsonc`.
+
+| Variable             | Description                    | Where            |
+| -------------------- | ------------------------------ | ---------------- |
+| `BETTER_AUTH_SECRET` | Auth secret key                | `.env` (secret)  |
+| `RESEND_API_KEY`     | Email sending API key          | `.env` (secret)  |
+| `GOOGLE_MAPS_API_KEY`| Geocoding API key              | `.env` (secret)  |
+| `BETTER_AUTH_URL`    | Auth callback URL              | `wrangler.jsonc` |
+| `CORS_ORIGINS`       | Allowed origins                | `wrangler.jsonc` |
+| `WEB_URL`            | Frontend URL (for email links) | `wrangler.jsonc` |
 
 ## Scripts
 
 ### Development
 
-| Command         | Description                      |
-| --------------- | -------------------------------- |
-| `pnpm dev`      | Start dev server with hot reload |
-| `pnpm build`    | Build for production             |
-| `pnpm start`    | Run production build             |
-| `pnpm test`     | Run tests in watch mode          |
-| `pnpm test:run` | Run tests once                   |
+| Command         | Description                              |
+| --------------- | ---------------------------------------- |
+| `pnpm dev`      | Start wrangler dev server (port 8787)    |
+| `pnpm deploy`   | Deploy to Cloudflare (staging)           |
+| `pnpm deploy:prod` | Deploy to Cloudflare (production)     |
+| `pnpm test`     | Run tests in watch mode                  |
+| `pnpm test:run` | Run tests once                           |
 
 ### Database
 
-| Command            | Description                |
-| ------------------ | -------------------------- |
-| `pnpm docker:up`   | Start PostgreSQL container |
-| `pnpm docker:down` | Stop PostgreSQL container  |
-| `pnpm db:generate` | Generate migration files   |
-| `pnpm db:migrate`  | Run migrations             |
-| `pnpm db:push`     | Push schema directly (dev) |
-| `pnpm db:studio`   | Open Drizzle Studio GUI    |
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `pnpm db:generate` | Generate migration files from schema |
+| `pnpm db:migrate`  | Apply migrations to local D1         |
+| `pnpm db:migrate:prod` | Apply migrations to production D1 |
+| `pnpm db:studio`   | Open Drizzle Studio GUI              |
 
 ### Migration Sync Scripts
 
-These scripts sync data from Firebase/RERUM to PostgreSQL during the migration period.
+These scripts sync data from Firebase/RERUM to D1 during the migration period.
 
 **Run order for initial sync:**
 
 1. `pnpm sync:users:yolo` - Sync users from Firebase first
 2. `pnpm sync:from-rerum:yolo --full` - Then sync notes/comments from RERUM
-
-| Command                      | Description                               |
-| ---------------------------- | ----------------------------------------- |
-| `pnpm sync:users`            | Dry-run: preview Firebase users sync      |
-| `pnpm sync:users:yolo`       | Actually sync users from Firebase         |
-| `pnpm sync:from-rerum`       | Dry-run: preview RERUM to PostgreSQL sync |
-| `pnpm sync:from-rerum:yolo`  | Actually sync from RERUM to PostgreSQL    |
-| `pnpm sync:from-rerum:full`  | Full re-sync (ignore last sync time)      |
-| `pnpm sync:from-rerum:watch` | Continuous sync every 30s                 |
-| `pnpm sync:to-rerum`         | Dry-run: preview PostgreSQL to RERUM sync |
-| `pnpm sync:to-rerum:yolo`    | Actually sync from PostgreSQL to RERUM    |
-| `pnpm sync:to-rerum:watch`   | Continuous reverse sync every 30s         |
-| `pnpm sync:bidirectional`    | Run both sync directions continuously     |
 
 ## API Endpoints
 
@@ -128,13 +110,6 @@ These scripts sync data from Firebase/RERUM to PostgreSQL during the migration p
 | `DELETE` | `/api/notes/:id`                    | Delete note               | Owner/Admin |
 | `GET`    | `/api/notes/students/:instructorId` | Get student notes         | Instructor  |
 
-**Query Parameters for `GET /api/notes`:**
-
-- `published` - Filter by published status
-- `creatorId` - Filter by creator
-- `minLat`, `maxLat`, `minLng`, `maxLng` - Geo bounds
-- `limit`, `offset` - Pagination
-
 ### Comments
 
 | Method   | Path                                     | Description           | Auth       |
@@ -154,82 +129,36 @@ These scripts sync data from Firebase/RERUM to PostgreSQL during the migration p
 | `POST`  | `/api/admin/users/:id/ban`   | Ban user         | Admin |
 | `POST`  | `/api/admin/users/:id/unban` | Unban user       | Admin |
 
-## Database Schema
-
-```
-user
-  - id, name, email, emailVerified, image
-  - role, banned, banReason, banExpires
-  - isInstructor, instructorId, pendingInstructorDescription
-
-session
-  - id, token, expiresAt, userId, ipAddress, userAgent
-
-account
-  - id, accountId, providerId, userId, accessToken, refreshToken
-
-note
-  - id, title, text, creatorId
-  - latitude, longitude
-  - isPublished, approvalRequested
-  - tags (jsonb), time, createdAt, updatedAt
-
-media
-  - id, noteId, type, uri, thumbnailUri, uuid
-
-audio
-  - id, noteId, uri, name, duration, uuid
-
-comment
-  - id, noteId, authorId, authorName, text
-  - position (jsonb), threadId, parentId, isResolved
-```
-
 ## Project Structure
 
 ```
-apps/api/
+packages/api/
 ├── src/
 │   ├── __tests__/       # Test files
 │   ├── db/
-│   │   ├── index.ts     # Database connection
-│   │   ├── schema.ts    # Drizzle schema
-│   │   └── types.ts     # TypeScript types
+│   │   ├── index.ts     # D1 database factory
+│   │   └── schema.ts    # Drizzle schema (SQLite)
 │   ├── lib/
-│   │   └── logger.ts    # Pino logger
+│   │   ├── email.ts     # Resend email helpers
+│   │   └── geocode.ts   # Reverse geocoding
 │   ├── middleware/
-│   │   └── auth.ts      # Auth middleware
+│   │   └── auth.ts      # Auth + DB middleware
 │   ├── routes/
 │   │   ├── admin.ts     # Admin routes
 │   │   ├── comments.ts  # Comments CRUD
 │   │   ├── health.ts    # Health check
+│   │   ├── helpers.ts   # Route context helpers
 │   │   ├── index.ts     # Route aggregator
 │   │   ├── notes.ts     # Notes CRUD
 │   │   └── users.ts     # User routes
-│   ├── scripts/
-│   │   ├── sync-from-rerum.ts  # RERUM -> PostgreSQL
-│   │   └── sync-to-rerum.ts    # PostgreSQL -> RERUM
-│   ├── auth.ts          # better-auth config
-│   ├── env.ts           # Environment validation
-│   ├── index.ts         # App entry point
+│   ├── scripts/         # Migration sync scripts
+│   ├── auth.ts          # better-auth config factory
+│   ├── index.ts         # Worker entry point
 │   └── types.ts         # Shared types
 ├── drizzle/             # Generated migrations
-├── docker-compose.yml   # PostgreSQL container
+├── wrangler.jsonc       # Cloudflare Workers config
 ├── drizzle.config.ts    # Drizzle Kit config
 └── package.json
-```
-
-## Testing
-
-```bash
-# Run all tests
-pnpm test
-
-# Run once (CI)
-pnpm test:run
-
-# Run specific test file
-pnpm test src/__tests__/health.test.ts
 ```
 
 ## API Documentation

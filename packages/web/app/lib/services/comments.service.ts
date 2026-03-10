@@ -2,7 +2,7 @@
  * Comments Service
  *
  * Handles comment operations including CRUD, thread resolution, and deletion.
- * Uses the REST API backend (Hono/PostgreSQL).
+ * Uses the REST API backend (Hono/D1).
  */
 
 import { fetchWithAuth } from './api';

@@ -23,8 +23,7 @@
     "test:e2e:headed": "pnpm --filter web test:e2e:headed",
     "test:e2e:debug": "pnpm --filter web test:e2e:debug",
     "test:e2e:install": "pnpm --filter web test:e2e:install",
-    "clear-port": "./scripts/clear-port.sh",
-    "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/api/.env.example packages/api/.env && echo 'Created .env files - ready for pnpm dev:full'"
+    "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/api/.env.example packages/api/.env && echo 'Created .env files - ready for pnpm dev'"
   },
   "packageManager": "pnpm@10.20.0",
   "engines": {

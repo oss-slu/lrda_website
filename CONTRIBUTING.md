@@ -40,7 +40,6 @@ This guide helps new contributors get the Where's Religion? web application runn
 
 - **Node.js** 24+ (recommend using [nvm](https://github.com/nvm-sh/nvm))
 - **pnpm** 10+ (install with `npm i -g pnpm`)
-- **Docker** (for local backend - [Install Docker](https://docs.docker.com/get-docker/))
 - **Git**
 
 ## Quick Start (5 minutes)
@@ -61,25 +60,32 @@ pnpm install
 pnpm setup
 ```
 
-This creates `packages/web/.env.local` and `packages/server/.env` with sensible defaults.
+This creates `packages/web/.env.local` and `packages/api/.env` with sensible defaults.
 
-### 3. Start Everything
+### 3. Apply Database Migrations
 
 ```bash
-pnpm dev:full
+pnpm api:db:migrate
+```
+
+This creates the local D1 (SQLite) database and applies all schema migrations.
+
+### 4. Start Everything
+
+```bash
+pnpm dev
 ```
 
 This single command starts:
 
-- **Docker services** (PostgreSQL, LocalStack S3)
-- **Backend API server** on port 3002
+- **API server** (Cloudflare Workers via wrangler) on port 8787
 - **Next.js frontend** on port 3000
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
 > **Tip:** Use `Ctrl+C` to stop all services at once.
 
-### 4. Seed the Database (Optional)
+### 5. Seed the Database (Optional)
 
 Populate the database with sample data so you have something to work with right away:
 
@@ -87,33 +93,29 @@ Populate the database with sample data so you have something to work with right 
 pnpm api:db:seed
 ```
 
-This inserts a set of sample users, notes with geolocation data, media, audio, and threaded comments. The seed data is hand-crafted to exercise all major features (map pins, published/draft notes, instructor-student relationships, comment threads, etc.).
-
-The seed script **truncates all tables** before inserting, so it is safe to run multiple times. Note that any data you created manually will be wiped.
-
 ### Alternative: Frontend Only
 
 If you only need the frontend (pointing to a running API server):
 
 ```bash
-pnpm dev
+pnpm dev:web
 ```
 
 ---
 
 ## Available Commands
 
-| Command              | Description                                     |
-| -------------------- | ----------------------------------------------- |
-| `pnpm dev:full`      | Start everything (Docker, API server, frontend) |
-| `pnpm dev:api`       | Start Docker services + API server only         |
-| `pnpm dev`           | Start frontend only (requires separate API)     |
-| `pnpm docker:up`     | Start Docker services (MongoDB, LocalStack)     |
-| `pnpm docker:down`   | Stop Docker services                            |
-| `pnpm api:db:seed`   | Seed database with sample data                  |
-| `pnpm setup`         | Create .env files from examples                 |
-| `pnpm test`          | Run unit and e2e tests                          |
-| `pnpm lint`          | Run ESLint                                      |
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `pnpm dev`           | Start API + frontend together            |
+| `pnpm dev:api`       | Start API server only (port 8787)        |
+| `pnpm dev:web`       | Start frontend only (port 3000)          |
+| `pnpm api:db:migrate`| Apply D1 database migrations             |
+| `pnpm api:db:generate`| Generate migrations from schema changes |
+| `pnpm api:db:seed`   | Seed database with sample data           |
+| `pnpm setup`         | Create .env files from examples          |
+| `pnpm test`          | Run unit and e2e tests                   |
+| `pnpm lint`          | Run ESLint                               |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 
@@ -127,14 +129,16 @@ Create `packages/web/.env.local` with the following:
 
 ```env
 # API Server URL
-NEXT_PUBLIC_API_URL=http://localhost:3002
-
-# better-auth configuration
-BETTER_AUTH_SECRET=your-secret-key-here
-BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8787
 
 # Google Maps (for map features)
-NEXT_PUBLIC_MAP_KEY=your-google-maps-api-key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+```
+
+Create `packages/api/.env` with:
+
+```env
+BETTER_AUTH_SECRET=your-secret-key-here
 ```
 
 > **Note:** Run `pnpm setup` to automatically create env files from the examples.
@@ -150,72 +154,12 @@ For full access to the development environment, contact the team lead at yashkam
 
 ---
 
-## Local Backend Setup
+## Architecture
 
-The backend uses MongoDB, a custom RERUM-compatible API server, and LocalStack for S3 emulation.
-
-### Architecture
-
+- **Frontend**: Next.js (App Router) deployed to Cloudflare Workers via OpenNext
+- **API**: Hono + Drizzle ORM deployed to Cloudflare Workers
+- **Database**: Cloudflare D1 (SQLite)
 - **Authentication**: better-auth (session-based, self-hosted)
-- **Database**: MongoDB (via Docker)
-- **Media Storage**: LocalStack S3 emulator (via Docker)
-- **API Server**: Express.js on port 3002
-
-### Starting Services Manually
-
-If you prefer to start services individually instead of using `pnpm dev:full`:
-
-```bash
-# Start Docker services
-pnpm docker:up
-
-# Start the API server (in a separate terminal)
-pnpm dev:api
-```
-
-Docker starts:
-
-- **MongoDB** on port 27017
-- **Mongo Express** (DB admin UI) on port 8081
-- **LocalStack** (S3 emulator) on port 4566
-
-### Initialize LocalStack S3 (Only needed for manual setup)
-
-When using `pnpm dev:full` or `pnpm docker:up`, the S3 bucket is created automatically.
-
-For manual setup, after starting Docker, run:
-
-> **Note:** You need the AWS CLI installed. Install with: `brew install awscli`
-
-```bash
-./scripts/init-localstack.sh
-```
-
-### Accessing Mongo Express (optional)
-
-Open [http://localhost:8081](http://localhost:8081) with:
-
-- Username: `mongoexpressuser`
-- Password: `mongoexpresspass`
-
-### API Server
-
-When using `pnpm dev:full`, the server starts automatically. For manual setup:
-
-```bash
-pnpm dev:api
-```
-
-The API server runs on [http://localhost:3002](http://localhost:3002).
-
-> **Note:** The server uses `packages/server/.env`. Run `pnpm setup` to create it from the example.
-
-### Stopping Services
-
-```bash
-# Stop everything (if using pnpm dev:full, just Ctrl+C)
-pnpm docker:down
-```
 
 ---
 
@@ -224,28 +168,11 @@ pnpm docker:down
 ### Port Already in Use
 
 ```bash
-# Find and kill the process on port 3000
-lsof -ti:3000 | xargs kill -9
+# Kill processes on conflicting ports
+lsof -ti:3000 -ti:8787 | xargs kill -9
 
-# Or use a different port
-pnpm dev -- -p 3001
-```
-
-### Docker Issues
-
-```bash
-# Reset Docker containers
-pnpm docker:down
-pnpm docker:up
-```
-
-### MongoDB Connection Failed
-
-Ensure Docker is running and the MongoDB container is healthy:
-
-```bash
-docker ps
-docker logs server-mongo-1
+# Or use pnpm's built-in port clearing
+pnpm clear-ports
 ```
 
 ### Authentication Issues
@@ -253,7 +180,7 @@ docker logs server-mongo-1
 If you're having trouble logging in:
 
 1. Ensure the API server is running (`pnpm dev:api`)
-2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` points to the correct API server
+2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` is `http://localhost:8787`
 3. Clear browser cookies and try again
 
 ---

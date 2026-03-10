@@ -2,7 +2,7 @@
  * Notes Service
  *
  * Handles all note-related operations including CRUD, search, and filtering.
- * Uses the REST API backend (Hono/PostgreSQL).
+ * Uses the REST API backend (Hono/D1).
  */
 
 import type { Note } from '@/app/types';

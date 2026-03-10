@@ -56,7 +56,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const noteId = note.id;
   const bodyHtml = note.text || '';
 
-  // Fetch comments from the PostgreSQL comment table
+  // Fetch comments from the API
   const { data: comments = [] } = useComments(noteId);
   const { createComment, resolveThread, deleteComment } = useCommentMutations(noteId);
 
