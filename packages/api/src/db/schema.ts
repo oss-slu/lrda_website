@@ -1,26 +1,26 @@
-import { pgTable, text, timestamp, boolean, doublePrecision, jsonb, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { sqliteTable, text, integer, real, index, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { sql, relations } from 'drizzle-orm';
 import type { Tag, Comment as CommentType } from './types';
 
 // Better Auth required tables + app-specific extensions
 
-export const user = pgTable('user', {
+export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
   image: text('image'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 
   // Admin plugin fields
   role: text('role').default('user'),
-  banned: boolean('banned').default(false),
+  banned: integer('banned', { mode: 'boolean' }).default(false),
   banReason: text('ban_reason'),
-  banExpires: timestamp('ban_expires'),
+  banExpires: integer('ban_expires', { mode: 'timestamp' }),
 
   // App-specific fields
-  isInstructor: boolean('is_instructor').notNull().default(false),
+  isInstructor: integer('is_instructor', { mode: 'boolean' }).notNull().default(false),
   instructorId: text('instructor_id').references((): any => user.id, {
     onDelete: 'set null',
   }),
@@ -42,12 +42,12 @@ export const userRelations = relations(user, ({ one, many }) => ({
   comments: many(comment),
 }));
 
-export const session = pgTable('session', {
+export const session = sqliteTable('session', {
   id: text('id').primaryKey(),
-  expiresAt: timestamp('expires_at').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
   token: text('token').notNull().unique(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
   userId: text('user_id')
@@ -65,7 +65,7 @@ export const sessionRelations = relations(session, ({ one }) => ({
   }),
 }));
 
-export const account = pgTable('account', {
+export const account = sqliteTable('account', {
   id: text('id').primaryKey(),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
@@ -75,12 +75,12 @@ export const account = pgTable('account', {
   accessToken: text('access_token'),
   refreshToken: text('refresh_token'),
   idToken: text('id_token'),
-  accessTokenExpiresAt: timestamp('access_token_expires_at'),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp' }),
+  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp' }),
   scope: text('scope'),
   password: text('password'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 });
 
 export const accountRelations = relations(account, ({ one }) => ({
@@ -90,13 +90,13 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const verification = pgTable('verification', {
+export const verification = sqliteTable('verification', {
   id: text('id').primaryKey(),
   identifier: text('identifier').notNull(),
   value: text('value').notNull(),
-  expiresAt: timestamp('expires_at').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 });
 
 // ============================================
@@ -106,7 +106,7 @@ export const verification = pgTable('verification', {
 /**
  * Notes table - main content entity
  */
-export const note = pgTable('note', {
+export const note = sqliteTable('note', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -115,17 +115,19 @@ export const note = pgTable('note', {
   creatorId: text('creator_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
-  latitude: doublePrecision('latitude'),
-  longitude: doublePrecision('longitude'),
+  latitude: real('latitude'),
+  longitude: real('longitude'),
   locationName: text('location_name'),
-  isPublished: boolean('is_published').notNull().default(false),
-  approvalRequested: boolean('approval_requested').notNull().default(false),
-  isReturned: boolean('is_returned').notNull().default(false),
-  tags: jsonb('tags').$type<Tag[]>().default([]),
-  time: timestamp('time').notNull().defaultNow(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+  isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
+  approvalRequested: integer('approval_requested', { mode: 'boolean' }).notNull().default(false),
+  isReturned: integer('is_returned', { mode: 'boolean' }).notNull().default(false),
+  tags: text('tags', { mode: 'json' }).$type<Tag[]>().default([]),
+  time: integer('time', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => [
+  index('note_creator_id_idx').on(table.creatorId),
+]);
 
 export const noteRelations = relations(note, ({ one, many }) => ({
   creator: one(user, {
@@ -140,7 +142,7 @@ export const noteRelations = relations(note, ({ one, many }) => ({
 /**
  * Media table - images and videos attached to notes
  */
-export const media = pgTable('media', {
+export const media = sqliteTable('media', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -151,8 +153,10 @@ export const media = pgTable('media', {
   uri: text('uri').notNull(),
   thumbnailUri: text('thumbnail_uri'),
   uuid: text('uuid'), // Original UUID from mobile app
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => [
+  index('media_note_id_idx').on(table.noteId),
+]);
 
 export const mediaRelations = relations(media, ({ one }) => ({
   note: one(note, {
@@ -164,7 +168,7 @@ export const mediaRelations = relations(media, ({ one }) => ({
 /**
  * Audio table - audio recordings attached to notes
  */
-export const audio = pgTable('audio', {
+export const audio = sqliteTable('audio', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -175,8 +179,10 @@ export const audio = pgTable('audio', {
   name: text('name'),
   duration: text('duration'),
   uuid: text('uuid'), // Original UUID from mobile app
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => [
+  index('audio_note_id_idx').on(table.noteId),
+]);
 
 export const audioRelations = relations(audio, ({ one }) => ({
   note: one(note, {
@@ -188,7 +194,7 @@ export const audioRelations = relations(audio, ({ one }) => ({
 /**
  * Comments table - comments on notes with threading support
  */
-export const comment = pgTable('comment', {
+export const comment = sqliteTable('comment', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -200,13 +206,16 @@ export const comment = pgTable('comment', {
     .references(() => user.id, { onDelete: 'cascade' }),
   authorName: text('author_name').notNull(), // Denormalized for display
   text: text('text').notNull(),
-  position: jsonb('position').$type<{ from: number; to: number } | null>(),
+  position: text('position', { mode: 'json' }).$type<{ from: number; to: number } | null>(),
   threadId: text('thread_id'),
-  parentId: text('parent_id').references((): AnyPgColumn => comment.id, { onDelete: 'cascade' }),
-  isResolved: boolean('is_resolved').notNull().default(false),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+  parentId: text('parent_id').references((): AnySQLiteColumn => comment.id, { onDelete: 'cascade' }),
+  isResolved: integer('is_resolved', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => [
+  index('comment_note_id_idx').on(table.noteId),
+  index('comment_author_id_idx').on(table.authorId),
+]);
 
 export const commentRelations = relations(comment, ({ one, many }) => ({
   note: one(note, {

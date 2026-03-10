@@ -1,0 +1,50 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lrda-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lrda-db",
+      "database_id": "TODO",
+      "migrations_dir": "drizzle"
+    }
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "staging",
+    "BETTER_AUTH_URL": "http://localhost:8787",
+    "CORS_ORIGINS": "http://localhost:3000",
+    "WEB_URL": "http://localhost:3000",
+    "EMAIL_FROM": "noreply@wheresreligion.org"
+  },
+
+  // Secrets (set via `wrangler secret put`):
+  // BETTER_AUTH_SECRET
+  // RESEND_API_KEY
+  // GOOGLE_MAPS_API_KEY
+
+  "env": {
+    "production": {
+      "name": "lrda-api-prod",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "BETTER_AUTH_URL": "https://api.wheresreligion.org",
+        "CORS_ORIGINS": "https://wheresreligion.org,https://www.wheresreligion.org",
+        "WEB_URL": "https://wheresreligion.org",
+        "EMAIL_FROM": "noreply@wheresreligion.org"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lrda-db-prod",
+          "database_id": "TODO",
+          "migrations_dir": "drizzle"
+        }
+      ]
+    }
+  }
+}

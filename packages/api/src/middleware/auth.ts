@@ -1,17 +1,32 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { auth } from '../auth';
-import type { AuthUser, AuthSession } from '../types';
+import { createDb } from '../db';
+import { createAuth } from '../auth';
+import { setEmailEnv } from '../lib/email';
+import type { AuthUser, AuthSession, AppBindings } from '../types';
+
+/**
+ * Database middleware - creates D1-backed db and sets it on context.
+ * Must run before any route that needs db access.
+ */
+export const dbMiddleware: MiddlewareHandler<AppBindings> = async (c, next) => {
+  const db = createDb(c.env.DB);
+  c.set('db', db);
+  setEmailEnv(c.env);
+  await next();
+};
 
 /**
  * Optional auth middleware - sets user/session on context if present
  */
-export const authMiddleware: MiddlewareHandler = async (c, next) => {
+export const authMiddleware: MiddlewareHandler<AppBindings> = async (c, next) => {
   try {
+    const db = c.get('db');
+    const auth = createAuth(c.env, db);
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
     });
 
-    c.set('user', session?.user || null);
+    c.set('user', (session?.user as AuthUser) || null);
     c.set('session', session?.session || null);
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -25,8 +40,10 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 /**
  * Required auth middleware - returns 401 if no valid session
  */
-export const requireAuth: MiddlewareHandler = async (c, next) => {
+export const requireAuth: MiddlewareHandler<AppBindings> = async (c, next) => {
   try {
+    const db = c.get('db');
+    const auth = createAuth(c.env, db);
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
     });
@@ -35,7 +52,7 @@ export const requireAuth: MiddlewareHandler = async (c, next) => {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    c.set('user', session.user);
+    c.set('user', session.user as AuthUser);
     c.set('session', session.session);
 
     await next();
@@ -49,7 +66,7 @@ export const requireAuth: MiddlewareHandler = async (c, next) => {
  * Required admin middleware - returns 403 if user is not admin
  * Must be used after requireAuth
  */
-export const requireAdmin: MiddlewareHandler = async (c, next) => {
+export const requireAdmin: MiddlewareHandler<AppBindings> = async (c, next) => {
   const user = c.get('user') as AuthUser | null;
 
   if (!user) {

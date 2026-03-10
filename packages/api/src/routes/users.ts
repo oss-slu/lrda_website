@@ -6,10 +6,10 @@ import {
   UserDetailSchema,
 } from '@lrda/shared';
 import { eq } from 'drizzle-orm';
-import { db } from '../db';
 import { user } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
-import type { AppEnv } from '../types';
+import type { AppBindings } from '../types';
+import { getDb } from './helpers';
 
 // Routes
 
@@ -172,10 +172,11 @@ const assignInstructorRoute = createRoute({
 });
 
 // Create router
-export const userRoutes = new OpenAPIHono<AppEnv>()
+export const userRoutes = new OpenAPIHono<AppBindings>()
   // GET /users/me - requires auth
   .openapi(getMeRoute, async c => {
-    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
+    const db = getDb(c);
+    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
 
     const result = await db.query.user.findFirst({
       where: eq(user.id, authUser.id),
@@ -214,7 +215,8 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // PATCH /users/me - requires auth
   .openapi(updateMeRoute, async c => {
-    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
+    const db = getDb(c);
+    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
     const body = c.req.valid('json');
 
     const [updated] = await db
@@ -264,7 +266,8 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // POST /users/me/instructor - requires auth
   .openapi(assignInstructorRoute, async c => {
-    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
+    const db = getDb(c);
+    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
     const body = c.req.valid('json');
 
     // Verify the instructor exists and is actually an instructor
@@ -302,6 +305,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // GET /users/instructors - public
   .openapi(getInstructorsRoute, async c => {
+    const db = getDb(c);
     const instructors = await db.query.user.findMany({
       where: eq(user.isInstructor, true),
       columns: {
@@ -318,6 +322,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // GET /users/:id - public
   .openapi(getUserRoute, async c => {
+    const db = getDb(c);
     const { id } = c.req.valid('param');
 
     const result = await db.query.user.findFirst({
@@ -340,8 +345,9 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
 
   // GET /users/:id/students - requires auth
   .openapi(getStudentsRoute, async c => {
+    const db = getDb(c);
     const { id } = c.req.valid('param');
-    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
 
     // First verify the instructor exists and is actually an instructor
     const instructor = await db.query.user.findFirst({

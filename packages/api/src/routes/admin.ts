@@ -7,10 +7,10 @@ import {
   StatsSchema,
 } from '@lrda/shared';
 import { eq, isNotNull, and, ne } from 'drizzle-orm';
-import { db } from '../db';
 import { user } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
-import type { AppEnv } from '../types';
+import type { AppBindings } from '../types';
+import { getDb } from './helpers';
 
 // Routes
 const getAllUsersRoute = createRoute({
@@ -148,9 +148,10 @@ const rejectInstructorRoute = createRoute({
 });
 
 // Create router
-export const adminRoutes = new OpenAPIHono<AppEnv>()
+export const adminRoutes = new OpenAPIHono<AppBindings>()
   // GET /admin/users - list all users
   .openapi(getAllUsersRoute, async c => {
+    const db = getDb(c);
     const users = await db.query.user.findMany({
       columns: {
         id: true,
@@ -170,6 +171,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
 
   // GET /admin/pending-instructors - list pending applications
   .openapi(getPendingApplicationsRoute, async c => {
+    const db = getDb(c);
     const pending = await db.query.user.findMany({
       where: and(
         isNotNull(user.pendingInstructorDescription),
@@ -199,6 +201,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
 
   // GET /admin/stats - get statistics
   .openapi(getStatsRoute, async c => {
+    const db = getDb(c);
     const users = await db.query.user.findMany({
       columns: {
         role: true,
@@ -220,6 +223,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
 
   // POST /admin/approve-instructor/:id - approve application
   .openapi(approveInstructorRoute, async c => {
+    const db = getDb(c);
     const { id } = c.req.valid('param');
 
     // Find user with pending application
@@ -254,6 +258,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
 
   // POST /admin/reject-instructor/:id - reject application
   .openapi(rejectInstructorRoute, async c => {
+    const db = getDb(c);
     const { id } = c.req.valid('param');
 
     // Find user with pending application
