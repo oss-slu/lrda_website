@@ -1,7 +1,7 @@
 /**
  * Database Seed Script
  *
- * Populates the PostgreSQL database with hand-crafted fixture data
+ * Populates the local D1 (SQLite) database with hand-crafted fixture data
  * for local development. Safe to run multiple times (deletes and re-inserts).
  *
  * Usage:
@@ -12,14 +12,10 @@
  *   pnpm api:db:seed                      # Runs with --yolo
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import { sql } from 'drizzle-orm';
 import { hashPassword } from 'better-auth/crypto';
 import * as schema from '../db/schema';
 import { users, notes, media, audio, comments, SEED_PASSWORD } from './fixtures/seed-data';
-
-const DATABASE_URL = process.env.DATABASE_URL || '';
+import { openLocalDb } from './local-db';
 
 let DRY_RUN = true;
 
@@ -38,19 +34,16 @@ function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) 
 }
 
 async function seed() {
-  const pool = new Pool({ connectionString: DATABASE_URL });
-  const db = drizzle(pool, { schema });
+  const { db, sqlite } = openLocalDb();
 
   try {
     // Test connection
-    const client = await pool.connect();
-    await client.query('SELECT 1');
-    client.release();
+    sqlite.prepare('SELECT 1').get();
     log('info', 'Database connection verified');
 
     if (DRY_RUN) {
       log('info', 'DRY RUN - No changes will be written');
-      log('info', 'Would truncate ALL tables and insert:');
+      log('info', 'Would delete all rows and insert:');
       log('info', `  Users:    ${users.length} (with account records for login)`);
       log('info', `  Notes:    ${notes.length}`);
       log('info', `  Media:    ${media.length}`);
@@ -61,17 +54,23 @@ async function seed() {
       return;
     }
 
-    log('info', 'Truncating all tables...');
+    log('info', 'Deleting all rows...');
 
-    // TRUNCATE CASCADE resets the entire database. This is a dev-only tool.
-    await db.execute(
-      sql`TRUNCATE TABLE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE`,
-    );
-    log('info', 'All tables truncated');
+    // SQLite has no TRUNCATE CASCADE -- delete in reverse FK order
+    // Temporarily disable foreign keys so we can delete in any order
+    sqlite.exec('PRAGMA foreign_keys = OFF');
+    sqlite.exec('DELETE FROM "comment"');
+    sqlite.exec('DELETE FROM "audio"');
+    sqlite.exec('DELETE FROM "media"');
+    sqlite.exec('DELETE FROM "note"');
+    sqlite.exec('DELETE FROM "session"');
+    sqlite.exec('DELETE FROM "account"');
+    sqlite.exec('DELETE FROM "verification"');
+    sqlite.exec('DELETE FROM "user"');
+    sqlite.exec('PRAGMA foreign_keys = ON');
+    log('info', 'All tables cleared');
 
     // Insert in foreign-key order.
-    // Users with instructorId references must be inserted after the
-    // referenced instructor, so split into two batches.
     log('info', 'Inserting users...');
     const nonStudents = users.filter((u) => !u.instructorId);
     const students = users.filter((u) => u.instructorId);
@@ -82,8 +81,6 @@ async function seed() {
     log('info', `  Inserted ${users.length} users`);
 
     // Create account records so users can log in with email + password.
-    // Better Auth requires an 'account' row with providerId='credential'
-    // and a hashed password for email/password authentication.
     log('info', 'Creating account records (hashing password)...');
     const hashedPassword = await hashPassword(SEED_PASSWORD);
     const accounts = users.map((u) => ({
@@ -109,7 +106,6 @@ async function seed() {
     log('info', `  Inserted ${audio.length} audio`);
 
     log('info', 'Inserting comments...');
-    // Insert parent comments first (parentId is null), then replies
     const parents = comments.filter((c) => c.parentId === null);
     const replies = comments.filter((c) => c.parentId !== null);
     await db.insert(schema.comment).values(parents);
@@ -129,7 +125,7 @@ async function seed() {
     log('error', 'Seed failed', error);
     process.exit(1);
   } finally {
-    await pool.end();
+    sqlite.close();
   }
 }
 
@@ -138,11 +134,6 @@ async function main() {
 
   if (args.includes('--yolo')) {
     DRY_RUN = false;
-  }
-
-  if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required');
-    process.exit(1);
   }
 
   log('info', 'Seed script starting...');

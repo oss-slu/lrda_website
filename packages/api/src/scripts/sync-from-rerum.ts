@@ -1,7 +1,7 @@
 /**
- * RERUM to PostgreSQL Sync Script
+ * RERUM to D1 Sync Script
  *
- * This script continuously syncs data from RERUM (MongoDB) to PostgreSQL.
+ * This script syncs data from RERUM (MongoDB) to the local D1 (SQLite) database.
  * Run as a cron job or background process during the migration period.
  *
  * Usage:
@@ -15,22 +15,20 @@
  *
  * Environment variables:
  *   RERUM_API_URL - RERUM API base URL (e.g., https://lived-religion-dev.rerum.io/deer-lr/v1/)
- *   DATABASE_URL  - PostgreSQL connection string
+ *   D1_DB_PATH    - (optional) Override path to local D1 SQLite file
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
 import { eq, sql } from 'drizzle-orm';
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { initializeApp, cert, getApps, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import * as fs from 'fs';
 import * as schema from '../db/schema';
 import type { Tag } from '../db/types';
+import { openLocalDb } from './local-db';
 
 // Configuration
 const RERUM_API_URL = process.env.RERUM_API_URL || process.env.NEXT_PUBLIC_RERUM_PREFIX || '';
-const DATABASE_URL = process.env.DATABASE_URL || '';
 const SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
 const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 const SYNC_INTERVAL_MS = 30_000; // 30 seconds
@@ -40,18 +38,22 @@ const BATCH_SIZE = 100;
 // DRY_RUN is true by default for safety - use --yolo to actually write to database
 let DRY_RUN = true;
 
-// Sync state table (tracks last sync time)
-const syncState = pgTable('sync_state', {
+// Sync state table (tracks last sync time) -- stored as unix epoch integers
+const syncState = sqliteTable('sync_state', {
   id: text('id').primaryKey(),
-  lastSyncAt: timestamp('last_sync_at').notNull(),
-  lastNotesSyncAt: timestamp('last_notes_sync_at'),
-  lastCommentsSyncAt: timestamp('last_comments_sync_at'),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  lastSyncAt: integer('last_sync_at', { mode: 'timestamp' }).notNull(),
+  lastNotesSyncAt: integer('last_notes_sync_at', { mode: 'timestamp' }),
+  lastCommentsSyncAt: integer('last_comments_sync_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 });
 
 // Initialize database connection
-const pool = new Pool({ connectionString: DATABASE_URL });
-const db = drizzle(pool, { schema: { ...schema, syncState } });
+const { db, sqlite } = openLocalDb();
+
+// Extend the db with the sync_state table for typed queries
+const extDb = Object.assign(db, {
+  // We'll use raw SQL for sync_state since it's a script-only table
+});
 
 // Initialize Firebase Admin SDK (optional - for looking up user emails)
 let firebaseInitialized = false;
@@ -94,10 +96,9 @@ async function getFirebaseUserEmail(uid: string): Promise<string | null> {
 
 // Logger with timestamps
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
-  const timestamp = new Date().toISOString();
-  const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+  const ts = new Date().toISOString();
+  const prefix = `[${ts}] [${level.toUpperCase()}]`;
   if (data) {
-    // Handle Error objects specially since JSON.stringify doesn't serialize them
     if (data instanceof Error) {
       console.log(prefix, message, data.message, data.stack);
     } else {
@@ -225,75 +226,100 @@ interface RerumComment {
 }
 
 // Ensure sync_state table exists
-async function ensureSyncStateTable() {
-  await pool.query(`
+function ensureSyncStateTable() {
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS sync_state (
       id TEXT PRIMARY KEY,
-      last_sync_at TIMESTAMPTZ NOT NULL,
-      last_notes_sync_at TIMESTAMPTZ,
-      last_comments_sync_at TIMESTAMPTZ,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      last_sync_at INTEGER NOT NULL,
+      last_notes_sync_at INTEGER,
+      last_comments_sync_at INTEGER,
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
 }
 
 // Get last sync time
-async function getLastSyncTime(type: 'notes' | 'comments'): Promise<Date | null> {
-  const result = await db.select().from(syncState).where(eq(syncState.id, 'main')).limit(1);
+function getLastSyncTime(type: 'notes' | 'comments'): Date | null {
+  const row = sqlite.prepare('SELECT * FROM sync_state WHERE id = ?').get('main') as {
+    last_sync_at: number;
+    last_notes_sync_at: number | null;
+    last_comments_sync_at: number | null;
+  } | undefined;
 
-  if (result.length === 0) return null;
+  if (!row) return null;
 
-  const state = result[0];
-  if (type === 'notes') return state.lastNotesSyncAt;
-  if (type === 'comments') return state.lastCommentsSyncAt;
-  return state.lastSyncAt;
+  if (type === 'notes' && row.last_notes_sync_at != null) {
+    return new Date(row.last_notes_sync_at * 1000);
+  }
+  if (type === 'comments' && row.last_comments_sync_at != null) {
+    return new Date(row.last_comments_sync_at * 1000);
+  }
+  return new Date(row.last_sync_at * 1000);
 }
 
 // Update last sync time
-async function updateLastSyncTime(type: 'notes' | 'comments', time: Date) {
+function updateLastSyncTime(type: 'notes' | 'comments', time: Date) {
   if (DRY_RUN) {
     log('info', `[DRY RUN] Would update last ${type} sync time to: ${time.toISOString()}`);
     return;
   }
 
-  const updateData: Record<string, unknown> = {
-    updatedAt: new Date(),
-    lastSyncAt: time,
-  };
+  const epoch = Math.floor(time.getTime() / 1000);
+  const now = Math.floor(Date.now() / 1000);
 
-  if (type === 'notes') updateData.lastNotesSyncAt = time;
-  if (type === 'comments') updateData.lastCommentsSyncAt = time;
-
-  await db
-    .insert(syncState)
-    .values({
-      id: 'main',
-      lastSyncAt: time,
-      lastNotesSyncAt: type === 'notes' ? time : undefined,
-      lastCommentsSyncAt: type === 'comments' ? time : undefined,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: syncState.id,
-      set: updateData,
-    });
+  if (type === 'notes') {
+    sqlite.prepare(`
+      INSERT INTO sync_state (id, last_sync_at, last_notes_sync_at, updated_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT (id) DO UPDATE SET
+        last_sync_at = excluded.last_sync_at,
+        last_notes_sync_at = excluded.last_notes_sync_at,
+        updated_at = excluded.updated_at
+    `).run('main', epoch, epoch, now);
+  } else {
+    sqlite.prepare(`
+      INSERT INTO sync_state (id, last_sync_at, last_comments_sync_at, updated_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT (id) DO UPDATE SET
+        last_sync_at = excluded.last_sync_at,
+        last_comments_sync_at = excluded.last_comments_sync_at,
+        updated_at = excluded.updated_at
+    `).run('main', epoch, epoch, now);
+  }
 }
 
-// Sync notes from RERUM to PostgreSQL
+// Fallback user for notes whose creators don't exist in the user table
+const FALLBACK_USER_ID = 'rerum-orphan-user';
+const FALLBACK_USER = {
+  id: FALLBACK_USER_ID,
+  name: 'Billy Joel',
+  email: 'billy.joel@rerum.orphan',
+  emailVerified: false,
+  role: 'user',
+  isInstructor: false,
+};
+
+async function ensureFallbackUser() {
+  const exists = await db.query.user.findFirst({
+    where: eq(schema.user.id, FALLBACK_USER_ID),
+  });
+  if (!exists) {
+    await db.insert(schema.user).values(FALLBACK_USER);
+    log('info', 'Created fallback user "Billy Joel" for orphaned notes');
+  }
+}
+
+// Sync notes from RERUM to D1
 async function syncNotes(fullSync = false) {
   log('info', 'Starting notes sync...');
 
-  const lastSync = fullSync ? null : await getLastSyncTime('notes');
+  const lastSync = fullSync ? null : getLastSyncTime('notes');
   const syncStartTime = new Date();
 
   // Build query - fetch all non-deleted notes
   const queryObj: Record<string, unknown> = {
     type: 'message',
   };
-
-  // Note: RERUM doesn't support querying by modifiedAt directly
-  // For incremental sync, we fetch all and filter client-side
-  // This could be optimized with RERUM-specific features if available
 
   const rerumNotes = await rerumQueryAll<RerumNote>(queryObj);
   log('info', `Fetched ${rerumNotes.length} notes from RERUM`);
@@ -317,32 +343,26 @@ async function syncNotes(fullSync = false) {
         continue;
       }
 
-      const creatorId = normalizeCreatorId(rerumNote.creator);
-      if (!creatorId) {
-        log('warn', 'Skipping note with no creator', {
+      const creatorId = normalizeCreatorId(rerumNote.creator) || FALLBACK_USER_ID;
+      if (creatorId === FALLBACK_USER_ID) {
+        log('info', 'Note has no creator, assigning to fallback user', {
           id: noteId,
           title: rerumNote.title || '(no title)',
-          rawCreator: rerumNote.creator,
         });
-        skipped++;
-        continue;
       }
 
-      // Check if user exists (foreign key constraint)
+      // Check if user exists -- assign to fallback user if not
       const userExists = await db.query.user.findFirst({
         where: eq(schema.user.id, creatorId),
       });
 
+      const effectiveCreatorId = userExists ? creatorId : FALLBACK_USER_ID;
       if (!userExists) {
-        const creatorEmail = await getFirebaseUserEmail(creatorId);
-        log('warn', `Skipping note - creator not found in users table`, {
+        log('info', `Assigning note to fallback user (original creator not found)`, {
           noteId,
           title: rerumNote.title || '(no title)',
-          creatorId,
-          creatorEmail: creatorEmail || '(not found in Firebase)',
+          originalCreatorId: creatorId,
         });
-        skipped++;
-        continue;
       }
 
       const modifiedAt =
@@ -359,10 +379,9 @@ async function syncNotes(fullSync = false) {
         id: noteId,
         title: rerumNote.title || null,
         text: rerumNote.BodyText || rerumNote.text || '',
-        creatorId,
+        creatorId: effectiveCreatorId,
         latitude: rerumNote.latitude ? parseFloat(rerumNote.latitude) || null : null,
         longitude: rerumNote.longitude ? parseFloat(rerumNote.longitude) || null : null,
-        // Validate booleans - some RERUM data has corrupted values (e.g., React events stored as published)
         isPublished: rerumNote.published === true,
         approvalRequested: rerumNote.approvalRequested === true,
         tags: (rerumNote.tags || []).map(t => ({
@@ -381,7 +400,6 @@ async function syncNotes(fullSync = false) {
       });
 
       if (DRY_RUN) {
-        // In dry-run mode, just count what would happen
         if (existing) {
           log('info', `[DRY RUN] Would update note: ${noteId}`);
           updated++;
@@ -431,17 +449,17 @@ async function syncNotes(fullSync = false) {
     }
   }
 
-  await updateLastSyncTime('notes', syncStartTime);
+  updateLastSyncTime('notes', syncStartTime);
   log('info', `Notes sync complete: ${created} created, ${updated} updated, ${skipped} skipped`);
 
   return { created, updated, skipped };
 }
 
-// Sync comments from RERUM to PostgreSQL
+// Sync comments from RERUM to D1
 async function syncComments(fullSync = false) {
   log('info', 'Starting comments sync...');
 
-  const lastSync = fullSync ? null : await getLastSyncTime('comments');
+  const lastSync = fullSync ? null : getLastSyncTime('comments');
   const syncStartTime = new Date();
 
   const queryObj = { type: 'comment' };
@@ -517,7 +535,6 @@ async function syncComments(fullSync = false) {
           where: eq(schema.comment.id, parentId),
         });
         if (!parentExists) {
-          // Parent doesn't exist yet - might be synced later
           parentId = null;
         }
       }
@@ -542,7 +559,6 @@ async function syncComments(fullSync = false) {
       });
 
       if (DRY_RUN) {
-        // In dry-run mode, just count what would happen
         if (existing) {
           log('info', `[DRY RUN] Would update comment: ${commentId}`);
           updated++;
@@ -564,7 +580,7 @@ async function syncComments(fullSync = false) {
     }
   }
 
-  await updateLastSyncTime('comments', syncStartTime);
+  updateLastSyncTime('comments', syncStartTime);
   log('info', `Comments sync complete: ${created} created, ${updated} updated, ${skipped} skipped`);
 
   return { created, updated, skipped };
@@ -575,7 +591,8 @@ async function runSync(fullSync = false) {
   log('info', `Starting ${fullSync ? 'full' : 'incremental'} sync...`);
 
   try {
-    await ensureSyncStateTable();
+    ensureSyncStateTable();
+    if (!DRY_RUN) await ensureFallbackUser();
 
     const notesResult = await syncNotes(fullSync);
     const commentsResult = await syncComments(fullSync);
@@ -616,7 +633,6 @@ async function main() {
   const fullSync = args.includes('--full');
   const yoloMode = args.includes('--yolo');
 
-  // --yolo disables dry-run mode
   if (yoloMode) {
     DRY_RUN = false;
   }
@@ -625,11 +641,6 @@ async function main() {
     console.error(
       'Error: RERUM_API_URL or NEXT_PUBLIC_RERUM_PREFIX environment variable is required',
     );
-    process.exit(1);
-  }
-
-  if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required');
     process.exit(1);
   }
 
@@ -655,12 +666,12 @@ async function main() {
       await runWatchMode();
     } else {
       await runSync(fullSync);
-      await pool.end();
+      sqlite.close();
       process.exit(0);
     }
   } catch (error) {
     log('error', 'Fatal error', error);
-    await pool.end();
+    sqlite.close();
     process.exit(1);
   }
 }

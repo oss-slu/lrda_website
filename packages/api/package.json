@@ -5,14 +5,13 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "deploy:prod": "wrangler deploy --env production",
     "test": "vitest",
     "test:run": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply lrda-db --local",
-    "db:migrate:prod": "wrangler d1 migrations apply lrda-db-prod --remote --env production",
+    "db:migrate:remote": "wrangler d1 migrations apply lrda-db --remote",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "wrangler d1 execute lrda-db --local --file=src/scripts/seed.sql",
+    "db:seed": "bun run src/scripts/seed.ts --yolo",
     "types": "wrangler types",
     "sync:from-rerum": "bun run src/scripts/sync-from-rerum.ts",
     "sync:from-rerum:yolo": "bun run src/scripts/sync-from-rerum.ts --yolo",
@@ -39,8 +38,6 @@
     "wrangler": "^4.0.0"
   },
   "optionalDependencies": {
-    "firebase-admin": "^13.6.0",
-    "pg": "^8.15.6",
-    "@types/pg": "^8.11.14"
+    "firebase-admin": "^13.6.0"
   }
 }

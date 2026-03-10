@@ -1,7 +1,7 @@
 /**
- * Firebase to PostgreSQL User Sync Script
+ * Firebase to D1 User Sync Script
  *
- * This script syncs users from Firebase Auth to PostgreSQL.
+ * This script syncs users from Firebase Auth to the local D1 (SQLite) database.
  * Run this BEFORE syncing notes/comments from RERUM.
  *
  * Usage:
@@ -9,23 +9,21 @@
  *   bun run src/scripts/sync-users-from-firebase.ts --yolo    # Actually write to database
  *
  * Environment variables:
- *   DATABASE_URL                    - PostgreSQL connection string
  *   FIREBASE_SERVICE_ACCOUNT_PATH   - Path to service account JSON file
  *   OR
  *   FIREBASE_SERVICE_ACCOUNT        - Service account JSON as string (for CI/CD)
+ *   D1_DB_PATH                      - (optional) Override path to local D1 SQLite file
  */
 
 import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import * as fs from 'fs';
+import { openLocalDb } from './local-db';
 
 // Configuration
-const DATABASE_URL = process.env.DATABASE_URL || '';
 const SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
 const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 
@@ -33,13 +31,12 @@ const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 let DRY_RUN = true;
 
 // Initialize database connection
-const pool = new Pool({ connectionString: DATABASE_URL });
-const db = drizzle(pool, { schema });
+const { db, sqlite } = openLocalDb();
 
 // Logger with timestamps
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
-  const timestamp = new Date().toISOString();
-  const prefix = `[${timestamp}] [FIREBASE-SYNC] [${level.toUpperCase()}]`;
+  const ts = new Date().toISOString();
+  const prefix = `[${ts}] [FIREBASE-SYNC] [${level.toUpperCase()}]`;
   if (data) {
     if (data instanceof Error) {
       console.log(prefix, message, data.message, data.stack);
@@ -56,12 +53,10 @@ function initializeFirebase(): void {
   let serviceAccount: ServiceAccount;
 
   if (SERVICE_ACCOUNT_PATH) {
-    // Load from file path
     const fileContent = fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf-8');
     serviceAccount = JSON.parse(fileContent) as ServiceAccount;
     log('info', `Loaded service account from: ${SERVICE_ACCOUNT_PATH}`);
   } else if (SERVICE_ACCOUNT_JSON) {
-    // Load from environment variable (JSON string)
     serviceAccount = JSON.parse(SERVICE_ACCOUNT_JSON) as ServiceAccount;
     log('info', 'Loaded service account from environment variable');
   } else {
@@ -123,7 +118,7 @@ async function fetchFirestoreUser(uid: string): Promise<Record<string, unknown> 
   }
 }
 
-// Sync users to PostgreSQL
+// Sync users to D1
 async function syncUsers() {
   log('info', 'Starting user sync from Firebase...');
 
@@ -134,34 +129,28 @@ async function syncUsers() {
   let updated = 0;
   let skipped = 0;
 
+  // Collect user data with deferred instructorId references
+  const deferredInstructorIds: Array<{ uid: string; instructorId: string }> = [];
+
   for (const fbUser of firebaseUsers) {
     try {
-      // Skip users without email (shouldn't happen but just in case)
       if (!fbUser.email) {
         log('warn', `Skipping user ${fbUser.uid} - no email`);
         skipped++;
         continue;
       }
 
-      // Fetch Firestore doc for instructor/student fields
-      // These live in Firestore, not Firebase Auth custom claims:
-      //   - isInstructor (boolean)
-      //   - parentInstructorId (student's instructor UID)
-      //   - pendingInstructorDescription (instructor application text)
       const firestoreData = await fetchFirestoreUser(fbUser.uid);
 
-      // isInstructor: check Firestore first (source of truth), fall back to custom claims
       const isInstructor =
         firestoreData?.isInstructor === true ||
         fbUser.customClaims?.instructor === true;
 
-      // Admin: check custom claims first, fall back to Firestore roles
       const firestoreRoles = firestoreData?.roles as Record<string, boolean> | undefined;
       const isAdmin =
         fbUser.customClaims?.admin === true ||
         firestoreRoles?.administrator === true;
 
-      // parentInstructorId in Firestore -> instructorId in PostgreSQL
       const instructorId =
         typeof firestoreData?.parentInstructorId === 'string'
           ? firestoreData.parentInstructorId
@@ -172,12 +161,12 @@ async function syncUsers() {
           ? firestoreData.pendingInstructorDescription
           : null;
 
-      // Use Firestore name if available (may have full name vs Auth displayName)
       const name =
         (typeof firestoreData?.name === 'string' && firestoreData.name) ||
         fbUser.displayName ||
         fbUser.email.split('@')[0];
 
+      // First pass: insert/update without instructorId to avoid FK ordering issues
       const userData = {
         id: fbUser.uid,
         name,
@@ -188,11 +177,10 @@ async function syncUsers() {
         updatedAt: new Date(),
         role: isAdmin ? 'admin' : 'user',
         isInstructor,
-        instructorId,
+        instructorId: null as string | null,
         pendingInstructorDescription,
       };
 
-      // Check if user exists
       const existing = await db.query.user.findFirst({
         where: eq(schema.user.id, fbUser.uid),
       });
@@ -224,9 +212,33 @@ async function syncUsers() {
           created++;
         }
       }
+
+      // Defer instructorId assignment to second pass
+      if (instructorId) {
+        deferredInstructorIds.push({ uid: fbUser.uid, instructorId });
+      }
     } catch (error) {
       log('error', `Failed to sync user ${fbUser.uid}`, error);
       skipped++;
+    }
+  }
+
+  // Second pass: set instructorId now that all users exist
+  if (deferredInstructorIds.length > 0) {
+    log('info', `Setting instructorId for ${deferredInstructorIds.length} students...`);
+    for (const { uid, instructorId } of deferredInstructorIds) {
+      if (DRY_RUN) {
+        log('info', `[DRY RUN] Would set instructorId=${instructorId} for user ${uid}`);
+      } else {
+        try {
+          await db
+            .update(schema.user)
+            .set({ instructorId })
+            .where(eq(schema.user.id, uid));
+        } catch (error) {
+          log('warn', `Failed to set instructorId for ${uid} (instructor ${instructorId} may not exist)`, error);
+        }
+      }
     }
   }
 
@@ -241,11 +253,6 @@ async function main() {
 
   if (yoloMode) {
     DRY_RUN = false;
-  }
-
-  if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required');
-    process.exit(1);
   }
 
   if (!SERVICE_ACCOUNT_PATH && !SERVICE_ACCOUNT_JSON) {
@@ -271,11 +278,11 @@ async function main() {
   try {
     initializeFirebase();
     await syncUsers();
-    await pool.end();
+    sqlite.close();
     process.exit(0);
   } catch (error) {
     log('error', 'Fatal error', error);
-    await pool.end();
+    sqlite.close();
     process.exit(1);
   }
 }

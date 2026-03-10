@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "5100661403ca1e484379f9064b8f6f6f",
   "main": ".open-next/worker.js",
   "name": "lrda-web",
   "compatibility_date": "2025-04-01",
@@ -18,21 +19,6 @@
   ],
 
   "vars": {
-    "NEXT_PUBLIC_API_URL": "http://localhost:8787"
-  },
-
-  "env": {
-    "production": {
-      "name": "lrda-web-prod",
-      "vars": {
-        "NEXT_PUBLIC_API_URL": "https://api.wheresreligion.org"
-      },
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "lrda-web-prod"
-        }
-      ]
-    }
+    "NEXT_PUBLIC_API_URL": "https://lrda-api.jacobmaynard.workers.dev"
   }
 }

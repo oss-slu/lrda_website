@@ -23,6 +23,9 @@ interface UseMapMarkersProps {
 
 /**
  * Hook to manage map markers and their interactions.
+ *
+ * Uses diff-based updates: only adds/removes markers that changed,
+ * instead of destroying and recreating all markers on every render.
  */
 export function useMapMarkers({
   mapRef,
@@ -36,9 +39,26 @@ export function useMapMarkers({
   scrollToNoteTile,
 }: UseMapMarkersProps) {
   const queryClient = useQueryClient();
-  // Store queryClient in ref to avoid dependency issues
+
+  // --- Refs for values that change but should NOT trigger marker rebuilds ---
   const queryClientRef = useRef(queryClient);
   queryClientRef.current = queryClient;
+
+  const isPanelOpenRef = useRef(isPanelOpen);
+  isPanelOpenRef.current = isPanelOpen;
+
+  const setActiveNoteRef = useRef(setActiveNote);
+  setActiveNoteRef.current = setActiveNote;
+
+  const setHoveredNoteIdRef = useRef(setHoveredNoteId);
+  setHoveredNoteIdRef.current = setHoveredNoteId;
+
+  const scrollToNoteTileRef = useRef(scrollToNoteTile);
+  scrollToNoteTileRef.current = scrollToNoteTile;
+
+  const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
@@ -46,10 +66,9 @@ export function useMapMarkers({
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = useRef(false);
   const popupHoveredRef = useRef(false);
-  // Use ref instead of state to avoid re-render loops
   const markersRef = useRef(new Map<string, google.maps.marker.AdvancedMarkerElement>());
-
-  const router = useRouter();
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const popupClassRef = useRef<ReturnType<typeof createPopupClass> | null>(null);
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -62,11 +81,14 @@ export function useMapMarkers({
         currentPopupRef.current.setMap(null);
         currentPopupRef.current = null;
         currentPopupNoteIdRef.current = null;
-        setHoveredNoteId(null);
-        setActiveNote(null);
+        setHoveredNoteIdRef.current(null);
+        setActiveNoteRef.current(null);
       }
     }, 300);
-  }, [setHoveredNoteId, setActiveNote]);
+  }, []);
+
+  const startPopupCloseTimerRef = useRef(startPopupCloseTimer);
+  startPopupCloseTimerRef.current = startPopupCloseTimer;
 
   // Handle map click to close popup
   const handleMapClick = useCallback(() => {
@@ -75,8 +97,8 @@ export function useMapMarkers({
     }
     currentPopupRef.current = null;
     currentPopupNoteIdRef.current = null;
-    setActiveNote(null);
-  }, [setActiveNote]);
+    setActiveNoteRef.current(null);
+  }, []);
 
   // Create marker icon element
   const createMarkerIcon = useCallback((): HTMLElement => {
@@ -91,130 +113,11 @@ export function useMapMarkers({
     return div;
   }, []);
 
-  // Main effect to create/update markers
-  useEffect(() => {
-    if (!isMapsApiLoaded || !mapRef.current) return;
-
-    const map = mapRef.current;
-
-    // Clear existing markers before creating new ones
-    if (markerClustererRef.current) {
-      markerClustererRef.current.clearMarkers();
-    }
-    markersRef.current.forEach(marker => {
-      marker.map = null;
-    });
-    markersRef.current = new Map();
-
-    if (filteredNotes.length === 0) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Create Popup class with refs
-    const Popup = createPopupClass({
-      popupHoveredRef,
-      hoverTimerRef,
-      startPopupCloseTimer,
-    });
-
-    const tempMarkers = new Map<string, google.maps.marker.AdvancedMarkerElement>();
-
-    const mapClickListener = map.addListener('click', () => {
-      if (currentPopupRef.current) {
-        currentPopupRef.current.setMap(null);
-        currentPopupRef.current = null;
-        currentPopupNoteIdRef.current = null;
-        setActiveNote(null);
-      }
-    });
-
-    // Open popup helper
-    const openPopup = (note: Note, isClick: boolean) => {
-      // If already showing this note's popup, don't recreate it
-      if (currentPopupNoteIdRef.current === note.id && currentPopupRef.current) {
-        return;
-      }
-
-      if (currentPopupRef.current) {
-        currentPopupRef.current.setMap(null);
-      }
-
-      if (isClick) {
-        router.push(`/notes/${note.id}`);
-        currentPopupNoteIdRef.current = null;
-        return;
-      }
-
-      const popupContent = document.createElement('div');
-      const root = ReactDOM.createRoot(popupContent);
-      root.render(
-        <QueryClientProvider client={queryClientRef.current}>
-          <NoteCard note={note} />
-        </QueryClientProvider>,
-      );
-
-      const popup = new Popup(
-        new google.maps.LatLng(note.latitude!, note.longitude!),
-        popupContent,
-        isClick,
-      );
-
-      currentPopupRef.current = popup;
-      currentPopupNoteIdRef.current = note.id;
-      popup.setMap(map);
-    };
-
-    // Handle marker click -- navigate to dedicated note page
-    const handleMarkerClick = (note: Note) => {
-      if (currentPopupRef.current) {
-        currentPopupRef.current.setMap(null);
-        currentPopupRef.current = null;
-        currentPopupNoteIdRef.current = null;
-      }
-
-      router.push(`/notes/${note.id}`);
-    };
-
-    // Attach events to marker
-    const attachMarkerEvents = (marker: google.maps.marker.AdvancedMarkerElement, note: Note) => {
-      const iconNode = marker.content as HTMLElement;
-
-      iconNode.addEventListener('click', e => {
-        e.stopPropagation();
-        handleMarkerClick(note);
-      });
-
-      iconNode.addEventListener('mouseenter', () => {
-        if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
-          return;
-        }
-
-        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-        markerHoveredRef.current = true;
-
-        // Always open new popup for the hovered marker (closes old one automatically)
-        openPopup(note, false);
-
-        setHoveredNoteId(note.id);
-        if (isPanelOpen) scrollToNoteTile(note.id);
-        setActiveNote(note);
-      });
-
-      iconNode.addEventListener('mouseleave', () => {
-        markerHoveredRef.current = false;
-        startPopupCloseTimer();
-      });
-    };
-
-    // Create markers for each note
-    filteredNotes.forEach(note => {
-      if (note.latitude == null || note.longitude == null) {
-        console.warn(`Skipping note ${note.id}: missing coordinates`, note);
-        return;
-      }
-
-      const position = new google.maps.LatLng(note.latitude, note.longitude);
+  // Create a single marker and attach events. Uses refs for all callbacks
+  // so marker event handlers never go stale.
+  const createMarker = useCallback(
+    (note: Note, map: google.maps.Map): google.maps.marker.AdvancedMarkerElement => {
+      const position = new google.maps.LatLng(note.latitude!, note.longitude!);
       const iconNode = createMarkerIcon();
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position,
@@ -223,39 +126,170 @@ export function useMapMarkers({
         title: note.title || '',
       });
 
-      attachMarkerEvents(marker, note);
-      tempMarkers.set(note.id, marker);
+      // Click -> navigate to note page
+      iconNode.addEventListener('click', e => {
+        e.stopPropagation();
+        if (currentPopupRef.current) {
+          currentPopupRef.current.setMap(null);
+          currentPopupRef.current = null;
+          currentPopupNoteIdRef.current = null;
+        }
+        routerRef.current.push(`/notes/${note.id}`);
+      });
+
+      // Hover -> show popup
+      iconNode.addEventListener('mouseenter', () => {
+        if (currentPopupRef.current && currentPopupRef.current.isClickPopup) {
+          return;
+        }
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+        markerHoveredRef.current = true;
+
+        // Open popup if not already showing for this note
+        if (currentPopupNoteIdRef.current !== note.id || !currentPopupRef.current) {
+          if (currentPopupRef.current) {
+            currentPopupRef.current.setMap(null);
+          }
+
+          if (!popupClassRef.current) return;
+
+          const popupContent = document.createElement('div');
+          const root = ReactDOM.createRoot(popupContent);
+          root.render(
+            <QueryClientProvider client={queryClientRef.current}>
+              <NoteCard note={note} />
+            </QueryClientProvider>,
+          );
+
+          const popup = new popupClassRef.current(
+            new google.maps.LatLng(note.latitude!, note.longitude!),
+            popupContent,
+            false,
+          );
+
+          currentPopupRef.current = popup;
+          currentPopupNoteIdRef.current = note.id;
+          popup.setMap(map);
+        }
+
+        setHoveredNoteIdRef.current(note.id);
+        if (isPanelOpenRef.current) scrollToNoteTileRef.current(note.id);
+        setActiveNoteRef.current(note);
+      });
+
+      iconNode.addEventListener('mouseleave', () => {
+        markerHoveredRef.current = false;
+        startPopupCloseTimerRef.current();
+      });
+
+      return marker;
+    },
+    [createMarkerIcon],
+  );
+
+  // One-time setup: map click listener and Popup class
+  useEffect(() => {
+    if (!isMapsApiLoaded || !mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Create Popup class once
+    popupClassRef.current = createPopupClass({
+      popupHoveredRef,
+      hoverTimerRef,
+      startPopupCloseTimer: startPopupCloseTimerRef.current,
     });
 
-    markersRef.current = tempMarkers;
-
-    markerClustererRef.current = new MarkerClusterer({
-      markers: Array.from(tempMarkers.values()),
-      map: mapRef.current,
+    // Map click listener -- set up once
+    mapClickListenerRef.current = map.addListener('click', () => {
+      if (currentPopupRef.current) {
+        currentPopupRef.current.setMap(null);
+        currentPopupRef.current = null;
+        currentPopupNoteIdRef.current = null;
+      }
+      setActiveNoteRef.current(null);
     });
+
+    return () => {
+      if (mapClickListenerRef.current) {
+        google.maps.event.removeListener(mapClickListenerRef.current);
+        mapClickListenerRef.current = null;
+      }
+    };
+  }, [isMapsApiLoaded, mapRef]);
+
+  // Diff-based marker sync: only add/remove markers that changed
+  useEffect(() => {
+    if (!isMapsApiLoaded || !mapRef.current) return;
+
+    const map = mapRef.current;
+    const currentMarkers = markersRef.current;
+
+    // Build set of note IDs that should have markers
+    const desiredIds = new Set<string>();
+    for (const n of filteredNotes) {
+      if (n.latitude != null && n.longitude != null) {
+        desiredIds.add(n.id);
+      }
+    }
+
+    // Remove markers for notes no longer in the set
+    const toRemove: string[] = [];
+    for (const id of currentMarkers.keys()) {
+      if (!desiredIds.has(id)) {
+        toRemove.push(id);
+      }
+    }
+    for (const id of toRemove) {
+      const marker = currentMarkers.get(id)!;
+      markerClustererRef.current?.removeMarker(marker);
+      marker.map = null;
+      currentMarkers.delete(id);
+    }
+
+    // Add markers for newly visible notes
+    const toAdd: google.maps.marker.AdvancedMarkerElement[] = [];
+    for (const note of filteredNotes) {
+      if (note.latitude == null || note.longitude == null) continue;
+      if (currentMarkers.has(note.id)) continue;
+
+      const marker = createMarker(note, map);
+      currentMarkers.set(note.id, marker);
+      toAdd.push(marker);
+    }
+
+    // Update clusterer
+    if (!markerClustererRef.current) {
+      // First run: create clusterer with all current markers
+      markerClustererRef.current = new MarkerClusterer({
+        markers: Array.from(currentMarkers.values()),
+        map,
+      });
+    } else {
+      if (toAdd.length > 0) {
+        markerClustererRef.current.addMarkers(toAdd, true);
+      }
+      if (toAdd.length > 0 || toRemove.length > 0) {
+        markerClustererRef.current.render();
+      }
+    }
 
     setIsLoading(false);
+  }, [isMapsApiLoaded, filteredNotes, mapRef, createMarker, setIsLoading]);
 
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
       if (markerClustererRef.current) {
         markerClustererRef.current.clearMarkers();
+        markerClustererRef.current = null;
       }
-      google.maps.event.removeListener(mapClickListener);
+      markersRef.current.forEach(marker => {
+        marker.map = null;
+      });
+      markersRef.current.clear();
     };
-  }, [
-    isMapsApiLoaded,
-    filteredNotes,
-    mapRef,
-    isPanelOpen,
-    setActiveNote,
-    setHoveredNoteId,
-    setModalNote,
-    setIsLoading,
-    scrollToNoteTile,
-    startPopupCloseTimer,
-    createMarkerIcon,
-    router,
-  ]);
+  }, []);
 
   return {
     markersRef,

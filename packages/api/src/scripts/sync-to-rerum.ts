@@ -1,7 +1,7 @@
 /**
- * PostgreSQL to RERUM Sync Script (Reverse Sync)
+ * D1 to RERUM Sync Script (Reverse Sync)
  *
- * This script syncs new data created in PostgreSQL back to RERUM,
+ * This script syncs new data created in D1 back to RERUM,
  * so the mobile app can still read it while being migrated.
  *
  * Usage:
@@ -14,46 +14,27 @@
  *
  * Environment variables:
  *   RERUM_API_URL - RERUM API base URL
- *   DATABASE_URL  - PostgreSQL connection string
+ *   D1_DB_PATH    - (optional) Override path to local D1 SQLite file
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
 import { gt } from 'drizzle-orm';
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import * as schema from '../db/schema';
+import { openLocalDb } from './local-db';
 
 // Configuration
 const RERUM_API_URL = process.env.RERUM_API_URL || process.env.NEXT_PUBLIC_RERUM_PREFIX || '';
-const DATABASE_URL = process.env.DATABASE_URL || '';
 const SYNC_INTERVAL_MS = 30_000; // 30 seconds
 
 // Runtime flags (set by CLI)
 // DRY_RUN is true by default for safety - use --yolo to actually write to RERUM
 let DRY_RUN = true;
 
-// Sync state table
-const reverseSyncState = pgTable('reverse_sync_state', {
-  id: text('id').primaryKey(),
-  lastSyncAt: timestamp('last_sync_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// ID mapping table (maps PostgreSQL IDs to RERUM @ids)
-const idMapping = pgTable('id_mapping', {
-  id: text('id').primaryKey(), // PostgreSQL ID
-  rerumId: text('rerum_id').notNull(), // RERUM @id URL
-  type: text('type').notNull(), // 'note' or 'comment'
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
 // Initialize database
-const pool = new Pool({ connectionString: DATABASE_URL });
-const db = drizzle(pool, { schema: { ...schema, reverseSyncState, idMapping } });
+const { db, sqlite } = openLocalDb();
 
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
-  const timestamp = new Date().toISOString();
-  const prefix = `[${timestamp}] [REVERSE-SYNC] [${level.toUpperCase()}]`;
+  const ts = new Date().toISOString();
+  const prefix = `[${ts}] [REVERSE-SYNC] [${level.toUpperCase()}]`;
   if (data) {
     console.log(prefix, message, JSON.stringify(data, null, 2));
   } else {
@@ -91,75 +72,77 @@ async function rerumOverwrite(data: object): Promise<{ '@id': string }> {
   return response.json();
 }
 
-// Ensure tables exist
-async function ensureTables() {
-  await pool.query(`
+// Ensure script-only tables exist
+function ensureTables() {
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS reverse_sync_state (
       id TEXT PRIMARY KEY,
-      last_sync_at TIMESTAMPTZ NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      last_sync_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
 
-  await pool.query(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS id_mapping (
       id TEXT PRIMARY KEY,
       rerum_id TEXT NOT NULL,
       type TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
     )
   `);
 }
 
-// Get RERUM ID for a PostgreSQL ID
-async function getRerumId(pgId: string): Promise<string | null> {
-  const result = await pool.query('SELECT rerum_id FROM id_mapping WHERE id = $1', [pgId]);
-  return result.rows[0]?.rerum_id || null;
+// Get RERUM ID for a local ID
+function getRerumId(localId: string): string | null {
+  const row = sqlite.prepare('SELECT rerum_id FROM id_mapping WHERE id = ?').get(localId) as
+    | { rerum_id: string }
+    | undefined;
+  return row?.rerum_id || null;
 }
 
 // Save ID mapping
-async function saveIdMapping(pgId: string, rerumId: string, type: string) {
+function saveIdMapping(localId: string, rerumId: string, type: string) {
   if (DRY_RUN) {
-    log('info', `[DRY RUN] Would save ID mapping: ${pgId} -> ${rerumId} (${type})`);
+    log('info', `[DRY RUN] Would save ID mapping: ${localId} -> ${rerumId} (${type})`);
     return;
   }
 
-  await pool.query(
-    `INSERT INTO id_mapping (id, rerum_id, type) VALUES ($1, $2, $3)
-     ON CONFLICT (id) DO UPDATE SET rerum_id = $2`,
-    [pgId, rerumId, type],
-  );
+  sqlite.prepare(`
+    INSERT INTO id_mapping (id, rerum_id, type) VALUES (?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET rerum_id = excluded.rerum_id
+  `).run(localId, rerumId, type);
 }
 
 // Get last sync time
-async function getLastSyncTime(): Promise<Date> {
-  const result = await pool.query('SELECT last_sync_at FROM reverse_sync_state WHERE id = $1', [
-    'main',
-  ]);
+function getLastSyncTime(): Date {
+  const row = sqlite.prepare('SELECT last_sync_at FROM reverse_sync_state WHERE id = ?').get('main') as
+    | { last_sync_at: number }
+    | undefined;
   // Default to epoch if no previous sync
-  return result.rows[0]?.last_sync_at || new Date(0);
+  return row ? new Date(row.last_sync_at * 1000) : new Date(0);
 }
 
 // Update last sync time
-async function updateLastSyncTime(time: Date) {
+function updateLastSyncTime(time: Date) {
   if (DRY_RUN) {
     log('info', `[DRY RUN] Would update last sync time to: ${time.toISOString()}`);
     return;
   }
 
-  await pool.query(
-    `INSERT INTO reverse_sync_state (id, last_sync_at, updated_at) VALUES ($1, $2, NOW())
-     ON CONFLICT (id) DO UPDATE SET last_sync_at = $2, updated_at = NOW()`,
-    ['main', time],
-  );
+  const epoch = Math.floor(time.getTime() / 1000);
+  const now = Math.floor(Date.now() / 1000);
+
+  sqlite.prepare(`
+    INSERT INTO reverse_sync_state (id, last_sync_at, updated_at) VALUES (?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET last_sync_at = excluded.last_sync_at, updated_at = excluded.updated_at
+  `).run('main', epoch, now);
 }
 
-// Sync notes from PostgreSQL to RERUM
+// Sync notes from D1 to RERUM
 async function syncNotesToRerum() {
   log('info', 'Syncing notes to RERUM...');
 
-  const lastSync = await getLastSyncTime();
-  const syncStartTime = new Date();
+  const lastSync = getLastSyncTime();
 
   // Find notes updated since last sync
   const notes = await db.query.note.findMany({
@@ -178,7 +161,7 @@ async function syncNotesToRerum() {
 
   for (const note of notes) {
     try {
-      const existingRerumId = await getRerumId(note.id);
+      const existingRerumId = getRerumId(note.id);
 
       // Transform to RERUM format
       const rerumData: Record<string, unknown> = {
@@ -207,7 +190,6 @@ async function syncNotesToRerum() {
       };
 
       if (DRY_RUN) {
-        // In dry-run mode, just count what would happen
         if (existingRerumId) {
           log('info', `[DRY RUN] Would update note in RERUM: ${note.id} -> ${existingRerumId}`);
           updated++;
@@ -217,14 +199,12 @@ async function syncNotesToRerum() {
         }
       } else {
         if (existingRerumId) {
-          // Update existing
           rerumData['@id'] = existingRerumId;
           await rerumOverwrite(rerumData);
           updated++;
         } else {
-          // Create new
           const result = await rerumCreate(rerumData);
-          await saveIdMapping(note.id, result['@id'], 'note');
+          saveIdMapping(note.id, result['@id'], 'note');
           created++;
         }
       }
@@ -238,11 +218,11 @@ async function syncNotesToRerum() {
   return { created, updated, errors };
 }
 
-// Sync comments from PostgreSQL to RERUM
+// Sync comments from D1 to RERUM
 async function syncCommentsToRerum() {
   log('info', 'Syncing comments to RERUM...');
 
-  const lastSync = await getLastSyncTime();
+  const lastSync = getLastSyncTime();
 
   const comments = await db.query.comment.findMany({
     where: gt(schema.comment.updatedAt, lastSync),
@@ -256,12 +236,11 @@ async function syncCommentsToRerum() {
 
   for (const comment of comments) {
     try {
-      const existingRerumId = await getRerumId(comment.id);
+      const existingRerumId = getRerumId(comment.id);
 
       // Get RERUM ID for the note
-      let noteRerumId = await getRerumId(comment.noteId);
+      let noteRerumId = getRerumId(comment.noteId);
       if (!noteRerumId) {
-        // Note might have been created in RERUM originally
         noteRerumId = comment.noteId;
       }
 
@@ -280,7 +259,6 @@ async function syncCommentsToRerum() {
       };
 
       if (DRY_RUN) {
-        // In dry-run mode, just count what would happen
         if (existingRerumId) {
           log(
             'info',
@@ -298,7 +276,7 @@ async function syncCommentsToRerum() {
           updated++;
         } else {
           const result = await rerumCreate(rerumData);
-          await saveIdMapping(comment.id, result['@id'], 'comment');
+          saveIdMapping(comment.id, result['@id'], 'comment');
           created++;
         }
       }
@@ -314,16 +292,16 @@ async function syncCommentsToRerum() {
 
 // Main sync function
 async function runSync() {
-  log('info', 'Starting reverse sync (PostgreSQL -> RERUM)...');
+  log('info', 'Starting reverse sync (D1 -> RERUM)...');
 
   try {
-    await ensureTables();
+    ensureTables();
 
     const syncStartTime = new Date();
     const notesResult = await syncNotesToRerum();
     const commentsResult = await syncCommentsToRerum();
 
-    await updateLastSyncTime(syncStartTime);
+    updateLastSyncTime(syncStartTime);
 
     log('info', 'Reverse sync completed', {
       notes: notesResult,
@@ -341,10 +319,8 @@ async function runSync() {
 async function runWatchMode() {
   log('info', `Starting watch mode (sync every ${SYNC_INTERVAL_MS / 1000}s)...`);
 
-  // Initial sync
   await runSync();
 
-  // Continuous sync
   setInterval(async () => {
     try {
       await runSync();
@@ -360,18 +336,12 @@ async function main() {
   const watchMode = args.includes('--watch');
   const yoloMode = args.includes('--yolo');
 
-  // --yolo disables dry-run mode
   if (yoloMode) {
     DRY_RUN = false;
   }
 
   if (!RERUM_API_URL) {
     console.error('Error: RERUM_API_URL environment variable is required');
-    process.exit(1);
-  }
-
-  if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required');
     process.exit(1);
   }
 
@@ -389,12 +359,12 @@ async function main() {
       await runWatchMode();
     } else {
       await runSync();
-      await pool.end();
+      sqlite.close();
       process.exit(0);
     }
   } catch (error) {
     log('error', 'Fatal error', error);
-    await pool.end();
+    sqlite.close();
     process.exit(1);
   }
 }

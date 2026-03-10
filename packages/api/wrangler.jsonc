@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "5100661403ca1e484379f9064b8f6f6f",
   "name": "lrda-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-04-01",
@@ -9,42 +10,21 @@
     {
       "binding": "DB",
       "database_name": "lrda-db",
-      "database_id": "TODO",
+      "database_id": "06e54b58-79a9-4ae9-837a-38514dd27568",
       "migrations_dir": "drizzle"
     }
   ],
 
   "vars": {
-    "ENVIRONMENT": "staging",
-    "BETTER_AUTH_URL": "http://localhost:8787",
-    "CORS_ORIGINS": "http://localhost:3000",
-    "WEB_URL": "http://localhost:3000",
+    "ENVIRONMENT": "production",
+    "BETTER_AUTH_URL": "https://lrda-api.jacobmaynard.workers.dev",
+    "CORS_ORIGINS": "https://lrda-web.jacobmaynard.workers.dev,http://localhost:3000",
+    "WEB_URL": "https://lrda-web.jacobmaynard.workers.dev",
     "EMAIL_FROM": "noreply@wheresreligion.org"
-  },
+  }
 
   // Secrets (set via `wrangler secret put`):
   // BETTER_AUTH_SECRET
   // RESEND_API_KEY
   // GOOGLE_MAPS_API_KEY
-
-  "env": {
-    "production": {
-      "name": "lrda-api-prod",
-      "vars": {
-        "ENVIRONMENT": "production",
-        "BETTER_AUTH_URL": "https://api.wheresreligion.org",
-        "CORS_ORIGINS": "https://wheresreligion.org,https://www.wheresreligion.org",
-        "WEB_URL": "https://wheresreligion.org",
-        "EMAIL_FROM": "noreply@wheresreligion.org"
-      },
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "lrda-db-prod",
-          "database_id": "TODO",
-          "migrations_dir": "drizzle"
-        }
-      ]
-    }
-  }
 }

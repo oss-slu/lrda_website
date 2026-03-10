@@ -43,13 +43,34 @@ export function usePersonalNotes(userId: string | null, limit = 150, skip = 0) {
 }
 
 /**
+ * Fetch all pages of a paginated endpoint until exhausted.
+ */
+async function fetchAllPages(
+  fetcher: (limit: number, offset: number) => Promise<Note[]>,
+  pageSize = 200,
+): Promise<Note[]> {
+  const all: Note[] = [];
+  let offset = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const page = await fetcher(pageSize, offset);
+    all.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
+/**
  * Hook for fetching global notes for Map page (published, non-archived, reversed)
  */
 export function useGlobalMapNotes() {
   return useQuery({
     queryKey: notesKeys.globalMap(),
     queryFn: async (): Promise<Note[]> => {
-      const data = await notesService.fetchPublished();
+      const data = await fetchAllPages(
+        (limit, offset) => notesService.fetchPublished(limit, offset),
+      );
       return data.reverse().filter(note => note.published === true);
     },
   });
@@ -63,7 +84,9 @@ export function usePersonalMapNotes(userId: string | null) {
     queryKey: notesKeys.personalMap(userId ?? ''),
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await notesService.fetchUserNotes(userId);
+      const data = await fetchAllPages(
+        (limit, offset) => notesService.fetchUserNotes(userId, limit, offset),
+      );
       return data.reverse();
     },
     enabled: !!userId,

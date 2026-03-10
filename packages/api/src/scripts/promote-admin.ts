@@ -8,12 +8,9 @@
  *   pnpm --filter api promote-admin <email>
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
-
-const DATABASE_URL = process.env.DATABASE_URL || '';
+import { openLocalDb } from './local-db';
 
 async function main() {
   const email = process.argv[2];
@@ -23,13 +20,7 @@ async function main() {
     process.exit(1);
   }
 
-  if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required');
-    process.exit(1);
-  }
-
-  const pool = new Pool({ connectionString: DATABASE_URL });
-  const db = drizzle(pool, { schema });
+  const { db, sqlite } = openLocalDb();
 
   try {
     const existing = await db.query.user.findFirst({
@@ -56,7 +47,7 @@ async function main() {
     console.error('Failed:', error);
     process.exit(1);
   } finally {
-    await pool.end();
+    sqlite.close();
   }
 }
 

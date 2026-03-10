@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
 import { useAuthStore } from '../lib/stores/authStore';
@@ -127,9 +127,12 @@ const Page = () => {
   const searchBarRef = useRef<HTMLDivElement | null>(null);
   const notesListRef = useRef<HTMLDivElement | null>(null);
 
+  // Defer panel updates so they don't block map interactions (pan/zoom)
+  const deferredFilteredNotes = useDeferredValue(filteredNotes);
+
   // Infinite scroll for notes panel
   const infinite = useInfiniteNotes<Note>({
-    items: filteredNotes,
+    items: deferredFilteredNotes,
     pageSize: NOTES_PAGE_SIZE,
   });
 
