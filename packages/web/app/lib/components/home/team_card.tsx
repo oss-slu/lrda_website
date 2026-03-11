@@ -1,5 +1,3 @@
-'use client';
-import Image from 'next/image';
 import { Icons } from '@/app/lib/components/icons';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 
@@ -37,11 +35,9 @@ export default function TeamCard({ name, role, src, socials, delay = 0 }: TeamCa
 
           {/* Image container */}
           <div className='relative h-full w-full overflow-hidden rounded-full transition-all duration-300'>
-            <Image
+            <img
               src={src}
               alt={name}
-              width={96}
-              height={96}
               className='group-hover:saturate-110 h-full w-full object-cover transition-all duration-500 group-hover:scale-110'
             />
           </div>

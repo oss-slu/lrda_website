@@ -1,4 +1,3 @@
-'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { GoogleMap, MarkerF, Autocomplete } from '@react-google-maps/api';
@@ -69,7 +68,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         return;
       }
       if (latitude && longitude && latitude !== 0 && longitude !== 0) {
-        const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
+        const MAPS_API_KEY = import.meta.env.NEXT_PUBLIC_MAP_KEY;
         if (MAPS_API_KEY) {
           try {
             const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);

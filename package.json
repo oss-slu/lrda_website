@@ -10,6 +10,7 @@
     "api:db:migrate": "pnpm --filter @lrda/api db:migrate",
     "api:db:studio": "pnpm --filter @lrda/api db:studio",
     "api:db:seed": "pnpm --filter @lrda/api db:seed",
+    "api:db:seed:remote": "pnpm --filter @lrda/api db:seed:remote",
     "clear-ports": "lsof -ti:3000 -ti:8787 2>/dev/null | xargs kill -9 2>/dev/null || true",
     "deploy": "pnpm --filter @lrda/api db:migrate:remote && pnpm --filter @lrda/api run deploy && pnpm --filter web run deploy",
     "deploy:api": "pnpm --filter @lrda/api db:migrate:remote && pnpm --filter @lrda/api run deploy",

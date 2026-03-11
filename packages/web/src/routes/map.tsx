@@ -1,32 +1,35 @@
-'use client';
-
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
-import { useAuthStore } from '../lib/stores/authStore';
-import { useMapStore } from '../lib/stores/mapStore';
+import { useAuthStore } from '@/app/lib/stores/authStore';
+import { useMapStore } from '@/app/lib/stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
-import ClickableNote from '../lib/components/click_note_card';
-import { MapControls, MapNotesPanel } from '../lib/components/map';
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from '../lib/hooks/useInfiniteNotes';
-import { useGoogleMaps } from '../lib/utils/GoogleMapsContext';
+import ClickableNote from '@/app/lib/components/click_note_card';
+import { MapControls, MapNotesPanel } from '@/app/lib/components/map';
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from '@/app/lib/hooks/useInfiniteNotes';
+import { useGoogleMaps } from '@/app/lib/utils/GoogleMapsContext';
 import { Dialog } from '@/components/ui/dialog';
-import { useGlobalMapNotes, usePersonalMapNotes } from '../lib/hooks/queries/useNotes';
-import { useMapLocation } from '../lib/hooks/useMapLocation';
-import { useMapMarkers } from '../lib/hooks/useMapMarkers';
-import { useMapIntro } from '../lib/hooks/useMapIntro';
+import { useGlobalMapNotes, usePersonalMapNotes } from '@/app/lib/hooks/queries/useNotes';
+import { useMapLocation } from '@/app/lib/hooks/useMapLocation';
+import { useMapMarkers } from '@/app/lib/hooks/useMapMarkers';
+import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
 import {
   filterNotesByMapBounds,
   filterNotesByQuery,
   filterNotesByTitleAndTags,
-} from '../lib/utils/mapUtils';
-import { MAP_WIDTH_WITH_PANEL } from '../lib/utils/mapConstants';
+} from '@/app/lib/utils/mapUtils';
+import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
+
+export const Route = createFileRoute('/map')({
+  component: MapPage,
+})
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
 }
 
-const Page = () => {
+function MapPage() {
   // Map store for UI state
   const {
     mapCenter,
@@ -318,7 +321,7 @@ const Page = () => {
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
-              mapId: process.env.NEXT_PUBLIC_MAP_ID,
+              mapId: import.meta.env.NEXT_PUBLIC_MAP_ID,
             }}
           />
         )}
@@ -355,6 +358,4 @@ const Page = () => {
       </Dialog>
     </div>
   );
-};
-
-export default Page;
+}

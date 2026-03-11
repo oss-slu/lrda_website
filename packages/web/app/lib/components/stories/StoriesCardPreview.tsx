@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin } from 'lucide-react';
 import { fetchCreatorName } from '../../services';
@@ -114,7 +113,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
       return;
     }
     if (hasValidCoordinates) {
-      const apiKey = process.env.NEXT_PUBLIC_MAP_KEY;
+      const apiKey = import.meta.env.NEXT_PUBLIC_MAP_KEY;
       if (apiKey) {
         getCachedLocation(note.latitude!, note.longitude!, apiKey)
           .then(loc => setLocation(loc))
@@ -136,13 +135,10 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
               <div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600' />
             </div>
           )}
-          <Image
+          <img
             src={coverImage}
             alt='Note Cover'
-            fill
-            sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
-            className={`object-cover ${isImageLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
-            priority={false}
+            className={`h-full w-full object-cover ${isImageLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
             onLoad={() => setIsImageLoading(false)}
             onError={() => setIsImageLoading(false)}
           />

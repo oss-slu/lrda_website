@@ -1,30 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "account_id": "5100661403ca1e484379f9064b8f6f6f",
-  "main": ".open-next/worker.js",
   "name": "lrda-web",
+  "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
-  "minify": true,
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-
-  // Next.js image optimization via Cloudflare Images
-  "images": {
-    "binding": "IMAGES"
-  },
-
-  // Self-reference binding for ISR/revalidation callbacks
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "lrda-web"
-    }
-  ],
-
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://lrda-api.wheresreligion.workers.dev"
+    "NEXT_PUBLIC_API_URL": "https://lrda-api.lrda-adam-park.workers.dev"
   }
 }

@@ -1,6 +1,5 @@
-'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 
 type RegisterButtonProps = {
@@ -22,7 +21,7 @@ const RegisterButton: React.FC<RegisterButtonProps> = () => {
 
   return (
     <div>
-      <Link href='/signup' passHref>
+      <Link to='/signup'>
         <Button
           onClick={handleClick}
           className={` ${

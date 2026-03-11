@@ -1,9 +1,8 @@
-import { useRouter } from 'next/router';
+import { useSearch } from '@tanstack/react-router';
 import { saveAs } from 'file-saver';
 
 const DownloadNote = () => {
-  const router = useRouter();
-  const { title, content, tags, time, longitude, latitude } = router.query;
+  const { title, content, tags, time, longitude, latitude } = useSearch({ strict: false }) as Record<string, string | string[] | undefined>;
 
   const handleDownload = async (format: string) => {
     const noteContent = {
@@ -84,7 +83,7 @@ const DownloadNote = () => {
       </div>
       <button
         className='mt-4 rounded bg-gray-300 px-4 py-2 hover:bg-gray-400'
-        onClick={() => router.back()}
+        onClick={() => window.history.back()}
       >
         Back to Editor
       </button>

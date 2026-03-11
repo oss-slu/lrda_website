@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/carousel';
 
 import type { AnyMedia } from '@/app/types';
-import dynamic from 'next/dynamic';
+import { lazy, Suspense } from 'react';
 
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
+const ReactPlayer = lazy(() => import('react-player'));
 
 export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) {
   return (
@@ -28,15 +28,17 @@ export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) 
 
             {/* Render Video */}
             {media.type === 'video' && (
-              <ReactPlayer
-                {...({
-                  url: media.uri,
-                  controls: true,
-                  width: '100%',
-                  height: '100%',
-                  className: 'self-center',
-                } as any)}
-              />
+              <Suspense fallback={null}>
+                <ReactPlayer
+                  {...({
+                    url: media.uri,
+                    controls: true,
+                    width: '100%',
+                    height: '100%',
+                    className: 'self-center',
+                  } as any)}
+                />
+              </Suspense>
             )}
 
             {/* Render Audio */}

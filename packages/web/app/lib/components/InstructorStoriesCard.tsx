@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { Note } from '@/app/types';
 import { fetchCreatorName, notesService } from '../services';
@@ -81,7 +79,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         setLocation(note.locationName);
         return;
       }
-      const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
+      const MAPS_API_KEY = import.meta.env.NEXT_PUBLIC_MAP_KEY;
       if (note.latitude != null && note.longitude != null && MAPS_API_KEY) {
         const loc = await getCachedLocation(note.latitude, note.longitude, MAPS_API_KEY);
         setLocation(loc || 'Unknown Location');

@@ -1,7 +1,5 @@
-'use client';
-
 import { useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from '@tanstack/react-router';
 import * as ReactDOM from 'react-dom/client';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -54,9 +52,9 @@ export function useMapMarkers({
   const scrollToNoteTileRef = useRef(scrollToNoteTile);
   scrollToNoteTileRef.current = scrollToNoteTile;
 
-  const router = useRouter();
-  const routerRef = useRef(router);
-  routerRef.current = router;
+  const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
@@ -132,7 +130,7 @@ export function useMapMarkers({
           currentPopupRef.current = null;
           currentPopupNoteIdRef.current = null;
         }
-        routerRef.current.push(`/notes/${note.id}`);
+        navigateRef.current({ to: `/notes/${note.id}` });
       });
 
       // Hover -> show popup

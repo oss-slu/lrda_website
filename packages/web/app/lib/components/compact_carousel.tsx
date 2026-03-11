@@ -8,10 +8,9 @@ import {
 } from '@/components/ui/carousel';
 import { type CarouselApi } from '@/components/ui/carousel';
 import type { NoteMedia } from '@/app/types';
-import Image from 'next/image';
-import dynamic from 'next/dynamic';
+import { lazy, Suspense } from 'react';
 
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
+const ReactPlayer = lazy(() => import('react-player'));
 
 export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[] }) {
   const [api, setApi] = useState<CarouselApi>();
@@ -51,25 +50,24 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[
         {mediaArray.map((media, index) => (
           <CarouselItem key={index} className='flex h-full items-center justify-center self-center'>
             {media.type === 'image' && (
-              <Image
+              <img
                 src={media.uri}
-                width={256}
-                height={180}
                 className='h-[180px] w-[256px] rounded-t-sm object-cover'
                 alt='Media content'
-                quality={50}
               />
             )}
             {media.type === 'video' && (
-              <ReactPlayer
-                {...({
-                  url: media.uri,
-                  controls: true,
-                  width: '256px',
-                  height: '180px',
-                  className: 'self-center object-cover bg-black',
-                } as any)}
-              />
+              <Suspense fallback={null}>
+                <ReactPlayer
+                  {...({
+                    url: media.uri,
+                    controls: true,
+                    width: '256px',
+                    height: '180px',
+                    className: 'self-center object-cover bg-black',
+                  } as any)}
+                />
+              </Suspense>
             )}
           </CarouselItem>
         ))}

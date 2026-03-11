@@ -1,6 +1,6 @@
-'use client';
+import { createFileRoute } from '@tanstack/react-router'
 import React, { useState, useMemo } from 'react';
-import EnhancedClickableNote from '../lib/components/stories_card';
+import EnhancedClickableNote from '@/app/lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,8 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useInfinitePublishedNotes } from '../lib/hooks/queries/useNotes';
-import { useCreatorName } from '../lib/hooks/queries/useUsers';
+import { useInfinitePublishedNotes } from '@/app/lib/hooks/queries/useNotes';
+import { useCreatorName } from '@/app/lib/hooks/queries/useUsers';
+
+export const Route = createFileRoute('/stories')({
+  component: StoriesPage,
+})
 
 // Component to display user name with caching via TanStack Query
 const UserOption = ({ uid }: { uid: string }) => {
@@ -19,7 +23,7 @@ const UserOption = ({ uid }: { uid: string }) => {
   return <SelectItem value={uid}>{name}</SelectItem>;
 };
 
-const StoriesPage = () => {
+function StoriesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
@@ -161,6 +165,4 @@ const StoriesPage = () => {
       )}
     </div>
   );
-};
-
-export default StoriesPage;
+}

@@ -1,10 +1,14 @@
-'use client';
-import Link from 'next/link';
+import { createFileRoute } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { CollapsibleSection } from '@/app/lib/components/CollapsibleSection';
 
-export default function WheresReligionPage() {
+export const Route = createFileRoute('/wheres-religion')({
+  component: WheresReligionPage,
+})
+
+function WheresReligionPage() {
   const { ref: heroRef, isVisible: heroVisible } = useReveal<HTMLDivElement>();
 
   return (
@@ -31,7 +35,7 @@ export default function WheresReligionPage() {
           <p className='mb-8 text-xl font-light text-white/90 sm:text-2xl'>
             Your guide to understanding the platform
           </p>
-          <Link href='/#aboutSection'>
+          <Link to='/' hash='aboutSection'>
             <Button
               variant='outline'
               size='lg'
@@ -103,7 +107,7 @@ export default function WheresReligionPage() {
                 files and fractured across multiple digital projects. When researching and teaching
                 around religion in St. Louis, Rachel McBride Lindsey and Pauline Chen Lee, both
                 faculty at Saint Louis University, realized that there could be more generative uses
-                of digital research methods to increase knowledge–both public and academic–from the
+                of digital research methods to increase knowledge--both public and academic--from the
                 materials they were encountering and collecting.
               </p>
               <p className='leading-relaxed'>
@@ -111,7 +115,7 @@ export default function WheresReligionPage() {
                 additional functionalities in the coming months and years. One example is a suite of
                 tools for educators to access and engage their students' Notes before publishing to
                 the Library. Knowledge production is a conversation and we are eager to hear from
-                users–researchers and learners alike–about what works best, what needs to be
+                users--researchers and learners alike--about what works best, what needs to be
                 improved, and what your ideas are for improving the experience and/or functionality
                 of these resources.
               </p>
@@ -204,7 +208,7 @@ export default function WheresReligionPage() {
                 Spoiler: this is a trick question! Sort of.
               </p>
               <p className='leading-relaxed'>
-                Religion can be–and is–defined in many ways, by different people, at different
+                Religion can be--and is--defined in many ways, by different people, at different
                 points in time, in different places, and to different effects. For example, in the
                 United States, we might define "religion" as a theological category (attending to
                 knowledge about, from, and with divine beings), a cultural category (attending to
@@ -215,8 +219,8 @@ export default function WheresReligionPage() {
               <p className='leading-relaxed'>
                 Where's Religion? is built to provoke this question of definition and also to shift
                 attention from what to where. Thinking deliberately about where also prompts us to
-                think about why–why this expression in this place? How can circumstances of
-                migration, sexuality, economics, politics, race, gender–etc., etc., etc.--help us
+                think about why--why this expression in this place? How can circumstances of
+                migration, sexuality, economics, politics, race, gender--etc., etc., etc.--help us
                 better understand religion?
               </p>
             </div>
@@ -319,7 +323,7 @@ export default function WheresReligionPage() {
               </p>
               <p className='leading-relaxed'>
                 Where's Religion? is custom built using the most rigorous standard for open web
-                design and shared data – Linked Open Data. This means that our app is available on
+                design and shared data -- Linked Open Data. This means that our app is available on
                 the Web; it is machine readable structured data; it is non-proprietary; it is
                 published using open standards from the World Wide Web Consortium; and it all links
                 to other Linked Open Data.
@@ -394,7 +398,7 @@ export default function WheresReligionPage() {
 
         {/* Back to top button */}
         <div className='mt-12 text-center'>
-          <Link href='/#aboutSection'>
+          <Link to='/' hash='aboutSection'>
             <Button
               variant='outline'
               size='lg'

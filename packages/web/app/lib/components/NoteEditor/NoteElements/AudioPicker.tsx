@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { lazy, Suspense } from 'react';
 
-const AudioPlayer = dynamic(() => import('react-h5-audio-player'), { ssr: false });
+const AudioPlayer = lazy(() => import('react-h5-audio-player'));
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { toast } from 'sonner';
 import { FileUp } from 'lucide-react';
@@ -174,15 +174,17 @@ const AudioPickerInner: React.FC<AudioPickerProps> = ({ audioArray, setAudio, ed
       </div>
 
       {/* Audio player for playback */}
-      <AudioPlayer
-        ref={audioPlayerRef}
-        data-testid='audio-player'
-        src={curRec}
-        className='flex w-[90] flex-row rounded-md p-3'
-        onClickNext={handleIncrementRecs}
-        onClickPrevious={handleDecrementRecs}
-        key={currentUUID}
-      />
+      <Suspense fallback={null}>
+        <AudioPlayer
+          ref={audioPlayerRef}
+          data-testid='audio-player'
+          src={curRec}
+          className='flex w-[90] flex-row rounded-md p-3'
+          onClickNext={handleIncrementRecs}
+          onClickPrevious={handleDecrementRecs}
+          key={currentUUID}
+        />
+      </Suspense>
     </div>
   );
 };

@@ -1,7 +1,5 @@
-'use client';
 import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,7 +31,8 @@ export default function Navbar() {
   const name = user?.name ?? null;
 
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
 
   const handleLogout = async () => {
     try {
@@ -72,7 +71,7 @@ export default function Navbar() {
   const renderMobileLink = (item: { href: string; label: string }) => (
     <Link
       key={item.href}
-      href={item.href}
+      to={item.href}
       onClick={() => setMobileOpen(false)}
       className={cn(
         'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -104,9 +103,8 @@ export default function Navbar() {
           (!item.authRequired || name) && (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               className={linkClass(item.href)}
-              aria-current={isActive(item.href) ? 'page' : undefined}
             >
               {item.label}
             </Link>
@@ -147,10 +145,10 @@ export default function Navbar() {
         ) : (
           <div className='flex items-center gap-2'>
             <Button variant='default' asChild className='whitespace-nowrap'>
-              <Link href='/login'>Login</Link>
+              <Link to='/login'>Login</Link>
             </Button>
             <Button variant='outline' asChild className='whitespace-nowrap'>
-              <Link href='/signup'>Sign Up</Link>
+              <Link to='/signup'>Sign Up</Link>
             </Button>
           </div>
         )}
@@ -189,10 +187,10 @@ export default function Navbar() {
             ) : (
               <div className='flex flex-col gap-2 px-3'>
                 <Button variant='default' asChild>
-                  <Link href='/login' onClick={() => setMobileOpen(false)}>Login</Link>
+                  <Link to='/login' onClick={() => setMobileOpen(false)}>Login</Link>
                 </Button>
                 <Button variant='outline' asChild>
-                  <Link href='/signup' onClick={() => setMobileOpen(false)}>Sign Up</Link>
+                  <Link to='/signup' onClick={() => setMobileOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
             )}

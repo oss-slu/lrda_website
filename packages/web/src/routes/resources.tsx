@@ -1,6 +1,9 @@
-'use client';
-import React from 'react';
-import { formatCitation } from '../lib/utils/citation_formatter';
+import { createFileRoute } from '@tanstack/react-router'
+import { formatCitation } from '@/app/lib/utils/citation_formatter';
+
+export const Route = createFileRoute('/resources')({
+  component: ResourcesPage,
+})
 
 type OnlineResource = {
   title: string;
@@ -43,7 +46,7 @@ const FurtherReading = [
   'Weller, Susan and A. Kimball. Romney. Systematic Data Collection.',
 ];
 
-const ResourcesPage: React.FC = () => {
+function ResourcesPage() {
   return (
     <div className='mx-auto max-w-4xl px-4 py-16'>
       <h1 className='mb-10 text-center text-4xl font-bold'>Resources</h1>
@@ -80,6 +83,4 @@ const ResourcesPage: React.FC = () => {
       </section>
     </div>
   );
-};
-
-export default ResourcesPage;
+}

@@ -1,5 +1,3 @@
-'use client';
-import Image from 'next/image';
 import { Icons } from '@/app/lib/components/icons';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 
@@ -35,11 +33,10 @@ export default function ContributorCard({
       <div className='relative h-64 overflow-hidden rounded-3xl bg-slate-900'>
         {/* Background image */}
         <div className='absolute inset-0'>
-          <Image
+          <img
             src={src}
             alt={name}
-            fill
-            className='object-cover transition-transform duration-700 group-hover:scale-[1.02]'
+            className='h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]'
             style={{ objectPosition: `center ${offset}%` }}
           />
 

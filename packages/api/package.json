@@ -13,6 +13,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply lrda-db --remote",
     "db:studio": "drizzle-kit studio",
     "db:seed": "bun run src/scripts/seed.ts --yolo",
+    "db:seed:remote": "bun run src/scripts/seed.ts --yolo --remote",
     "types": "wrangler types",
     "sync:from-rerum": "bun run src/scripts/sync-from-rerum.ts",
     "sync:from-rerum:yolo": "bun run src/scripts/sync-from-rerum.ts --yolo",

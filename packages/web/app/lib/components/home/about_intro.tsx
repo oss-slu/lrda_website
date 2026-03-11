@@ -1,6 +1,5 @@
-'use client';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 
 export default function AboutIntro() {
   const { ref, isVisible } = useReveal<HTMLDivElement>();
@@ -136,7 +135,7 @@ export default function AboutIntro() {
               </div>
               <div className='flex flex-col flex-wrap items-center justify-center gap-3 sm:flex-row'>
                 <Link
-                  href='/wheres-religion'
+                  to='/wheres-religion'
                   className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50'
                 >
                   <span className='absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
@@ -157,12 +156,12 @@ export default function AboutIntro() {
                     </svg>
                   </span>
                 </Link>
-                <Link
+                <a
                   href='/wheres-religion#faqs'
                   className='inline-flex transform items-center justify-center rounded-xl border-2 border-blue-300 bg-white px-6 py-3 font-semibold text-blue-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2'
                 >
                   FAQs
-                </Link>
+                </a>
               </div>
             </div>
           </div>

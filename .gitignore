@@ -43,3 +43,4 @@ docs/issues/*
 **/.wrangler**
 .open-next
 rerum-notes-dump.json
+d1-seed-dump.sql

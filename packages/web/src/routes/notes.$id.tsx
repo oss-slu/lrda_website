@@ -1,7 +1,5 @@
-'use client';
-
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { Note, Tag } from '@/app/types';
 import { notesService } from '@/app/lib/services/notes.service';
 import { fetchCreatorName } from '@/app/lib/services';
@@ -22,6 +20,10 @@ import {
   UserCircle,
   X,
 } from 'lucide-react';
+
+export const Route = createFileRoute('/notes/$id')({
+  component: NoteDetailPage,
+})
 
 function formatDate(date: string | number | Date) {
   const parsed = new Date(date);
@@ -49,10 +51,8 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   return tags.map(tag => (typeof tag === 'string' ? { label: tag, origin: 'user' as const } : tag));
 };
 
-export default function NoteDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const noteId = typeof params?.id === 'string' ? params.id : '';
+function NoteDetailPage() {
+  const { id: noteId } = Route.useParams();
 
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ export default function NoteDetailPage() {
     return (
       <div className='flex h-screen flex-col items-center justify-center gap-4'>
         <p className='text-lg font-semibold text-destructive'>{error ?? 'Note not available'}</p>
-        <Button onClick={() => router.back()}>
+        <Button onClick={() => window.history.back()}>
           <ArrowLeft className='mr-2 h-4 w-4' />
           Back to map
         </Button>
@@ -115,7 +115,7 @@ export default function NoteDetailPage() {
     <div className='flex h-screen flex-col bg-background'>
       {/* Header */}
       <div className='border-b px-6 py-4'>
-        <Button variant='ghost' size='sm' onClick={() => router.back()} className='mb-4 -ml-2'>
+        <Button variant='ghost' size='sm' onClick={() => window.history.back()} className='mb-4 -ml-2'>
           <ArrowLeft className='mr-2 h-4 w-4' />
           Back to map
         </Button>

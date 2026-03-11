@@ -118,7 +118,7 @@ export const StoryMapPopover: React.FC<StoryMapPopoverProps> = ({
               mapTypeControl: false,
               fullscreenControl: false,
               zoomControl: true,
-              mapId: process.env.NEXT_PUBLIC_MAP_ID,
+              mapId: import.meta.env.NEXT_PUBLIC_MAP_ID,
               mapTypeId: 'satellite',
             }}
             onLoad={(map: any) => setMapInstance(map)}

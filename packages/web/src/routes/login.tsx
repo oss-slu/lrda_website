@@ -1,59 +1,63 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/app/lib/stores/authStore';
-import { useShallow } from 'zustand/react/shallow';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { useAuthStore } from '@/app/lib/stores/authStore'
+import { useShallow } from 'zustand/react/shallow'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/components/ui/card'
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field';
+} from '@/components/ui/field'
+import { Link } from '@tanstack/react-router'
 
-export default function LoginPage() {
+export const Route = createFileRoute('/login')({
+  component: LoginPage,
+})
+
+function LoginPage() {
+  const navigate = useNavigate()
   const { login } = useAuthStore(
     useShallow(state => ({
       login: state.login,
     }))
-  );
+  )
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [snackState, setSnackState] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [snackState, setSnackState] = useState(false)
 
   useEffect(() => {
-    if (!snackState) return;
-    const timer = setTimeout(() => setSnackState(false), 3000);
-    return () => clearTimeout(timer);
-  }, [snackState]);
+    if (!snackState) return
+    const timer = setTimeout(() => setSnackState(false), 3000)
+    return () => clearTimeout(timer)
+  }, [snackState])
 
   const handleLogin = async () => {
-    if (!email || !password) return;
+    if (!email || !password) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const status = await login(email, password);
+      const status = await login(email, password)
       if (status === 'success') {
-        window.location.href = '/map';
+        navigate({ to: '/map' })
       }
     } catch (err) {
-      console.error(err);
-      setSnackState(true);
+      console.error(err)
+      setSnackState(true)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 p-6">
@@ -68,8 +72,8 @@ export default function LoginPage() {
         <CardContent>
           <form
             onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
+              e.preventDefault()
+              handleLogin()
             }}
           >
             <FieldGroup>
@@ -88,12 +92,12 @@ export default function LoginPage() {
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="/forgot-password"
+                  <Link
+                    to="/forgot-password"
                     className="ml-auto text-sm text-blue-600 underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
@@ -115,9 +119,9 @@ export default function LoginPage() {
 
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{' '}
-                  <a href="/signup" className="text-blue-600 underline-offset-4 hover:underline">
+                  <Link to="/signup" className="text-blue-600 underline-offset-4 hover:underline">
                     Sign up
-                  </a>
+                  </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -139,5 +143,5 @@ export default function LoginPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

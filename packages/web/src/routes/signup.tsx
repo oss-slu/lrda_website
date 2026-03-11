@@ -1,14 +1,13 @@
-'use client';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { useAuthStore } from '../lib/stores/authStore';
-import { useShallow } from 'zustand/react/shallow';
-import { fetchInstructors } from '../lib/services';
-import StrengthIndicator from '@/components/ui/strength-indicator';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { useAuthStore } from '@/app/lib/stores/authStore'
+import { useShallow } from 'zustand/react/shallow'
+import { fetchInstructors } from '@/app/lib/services'
+import StrengthIndicator from '@/components/ui/strength-indicator'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -16,35 +15,40 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 
 interface SignupFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: 'none' | 'instructor' | 'student';
-  instructorId?: string;
-  instructorDescription?: string;
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  confirmPassword: string
+  role: 'none' | 'instructor' | 'student'
+  instructorId?: string
+  instructorDescription?: string
 }
 
-const SignupPage = () => {
-  const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([]);
-  const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const Route = createFileRoute('/signup')({
+  component: SignupPage,
+})
+
+function SignupPage() {
+  const navigate = useNavigate()
+  const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([])
+  const [passwordRequirements, setPasswordRequirements] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const { signup } = useAuthStore(
     useShallow(state => ({ signup: state.signup })),
-  );
+  )
 
   const form = useForm<SignupFormData>({
     defaultValues: {
@@ -57,61 +61,61 @@ const SignupPage = () => {
       instructorId: '',
       instructorDescription: '',
     },
-  });
+  })
 
-  const selectedRole = form.watch('role');
+  const selectedRole = form.watch('role')
 
   // Fetch instructors when role changes to student
   useEffect(() => {
     const loadInstructors = async () => {
       try {
-        const instructorsList = await fetchInstructors();
+        const instructorsList = await fetchInstructors()
         setInstructors(
           instructorsList.map(i => ({
             value: i.id,
             label: i.name || i.email || 'Unknown Instructor',
           })),
-        );
+        )
       } catch (error) {
-        console.error('Error fetching instructors:', error);
-        toast.error('Failed to fetch instructors. Please try again.');
+        console.error('Error fetching instructors:', error)
+        toast.error('Failed to fetch instructors. Please try again.')
       }
-    };
+    }
 
     if (selectedRole === 'student') {
-      loadInstructors();
+      loadInstructors()
     }
-  }, [selectedRole]);
+  }, [selectedRole])
 
   const onSubmit = async (data: SignupFormData) => {
     // Validate password strength
     if (passwordRequirements.length > 0) {
-      toast.error('Password must meet all requirements');
-      return;
+      toast.error('Password must meet all requirements')
+      return
     }
 
     // Validate passwords match
     if (data.password !== data.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
+      toast.error('Passwords do not match')
+      return
     }
 
     // Validate instructor selection for students
     if (data.role === 'student' && !data.instructorId) {
-      toast.error('Please select an instructor');
-      return;
+      toast.error('Please select an instructor')
+      return
     }
 
     // Validate instructor description
     if (data.role === 'instructor' && !data.instructorDescription?.trim()) {
-      toast.error('Please provide a description of your teaching background');
-      return;
+      toast.error('Please provide a description of your teaching background')
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const fullName = `${data.firstName} ${data.lastName}`;
+      const fullName = `${data.firstName} ${data.lastName}`
 
       // Create user via better-auth with role-specific fields set at creation time
       await signup({
@@ -122,20 +126,19 @@ const SignupPage = () => {
           pendingInstructorDescription: data.instructorDescription?.trim(),
         }),
         ...(data.role === 'student' && data.instructorId && { instructorId: data.instructorId }),
-      });
+      })
 
-      toast.success('Account created! Check your email to verify.');
+      toast.success('Account created! Check your email to verify.')
 
       // Redirect to confirmation page showing email verification info
-      // The verification link will be in their email with the token
-      window.location.href = `/confirm?email=${encodeURIComponent(data.email)}`;
+      navigate({ to: '/confirm', search: { email: encodeURIComponent(data.email) } })
     } catch (error) {
-      console.error('Signup error:', error);
-      toast.error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Signup error:', error)
+      toast.error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className='flex min-h-full flex-col items-center justify-center overflow-y-auto bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-8'>
@@ -222,7 +225,7 @@ const SignupPage = () => {
                         className='border-gray-300'
                         disabled={isLoading}
                         onChange={e => {
-                          field.onChange(e);
+                          field.onChange(e)
                         }}
                       />
                     </FormControl>
@@ -356,7 +359,7 @@ const SignupPage = () => {
           <div className='mt-4 text-center text-sm'>
             <span className='text-gray-600'>Already have an account? </span>
             <Link
-              href='/login'
+              to='/login'
               className='font-semibold text-blue-600 underline hover:text-blue-800'
             >
               Log In
@@ -365,7 +368,5 @@ const SignupPage = () => {
         </div>
       </Card>
     </div>
-  );
-};
-
-export default SignupPage;
+  )
+}

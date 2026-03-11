@@ -5,7 +5,7 @@
  * All requests include credentials (cookies) for session-based auth.
  */
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+export const API_URL = import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 /**
  * Make an authenticated fetch request to the API.

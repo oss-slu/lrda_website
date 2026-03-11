@@ -1,12 +1,8 @@
-'use client';
-
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, lazy, Suspense } from 'react';
 
-const ReactQueryDevtools = dynamic(
-  () => import('@tanstack/react-query-devtools').then(mod => mod.ReactQueryDevtools),
-  { ssr: false },
+const ReactQueryDevtools = lazy(
+  () => import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
 );
 
 export default function QueryProvider({ children }: { children: React.ReactNode }) {
@@ -46,8 +42,10 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </Suspense>
       )}
     </QueryClientProvider>
   );

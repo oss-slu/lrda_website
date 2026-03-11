@@ -1,5 +1,3 @@
-'use client';
-import Image from 'next/image';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { IconLink } from './lib/components/IconLink';
 const ANIMATE_CLASS = 'animate-fadeIn opacity-0';
@@ -164,13 +162,10 @@ export default function WelcomePage() {
                 style={{ height: 40 }}
                 aria-label='Get the app on the Apple App Store'
               >
-                <Image
+                <img
                   src='/app_store_img.svg'
                   alt='Apple App Store'
-                  width={120}
-                  height={40}
                   style={{ height: 40, width: 'auto' }}
-                  priority
                 />
               </a>
               <a
@@ -181,13 +176,10 @@ export default function WelcomePage() {
                 style={{ height: 40 }}
                 aria-label='Get the app on Google Play'
               >
-                <Image
+                <img
                   src='/01googleplay.svg'
                   alt='Google Play Store'
-                  width={135}
-                  height={40}
                   style={{ transform: 'scale(1.15)' }}
-                  priority
                 />
               </a>
             </div>
@@ -213,18 +205,15 @@ export default function WelcomePage() {
 
               {/* Phone container with glass effect */}
               <div className='flex h-full w-full items-center justify-center overflow-hidden rounded-[3rem] border border-white/50 p-2 shadow-2xl backdrop-blur-sm'>
-                <Image
+                <img
                   src='/mobile_image_WR.png'
                   alt="Where's Religion App"
-                  width={600}
-                  height={1000}
                   style={{
                     objectFit: 'contain',
                     objectPosition: 'center',
                     width: '100%',
                     height: '100%',
                   }}
-                  priority
                 />
               </div>
 

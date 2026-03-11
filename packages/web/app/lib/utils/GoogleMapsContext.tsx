@@ -1,43 +1,53 @@
-'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
-// Define the context shape
 interface GoogleMapsContextType {
   isMapsApiLoaded: boolean;
 }
 
-// Create context with a default value
 const GoogleMapsContext = createContext<GoogleMapsContextType>({
   isMapsApiLoaded: false,
 });
 
-// Create a custom hook to use the GoogleMaps context
 export const useGoogleMaps = () => useContext(GoogleMapsContext);
 
 interface GoogleMapsProviderProps {
   children: ReactNode;
 }
 
-// Move libraries array outside component to prevent reload warning
 const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
 
-// Create the provider component
-export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
-  const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
-
+/**
+ * Internal component that loads the Google Maps JS API.
+ * Only rendered on the client to avoid SSR issues with useJsApiLoader.
+ */
+function GoogleMapsLoader({ setLoaded }: { setLoaded: (v: boolean) => void }) {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
+    googleMapsApiKey: import.meta.env.NEXT_PUBLIC_MAP_KEY || '',
     libraries: GOOGLE_MAPS_LIBRARIES,
-    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ''],
+    mapIds: [import.meta.env.NEXT_PUBLIC_MAP_ID || ''],
     id: 'google-map-script',
   });
 
   useEffect(() => {
-    setIsMapsApiLoaded(isLoaded);
-  }, [isLoaded]);
+    setLoaded(isLoaded);
+  }, [isLoaded, setLoaded]);
+
+  return null;
+}
+
+export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
+  const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
-    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>{children}</GoogleMapsContext.Provider>
+    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>
+      {isClient && <GoogleMapsLoader setLoaded={setIsMapsApiLoaded} />}
+      {children}
+    </GoogleMapsContext.Provider>
   );
 };
