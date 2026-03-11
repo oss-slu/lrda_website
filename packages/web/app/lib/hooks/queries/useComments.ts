@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CommentData } from '../../services/comments.types';
 import { commentsService, fetchCreatorName } from '../../services';
@@ -139,9 +140,13 @@ export function useCommentMutations(noteId: string) {
  */
 export function useCommentPreview(noteId: string | null) {
   const query = useComments(noteId);
-  const preview = (query.data ?? [])
-    .filter(c => !c.parentId)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 2);
+  const preview = useMemo(
+    () =>
+      (query.data ?? [])
+        .filter(c => !c.parentId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 2),
+    [query.data],
+  );
   return { ...query, preview };
 }

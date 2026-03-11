@@ -504,6 +504,78 @@ This prevents double-initialization, following the "initialize once per app load
 
 ---
 
+## Changes Applied (2026-03-10)
+
+The following performance issues were identified and fixed during this audit session:
+
+### FIXED: Map marker flashing on pan/zoom (`useMapMarkers.tsx`)
+
+**Problem:** The `useMapMarkers` effect destroyed and recreated ALL markers and the MarkerClusterer on every pan/zoom. This caused visible flashing as markers briefly disappeared and reappeared. The effect had 12 dependencies, many of which (like `isPanelOpen`, `router`, callback functions) had nothing to do with marker placement but triggered full rebuilds.
+
+**Root cause:** `filteredNotes` (which depends on `mapBounds`) was in the dependency array. Every bounds change from pan/zoom caused the effect to: `clearMarkers()` -> null every marker -> recreate ALL markers -> new `MarkerClusterer`.
+
+**Fix:**
+1. **Diff-based marker sync** -- Instead of clear-and-rebuild, the effect now computes which note IDs to add/remove by comparing `desiredIds` vs `currentMarkers.keys()`. Existing markers stay untouched on the map. Only new markers are created; only stale markers are removed. The MarkerClusterer is updated incrementally via `addMarkers()`/`removeMarker()`.
+2. **Ref-based callbacks** -- `isPanelOpen`, `setActiveNote`, `setHoveredNoteId`, `scrollToNoteTile`, and `router` are stored in refs. Marker event handlers read from refs so they never go stale. These values no longer appear in the dependency array, so changing them doesn't trigger marker rebuilds.
+3. **One-time setup** -- The Popup class and map click listener are created once in a separate `useEffect`, not on every bounds change.
+4. **Dependency array** went from 12 items to 5: `[isMapsApiLoaded, filteredNotes, mapRef, createMarker, setIsLoading]`.
+
+**Files changed:** `packages/web/app/lib/hooks/useMapMarkers.tsx`
+
+### FIXED: Global map fetching only 20 notes (`useNotes.ts`)
+
+**Problem:** `useGlobalMapNotes()` called `notesService.fetchPublished()` with default `limit=20`. The API returned only 20 published notes total (across all locations). Client-side bounds filtering then reduced this to ~2 notes in the St. Louis viewport.
+
+**Fix:** Added `fetchAllPages()` helper that paginates through all results (200 per page, the API max). Both `useGlobalMapNotes` and `usePersonalMapNotes` now exhaust all pages before returning. With 164 published notes, this completes in a single request; if the dataset grows past 200 it automatically paginates.
+
+**Files changed:** `packages/web/app/lib/hooks/queries/useNotes.ts`
+
+### ADDED: `useDeferredValue` for map notes panel (`map/page.tsx`)
+
+**Problem:** When `filteredNotes` changes on pan/zoom, the notes panel re-renders synchronously, potentially blocking map interactions.
+
+**Fix:** Wrapped `filteredNotes` in `useDeferredValue` before passing to the infinite scroll hook. React can now deprioritize the panel list re-render, keeping map interactions smooth.
+
+**Files changed:** `packages/web/app/map/page.tsx`
+
+### NOTE: Image optimization limited by Cloudflare deployment
+
+`next.config.ts` has `images: { unoptimized: true }` because OpenNext/Cloudflare doesn't support Next.js Image Optimization. All `next/image` components render as raw `<img>` tags. The `quality={5}` prop in `compact_carousel.tsx` is a no-op. Images are still lazy-loaded by default. Future optimization options: Cloudflare Image Resizing, pre-optimizing uploads to WebP/AVIF, or a custom image loader with a CDN.
+
+### FIXED: Emotion/MUI cache provider scoped to NoteEditor (rec #2)
+
+**Problem:** `NextAppDirEmotionCacheProvider` wrapped the entire app in `layout.tsx`, adding CSS-in-JS overhead to every page, even though MUI/Emotion is only used by the rich text editor.
+
+**Fix:** Removed the provider from `layout.tsx` and moved it into `NoteEditor.tsx`, which is the root of the only component tree that uses MUI/Emotion (`mui-tiptap`, `@mui/material`).
+
+**Files changed:** `packages/web/app/layout.tsx`, `packages/web/app/lib/components/NoteEditor/NoteEditor.tsx`
+
+### FIXED: Barrel file imports optimized (rec #3)
+
+**Problem:** 5 barrel files (`services/index.ts`, `NoteEditor/index.ts`, `hooks/queries/index.ts`, `auth/index.ts`, `components/map/index.ts`) caused unnecessary module evaluation. Importing one service pulled in all 8 service modules.
+
+**Fix:** Added `optimizePackageImports` to `next.config.ts` targeting the 4 most impactful barrel paths (`@/app/lib/services`, `@/app/lib/components/NoteEditor`, `@/app/lib/hooks/queries`, `@/app/lib/auth`).
+
+**Files changed:** `packages/web/next.config.ts`
+
+### FIXED: Zustand persist versioning added (rec #5)
+
+**Problem:** Auth store persisted to localStorage with no schema versioning. If the `UserProfile` type changes, stale data could cause runtime errors.
+
+**Fix:** Added `version: 1` and a `migrate` function to the Zustand `persist` config. Future type changes can bump the version and handle migration.
+
+**Files changed:** `packages/web/app/lib/stores/authStore.ts`
+
+### FIXED: `useMemo` for filtered/sorted derived data (rec #7)
+
+**Problem:** `useCommentPreview` re-filtered, re-sorted, and re-sliced comments on every render. `filteredUsers` in `AdminDashboard` re-filtered the user list on every render.
+
+**Fix:** Wrapped both in `useMemo` -- `useCommentPreview` keyed on `query.data`, `filteredUsers` keyed on `[users, searchQuery]`.
+
+**Files changed:** `packages/web/app/lib/hooks/queries/useComments.ts`, `packages/web/app/admin/AdminDashboard.tsx`
+
+---
+
 ## Strengths Summary
 
 1. **TanStack Query architecture** -- Query key factories, optimistic updates, cache sharing, and sensible defaults demonstrate strong data fetching patterns.
@@ -522,47 +594,35 @@ This prevents double-initialization, following the "initialize once per app load
 
 ## Recommendations Summary
 
-| # | Recommendation | Impact | Effort | Rule |
-|---|---------------|--------|--------|------|
-| 1 | Add `next/dynamic` for Google Maps, Tiptap editor, MUI | CRITICAL | Medium | `bundle-dynamic-imports` |
-| 2 | Move Emotion cache provider out of root layout | HIGH | Low | `bundle-defer-third-party` |
-| 3 | Eliminate barrel file imports or add `optimizePackageImports` | HIGH | Medium | `bundle-barrel-imports` |
-| 4 | Convert `notes/[id]/page.tsx` to use Server Component + TanStack Query | HIGH | Medium | `server-parallel-fetching` |
-| 5 | Add localStorage versioning to Zustand persist | MEDIUM | Low | `client-localstorage-schema` |
-| 6 | Split `useNoteSync` mega-effect into focused effects | MEDIUM | Medium | `rerender-dependencies` |
-| 7 | Add `useMemo` for filtered lists (admin users, comment preview) | MEDIUM | Low | `rerender-memo` |
-| 8 | Add `content-visibility: auto` to note card lists | MEDIUM | Low | `rendering-content-visibility` |
-| 9 | Separate Zustand actions from state in selectors | LOW | Low | `rerender-defer-reads` |
-| 10 | Replace `.reverse()` with `.toReversed()` | LOW | Low | `js-tosorted-immutable` |
-| 11 | Add `React.memo` to list item components | LOW | Low | `rerender-memo` |
-| 12 | Extract inline zoom/toggle handlers to `useCallback` | LOW | Low | `rerender-functional-setstate` |
+| # | Recommendation | Impact | Effort | Rule | Status |
+|---|---------------|--------|--------|------|--------|
+| 1 | Add `next/dynamic` for Google Maps, Tiptap editor, MUI | CRITICAL | Medium | `bundle-dynamic-imports` | Open |
+| 2 | Move Emotion cache provider out of root layout | HIGH | Low | `bundle-defer-third-party` | **DONE** |
+| 3 | Eliminate barrel file imports or add `optimizePackageImports` | HIGH | Medium | `bundle-barrel-imports` | **DONE** |
+| 4 | Convert `notes/[id]/page.tsx` to use Server Component + TanStack Query | HIGH | Medium | `server-parallel-fetching` | Open |
+| 5 | Add localStorage versioning to Zustand persist | MEDIUM | Low | `client-localstorage-schema` | **DONE** |
+| 6 | Split `useNoteSync` mega-effect into focused effects | MEDIUM | Medium | `rerender-dependencies` | Open |
+| 7 | Add `useMemo` for filtered lists (admin users, comment preview) | MEDIUM | Low | `rerender-memo` | **DONE** |
+| 8 | Add `content-visibility: auto` to note card lists | MEDIUM | Low | `rendering-content-visibility` | Open |
+| 9 | Separate Zustand actions from state in selectors | LOW | Low | `rerender-defer-reads` | Open |
+| 10 | Replace `.reverse()` with `.toReversed()` | LOW | Low | `js-tosorted-immutable` | Open |
+| 11 | Add `React.memo` to list item components | LOW | Low | `rerender-memo` | Open |
+| 12 | Extract inline zoom/toggle handlers to `useCallback` | LOW | Low | `rerender-functional-setstate` | Open |
+| 13 | Diff-based map marker updates (destroy/recreate -> add/remove) | CRITICAL | Medium | `rendering-map-markers` | **DONE** |
+| 14 | Fix map global notes pagination (limit=20 -> fetchAllPages) | HIGH | Low | `client-data-fetching` | **DONE** |
+| 15 | Add `useDeferredValue` for map panel list | MEDIUM | Low | `rendering-deferred-value` | **DONE** |
 
 ---
 
 ## Priority Action Items
 
-### Immediate (High Impact, Low Effort)
+### Immediate (High Impact, Low Effort) -- COMPLETED
 
-1. **Move Emotion provider** -- Scope `NextAppDirEmotionCacheProvider` to only the editor route instead of wrapping the entire app.
+1. ~~**Move Emotion provider**~~ -- **DONE.** Scoped to `NoteEditor.tsx`.
 
-2. **Add `optimizePackageImports`** to `next.config.js`:
-   ```js
-   experimental: {
-     optimizePackageImports: [
-       '@/app/lib/services',
-       '@/app/lib/components/NoteEditor',
-     ]
-   }
-   ```
+2. ~~**Add `optimizePackageImports`**~~ -- **DONE.** Added to `next.config.ts`.
 
-3. **Add Zustand persist versioning:**
-   ```typescript
-   persist(store, {
-     name: 'auth-store',
-     version: 1,
-     migrate: (persisted, version) => { /* handle migrations */ },
-   })
-   ```
+3. ~~**Add Zustand persist versioning**~~ -- **DONE.** Added `version: 1` + `migrate` to auth store.
 
 ### Short-term (High Impact, Medium Effort)
 

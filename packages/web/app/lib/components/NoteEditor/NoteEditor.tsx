@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import { RichTextEditorProvider } from 'mui-tiptap';
+import { NextAppDirEmotionCacheProvider } from 'tss-react/next/appDir';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileX2, MessageSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -317,6 +318,7 @@ export default function NoteEditor({
 
 
   return (
+    <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>
     <RichTextEditorProvider editor={editor}>
       <div className='flex h-full min-h-0 w-full flex-col'>
         {/* Toolbar */}
@@ -464,5 +466,6 @@ export default function NoteEditor({
       </div>
 
     </RichTextEditorProvider>
+    </NextAppDirEmotionCacheProvider>
   );
 }

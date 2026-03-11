@@ -3,7 +3,6 @@ import './globals.css';
 import './introjs-custom.css';
 import 'intro.js/introjs.css';
 import Navbar from './lib/components/navbar';
-import { NextAppDirEmotionCacheProvider } from 'tss-react/next/appDir';
 import { Toaster } from '@/components/ui/sonner';
 import { GoogleMapsProvider } from './lib/utils/GoogleMapsContext';
 import QueryProvider from './lib/components/QueryProvider';
@@ -25,9 +24,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
             <GoogleMapsProvider>
               <Navbar />
               <div className='flex-grow overflow-y-auto scroll-smooth'>
-                <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>
-                  {children}
-                </NextAppDirEmotionCacheProvider>
+                {children}
               </div>
               <Toaster />
             </GoogleMapsProvider>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Note } from '@/app/types';
 import { useCreatorName } from '../hooks/queries/useUsers';
 import { Calendar, User, ImageIcon } from 'lucide-react';
@@ -33,7 +33,7 @@ function getTagLabels(tags: unknown): string[] {
     .filter((label): label is string => label !== null && label.length > 0);
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
+const NoteCard = memo<NoteCardProps>(function NoteCard({ note, isActive = false }) {
   const title = note.title;
   const tags = getTagLabels(note.tags);
   const { data: creator, isPending: isCreatorLoading } = useCreatorName(note.creator);
@@ -97,6 +97,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
       </CardContent>
     </Card>
   );
-};
+});
 
 export default NoteCard;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   fetchAllUsers,
   fetchPendingApplications,
@@ -87,10 +87,14 @@ export default function AdminDashboard({
     }
   }, []);
 
-  const filteredUsers = users.filter(
-    u =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredUsers = useMemo(
+    () =>
+      users.filter(
+        u =>
+          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [users, searchQuery],
   );
 
   const handleApprove = async (application: PendingApplication) => {

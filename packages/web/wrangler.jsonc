@@ -10,6 +10,11 @@
     "binding": "ASSETS"
   },
 
+  // Next.js image optimization via Cloudflare Images
+  "images": {
+    "binding": "IMAGES"
+  },
+
   // Self-reference binding for ISR/revalidation callbacks
   "services": [
     {

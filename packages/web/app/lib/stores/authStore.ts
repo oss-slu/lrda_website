@@ -166,11 +166,19 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-store',
+      version: 1,
       partialize: state => ({
         // Only persist user data, not loading/initialized states
         user: state.user,
         isLoggedIn: state.isLoggedIn,
       }),
+      migrate: (persisted, version) => {
+        if (version === 0) {
+          // v0 -> v1: no schema change, just adding versioning
+          return persisted as Pick<AuthState, 'user' | 'isLoggedIn'>;
+        }
+        return persisted as Pick<AuthState, 'user' | 'isLoggedIn'>;
+      },
     },
   ),
 );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 import { Note } from '@/app/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,25 @@ interface MapNotesPanelProps {
   onTogglePanel: () => void;
 }
 
+// Skeleton cards shown while notes are loading
+const SKELETON_COUNT = 6;
+const skeletonIndices = Array.from({ length: SKELETON_COUNT }, (_, i) => i);
+
+function SkeletonCard({ index }: { index: number }) {
+  return (
+    <Card
+      className='overflow-hidden'
+      style={{ animationDelay: `${index * 75}ms` }}
+    >
+      <Skeleton className='aspect-[4/3] w-full' />
+      <div className='space-y-2 p-3'>
+        <Skeleton className='h-4 w-full' />
+        <Skeleton className='h-3 w-2/3' />
+      </div>
+    </Card>
+  );
+}
+
 const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
   (
     {
@@ -49,6 +68,9 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
     },
     notesListRef,
   ) => {
+    // Stable callback for clearing hover
+    const handleMouseLeave = useCallback(() => onNoteHover(null), [onNoteHover]);
+
     return (
       <>
         {/* Toggle Button - hidden on mobile when panel is open */}
@@ -94,15 +116,9 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
 
           <div className='grid grid-cols-1 content-start gap-4 p-4 lg:grid-cols-2'>
             {isLoading ?
-              // Loading state with card-shaped skeletons
-              [...Array(6)].map((_, index) => (
-                <Card key={index} className='overflow-hidden'>
-                  <Skeleton className='aspect-[4/3] w-full' />
-                  <div className='space-y-2 p-3'>
-                    <Skeleton className='h-4 w-full' />
-                    <Skeleton className='h-3 w-2/3' />
-                  </div>
-                </Card>
+              // Loading skeletons with staggered pulse
+              skeletonIndices.map(index => (
+                <SkeletonCard key={index} index={index} />
               ))
             : isError ?
               // Error state
@@ -117,16 +133,20 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
                 </p>
               </div>
             : visibleItems.length > 0 ?
-              // Notes grid
+              // Notes grid with content-visibility for off-screen cards
               visibleItems.map(note => (
                 <div
                   key={note.id}
                   ref={el => {
                     if (el) noteRefs.current[note.id] = el;
                   }}
-                  className='cursor-pointer'
+                  className='cursor-pointer animate-in fade-in duration-200'
+                  style={{
+                    contentVisibility: 'auto',
+                    containIntrinsicSize: 'auto 280px',
+                  }}
                   onMouseEnter={() => onNoteHover(note.id)}
-                  onMouseLeave={() => onNoteHover(null)}
+                  onMouseLeave={handleMouseLeave}
                   onClick={() => onNoteClick(note)}
                 >
                   <NoteCard note={note} isActive={note.id === activeNoteId} />

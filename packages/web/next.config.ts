@@ -10,10 +10,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'livedreligion.s3.amazonaws.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
     ],
-    unoptimized: true,
+    qualities: [5, 50, 75],
   },
   turbopack: {},
+  experimental: {
+    optimizePackageImports: [
+      '@/app/lib/services',
+      '@/app/lib/components/NoteEditor',
+      '@/app/lib/hooks/queries',
+      '@/app/lib/auth',
+    ],
+  },
   async redirects() {
     return [
       { source: '/lib/pages/map', destination: '/map', permanent: true },

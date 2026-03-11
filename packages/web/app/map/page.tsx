@@ -129,6 +129,7 @@ const Page = () => {
 
   // Defer panel updates so they don't block map interactions (pan/zoom)
   const deferredFilteredNotes = useDeferredValue(filteredNotes);
+  const isPanelStale = deferredFilteredNotes !== filteredNotes;
 
   // Infinite scroll for notes panel
   const infinite = useInfiniteNotes<Note>({
@@ -328,7 +329,7 @@ const Page = () => {
       <MapNotesPanel
         ref={notesListRef}
         isPanelOpen={isPanelOpen}
-        isLoading={notesLoading}
+        isLoading={notesLoading || (isPanelStale && deferredFilteredNotes.length === 0)}
         isError={notesError}
         errorMessage={notesErrorMessage}
         visibleItems={infinite.visibleItems}

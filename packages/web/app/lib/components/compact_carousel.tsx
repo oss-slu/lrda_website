@@ -53,10 +53,9 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[
                 src={media.uri}
                 width={256}
                 height={180}
-                objectFit='cover'
-                className='h-[180px] w-[256px] rounded-t-sm'
+                className='h-[180px] w-[256px] rounded-t-sm object-cover'
                 alt='Media content'
-                quality={5}
+                quality={50}
               />
             )}
             {media.type === 'video' && (

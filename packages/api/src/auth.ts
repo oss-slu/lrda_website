@@ -45,7 +45,10 @@ export function createAuth(env: Env, db: Database) {
       requireEmailVerification: true,
 
       sendResetPassword: async data => {
-        await sendPasswordResetEmail(data.user.email, data.url);
+        const url = new URL(data.url);
+        const token = url.searchParams.get('token');
+        const resetUrl = `${env.WEB_URL}/reset-password?token=${token}`;
+        await sendPasswordResetEmail(data.user.email, resetUrl);
       },
     },
     emailVerification: {
