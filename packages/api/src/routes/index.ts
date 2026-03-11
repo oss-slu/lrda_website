@@ -4,9 +4,9 @@ import { userRoutes } from './users';
 import { adminRoutes } from './admin';
 import { noteRoutes } from './notes';
 import { commentRoutes } from './comments';
-import type { AppBindings } from '../types';
+import type { AppEnv } from '../types';
 
-export const routes = new OpenAPIHono<AppBindings>()
+export const routes = new OpenAPIHono<AppEnv>()
   .route('/', healthRoutes)
   .route('/users', userRoutes)
   .route('/admin', adminRoutes)

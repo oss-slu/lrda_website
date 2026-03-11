@@ -18,15 +18,8 @@ import { hashPassword } from 'better-auth/crypto';
 import * as schema from '../db/schema';
 import { users, notes, media, audio, comments, SEED_PASSWORD } from './fixtures/seed-data';
 import { openLocalDb } from './local-db';
-import { execSync } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
 
 let DRY_RUN = true;
-let REMOTE = false;
-
-const API_ROOT = path.resolve(import.meta.dirname, '..', '..');
 
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
   const ts = new Date().toISOString();
@@ -48,15 +41,11 @@ function esc(value: string): string {
   return value.replace(/'/g, "''");
 }
 
-function toUnix(date: Date): number {
-  return Math.floor(date.getTime() / 1000);
-}
-
 function sqlVal(v: unknown): string {
   if (v === null || v === undefined) return 'NULL';
-  if (typeof v === 'boolean') return v ? '1' : '0';
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
   if (typeof v === 'number') return String(v);
-  if (v instanceof Date) return String(toUnix(v));
+  if (v instanceof Date) return `'${v.toISOString()}'`;
   if (typeof v === 'object') return `'${esc(JSON.stringify(v))}'`;
   return `'${esc(String(v))}'`;
 }
@@ -65,17 +54,8 @@ async function generateSql(): Promise<string> {
   const hashedPassword = await hashPassword(SEED_PASSWORD);
   const lines: string[] = [];
 
-  // Delete in reverse FK order
-  lines.push('PRAGMA foreign_keys = OFF;');
-  lines.push('DELETE FROM "comment";');
-  lines.push('DELETE FROM "audio";');
-  lines.push('DELETE FROM "media";');
-  lines.push('DELETE FROM "note";');
-  lines.push('DELETE FROM "session";');
-  lines.push('DELETE FROM "account";');
-  lines.push('DELETE FROM "verification";');
-  lines.push('DELETE FROM "user";');
-  lines.push('PRAGMA foreign_keys = ON;');
+  // Delete in reverse FK order (PostgreSQL cascades handle FK constraints)
+  lines.push('TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE;');
 
   // Users (non-students first for FK order)
   const nonStudents = users.filter((u) => !u.instructorId);
@@ -126,48 +106,17 @@ async function generateSql(): Promise<string> {
   return lines.join('\n');
 }
 
-// --- Remote seed via wrangler ---
-
-async function seedRemote() {
-  log('info', 'Generating SQL for remote seed...');
-  const sql = await generateSql();
-
-  const tmpFile = path.join(os.tmpdir(), `lrda-seed-${Date.now()}.sql`);
-  fs.writeFileSync(tmpFile, sql, 'utf-8');
-  log('info', `Wrote ${sql.split('\n').length} SQL statements to ${tmpFile}`);
-
-  try {
-    log('info', 'Executing against remote D1 via wrangler...');
-    execSync(`npx wrangler d1 execute lrda-db --remote --file "${tmpFile}"`, {
-      cwd: API_ROOT,
-      stdio: 'inherit',
-    });
-    log('info', 'Remote seed complete');
-  } finally {
-    fs.unlinkSync(tmpFile);
-  }
-}
-
 // --- Local seed via Drizzle ORM ---
 
 async function seedLocal() {
-  const { db, sqlite } = openLocalDb();
+  const { db, pool } = openLocalDb();
 
   try {
-    sqlite.prepare('SELECT 1').get();
+    await pool.query('SELECT 1');
     log('info', 'Database connection verified');
 
     log('info', 'Deleting all rows...');
-    sqlite.exec('PRAGMA foreign_keys = OFF');
-    sqlite.exec('DELETE FROM "comment"');
-    sqlite.exec('DELETE FROM "audio"');
-    sqlite.exec('DELETE FROM "media"');
-    sqlite.exec('DELETE FROM "note"');
-    sqlite.exec('DELETE FROM "session"');
-    sqlite.exec('DELETE FROM "account"');
-    sqlite.exec('DELETE FROM "verification"');
-    sqlite.exec('DELETE FROM "user"');
-    sqlite.exec('PRAGMA foreign_keys = ON');
+    await pool.query('TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE');
     log('info', 'All tables cleared');
 
     log('info', 'Inserting users...');
@@ -223,7 +172,7 @@ async function seedLocal() {
     log('error', 'Seed failed', error);
     process.exit(1);
   } finally {
-    sqlite.close();
+    await pool.end();
   }
 }
 
@@ -235,13 +184,8 @@ async function main() {
   if (args.includes('--yolo')) {
     DRY_RUN = false;
   }
-  if (args.includes('--remote')) {
-    REMOTE = true;
-  }
 
-  const target = REMOTE ? 'REMOTE (production D1)' : 'LOCAL';
   log('info', 'Seed script starting...');
-  log('info', `Target: ${target}`);
   log(
     'info',
     DRY_RUN
@@ -257,15 +201,11 @@ async function main() {
     log('info', `  Audio:    ${audio.length}`);
     log('info', `  Comments: ${comments.length}`);
     log('info', `  Shared password: ${SEED_PASSWORD}`);
-    log('info', `Run with --yolo to apply changes${REMOTE ? '' : ', add --remote for production D1'}`);
+    log('info', 'Run with --yolo to apply changes');
     return;
   }
 
-  if (REMOTE) {
-    await seedRemote();
-  } else {
-    await seedLocal();
-  }
+  await seedLocal();
 }
 
 main();

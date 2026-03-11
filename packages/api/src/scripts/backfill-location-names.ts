@@ -15,7 +15,7 @@ import { eq, and, isNotNull, isNull } from 'drizzle-orm';
 import { openLocalDb } from './local-db';
 
 async function run() {
-  const { db, sqlite } = openLocalDb();
+  const { db, pool } = openLocalDb();
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -42,7 +42,7 @@ async function run() {
   }
 
   console.log('Backfill complete.');
-  sqlite.close();
+  await pool.end();
 }
 
 run().catch(err => {

@@ -8,7 +8,7 @@ import {
 import { eq, and, desc } from 'drizzle-orm';
 import { comment, note } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
-import type { AppBindings } from '../types';
+import type { AppEnv } from '../types';
 import { getDb } from './helpers';
 
 // Routes
@@ -191,7 +191,7 @@ const resolveThreadRoute = createRoute({
 });
 
 // Create router
-export const commentRoutes = new OpenAPIHono<AppBindings>()
+export const commentRoutes = new OpenAPIHono<AppEnv>()
   // GET /comments/note/:noteId - list comments for note
   .openapi(listCommentsForNoteRoute, async c => {
     const db = getDb(c);
@@ -233,7 +233,7 @@ export const commentRoutes = new OpenAPIHono<AppBindings>()
   // POST /comments - create comment
   .openapi(createCommentRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
     // Verify note exists
@@ -281,7 +281,7 @@ export const commentRoutes = new OpenAPIHono<AppBindings>()
   // PATCH /comments/:id - update comment
   .openapi(updateCommentRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { id } = c.req.valid('param');
     const body = c.req.valid('json');
 
@@ -318,7 +318,7 @@ export const commentRoutes = new OpenAPIHono<AppBindings>()
   // DELETE /comments/:id - delete comment
   .openapi(deleteCommentRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { id } = c.req.valid('param');
 
     // Check if comment exists
@@ -346,7 +346,7 @@ export const commentRoutes = new OpenAPIHono<AppBindings>()
   // POST /comments/thread/:threadId/resolve - resolve thread
   .openapi(resolveThreadRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { threadId } = c.req.valid('param');
 
     // Only admins and instructors can resolve threads

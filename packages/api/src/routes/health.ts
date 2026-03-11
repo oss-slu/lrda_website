@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { testConnection } from '../db';
-import type { AppBindings } from '../types';
-import { getDb, getEnv } from './helpers';
+import type { AppEnv } from '../types';
+import { getEnv } from './helpers';
 
 const HealthResponseSchema = z.object({
   status: z.enum(['healthy', 'unhealthy']),
@@ -34,10 +34,9 @@ const getHealthRoute = createRoute({
   },
 });
 
-export const healthRoutes = new OpenAPIHono<AppBindings>().openapi(getHealthRoute, async c => {
-  const db = getDb(c);
+export const healthRoutes = new OpenAPIHono<AppEnv>().openapi(getHealthRoute, async c => {
   const env = getEnv(c);
-  const dbConnected = await testConnection(db);
+  const dbConnected = await testConnection();
   const healthy = dbConnected;
 
   return c.json(

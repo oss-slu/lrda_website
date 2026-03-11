@@ -1,31 +1,31 @@
-import { sqliteTable, text, integer, real, index, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { sql, relations } from 'drizzle-orm';
+import { pgTable, text, timestamp, boolean, doublePrecision, jsonb, type AnyPgColumn, index } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import type { Tag, Comment as CommentType } from './types';
 
 // Better Auth required tables + app-specific extensions
 
-export const user = sqliteTable('user', {
+export const user = pgTable('user', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+  emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 
   // Admin plugin fields
   role: text('role').default('user'),
-  banned: integer('banned', { mode: 'boolean' }).default(false),
+  banned: boolean('banned').default(false),
   banReason: text('ban_reason'),
-  banExpires: integer('ban_expires', { mode: 'timestamp' }),
+  banExpires: timestamp('ban_expires'),
 
   // App-specific fields
-  isInstructor: integer('is_instructor', { mode: 'boolean' }).notNull().default(false),
+  isInstructor: boolean('is_instructor').notNull().default(false),
   instructorId: text('instructor_id').references((): any => user.id, {
     onDelete: 'set null',
   }),
   pendingInstructorDescription: text('pending_instructor_description'),
-});
+}, (table) => [index('user_instructor_id_idx').on(table.instructorId)]);
 
 export const userRelations = relations(user, ({ one, many }) => ({
   instructor: one(user, {
@@ -42,12 +42,12 @@ export const userRelations = relations(user, ({ one, many }) => ({
   comments: many(comment),
 }));
 
-export const session = sqliteTable('session', {
+export const session = pgTable('session', {
   id: text('id').primaryKey(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
   token: text('token').notNull().unique(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
   userId: text('user_id')
@@ -56,7 +56,7 @@ export const session = sqliteTable('session', {
 
   // Admin plugin fields
   impersonatedBy: text('impersonated_by'),
-});
+}, (table) => [index('session_user_id_idx').on(table.userId)]);
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -65,7 +65,7 @@ export const sessionRelations = relations(session, ({ one }) => ({
   }),
 }));
 
-export const account = sqliteTable('account', {
+export const account = pgTable('account', {
   id: text('id').primaryKey(),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
@@ -75,13 +75,13 @@ export const account = sqliteTable('account', {
   accessToken: text('access_token'),
   refreshToken: text('refresh_token'),
   idToken: text('id_token'),
-  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp' }),
-  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp' }),
+  accessTokenExpiresAt: timestamp('access_token_expires_at'),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
   scope: text('scope'),
   password: text('password'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-});
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [index('account_user_id_idx').on(table.userId)]);
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
@@ -90,13 +90,13 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const verification = sqliteTable('verification', {
+export const verification = pgTable('verification', {
   id: text('id').primaryKey(),
   identifier: text('identifier').notNull(),
   value: text('value').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // ============================================
@@ -106,7 +106,7 @@ export const verification = sqliteTable('verification', {
 /**
  * Notes table - main content entity
  */
-export const note = sqliteTable('note', {
+export const note = pgTable('note', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -115,16 +115,16 @@ export const note = sqliteTable('note', {
   creatorId: text('creator_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
-  latitude: real('latitude'),
-  longitude: real('longitude'),
+  latitude: doublePrecision('latitude'),
+  longitude: doublePrecision('longitude'),
   locationName: text('location_name'),
-  isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
-  approvalRequested: integer('approval_requested', { mode: 'boolean' }).notNull().default(false),
-  isReturned: integer('is_returned', { mode: 'boolean' }).notNull().default(false),
-  tags: text('tags', { mode: 'json' }).$type<Tag[]>().default([]),
-  time: integer('time', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  isPublished: boolean('is_published').notNull().default(false),
+  approvalRequested: boolean('approval_requested').notNull().default(false),
+  isReturned: boolean('is_returned').notNull().default(false),
+  tags: jsonb('tags').$type<Tag[]>().default([]),
+  time: timestamp('time').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('note_creator_id_idx').on(table.creatorId),
 ]);
@@ -142,7 +142,7 @@ export const noteRelations = relations(note, ({ one, many }) => ({
 /**
  * Media table - images and videos attached to notes
  */
-export const media = sqliteTable('media', {
+export const media = pgTable('media', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -153,10 +153,8 @@ export const media = sqliteTable('media', {
   uri: text('uri').notNull(),
   thumbnailUri: text('thumbnail_uri'),
   uuid: text('uuid'), // Original UUID from mobile app
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-}, (table) => [
-  index('media_note_id_idx').on(table.noteId),
-]);
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [index('media_note_id_idx').on(table.noteId)]);
 
 export const mediaRelations = relations(media, ({ one }) => ({
   note: one(note, {
@@ -168,7 +166,7 @@ export const mediaRelations = relations(media, ({ one }) => ({
 /**
  * Audio table - audio recordings attached to notes
  */
-export const audio = sqliteTable('audio', {
+export const audio = pgTable('audio', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -179,10 +177,8 @@ export const audio = sqliteTable('audio', {
   name: text('name'),
   duration: text('duration'),
   uuid: text('uuid'), // Original UUID from mobile app
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-}, (table) => [
-  index('audio_note_id_idx').on(table.noteId),
-]);
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [index('audio_note_id_idx').on(table.noteId)]);
 
 export const audioRelations = relations(audio, ({ one }) => ({
   note: one(note, {
@@ -194,7 +190,7 @@ export const audioRelations = relations(audio, ({ one }) => ({
 /**
  * Comments table - comments on notes with threading support
  */
-export const comment = sqliteTable('comment', {
+export const comment = pgTable('comment', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -206,15 +202,16 @@ export const comment = sqliteTable('comment', {
     .references(() => user.id, { onDelete: 'cascade' }),
   authorName: text('author_name').notNull(), // Denormalized for display
   text: text('text').notNull(),
-  position: text('position', { mode: 'json' }).$type<{ from: number; to: number } | null>(),
+  position: jsonb('position').$type<{ from: number; to: number } | null>(),
   threadId: text('thread_id'),
-  parentId: text('parent_id').references((): AnySQLiteColumn => comment.id, { onDelete: 'cascade' }),
-  isResolved: integer('is_resolved', { mode: 'boolean' }).notNull().default(false),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  parentId: text('parent_id').references((): AnyPgColumn => comment.id, { onDelete: 'cascade' }),
+  isResolved: boolean('is_resolved').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('comment_note_id_idx').on(table.noteId),
   index('comment_author_id_idx').on(table.authorId),
+  index('comment_thread_id_idx').on(table.threadId),
 ]);
 
 export const commentRelations = relations(comment, ({ one, many }) => ({

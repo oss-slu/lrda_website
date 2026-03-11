@@ -20,7 +20,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { db, sqlite } = openLocalDb();
+  const { db, pool } = openLocalDb();
 
   try {
     const existing = await db.query.user.findFirst({
@@ -47,7 +47,7 @@ async function main() {
     console.error('Failed:', error);
     process.exit(1);
   } finally {
-    sqlite.close();
+    await pool.end();
   }
 }
 

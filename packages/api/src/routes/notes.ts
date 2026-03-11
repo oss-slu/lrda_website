@@ -8,7 +8,7 @@ import {
 import { eq, and, gte, lte, desc, inArray, or, like, asc } from 'drizzle-orm';
 import { note, media, audio, user } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
-import type { AppBindings } from '../types';
+import type { AppEnv } from '../types';
 import { getDb, getEnv } from './helpers';
 import { reverseGeocode } from '../lib/geocode';
 
@@ -200,12 +200,12 @@ const getStudentNotesRoute = createRoute({
 });
 
 // Create router
-export const noteRoutes = new OpenAPIHono<AppBindings>()
+export const noteRoutes = new OpenAPIHono<AppEnv>()
   // GET /notes - list notes with filters
   .openapi(listNotesRoute, async c => {
     const db = getDb(c);
     const query = c.req.valid('query');
-    const authUser = c.get('user') as AppBindings['Variables']['user'];
+    const authUser = c.get('user') as AppEnv['Variables']['user'];
     const conditions = [];
 
     // Determine if the authenticated user is the owner of the queried notes
@@ -269,7 +269,7 @@ export const noteRoutes = new OpenAPIHono<AppBindings>()
   .openapi(getNoteRoute, async c => {
     const db = getDb(c);
     const { id } = c.req.valid('param');
-    const authUser = c.get('user') as AppBindings['Variables']['user'];
+    const authUser = c.get('user') as AppEnv['Variables']['user'];
 
     const result = await db.query.note.findFirst({
       where: eq(note.id, id),
@@ -295,7 +295,7 @@ export const noteRoutes = new OpenAPIHono<AppBindings>()
   // POST /notes - create note
   .openapi(createNoteRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
     // Reverse geocode to get a human-readable address if coords are provided
@@ -368,7 +368,7 @@ export const noteRoutes = new OpenAPIHono<AppBindings>()
   // PATCH /notes/:id - update note
   .openapi(updateNoteRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { id } = c.req.valid('param');
     const body = c.req.valid('json');
 
@@ -480,7 +480,7 @@ export const noteRoutes = new OpenAPIHono<AppBindings>()
   // DELETE /notes/:id - delete note
   .openapi(deleteNoteRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { id } = c.req.valid('param');
 
     // Check if note exists and user owns it
@@ -515,7 +515,7 @@ export const noteRoutes = new OpenAPIHono<AppBindings>()
   // GET /notes/students/:instructorId - get notes from students of an instructor
   .openapi(getStudentNotesRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { instructorId } = c.req.valid('param');
     const query = c.req.valid('query');
 

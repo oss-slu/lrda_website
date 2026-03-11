@@ -1,5 +1,4 @@
 import type { User, Session } from 'better-auth';
-import type { Database } from './db';
 
 // Extended user type with app-specific fields.
 // `role` uses a literal union matching the DB default ('user') and admin plugin ('admin').
@@ -13,10 +12,8 @@ export type AuthUser = User & {
 
 export type AuthSession = Session;
 
-export type AppBindings = {
-  Bindings: Env;
+export type AppEnv = {
   Variables: {
-    db: Database;
     user: AuthUser | null;
     session: AuthSession | null;
   };

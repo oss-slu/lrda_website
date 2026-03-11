@@ -11,12 +11,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["@cloudflare/workers-types"],
+    "types": ["bun-types"],
     "paths": {
       "@/*": ["./src/*"]
     },
     "baseUrl": "."
   },
-  "include": ["src/**/*", "drizzle.config.ts", "worker-configuration.d.ts"],
+  "include": ["src/**/*", "drizzle.config.ts"],
   "exclude": ["node_modules", "dist", "src/__tests__", "src/scripts"]
 }

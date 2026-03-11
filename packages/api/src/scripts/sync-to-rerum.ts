@@ -30,7 +30,7 @@ const SYNC_INTERVAL_MS = 30_000; // 30 seconds
 let DRY_RUN = true;
 
 // Initialize database
-const { db, sqlite } = openLocalDb();
+const { db, pool } = openLocalDb();
 
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
   const ts = new Date().toISOString();
@@ -73,76 +73,68 @@ async function rerumOverwrite(data: object): Promise<{ '@id': string }> {
 }
 
 // Ensure script-only tables exist
-function ensureTables() {
-  sqlite.exec(`
+async function ensureTables() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS reverse_sync_state (
       id TEXT PRIMARY KEY,
-      last_sync_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+      last_sync_at TIMESTAMP NOT NULL,
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `);
 
-  sqlite.exec(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS id_mapping (
       id TEXT PRIMARY KEY,
       rerum_id TEXT NOT NULL,
       type TEXT NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `);
 }
 
 // Get RERUM ID for a local ID
-function getRerumId(localId: string): string | null {
-  const row = sqlite.prepare('SELECT rerum_id FROM id_mapping WHERE id = ?').get(localId) as
-    | { rerum_id: string }
-    | undefined;
-  return row?.rerum_id || null;
+async function getRerumId(localId: string): Promise<string | null> {
+  const { rows } = await pool.query('SELECT rerum_id FROM id_mapping WHERE id = $1', [localId]);
+  return rows[0]?.rerum_id || null;
 }
 
 // Save ID mapping
-function saveIdMapping(localId: string, rerumId: string, type: string) {
+async function saveIdMapping(localId: string, rerumId: string, type: string) {
   if (DRY_RUN) {
     log('info', `[DRY RUN] Would save ID mapping: ${localId} -> ${rerumId} (${type})`);
     return;
   }
 
-  sqlite.prepare(`
-    INSERT INTO id_mapping (id, rerum_id, type) VALUES (?, ?, ?)
-    ON CONFLICT (id) DO UPDATE SET rerum_id = excluded.rerum_id
-  `).run(localId, rerumId, type);
+  await pool.query(`
+    INSERT INTO id_mapping (id, rerum_id, type) VALUES ($1, $2, $3)
+    ON CONFLICT (id) DO UPDATE SET rerum_id = EXCLUDED.rerum_id
+  `, [localId, rerumId, type]);
 }
 
 // Get last sync time
-function getLastSyncTime(): Date {
-  const row = sqlite.prepare('SELECT last_sync_at FROM reverse_sync_state WHERE id = ?').get('main') as
-    | { last_sync_at: number }
-    | undefined;
-  // Default to epoch if no previous sync
-  return row ? new Date(row.last_sync_at * 1000) : new Date(0);
+async function getLastSyncTime(): Promise<Date> {
+  const { rows } = await pool.query('SELECT last_sync_at FROM reverse_sync_state WHERE id = $1', ['main']);
+  return rows[0] ? new Date(rows[0].last_sync_at) : new Date(0);
 }
 
 // Update last sync time
-function updateLastSyncTime(time: Date) {
+async function updateLastSyncTime(time: Date) {
   if (DRY_RUN) {
     log('info', `[DRY RUN] Would update last sync time to: ${time.toISOString()}`);
     return;
   }
 
-  const epoch = Math.floor(time.getTime() / 1000);
-  const now = Math.floor(Date.now() / 1000);
-
-  sqlite.prepare(`
-    INSERT INTO reverse_sync_state (id, last_sync_at, updated_at) VALUES (?, ?, ?)
-    ON CONFLICT (id) DO UPDATE SET last_sync_at = excluded.last_sync_at, updated_at = excluded.updated_at
-  `).run('main', epoch, now);
+  await pool.query(`
+    INSERT INTO reverse_sync_state (id, last_sync_at, updated_at) VALUES ($1, $2, NOW())
+    ON CONFLICT (id) DO UPDATE SET last_sync_at = EXCLUDED.last_sync_at, updated_at = NOW()
+  `, ['main', time.toISOString()]);
 }
 
 // Sync notes from D1 to RERUM
 async function syncNotesToRerum() {
   log('info', 'Syncing notes to RERUM...');
 
-  const lastSync = getLastSyncTime();
+  const lastSync = await getLastSyncTime();
 
   // Find notes updated since last sync
   const notes = await db.query.note.findMany({
@@ -161,7 +153,7 @@ async function syncNotesToRerum() {
 
   for (const note of notes) {
     try {
-      const existingRerumId = getRerumId(note.id);
+      const existingRerumId = await getRerumId(note.id);
 
       // Transform to RERUM format
       const rerumData: Record<string, unknown> = {
@@ -204,7 +196,7 @@ async function syncNotesToRerum() {
           updated++;
         } else {
           const result = await rerumCreate(rerumData);
-          saveIdMapping(note.id, result['@id'], 'note');
+          await saveIdMapping(note.id, result['@id'], 'note');
           created++;
         }
       }
@@ -222,7 +214,7 @@ async function syncNotesToRerum() {
 async function syncCommentsToRerum() {
   log('info', 'Syncing comments to RERUM...');
 
-  const lastSync = getLastSyncTime();
+  const lastSync = await getLastSyncTime();
 
   const comments = await db.query.comment.findMany({
     where: gt(schema.comment.updatedAt, lastSync),
@@ -236,10 +228,10 @@ async function syncCommentsToRerum() {
 
   for (const comment of comments) {
     try {
-      const existingRerumId = getRerumId(comment.id);
+      const existingRerumId = await getRerumId(comment.id);
 
       // Get RERUM ID for the note
-      let noteRerumId = getRerumId(comment.noteId);
+      let noteRerumId = await getRerumId(comment.noteId);
       if (!noteRerumId) {
         noteRerumId = comment.noteId;
       }
@@ -276,7 +268,7 @@ async function syncCommentsToRerum() {
           updated++;
         } else {
           const result = await rerumCreate(rerumData);
-          saveIdMapping(comment.id, result['@id'], 'comment');
+          await saveIdMapping(comment.id, result['@id'], 'comment');
           created++;
         }
       }
@@ -295,13 +287,13 @@ async function runSync() {
   log('info', 'Starting reverse sync (D1 -> RERUM)...');
 
   try {
-    ensureTables();
+    await ensureTables();
 
     const syncStartTime = new Date();
     const notesResult = await syncNotesToRerum();
     const commentsResult = await syncCommentsToRerum();
 
-    updateLastSyncTime(syncStartTime);
+    await updateLastSyncTime(syncStartTime);
 
     log('info', 'Reverse sync completed', {
       notes: notesResult,
@@ -359,12 +351,12 @@ async function main() {
       await runWatchMode();
     } else {
       await runSync();
-      sqlite.close();
+      await pool.end();
       process.exit(0);
     }
   } catch (error) {
     log('error', 'Fatal error', error);
-    sqlite.close();
+    await pool.end();
     process.exit(1);
   }
 }

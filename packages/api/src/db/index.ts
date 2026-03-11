@@ -1,19 +1,28 @@
-import { drizzle } from 'drizzle-orm/d1';
-import { sql } from 'drizzle-orm';
-import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import { env } from '../env';
 import * as schema from './schema';
 
-export type Database = DrizzleD1Database<typeof schema>;
+const pool = new Pool({
+  connectionString: env.DATABASE_URL,
+  max: 20,
+});
 
-export function createDb(d1: D1Database): Database {
-  return drizzle(d1, { schema });
-}
+export const db = drizzle(pool, { schema });
 
-export async function testConnection(db: Database): Promise<boolean> {
+export type Database = typeof db;
+
+export async function testConnection(): Promise<boolean> {
   try {
-    await db.run(sql`SELECT 1`);
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
     return true;
   } catch {
     return false;
   }
+}
+
+export async function closePool(): Promise<void> {
+  await pool.end();
 }

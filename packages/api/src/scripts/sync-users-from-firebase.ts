@@ -31,7 +31,7 @@ const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 let DRY_RUN = true;
 
 // Initialize database connection
-const { db, sqlite } = openLocalDb();
+const { db, pool } = openLocalDb();
 
 // Logger with timestamps
 function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
@@ -278,11 +278,11 @@ async function main() {
   try {
     initializeFirebase();
     await syncUsers();
-    sqlite.close();
+    await pool.end();
     process.exit(0);
   } catch (error) {
     log('error', 'Fatal error', error);
-    sqlite.close();
+    await pool.end();
     process.exit(1);
   }
 }

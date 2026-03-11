@@ -22,6 +22,7 @@
     "test:e2e:install": "playwright install"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@googlemaps/markerclusterer": "^2.6.2",
@@ -106,7 +107,6 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "tss-react": "^4.9.19",
     "uuid": "^13.0.0",
     "zustand": "^5.0.8"
   },

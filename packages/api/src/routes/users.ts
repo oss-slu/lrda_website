@@ -8,7 +8,7 @@ import {
 import { eq } from 'drizzle-orm';
 import { user } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
-import type { AppBindings } from '../types';
+import type { AppEnv } from '../types';
 import { getDb } from './helpers';
 
 // Routes
@@ -172,11 +172,11 @@ const assignInstructorRoute = createRoute({
 });
 
 // Create router
-export const userRoutes = new OpenAPIHono<AppBindings>()
+export const userRoutes = new OpenAPIHono<AppEnv>()
   // GET /users/me - requires auth
   .openapi(getMeRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
 
     const result = await db.query.user.findFirst({
       where: eq(user.id, authUser.id),
@@ -216,7 +216,7 @@ export const userRoutes = new OpenAPIHono<AppBindings>()
   // PATCH /users/me - requires auth
   .openapi(updateMeRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
     const [updated] = await db
@@ -267,7 +267,7 @@ export const userRoutes = new OpenAPIHono<AppBindings>()
   // POST /users/me/instructor - requires auth
   .openapi(assignInstructorRoute, async c => {
     const db = getDb(c);
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
     // Verify the instructor exists and is actually an instructor
@@ -347,7 +347,7 @@ export const userRoutes = new OpenAPIHono<AppBindings>()
   .openapi(getStudentsRoute, async c => {
     const db = getDb(c);
     const { id } = c.req.valid('param');
-    const authUser = c.get('user') as NonNullable<AppBindings['Variables']['user']>;
+    const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
 
     // First verify the instructor exists and is actually an instructor
     const instructor = await db.query.user.findFirst({

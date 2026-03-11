@@ -9,7 +9,7 @@ import {
 import { eq, isNotNull, and, ne } from 'drizzle-orm';
 import { user } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
-import type { AppBindings } from '../types';
+import type { AppEnv } from '../types';
 import { getDb } from './helpers';
 
 // Routes
@@ -148,7 +148,7 @@ const rejectInstructorRoute = createRoute({
 });
 
 // Create router
-export const adminRoutes = new OpenAPIHono<AppBindings>()
+export const adminRoutes = new OpenAPIHono<AppEnv>()
   // GET /admin/users - list all users
   .openapi(getAllUsersRoute, async c => {
     const db = getDb(c);

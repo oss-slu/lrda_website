@@ -18,8 +18,7 @@
  *   D1_DB_PATH    - (optional) Override path to local D1 SQLite file
  */
 
-import { eq, sql } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { eq } from 'drizzle-orm';
 import { initializeApp, cert, getApps, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import * as fs from 'fs';
@@ -38,22 +37,8 @@ const BATCH_SIZE = 100;
 // DRY_RUN is true by default for safety - use --yolo to actually write to database
 let DRY_RUN = true;
 
-// Sync state table (tracks last sync time) -- stored as unix epoch integers
-const syncState = sqliteTable('sync_state', {
-  id: text('id').primaryKey(),
-  lastSyncAt: integer('last_sync_at', { mode: 'timestamp' }).notNull(),
-  lastNotesSyncAt: integer('last_notes_sync_at', { mode: 'timestamp' }),
-  lastCommentsSyncAt: integer('last_comments_sync_at', { mode: 'timestamp' }),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-});
-
 // Initialize database connection
-const { db, sqlite } = openLocalDb();
-
-// Extend the db with the sync_state table for typed queries
-const extDb = Object.assign(db, {
-  // We'll use raw SQL for sync_state since it's a script-only table
-});
+const { db, pool } = openLocalDb();
 
 // Initialize Firebase Admin SDK (optional - for looking up user emails)
 let firebaseInitialized = false;
@@ -226,65 +211,59 @@ interface RerumComment {
 }
 
 // Ensure sync_state table exists
-function ensureSyncStateTable() {
-  sqlite.exec(`
+async function ensureSyncStateTable() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS sync_state (
       id TEXT PRIMARY KEY,
-      last_sync_at INTEGER NOT NULL,
-      last_notes_sync_at INTEGER,
-      last_comments_sync_at INTEGER,
-      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+      last_sync_at TIMESTAMP NOT NULL,
+      last_notes_sync_at TIMESTAMP,
+      last_comments_sync_at TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `);
 }
 
 // Get last sync time
-function getLastSyncTime(type: 'notes' | 'comments'): Date | null {
-  const row = sqlite.prepare('SELECT * FROM sync_state WHERE id = ?').get('main') as {
-    last_sync_at: number;
-    last_notes_sync_at: number | null;
-    last_comments_sync_at: number | null;
-  } | undefined;
+async function getLastSyncTime(type: 'notes' | 'comments'): Promise<Date | null> {
+  const { rows } = await pool.query('SELECT * FROM sync_state WHERE id = $1', ['main']);
+  const row = rows[0];
 
   if (!row) return null;
 
   if (type === 'notes' && row.last_notes_sync_at != null) {
-    return new Date(row.last_notes_sync_at * 1000);
+    return new Date(row.last_notes_sync_at);
   }
   if (type === 'comments' && row.last_comments_sync_at != null) {
-    return new Date(row.last_comments_sync_at * 1000);
+    return new Date(row.last_comments_sync_at);
   }
-  return new Date(row.last_sync_at * 1000);
+  return new Date(row.last_sync_at);
 }
 
 // Update last sync time
-function updateLastSyncTime(type: 'notes' | 'comments', time: Date) {
+async function updateLastSyncTime(type: 'notes' | 'comments', time: Date) {
   if (DRY_RUN) {
     log('info', `[DRY RUN] Would update last ${type} sync time to: ${time.toISOString()}`);
     return;
   }
 
-  const epoch = Math.floor(time.getTime() / 1000);
-  const now = Math.floor(Date.now() / 1000);
-
   if (type === 'notes') {
-    sqlite.prepare(`
+    await pool.query(`
       INSERT INTO sync_state (id, last_sync_at, last_notes_sync_at, updated_at)
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $2, NOW())
       ON CONFLICT (id) DO UPDATE SET
-        last_sync_at = excluded.last_sync_at,
-        last_notes_sync_at = excluded.last_notes_sync_at,
-        updated_at = excluded.updated_at
-    `).run('main', epoch, epoch, now);
+        last_sync_at = EXCLUDED.last_sync_at,
+        last_notes_sync_at = EXCLUDED.last_notes_sync_at,
+        updated_at = NOW()
+    `, ['main', time.toISOString()]);
   } else {
-    sqlite.prepare(`
+    await pool.query(`
       INSERT INTO sync_state (id, last_sync_at, last_comments_sync_at, updated_at)
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $2, NOW())
       ON CONFLICT (id) DO UPDATE SET
-        last_sync_at = excluded.last_sync_at,
-        last_comments_sync_at = excluded.last_comments_sync_at,
-        updated_at = excluded.updated_at
-    `).run('main', epoch, epoch, now);
+        last_sync_at = EXCLUDED.last_sync_at,
+        last_comments_sync_at = EXCLUDED.last_comments_sync_at,
+        updated_at = NOW()
+    `, ['main', time.toISOString()]);
   }
 }
 
@@ -313,7 +292,7 @@ async function ensureFallbackUser() {
 async function syncNotes(fullSync = false) {
   log('info', 'Starting notes sync...');
 
-  const lastSync = fullSync ? null : getLastSyncTime('notes');
+  const lastSync = fullSync ? null : await getLastSyncTime('notes');
   const syncStartTime = new Date();
 
   // Build query - fetch all non-deleted notes
@@ -449,7 +428,7 @@ async function syncNotes(fullSync = false) {
     }
   }
 
-  updateLastSyncTime('notes', syncStartTime);
+  await updateLastSyncTime('notes', syncStartTime);
   log('info', `Notes sync complete: ${created} created, ${updated} updated, ${skipped} skipped`);
 
   return { created, updated, skipped };
@@ -459,7 +438,7 @@ async function syncNotes(fullSync = false) {
 async function syncComments(fullSync = false) {
   log('info', 'Starting comments sync...');
 
-  const lastSync = fullSync ? null : getLastSyncTime('comments');
+  const lastSync = fullSync ? null : await getLastSyncTime('comments');
   const syncStartTime = new Date();
 
   const queryObj = { type: 'comment' };
@@ -580,7 +559,7 @@ async function syncComments(fullSync = false) {
     }
   }
 
-  updateLastSyncTime('comments', syncStartTime);
+  await updateLastSyncTime('comments', syncStartTime);
   log('info', `Comments sync complete: ${created} created, ${updated} updated, ${skipped} skipped`);
 
   return { created, updated, skipped };
@@ -591,7 +570,7 @@ async function runSync(fullSync = false) {
   log('info', `Starting ${fullSync ? 'full' : 'incremental'} sync...`);
 
   try {
-    ensureSyncStateTable();
+    await ensureSyncStateTable();
     if (!DRY_RUN) await ensureFallbackUser();
 
     const notesResult = await syncNotes(fullSync);
@@ -666,12 +645,12 @@ async function main() {
       await runWatchMode();
     } else {
       await runSync(fullSync);
-      sqlite.close();
+      await pool.end();
       process.exit(0);
     }
   } catch (error) {
     log('error', 'Fatal error', error);
-    sqlite.close();
+    await pool.end();
     process.exit(1);
   }
 }
