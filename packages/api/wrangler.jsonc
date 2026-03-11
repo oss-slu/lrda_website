@@ -17,9 +17,9 @@
 
   "vars": {
     "ENVIRONMENT": "production",
-    "BETTER_AUTH_URL": "https://lrda-api.jacobmaynard.workers.dev",
-    "CORS_ORIGINS": "https://lrda-web.jacobmaynard.workers.dev,http://localhost:3000",
-    "WEB_URL": "https://lrda-web.jacobmaynard.workers.dev",
+    "BETTER_AUTH_URL": "https://lrda-api.wheresreligion.workers.dev",
+    "CORS_ORIGINS": "https://lrda-web.wheresreligion.workers.dev,http://localhost:3000",
+    "WEB_URL": "https://lrda-web.wheresreligion.workers.dev",
     "EMAIL_FROM": "noreply@wheresreligion.org"
   }
 

@@ -16,7 +16,6 @@ interface UseMapMarkersProps {
   isPanelOpen: boolean;
   setActiveNote: (note: Note | null) => void;
   setHoveredNoteId: (noteId: string | null) => void;
-  setModalNote: (note: Note | null) => void;
   setIsLoading: (loading: boolean) => void;
   scrollToNoteTile: (noteId: string) => void;
 }
@@ -34,7 +33,6 @@ export function useMapMarkers({
   isPanelOpen,
   setActiveNote,
   setHoveredNoteId,
-  setModalNote,
   setIsLoading,
   scrollToNoteTile,
 }: UseMapMarkersProps) {
@@ -235,7 +233,7 @@ export function useMapMarkers({
 
     // Remove markers for notes no longer in the set
     const toRemove: string[] = [];
-    for (const id of currentMarkers.keys()) {
+    for (const id of Array.from(currentMarkers.keys())) {
       if (!desiredIds.has(id)) {
         toRemove.push(id);
       }

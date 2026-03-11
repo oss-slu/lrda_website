@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Note, Tag } from '@/app/types';
 import { notesService } from '@/app/lib/services/notes.service';

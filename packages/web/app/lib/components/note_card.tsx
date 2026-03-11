@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Note } from '@/app/types';
 import { useCreatorName } from '../hooks/queries/useUsers';
 import { Calendar, User, ImageIcon } from 'lucide-react';

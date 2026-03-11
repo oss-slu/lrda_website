@@ -162,7 +162,6 @@ const Page = () => {
     isPanelOpen,
     setActiveNote,
     setHoveredNoteId,
-    setModalNote,
     setIsLoading,
     scrollToNoteTile,
   });

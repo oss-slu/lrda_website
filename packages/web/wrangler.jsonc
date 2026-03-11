@@ -24,6 +24,6 @@
   ],
 
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://lrda-api.jacobmaynard.workers.dev"
+    "NEXT_PUBLIC_API_URL": "https://lrda-api.wheresreligion.workers.dev"
   }
 }
