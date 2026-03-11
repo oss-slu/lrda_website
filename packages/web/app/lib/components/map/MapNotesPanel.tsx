@@ -1,5 +1,3 @@
-'use client';
-
 import React, { forwardRef, useCallback } from 'react';
 import { Note } from '@/app/types';
 import { Skeleton } from '@/components/ui/skeleton';

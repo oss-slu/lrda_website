@@ -34,13 +34,12 @@ function VerifyEmailPage() {
     setError(null)
 
     try {
-      const res = await authClient.verifyEmail({
+      const { error: resError } = await authClient.verifyEmail({
         query: { token: verifyToken },
       })
 
-      if (res && (res as any).error) {
-        const err = (res as any).error
-        setError(err?.message || err || 'Email verification failed.')
+      if (resError) {
+        setError(resError.message || 'Email verification failed.')
         setAutoVerifying(false)
         return
       }

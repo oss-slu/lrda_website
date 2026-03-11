@@ -1,5 +1,3 @@
-'use client';
-
 import type { CommentData } from '@/app/lib/services/comments.types';
 import { Button } from '@/components/ui/button';
 

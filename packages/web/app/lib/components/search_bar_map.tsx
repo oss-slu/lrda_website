@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';

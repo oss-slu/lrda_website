@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { FileText, Search } from 'lucide-react';

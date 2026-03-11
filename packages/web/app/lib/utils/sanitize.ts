@@ -1,4 +1,14 @@
-import DOMPurify from 'dompurify';
+import type DOMPurifyType from 'dompurify';
+
+let _DOMPurify: typeof DOMPurifyType | null = null;
+
+async function getDOMPurify(): Promise<typeof DOMPurifyType> {
+  if (!_DOMPurify) {
+    const mod = await import('dompurify');
+    _DOMPurify = mod.default;
+  }
+  return _DOMPurify;
+}
 
 /**
  * Configuration options for HTML sanitization
@@ -151,7 +161,7 @@ function stripBlobAndDataUrls(html: string): string {
  * const clean = sanitizeHtml(content, { allowVideo: true, stripBlobUrls: true });
  * ```
  */
-export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): string {
+export async function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): Promise<string> {
   // Return empty string for falsy input
   if (!dirty) {
     return '';
@@ -160,9 +170,10 @@ export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): stri
   // SSR safety check - return the input if window is undefined
   // DOMPurify requires a DOM environment
   if (typeof window === 'undefined') {
-    console.warn('sanitizeHtml called during SSR - returning unsanitized content');
     return dirty;
   }
+
+  const DOMPurify = await getDOMPurify();
 
   const {
     allowIframes = false,
@@ -265,11 +276,11 @@ export function extractTextFromHtml(html: string): string {
  * @param options - Sanitization options
  * @returns Object with both sanitized HTML and extracted text
  */
-export function sanitizeAndExtract(
+export async function sanitizeAndExtract(
   dirty: string,
   options: SanitizeOptions = {},
-): { html: string; text: string } {
-  const html = sanitizeHtml(dirty, options);
+): Promise<{ html: string; text: string }> {
+  const html = await sanitizeHtml(dirty, options);
   const text = extractTextFromHtml(html);
   return { html, text };
 }

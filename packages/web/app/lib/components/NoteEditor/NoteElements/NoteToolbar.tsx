@@ -1,4 +1,3 @@
-'use client';
 import { Calendar, MapPin } from 'lucide-react';
 
 const NoteToolbar = () => {

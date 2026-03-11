@@ -131,7 +131,7 @@ function SignupPage() {
       toast.success('Account created! Check your email to verify.')
 
       // Redirect to confirmation page showing email verification info
-      navigate({ to: '/confirm', search: { email: encodeURIComponent(data.email) } })
+      navigate({ to: '/confirm', search: { email: data.email } })
     } catch (error) {
       console.error('Signup error:', error)
       toast.error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

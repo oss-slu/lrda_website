@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { CollapsibleSection } from '@/app/lib/components/CollapsibleSection';
@@ -41,7 +41,7 @@ function WheresReligionPage() {
               size='lg'
               className='rounded-xl border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white/20 hover:text-white hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600'
             >
-              ← Back to About
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to About
             </Button>
           </Link>
         </div>
@@ -404,7 +404,7 @@ function WheresReligionPage() {
               size='lg'
               className='rounded-xl border-2 border-blue-300 bg-white transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-white hover:text-slate-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2'
             >
-              ← Back to About
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to About
             </Button>
           </Link>
         </div>

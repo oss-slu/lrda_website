@@ -1,4 +1,3 @@
-'use client';
 import { useState } from 'react';
 import Sidebar from '@/app/lib/components/Sidebar';
 import NoteEditor from '@/app/lib/components/NoteEditor';

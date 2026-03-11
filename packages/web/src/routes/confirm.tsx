@@ -5,7 +5,7 @@ import { Mail } from 'lucide-react'
 
 export const Route = createFileRoute('/confirm')({
   validateSearch: (search: Record<string, unknown>) => ({
-    email: typeof search.email === 'string' ? decodeURIComponent(search.email) : '',
+    email: typeof search.email === 'string' ? search.email : '',
   }),
   component: ConfirmPage,
 })

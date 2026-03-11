@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { UserProfile } from '@/app/types';
 import {
   signInWithEmail,
@@ -167,6 +167,15 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-store',
       version: 1,
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined'
+          ? localStorage
+          : {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+            },
+      ),
       partialize: state => ({
         // Only persist user data, not loading/initialized states
         user: state.user,

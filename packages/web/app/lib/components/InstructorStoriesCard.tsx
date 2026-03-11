@@ -64,7 +64,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   // Sanitize HTML content
   useEffect(() => {
     if (bodyHtml) {
-      setSanitizedBodyHtml(sanitizeHtml(bodyHtml, { allowVideo: true, allowAudio: true }));
+      sanitizeHtml(bodyHtml, { allowVideo: true, allowAudio: true }).then(setSanitizedBodyHtml);
     }
   }, [bodyHtml]);
 

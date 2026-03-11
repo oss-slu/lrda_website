@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 import {
   HeadContent,
-  Outlet,
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
@@ -38,16 +37,8 @@ export const Route = createRootRoute({
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
-  component: RootComponent,
+  shellComponent: RootDocument,
 })
-
-function RootComponent() {
-  return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  )
-}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -67,7 +58,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </GoogleMapsProvider>
           </AuthProvider>
         </QueryProvider>
-        <React.Suspense>
+        <React.Suspense fallback={null}>
           <TanStackRouterDevtools position="bottom-right" />
         </React.Suspense>
         <Scripts />

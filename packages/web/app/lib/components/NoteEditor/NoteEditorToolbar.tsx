@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, RefObject } from 'react';
 import { Calendar as CalendarIcon, Download, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

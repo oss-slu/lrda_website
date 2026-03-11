@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { useAuthStore } from '@/app/lib/stores/authStore'
 import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
@@ -34,13 +35,6 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [snackState, setSnackState] = useState(false)
-
-  useEffect(() => {
-    if (!snackState) return
-    const timer = setTimeout(() => setSnackState(false), 3000)
-    return () => clearTimeout(timer)
-  }, [snackState])
 
   const handleLogin = async () => {
     if (!email || !password) return
@@ -53,7 +47,7 @@ function LoginPage() {
       }
     } catch (err) {
       console.error(err)
-      setSnackState(true)
+      toast.error('Invalid user credentials')
     } finally {
       setIsLoading(false)
     }
@@ -128,20 +122,6 @@ function LoginPage() {
           </form>
         </CardContent>
       </Card>
-
-      {snackState && (
-        <div className="fixed inset-x-0 bottom-10 flex justify-center">
-          <div className="w-80 rounded-lg bg-white p-3 text-center shadow">
-            <p className="mb-2">Invalid user credentials</p>
-            <button
-              className="text-sm text-blue-500 hover:underline"
-              onClick={() => setSnackState(false)}
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

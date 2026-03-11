@@ -1,5 +1,3 @@
-'use client';
-
 import CommentSidebar from '../comments/CommentSidebar';
 import type { Editor } from '@tiptap/core';
 

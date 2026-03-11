@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';

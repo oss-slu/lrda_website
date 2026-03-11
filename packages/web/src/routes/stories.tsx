@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import EnhancedClickableNote from '@/app/lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -53,9 +53,9 @@ function StoriesPage() {
   }, [data]);
 
   // Intersection observer for infinite scroll
-  const loaderRef = React.useRef<HTMLDivElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {

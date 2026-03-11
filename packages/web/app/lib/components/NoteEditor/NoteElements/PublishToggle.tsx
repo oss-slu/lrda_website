@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { UploadIcon, XCircle, ArrowDownToLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip';

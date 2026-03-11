@@ -76,7 +76,7 @@ function NoteDetailPage() {
             .then((name: string) => setCreator(name))
             .catch(() => setCreator('Unknown'));
           if (n.text) {
-            setSanitizedContent(sanitizeHtml(n.text, { allowVideo: true, allowAudio: true }));
+            sanitizeHtml(n.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
           }
         } else {
           setError('Note not found');

@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { LinkBubbleMenu, RichTextContent } from 'mui-tiptap';
 import type { Editor } from '@tiptap/core';

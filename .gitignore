@@ -44,3 +44,4 @@ docs/issues/*
 .open-next
 rerum-notes-dump.json
 d1-seed-dump.sql
+dist/

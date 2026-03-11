@@ -72,7 +72,7 @@ const ClickableNote: React.FC<{
   // Sanitize note content
   useEffect(() => {
     if (note.text) {
-      setSanitizedContent(sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }));
+      sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
     }
   }, [note.text]);
 

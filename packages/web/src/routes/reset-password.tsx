@@ -33,14 +33,13 @@ function ResetPasswordPage() {
     setError(null)
 
     try {
-      const res = await authClient.resetPassword({
+      const { error: resError } = await authClient.resetPassword({
         token,
         newPassword: password,
       })
 
-      if (res && (res as any).error) {
-        const err = (res as any).error
-        setError(err?.message || err || 'Password reset failed.')
+      if (resError) {
+        setError(resError.message || 'Password reset failed.')
         return
       }
 

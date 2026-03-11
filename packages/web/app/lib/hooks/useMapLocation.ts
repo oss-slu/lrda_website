@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { getItem, setItem } from '../utils/local_storage';

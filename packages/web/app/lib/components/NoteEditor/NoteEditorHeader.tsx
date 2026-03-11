@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { handleTitleChange } from './handlers/noteHandlers';

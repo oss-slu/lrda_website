@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Comment } from '@/app/types';
 import CommentPopover from '../CommentPopover';
