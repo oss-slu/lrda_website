@@ -9,7 +9,9 @@ import {
 import { type CarouselApi } from '@/components/ui/carousel';
 import type { NoteMedia } from '@/app/types';
 import Image from 'next/image';
-import ReactPlayer from 'react-player';
+import dynamic from 'next/dynamic';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[] }) {
   const [api, setApi] = useState<CarouselApi>();

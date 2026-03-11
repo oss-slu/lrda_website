@@ -40,5 +40,6 @@ docs/issues/*
 
 # Cloudflare
 **/.wrangler
+**/.wrangler**
 .open-next
 rerum-notes-dump.json

@@ -1,13 +1,11 @@
 import { useRouter } from 'next/router';
-import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph } from 'docx';
 import { saveAs } from 'file-saver';
 
 const DownloadNote = () => {
   const router = useRouter();
   const { title, content, tags, time, longitude, latitude } = router.query;
 
-  const handleDownload = (format: string) => {
+  const handleDownload = async (format: string) => {
     const noteContent = {
       title: title || 'Untitled Note',
       content: content || '',
@@ -22,6 +20,7 @@ const DownloadNote = () => {
     };
 
     if (format === 'pdf') {
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       doc.setFont('helvetica');
       doc.setFontSize(16);
@@ -41,6 +40,7 @@ const DownloadNote = () => {
       doc.text(noteContent.content as string, 10, 70 + noteContent.tags.length * 10);
       doc.save(`${noteContent.title || 'note'}.pdf`);
     } else if (format === 'docx') {
+      const { Document, Packer, Paragraph } = await import('docx');
       const doc = new Document({
         sections: [
           {

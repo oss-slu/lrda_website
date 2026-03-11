@@ -3,7 +3,6 @@
 import { useState, RefObject } from 'react';
 import { Calendar as CalendarIcon, Download, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Document, Packer, Paragraph } from 'docx';
 import { toast } from 'sonner';
 import TimePicker from './NoteElements/TimePicker';
 import LocationPicker from './NoteElements/LocationPicker';
@@ -49,6 +48,7 @@ export default function NoteEditorToolbar({
       pdf.text(noteContent, 10, 10);
       pdf.save(`${noteState.title || 'note'}.pdf`);
     } else if (fileType === 'docx') {
+      const { Document, Packer, Paragraph } = await import('docx');
       const doc = new Document({
         sections: [
           {

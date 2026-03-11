@@ -7,7 +7,9 @@ import {
 } from '@/components/ui/carousel';
 
 import type { AnyMedia } from '@/app/types';
-import ReactPlayer from 'react-player';
+import dynamic from 'next/dynamic';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) {
   return (

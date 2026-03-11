@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import AudioPlayer from 'react-h5-audio-player';
+import dynamic from 'next/dynamic';
+
+const AudioPlayer = dynamic(() => import('react-h5-audio-player'), { ssr: false });
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { toast } from 'sonner';
 import { FileUp } from 'lucide-react';

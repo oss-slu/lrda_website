@@ -14,12 +14,39 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'picsum.photos',
       },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.githubusercontent.com',
+      },
     ],
     qualities: [5, 50, 75],
   },
+  serverExternalPackages: [
+    'jspdf',
+    'docx',
+    'file-saver',
+    // react-player transitive deps -- loaded via next/dynamic with ssr: false
+    // (can't externalize react-player itself due to Turbopack ModuleId bug)
+    'hls-video-element',
+    'dash-video-element',
+    'vimeo-video-element',
+    'youtube-video-element',
+    'wistia-video-element',
+    'spotify-audio-element',
+    'twitch-video-element',
+    'tiktok-video-element',
+    '@mux/mux-player-react',
+  ],
   turbopack: {},
   experimental: {
     optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      '@tanstack/react-query',
       '@/app/lib/services',
       '@/app/lib/components/NoteEditor',
       '@/app/lib/hooks/queries',
