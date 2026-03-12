@@ -10,6 +10,7 @@ import NoteCard from '../components/note_card';
 interface UseMapMarkersProps {
   mapRef: React.MutableRefObject<google.maps.Map | null>;
   isMapsApiLoaded: boolean;
+  isMapReady: boolean;
   filteredNotes: Note[];
   isPanelOpen: boolean;
   setActiveNote: (note: Note | null) => void;
@@ -27,6 +28,7 @@ interface UseMapMarkersProps {
 export function useMapMarkers({
   mapRef,
   isMapsApiLoaded,
+  isMapReady,
   filteredNotes,
   isPanelOpen,
   setActiveNote,
@@ -271,7 +273,7 @@ export function useMapMarkers({
     }
 
     setIsLoading(false);
-  }, [isMapsApiLoaded, filteredNotes, mapRef, createMarker, setIsLoading]);
+  }, [isMapsApiLoaded, isMapReady, filteredNotes, mapRef, createMarker, setIsLoading]);
 
   // Cleanup on unmount
   useEffect(() => {

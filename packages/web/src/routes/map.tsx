@@ -164,6 +164,7 @@ function MapPage() {
   const { handleMapClick } = useMapMarkers({
     mapRef,
     isMapsApiLoaded,
+    isMapReady: mapBounds !== null,
     filteredNotes,
     isPanelOpen,
     setActiveNote,
