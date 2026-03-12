@@ -37,7 +37,7 @@ jobs:
       - name: Run unit tests
         run: pnpm test:unit --silent --no-coverage
         env:
-          NEXT_PUBLIC_API_URL: 'http://localhost:8787'
+          NEXT_PUBLIC_API_URL: 'http://localhost:3002'
           NEXT_PUBLIC_OPENAI_API_KEY: 'mock-openai-key'
           NEXT_PUBLIC_OPENAI_API_URL: 'https://api.openai.com/v1'
           CI: 'true'
@@ -82,7 +82,7 @@ jobs:
         run: pnpm --filter web build
         env:
           CI: true
-          NEXT_PUBLIC_API_URL: 'http://localhost:8787'
+          NEXT_PUBLIC_API_URL: 'http://localhost:3002'
           NEXT_PUBLIC_OPENAI_API_KEY: 'ci-mock-openai-key'
           NEXT_PUBLIC_OPENAI_API_URL: 'https://api.openai.com/v1/chat/completions'
 

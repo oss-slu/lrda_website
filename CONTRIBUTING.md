@@ -129,7 +129,7 @@ Create `packages/web/.env.local` with the following:
 
 ```env
 # API Server URL
-NEXT_PUBLIC_API_URL=http://localhost:8787
+NEXT_PUBLIC_API_URL=http://localhost:3002
 
 # Google Maps (for map features)
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
@@ -180,7 +180,7 @@ pnpm clear-ports
 If you're having trouble logging in:
 
 1. Ensure the API server is running (`pnpm dev:api`)
-2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` is `http://localhost:8787`
+2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` is `http://localhost:3002`
 3. Clear browser cookies and try again
 
 ---

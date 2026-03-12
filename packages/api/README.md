@@ -1,12 +1,12 @@
 # LRDA API
 
-REST API server for the Where's Religion? application, built with Hono, Drizzle ORM, and Cloudflare D1.
+REST API server for the Where's Religion? application, built with Hono, Drizzle ORM, and PostgreSQL.
 
 ## Tech Stack
 
-- **Runtime**: Cloudflare Workers
+- **Runtime**: Node.js
 - **Framework**: Hono with OpenAPI/Zod validation
-- **Database**: Cloudflare D1 (SQLite)
+- **Database**: PostgreSQL (Docker Compose for local dev)
 - **ORM**: Drizzle
 - **Authentication**: better-auth (session-based)
 - **Documentation**: Scalar API Reference
@@ -20,27 +20,32 @@ pnpm install
 # 2. Copy environment file
 cp .env.example .env
 
-# 3. Apply database migrations
-pnpm db:migrate
+# 3. Start PostgreSQL via Docker
+pnpm docker:up
 
-# 4. Start dev server
+# 4. Apply database migrations
+pnpm db:push
+
+# 5. Start dev server
 pnpm dev
 ```
 
-The API will be available at `http://localhost:8787` with docs at `http://localhost:8787/docs`.
+The API will be available at `http://localhost:3002` with docs at `http://localhost:3002/docs`.
 
 ## Environment Variables
 
-Secrets are stored in `.env` (read automatically by wrangler). Non-secret vars are in `wrangler.jsonc`.
+Secrets are stored in `.env` (loaded via `--env-file`).
 
-| Variable             | Description                    | Where            |
-| -------------------- | ------------------------------ | ---------------- |
-| `BETTER_AUTH_SECRET` | Auth secret key                | `.env` (secret)  |
-| `RESEND_API_KEY`     | Email sending API key          | `.env` (secret)  |
-| `GOOGLE_MAPS_API_KEY`| Geocoding API key              | `.env` (secret)  |
-| `BETTER_AUTH_URL`    | Auth callback URL              | `wrangler.jsonc` |
-| `CORS_ORIGINS`       | Allowed origins                | `wrangler.jsonc` |
-| `WEB_URL`            | Frontend URL (for email links) | `wrangler.jsonc` |
+| Variable             | Description                    |
+| -------------------- | ------------------------------ |
+| `PORT`               | Server port (default 3002)     |
+| `DATABASE_URL`       | PostgreSQL connection string   |
+| `BETTER_AUTH_SECRET` | Auth secret key                |
+| `BETTER_AUTH_URL`    | Auth callback URL              |
+| `RESEND_API_KEY`     | Email sending API key          |
+| `GOOGLE_MAPS_API_KEY`| Geocoding API key              |
+| `CORS_ORIGINS`       | Allowed origins                |
+| `WEB_URL`            | Frontend URL (for email links) |
 
 ## Scripts
 
@@ -48,24 +53,30 @@ Secrets are stored in `.env` (read automatically by wrangler). Non-secret vars a
 
 | Command         | Description                              |
 | --------------- | ---------------------------------------- |
-| `pnpm dev`      | Start wrangler dev server (port 8787)    |
-| `pnpm deploy`   | Deploy to Cloudflare (staging)           |
-| `pnpm deploy:prod` | Deploy to Cloudflare (production)     |
+| `pnpm dev`      | Start dev server with file watching      |
+| `pnpm start`    | Start server (no watch)                  |
 | `pnpm test`     | Run tests in watch mode                  |
 | `pnpm test:run` | Run tests once                           |
+
+### Docker
+
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `pnpm docker:up`   | Start PostgreSQL container           |
+| `pnpm docker:down-v` | Stop and remove PostgreSQL container |
 
 ### Database
 
 | Command            | Description                          |
 | ------------------ | ------------------------------------ |
 | `pnpm db:generate` | Generate migration files from schema |
-| `pnpm db:migrate`  | Apply migrations to local D1         |
-| `pnpm db:migrate:prod` | Apply migrations to production D1 |
+| `pnpm db:migrate`  | Apply migrations                     |
+| `pnpm db:push`     | Push schema directly (dev shortcut)  |
 | `pnpm db:studio`   | Open Drizzle Studio GUI              |
 
 ### Migration Sync Scripts
 
-These scripts sync data from Firebase/RERUM to D1 during the migration period.
+These scripts sync data from Firebase/RERUM to PostgreSQL during the migration period.
 
 **Run order for initial sync:**
 
@@ -136,8 +147,8 @@ packages/api/
 ├── src/
 │   ├── __tests__/       # Test files
 │   ├── db/
-│   │   ├── index.ts     # D1 database factory
-│   │   └── schema.ts    # Drizzle schema (SQLite)
+│   │   ├── index.ts     # PostgreSQL database factory
+│   │   └── schema.ts    # Drizzle schema (pg-core)
 │   ├── lib/
 │   │   ├── email.ts     # Resend email helpers
 │   │   └── geocode.ts   # Reverse geocoding
@@ -153,10 +164,11 @@ packages/api/
 │   │   └── users.ts     # User routes
 │   ├── scripts/         # Migration sync scripts
 │   ├── auth.ts          # better-auth config factory
-│   ├── index.ts         # Worker entry point
+│   ├── env.ts           # Environment validation
+│   ├── index.ts         # Server entry point
 │   └── types.ts         # Shared types
 ├── drizzle/             # Generated migrations
-├── wrangler.jsonc       # Cloudflare Workers config
+├── docker-compose.yml   # PostgreSQL container
 ├── drizzle.config.ts    # Drizzle Kit config
 └── package.json
 ```

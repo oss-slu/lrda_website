@@ -19,7 +19,7 @@ if (typeof global.setImmediate === 'undefined') {
 }
 
 // Ensure API env vars exist in test environment
-process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 // Store original console methods
 const originalConsoleError = console.error;
