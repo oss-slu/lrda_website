@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/app/lib/stores/authStore'
 import { useShallow } from 'zustand/react/shallow'
+import { checkMigrationStatus } from '@/app/lib/services'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -35,11 +36,13 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isMigratedUser, setIsMigratedUser] = useState(false)
 
   const handleLogin = async () => {
     if (!email || !password) return
 
     setIsLoading(true)
+    setIsMigratedUser(false)
     try {
       const status = await login(email, password)
       if (status === 'success') {
@@ -47,7 +50,23 @@ function LoginPage() {
       }
     } catch (err) {
       console.error(err)
-      toast.error('Invalid user credentials')
+      const message = err instanceof Error ? err.message : ''
+
+      if (message.toLowerCase().includes('email not verified')) {
+        navigate({ to: '/confirm', search: { email, sent: false } })
+        return
+      }
+
+      try {
+        const needsReset = await checkMigrationStatus(email)
+        if (needsReset) {
+          setIsMigratedUser(true)
+        } else {
+          toast.error('Invalid user credentials')
+        }
+      } catch {
+        toast.error('Invalid user credentials')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -120,6 +139,30 @@ function LoginPage() {
               </Field>
             </FieldGroup>
           </form>
+
+          {isMigratedUser && (
+            <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <p className="font-medium">Welcome back!</p>
+              <p className="mt-1 text-blue-800">
+                We've upgraded our system since your last visit. To keep
+                your account secure, we'll just need you to set a new
+                password. It only takes a moment!
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3 w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                onClick={() =>
+                  navigate({
+                    to: '/forgot-password',
+                    search: { email },
+                  })
+                }
+              >
+                Set up your password
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

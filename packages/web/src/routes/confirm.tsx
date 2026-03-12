@@ -1,48 +1,140 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Card } from '@/components/ui/card'
+import { createFileRoute } from '@tanstack/react-router'
+import { useState, useCallback } from 'react'
+import { authClient } from '@/app/lib/auth/client'
+import { toast } from 'sonner'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Mail } from 'lucide-react'
+import { ResendButton } from '@/components/ui/resend-button'
+import { Link } from '@tanstack/react-router'
+import { Mail, ArrowLeft, Inbox } from 'lucide-react'
 
 export const Route = createFileRoute('/confirm')({
   validateSearch: (search: Record<string, unknown>) => ({
     email: typeof search.email === 'string' ? search.email : '',
+    sent: search.sent === true || search.sent === 'true',
   }),
   component: ConfirmPage,
 })
 
 function ConfirmPage() {
-  const navigate = useNavigate()
-  const { email } = Route.useSearch()
+  const { email, sent } = Route.useSearch()
+  const [hasSent, setHasSent] = useState(sent)
+  const [isSending, setIsSending] = useState(false)
+
+  const sendVerification = useCallback(async () => {
+    if (!email) return
+    setIsSending(true)
+    try {
+      await authClient.sendVerificationEmail({
+        email,
+        callbackURL: `${window.location.origin}/login`,
+      })
+      toast.success('Verification email sent')
+      setHasSent(true)
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to send email',
+      )
+      throw err
+    } finally {
+      setIsSending(false)
+    }
+  }, [email])
+
+  const handleResend = useCallback(async () => {
+    await sendVerification()
+  }, [sendVerification])
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
       <Card className="w-full max-w-md">
-        <div className="p-8">
-          <div className="mb-6 flex justify-center">
-            <Mail className="h-12 w-12 text-blue-600" />
+        <CardHeader>
+          <div className="mb-2 flex justify-center">
+            <div className="rounded-full bg-blue-100 p-3">
+              <Mail className="h-6 w-6 text-blue-600" />
+            </div>
           </div>
-          <h1 className="mb-4 text-center text-2xl font-bold text-gray-800">Verify your email</h1>
-          <p className="mb-6 text-center text-gray-600">A verification link has been sent to:</p>
-          {email && <p className="mb-6 text-center text-sm font-semibold text-gray-800">{email}</p>}
-          <div className="mb-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
-            <p className="mb-2 font-medium">Next steps:</p>
-            <ul className="list-inside list-disc space-y-1">
-              <li>Check your email inbox</li>
-              <li>Click the verification link</li>
-              <li>You'll be able to log in to your account</li>
-            </ul>
+          <CardTitle className="text-center">Verify your email</CardTitle>
+          <CardDescription className="mt-2 text-center">
+            {hasSent ? (
+              <>
+                We sent a verification link to{' '}
+                <span className="font-medium text-foreground">{email}</span>
+              </>
+            ) : email ? (
+              <>
+                We need to verify{' '}
+                <span className="font-medium text-foreground">{email}</span>
+                {' '}before you can log in.
+              </>
+            ) : (
+              'We need to verify your email address before you can log in.'
+            )}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {hasSent && (
+            <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <Inbox className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+              <div className="text-sm text-blue-800">
+                <p className="mb-2 font-medium">Next steps:</p>
+                <ol className="list-inside list-decimal space-y-1">
+                  <li>Check your email inbox (and spam folder)</li>
+                  <li>Click the verification link</li>
+                  <li>Come back here and log in</li>
+                </ol>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {email && !hasSent && (
+              <Button
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
+                disabled={isSending}
+                onClick={sendVerification}
+              >
+                {isSending ? 'Sending...' : 'Send verification email'}
+              </Button>
+            )}
+
+            {email && hasSent && (
+              <ResendButton
+                onResend={handleResend}
+                label="Resend verification email"
+                resendingLabel="Sending..."
+                className="w-full"
+              />
+            )}
+
+            <Link to="/login">
+              <Button
+                variant={hasSent ? 'default' : 'outline'}
+                className={hasSent
+                  ? 'w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white'
+                  : 'w-full'
+                }
+              >
+                Go to login
+              </Button>
+            </Link>
+
+            <Link
+              to="/signup"
+              className="inline-flex items-center justify-center text-sm text-blue-600 underline-offset-4 hover:underline"
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Back to sign up
+            </Link>
           </div>
-          <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
-            <p className="mb-2 font-medium">In development mode:</p>
-            <p>Check the server console for the verification link.</p>
-          </div>
-          <Button
-            onClick={() => navigate({ to: '/login' })}
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
-          >
-            Go to Login
-          </Button>
-        </div>
+        </CardContent>
       </Card>
     </div>
   )

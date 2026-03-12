@@ -49,19 +49,14 @@ export const auth = betterAuth({
     requireEmailVerification: true,
 
     sendResetPassword: async data => {
-      const url = new URL(data.url);
-      const token = url.searchParams.get('token');
-      const resetUrl = `${env.WEB_URL}/reset-password?token=${token}`;
+      const resetUrl = `${env.WEB_URL}/reset-password?token=${data.token}`;
       await sendPasswordResetEmail(data.user.email, resetUrl);
     },
   },
   emailVerification: {
     autoSignInAfterVerification: false,
     sendVerificationEmail: async data => {
-      const url = new URL(data.url);
-      const token = url.searchParams.get('token');
-      const verificationUrl = `${env.WEB_URL}/verify-email?token=${token}`;
-
+      const verificationUrl = `${env.WEB_URL}/verify-email?token=${data.token}`;
       await sendVerificationEmail(data.user.email, verificationUrl);
     },
   },

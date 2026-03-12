@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { env } from '../env';
 
-const isDev = env.ENVIRONMENT !== 'production';
+const isDev = env.ENVIRONMENT === 'development';
 
 const resend = !isDev && env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 

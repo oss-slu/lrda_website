@@ -61,6 +61,9 @@ export {
 // Tags service
 export { tagsService } from './tags.service';
 
+// Migration service -- TEMPORARY, remove after Firebase migration
+export { checkMigrationStatus } from './migration.service';
+
 // Admin service
 export {
   fetchAllUsers,

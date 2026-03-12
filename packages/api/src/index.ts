@@ -1,8 +1,11 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
+import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
 import { env } from './env';
-import { closePool } from './db';
+import { db, closePool } from './db';
+import { user, account } from './db/schema';
 import { routes } from './routes';
 import { auth } from './auth';
 import type { AppEnv } from './types';
@@ -58,6 +61,39 @@ app.post('/api/auth/reset-password', async c => {
 
     return auth.handler(forwarded);
   } catch (err) {
+    return c.json({ error: 'Invalid request' }, 400);
+  }
+});
+
+// Migration status check -- TEMPORARY, remove after Firebase migration is complete.
+// Checks if a user was migrated from Firebase and needs to set a password.
+// Returns { needsPasswordReset: false } for unknown emails to avoid account enumeration.
+app.post('/api/auth/migration-status', async c => {
+  try {
+    const json = await c.req.json();
+    const parsed = z.object({ email: z.string().email() }).safeParse(json);
+    if (!parsed.success) {
+      return c.json({ error: 'Invalid request' }, 400);
+    }
+
+    const { email: emailValue } = parsed.data;
+
+    const result = await db
+      .select({ userId: user.id, accountId: account.id })
+      .from(user)
+      .leftJoin(
+        account,
+        and(eq(account.userId, user.id), eq(account.providerId, 'credential')),
+      )
+      .where(eq(user.email, emailValue))
+      .limit(1);
+
+    if (!result.length) {
+      return c.json({ needsPasswordReset: false }, 200);
+    }
+
+    return c.json({ needsPasswordReset: result[0].accountId === null }, 200);
+  } catch {
     return c.json({ error: 'Invalid request' }, 400);
   }
 });
