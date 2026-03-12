@@ -6,16 +6,13 @@
  *    notes disappearing on refresh when the API treats the user as anonymous).
  * 2. usePersonalNotes fires correctly once auth is initialized.
  */
+import { describe, test, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render } from '@testing-library/react';
+import { usePersonalNotes } from '../lib/hooks/queries/useNotes';
 import Sidebar from '../lib/components/Sidebar';
 
-// Mock next/router
-jest.mock('next/router', () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
-}));
-
-jest.mock('../lib/hooks/queries/useNotes', () => ({
-  usePersonalNotes: jest.fn((_userId?: any) => ({ data: [] })),
+vi.mock('../lib/hooks/queries/useNotes', () => ({
+  usePersonalNotes: vi.fn((_userId?: any) => ({ data: [] })),
   notesKeys: {
     all: ['notes'],
     personal: (userId: string) => ['notes', 'personal', userId],
@@ -23,39 +20,39 @@ jest.mock('../lib/hooks/queries/useNotes', () => ({
 }));
 
 // Mock @tanstack/react-query
-jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: jest.fn(() => ({
-    setQueryData: jest.fn(),
-    invalidateQueries: jest.fn(),
-    getQueryData: jest.fn(() => []),
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: vi.fn(() => ({
+    setQueryData: vi.fn(),
+    invalidateQueries: vi.fn(),
+    getQueryData: vi.fn(() => []),
   })),
 }));
 
 // Mock services
-jest.mock('../lib/services', () => ({
-  fetchMe: jest.fn().mockResolvedValue(null),
-  fetchProfileById: jest.fn().mockResolvedValue(null),
-  fetchInstructors: jest.fn().mockResolvedValue([]),
-  updateProfile: jest.fn().mockResolvedValue({}),
-  assignInstructor: jest.fn().mockResolvedValue(undefined),
-  fetchCreatorName: jest.fn().mockResolvedValue('Test User'),
+vi.mock('../lib/services', () => ({
+  fetchMe: vi.fn().mockResolvedValue(null),
+  fetchProfileById: vi.fn().mockResolvedValue(null),
+  fetchInstructors: vi.fn().mockResolvedValue([]),
+  updateProfile: vi.fn().mockResolvedValue({}),
+  assignInstructor: vi.fn().mockResolvedValue(undefined),
+  fetchCreatorName: vi.fn().mockResolvedValue('Test User'),
   notesService: {
-    create: jest.fn().mockResolvedValue({ id: 'new-note-id' }),
-    fetchUserNotes: jest.fn().mockResolvedValue([]),
+    create: vi.fn().mockResolvedValue({ id: 'new-note-id' }),
+    fetchUserNotes: vi.fn().mockResolvedValue([]),
   },
 }));
 
 // Mock notes store
-jest.mock('../lib/stores/notesStore', () => ({
+vi.mock('../lib/stores/notesStore', () => ({
   useNotesStore: Object.assign(
-    jest.fn((selector?: (state: any) => any) => {
+    vi.fn((selector?: (state: any) => any) => {
       const mockStore = {
         selectedNoteId: null,
-        setSelectedNoteId: jest.fn(),
+        setSelectedNoteId: vi.fn(),
       };
       return selector ? selector(mockStore) : mockStore;
     }),
-    { getState: jest.fn(() => ({ selectedNoteId: null })) },
+    { getState: vi.fn(() => ({ selectedNoteId: null })) },
   ),
 }));
 
@@ -74,15 +71,13 @@ const mockAuthState: Record<string, any> = {
   isInitialized: true,
 };
 
-jest.mock('../lib/stores/authStore', () => ({
-  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+vi.mock('../lib/stores/authStore', () => ({
+  useAuthStore: vi.fn((selector?: (state: any) => any) => {
     return selector ? selector(mockAuthState) : mockAuthState;
   }),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { usePersonalNotes } = require('../lib/hooks/queries/useNotes');
-const mockUsePersonalNotes = usePersonalNotes as jest.Mock;
+const mockUsePersonalNotes = usePersonalNotes as Mock;
 
 describe('Sidebar - auth initialization gate', () => {
   beforeEach(() => {
@@ -104,7 +99,7 @@ describe('Sidebar - auth initialization gate', () => {
     // isInitialized is false (session not yet re-validated).
     mockAuthState.isInitialized = false;
 
-    render(<Sidebar onNoteSelect={jest.fn()} />);
+    render(<Sidebar onNoteSelect={vi.fn()} />);
 
     // usePersonalNotes should be called with null (disabled)
     // so the API call doesn't fire before auth is ready
@@ -116,7 +111,7 @@ describe('Sidebar - auth initialization gate', () => {
   test('passes userId to usePersonalNotes when auth IS initialized', () => {
     mockAuthState.isInitialized = true;
 
-    render(<Sidebar onNoteSelect={jest.fn()} />);
+    render(<Sidebar onNoteSelect={vi.fn()} />);
 
     expect(mockUsePersonalNotes).toHaveBeenCalled();
     const firstCallArg = mockUsePersonalNotes.mock.calls[0][0];

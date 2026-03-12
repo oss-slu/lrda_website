@@ -8,153 +8,153 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as WheresReligionRouteImport } from './routes/wheres-religion';
-import { Route as VerifyEmailRouteImport } from './routes/verify-email';
-import { Route as StoriesRouteImport } from './routes/stories';
-import { Route as SignupRouteImport } from './routes/signup';
-import { Route as ResourcesRouteImport } from './routes/resources';
-import { Route as ResetPasswordRouteImport } from './routes/reset-password';
-import { Route as MapRouteImport } from './routes/map';
-import { Route as LoginRouteImport } from './routes/login';
-import { Route as InstructorDashboardRouteImport } from './routes/instructor-dashboard';
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password';
-import { Route as ConfirmRouteImport } from './routes/confirm';
-import { Route as AdminRouteImport } from './routes/admin';
-import { Route as IndexRouteImport } from './routes/index';
-import { Route as NotesIndexRouteImport } from './routes/notes.index';
-import { Route as NotesIdRouteImport } from './routes/notes.$id';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as WheresReligionRouteImport } from './routes/wheres-religion'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as StoriesRouteImport } from './routes/stories'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as MapRouteImport } from './routes/map'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as InstructorDashboardRouteImport } from './routes/instructor-dashboard'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ConfirmRouteImport } from './routes/confirm'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as NotesIndexRouteImport } from './routes/notes.index'
+import { Route as NotesIdRouteImport } from './routes/notes.$id'
 
 const WheresReligionRoute = WheresReligionRouteImport.update({
   id: '/wheres-religion',
   path: '/wheres-religion',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
   path: '/stories',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MapRoute = MapRouteImport.update({
   id: '/map',
   path: '/map',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const InstructorDashboardRoute = InstructorDashboardRouteImport.update({
   id: '/instructor-dashboard',
   path: '/instructor-dashboard',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ConfirmRoute = ConfirmRouteImport.update({
   id: '/confirm',
   path: '/confirm',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const NotesIndexRoute = NotesIndexRouteImport.update({
   id: '/notes/',
   path: '/notes/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const NotesIdRoute = NotesIdRouteImport.update({
   id: '/notes/$id',
   path: '/notes/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute;
-  '/admin': typeof AdminRoute;
-  '/confirm': typeof ConfirmRoute;
-  '/forgot-password': typeof ForgotPasswordRoute;
-  '/instructor-dashboard': typeof InstructorDashboardRoute;
-  '/login': typeof LoginRoute;
-  '/map': typeof MapRoute;
-  '/reset-password': typeof ResetPasswordRoute;
-  '/resources': typeof ResourcesRoute;
-  '/signup': typeof SignupRoute;
-  '/stories': typeof StoriesRoute;
-  '/verify-email': typeof VerifyEmailRoute;
-  '/wheres-religion': typeof WheresReligionRoute;
-  '/notes/$id': typeof NotesIdRoute;
-  '/notes/': typeof NotesIndexRoute;
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/confirm': typeof ConfirmRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/instructor-dashboard': typeof InstructorDashboardRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/signup': typeof SignupRoute
+  '/stories': typeof StoriesRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/wheres-religion': typeof WheresReligionRoute
+  '/notes/$id': typeof NotesIdRoute
+  '/notes/': typeof NotesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute;
-  '/admin': typeof AdminRoute;
-  '/confirm': typeof ConfirmRoute;
-  '/forgot-password': typeof ForgotPasswordRoute;
-  '/instructor-dashboard': typeof InstructorDashboardRoute;
-  '/login': typeof LoginRoute;
-  '/map': typeof MapRoute;
-  '/reset-password': typeof ResetPasswordRoute;
-  '/resources': typeof ResourcesRoute;
-  '/signup': typeof SignupRoute;
-  '/stories': typeof StoriesRoute;
-  '/verify-email': typeof VerifyEmailRoute;
-  '/wheres-religion': typeof WheresReligionRoute;
-  '/notes/$id': typeof NotesIdRoute;
-  '/notes': typeof NotesIndexRoute;
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/confirm': typeof ConfirmRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/instructor-dashboard': typeof InstructorDashboardRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/signup': typeof SignupRoute
+  '/stories': typeof StoriesRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/wheres-religion': typeof WheresReligionRoute
+  '/notes/$id': typeof NotesIdRoute
+  '/notes': typeof NotesIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/': typeof IndexRoute;
-  '/admin': typeof AdminRoute;
-  '/confirm': typeof ConfirmRoute;
-  '/forgot-password': typeof ForgotPasswordRoute;
-  '/instructor-dashboard': typeof InstructorDashboardRoute;
-  '/login': typeof LoginRoute;
-  '/map': typeof MapRoute;
-  '/reset-password': typeof ResetPasswordRoute;
-  '/resources': typeof ResourcesRoute;
-  '/signup': typeof SignupRoute;
-  '/stories': typeof StoriesRoute;
-  '/verify-email': typeof VerifyEmailRoute;
-  '/wheres-religion': typeof WheresReligionRoute;
-  '/notes/$id': typeof NotesIdRoute;
-  '/notes/': typeof NotesIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/confirm': typeof ConfirmRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/instructor-dashboard': typeof InstructorDashboardRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/signup': typeof SignupRoute
+  '/stories': typeof StoriesRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/wheres-religion': typeof WheresReligionRoute
+  '/notes/$id': typeof NotesIdRoute
+  '/notes/': typeof NotesIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
@@ -170,8 +170,8 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wheres-religion'
     | '/notes/$id'
-    | '/notes/';
-  fileRoutesByTo: FileRoutesByTo;
+    | '/notes/'
+  fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
@@ -187,7 +187,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wheres-religion'
     | '/notes/$id'
-    | '/notes';
+    | '/notes'
   id:
     | '__root__'
     | '/'
@@ -204,134 +204,134 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wheres-religion'
     | '/notes/$id'
-    | '/notes/';
-  fileRoutesById: FileRoutesById;
+    | '/notes/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AdminRoute: typeof AdminRoute;
-  ConfirmRoute: typeof ConfirmRoute;
-  ForgotPasswordRoute: typeof ForgotPasswordRoute;
-  InstructorDashboardRoute: typeof InstructorDashboardRoute;
-  LoginRoute: typeof LoginRoute;
-  MapRoute: typeof MapRoute;
-  ResetPasswordRoute: typeof ResetPasswordRoute;
-  ResourcesRoute: typeof ResourcesRoute;
-  SignupRoute: typeof SignupRoute;
-  StoriesRoute: typeof StoriesRoute;
-  VerifyEmailRoute: typeof VerifyEmailRoute;
-  WheresReligionRoute: typeof WheresReligionRoute;
-  NotesIdRoute: typeof NotesIdRoute;
-  NotesIndexRoute: typeof NotesIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  ConfirmRoute: typeof ConfirmRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  InstructorDashboardRoute: typeof InstructorDashboardRoute
+  LoginRoute: typeof LoginRoute
+  MapRoute: typeof MapRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ResourcesRoute: typeof ResourcesRoute
+  SignupRoute: typeof SignupRoute
+  StoriesRoute: typeof StoriesRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
+  WheresReligionRoute: typeof WheresReligionRoute
+  NotesIdRoute: typeof NotesIdRoute
+  NotesIndexRoute: typeof NotesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/wheres-religion': {
-      id: '/wheres-religion';
-      path: '/wheres-religion';
-      fullPath: '/wheres-religion';
-      preLoaderRoute: typeof WheresReligionRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/wheres-religion'
+      path: '/wheres-religion'
+      fullPath: '/wheres-religion'
+      preLoaderRoute: typeof WheresReligionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify-email': {
-      id: '/verify-email';
-      path: '/verify-email';
-      fullPath: '/verify-email';
-      preLoaderRoute: typeof VerifyEmailRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stories': {
-      id: '/stories';
-      path: '/stories';
-      fullPath: '/stories';
-      preLoaderRoute: typeof StoriesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/stories'
+      path: '/stories'
+      fullPath: '/stories'
+      preLoaderRoute: typeof StoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
-      id: '/signup';
-      path: '/signup';
-      fullPath: '/signup';
-      preLoaderRoute: typeof SignupRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources': {
-      id: '/resources';
-      path: '/resources';
-      fullPath: '/resources';
-      preLoaderRoute: typeof ResourcesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
-      id: '/reset-password';
-      path: '/reset-password';
-      fullPath: '/reset-password';
-      preLoaderRoute: typeof ResetPasswordRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/map': {
-      id: '/map';
-      path: '/map';
-      fullPath: '/map';
-      preLoaderRoute: typeof MapRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
-      id: '/login';
-      path: '/login';
-      fullPath: '/login';
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/instructor-dashboard': {
-      id: '/instructor-dashboard';
-      path: '/instructor-dashboard';
-      fullPath: '/instructor-dashboard';
-      preLoaderRoute: typeof InstructorDashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/instructor-dashboard'
+      path: '/instructor-dashboard'
+      fullPath: '/instructor-dashboard'
+      preLoaderRoute: typeof InstructorDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
-      id: '/forgot-password';
-      path: '/forgot-password';
-      fullPath: '/forgot-password';
-      preLoaderRoute: typeof ForgotPasswordRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirm': {
-      id: '/confirm';
-      path: '/confirm';
-      fullPath: '/confirm';
-      preLoaderRoute: typeof ConfirmRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/confirm'
+      path: '/confirm'
+      fullPath: '/confirm'
+      preLoaderRoute: typeof ConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
-      id: '/admin';
-      path: '/admin';
-      fullPath: '/admin';
-      preLoaderRoute: typeof AdminRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
-      id: '/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notes/': {
-      id: '/notes/';
-      path: '/notes';
-      fullPath: '/notes/';
-      preLoaderRoute: typeof NotesIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
+      preLoaderRoute: typeof NotesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notes/$id': {
-      id: '/notes/$id';
-      path: '/notes/$id';
-      fullPath: '/notes/$id';
-      preLoaderRoute: typeof NotesIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/notes/$id'
+      path: '/notes/$id'
+      fullPath: '/notes/$id'
+      preLoaderRoute: typeof NotesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -351,16 +351,17 @@ const rootRouteChildren: RootRouteChildren = {
   WheresReligionRoute: WheresReligionRoute,
   NotesIdRoute: NotesIdRoute,
   NotesIndexRoute: NotesIndexRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx';
-import type { createStart } from '@tanstack/react-start';
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

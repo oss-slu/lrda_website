@@ -6,13 +6,14 @@
  *    only auth store data -- no API call needed.
  * 2. Permissions work even on refresh before session is re-validated.
  */
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useNotePermissions } from '../lib/components/NoteEditor/hooks/useNotePermissions';
 import type { Note } from '@/app/types';
 
 // Mock services
-jest.mock('../lib/services', () => ({
-  fetchCreatorName: jest.fn().mockResolvedValue('Unknown'),
+vi.mock('../lib/services', () => ({
+  fetchCreatorName: vi.fn().mockResolvedValue('Unknown'),
 }));
 
 const mockAuthState: Record<string, any> = {
@@ -22,8 +23,8 @@ const mockAuthState: Record<string, any> = {
   isInitialized: true,
 };
 
-jest.mock('../lib/stores/authStore', () => ({
-  useAuthStore: jest.fn((selector?: (state: any) => any) => {
+vi.mock('../lib/stores/authStore', () => ({
+  useAuthStore: vi.fn((selector?: (state: any) => any) => {
     return selector ? selector(mockAuthState) : mockAuthState;
   }),
 }));

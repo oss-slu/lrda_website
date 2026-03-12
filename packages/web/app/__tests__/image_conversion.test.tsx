@@ -1,4 +1,4 @@
-// Test suite is for testing the image conversion functionality
+import { describe, it, expect, vi } from 'vitest';
 
 describe('convertToJpeg', () => {
   const convertToJpeg = async (file: File): Promise<File> => {
@@ -45,11 +45,10 @@ describe('convertToJpeg', () => {
     const fakeBlob = new Blob(['fake-image-data'], { type: 'image/png' });
     const fakeFile = new File([fakeBlob], 'test-image.png', { type: 'image/png' });
 
-    const mockReadAsDataURL = jest.fn();
-    const mockToBlob = jest.fn(cb => cb(new Blob(['jpeg-data'], { type: 'image/jpeg' })));
+    const mockToBlob = vi.fn(cb => cb(new Blob(['jpeg-data'], { type: 'image/jpeg' })));
 
     const originalFileReader = global.FileReader;
-    const originalCreateElement = document.createElement;
+    const originalCreateElement = document.createElement.bind(document);
     const originalImage = global.Image;
 
     // Mock FileReader
@@ -57,7 +56,7 @@ describe('convertToJpeg', () => {
       result = 'data:image/png;base64,fake';
       onload: Function = () => {};
       onerror: Function = () => {};
-      readAsDataURL = mockReadAsDataURL.mockImplementation(function (this: MockFileReader) {
+      readAsDataURL = vi.fn(function (this: MockFileReader) {
         setTimeout(() => {
           this.onload({ target: { result: this.result } });
         }, 0);
@@ -66,11 +65,11 @@ describe('convertToJpeg', () => {
     global.FileReader = MockFileReader as any;
 
     // Mock canvas
-    document.createElement = jest.fn((tag: string) => {
+    document.createElement = vi.fn((tag: string) => {
       if (tag === 'canvas') {
         return {
-          getContext: jest.fn(() => ({
-            drawImage: jest.fn(),
+          getContext: vi.fn(() => ({
+            drawImage: vi.fn(),
           })),
           toBlob: mockToBlob,
           width: 0,
@@ -78,7 +77,7 @@ describe('convertToJpeg', () => {
         } as any;
       }
       return originalCreateElement(tag);
-    });
+    }) as any;
 
     // Mock Image
     const mockImageInstance = {
@@ -91,7 +90,7 @@ describe('convertToJpeg', () => {
       width: 100,
       height: 100,
     };
-    global.Image = jest.fn(() => mockImageInstance) as any;
+    global.Image = vi.fn(() => mockImageInstance) as any;
 
     const jpegFile = await convertToJpeg(fakeFile);
     expect(jpegFile.type).toBe('image/jpeg');

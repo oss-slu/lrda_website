@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import TagManager from '../lib/components/NoteEditor/NoteElements/TagManager';
 
@@ -21,16 +21,16 @@ describe('TagManager', () => {
 
   it('renders without crashing', () => {
     // Test to ensure the TagManager component renders without throwing an error
-    render(<TagManager onTagsChange={jest.fn()} fetchSuggestedTags={jest.fn()} />);
+    render(<TagManager onTagsChange={vi.fn()} fetchSuggestedTags={vi.fn()} />);
   });
 
   it('adds a new valid tag', () => {
-    const mockOnTagsChange = jest.fn();
+    const mockOnTagsChange = vi.fn();
     render(
       <TagManager
         inputTags={initialTags}
         onTagsChange={mockOnTagsChange}
-        fetchSuggestedTags={jest.fn()}
+        fetchSuggestedTags={vi.fn()}
       />,
     );
 
@@ -46,8 +46,8 @@ describe('TagManager', () => {
   });
 
   it('does not add a tag with spaces', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    const mockOnTagsChange = vi.fn();
+    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'Invalid Tag' } });
@@ -58,8 +58,8 @@ describe('TagManager', () => {
   });
 
   it('adds a tag with exactly 1 character (minimum)', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    const mockOnTagsChange = vi.fn();
+    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'a' } });
@@ -69,12 +69,12 @@ describe('TagManager', () => {
   });
 
   it('does not add duplicate tags', () => {
-    const mockOnTagsChange = jest.fn();
+    const mockOnTagsChange = vi.fn();
     render(
       <TagManager
         inputTags={initialTags}
         onTagsChange={mockOnTagsChange}
-        fetchSuggestedTags={jest.fn()}
+        fetchSuggestedTags={vi.fn()}
       />,
     );
 
@@ -89,8 +89,8 @@ describe('TagManager', () => {
   });
 
   it('does not add a tag with more than 28 characters', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    const mockOnTagsChange = vi.fn();
+    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'ThisIsWayTooLongTagNameForTesting' } });
@@ -101,8 +101,8 @@ describe('TagManager', () => {
   });
 
   it('adds a tag with exactly 28 characters (maximum)', () => {
-    const mockOnTagsChange = jest.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={jest.fn()} />);
+    const mockOnTagsChange = vi.fn();
+    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'ValidTagWith28Characters' } });
@@ -114,8 +114,8 @@ describe('TagManager', () => {
   });
 
   it('hides input and buttons when disabled prop is true', () => {
-    const mockOnTagsChange = jest.fn();
-    const mockFetchSuggestedTags = jest.fn();
+    const mockOnTagsChange = vi.fn();
+    const mockFetchSuggestedTags = vi.fn();
     render(
       <TagManager
         inputTags={initialTags}
@@ -137,12 +137,12 @@ describe('TagManager', () => {
   });
 
   it('allows editing when disabled prop is false', () => {
-    const mockOnTagsChange = jest.fn();
+    const mockOnTagsChange = vi.fn();
     render(
       <TagManager
         inputTags={initialTags}
         onTagsChange={mockOnTagsChange}
-        fetchSuggestedTags={jest.fn()}
+        fetchSuggestedTags={vi.fn()}
         disabled={false}
       />,
     );

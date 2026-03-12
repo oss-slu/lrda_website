@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Tag } from '@/app/types';
 import { fetchCreatorName } from '@/app/lib/services';
@@ -38,6 +38,7 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
 
 function NoteDetailPage() {
   const { id: noteId } = Route.useParams();
+  const router = useRouter();
 
   const { data: note, isLoading, error: queryError } = useNoteDetail(noteId);
   const [creator, setCreator] = useState('Loading...');
@@ -67,7 +68,7 @@ function NoteDetailPage() {
         <p className='text-destructive text-lg font-semibold'>
           {queryError ? 'Failed to load note' : 'Note not found'}
         </p>
-        <Button onClick={() => window.history.back()}>
+        <Button onClick={() => router.history.back()}>
           <ArrowLeft className='mr-2 h-4 w-4' />
           Back to map
         </Button>
@@ -84,7 +85,7 @@ function NoteDetailPage() {
         <Button
           variant='ghost'
           size='sm'
-          onClick={() => window.history.back()}
+          onClick={() => router.history.back()}
           className='mb-4 -ml-2'
         >
           <ArrowLeft className='mr-2 h-4 w-4' />

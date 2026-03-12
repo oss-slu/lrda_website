@@ -1,7 +1,8 @@
-import { useSearch } from '@tanstack/react-router';
+import { useRouter, useSearch } from '@tanstack/react-router';
 import { saveAs } from 'file-saver';
 
 const DownloadNote = () => {
+  const router = useRouter();
   const { title, content, tags, time, longitude, latitude } = useSearch({
     strict: false,
   }) as Record<string, string | string[] | undefined>;
@@ -85,7 +86,7 @@ const DownloadNote = () => {
       </div>
       <button
         className='mt-4 rounded bg-gray-300 px-4 py-2 hover:bg-gray-400'
-        onClick={() => window.history.back()}
+        onClick={() => router.history.back()}
       >
         Back to Editor
       </button>

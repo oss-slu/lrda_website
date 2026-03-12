@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import Sidebar from '@/app/lib/components/Sidebar';
 import NoteEditor from '@/app/lib/components/NoteEditor';
 import { Note, newNote } from '@/app/types';
@@ -71,12 +72,12 @@ export default function Notes() {
               <p className='mb-6 text-sm text-gray-500'>
                 You must be logged in to create and edit notes.
               </p>
-              <button
-                onClick={() => (window.location.href = '/login')}
+              <Link
+                to='/login'
                 className='rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700'
               >
                 Sign in
-              </button>
+              </Link>
             </div>
           </div>
         }
