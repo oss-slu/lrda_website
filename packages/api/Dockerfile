@@ -1,4 +1,4 @@
-# ---- Stage 1: Install ALL dependencies (for build) ----
+# ---- Stage 1: Install dependencies ----
 FROM node:24-slim AS deps
 
 WORKDIR /app
@@ -10,8 +10,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc* ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
-# Install all deps including devDependencies (needed for tsc)
-# --no-optional skips firebase-admin
+# Install all deps (devDependencies needed for tsc build + drizzle-kit migrations)
+# --no-optional skips firebase-admin (~100MB, only needed for sync scripts)
 RUN pnpm install --frozen-lockfile --no-optional
 
 # ---- Stage 2: Build ----
@@ -33,24 +33,12 @@ COPY packages/api/ packages/api/
 WORKDIR /app/packages/api
 RUN npx tsc --project tsconfig.build.json
 
-# ---- Stage 3: Production-only dependencies ----
-FROM node:24-slim AS prod-deps
+# ---- Stage 3: Runtime ----
+FROM node:24-slim AS runtime
 
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
-
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc* ./
-COPY packages/api/package.json packages/api/
-COPY packages/shared/package.json packages/shared/
-
-# Install only production dependencies (no typescript, esbuild, prettier, vitest, etc.)
-RUN pnpm install --frozen-lockfile --no-optional --prod
-
-# ---- Stage 4: Runtime ----
-FROM node:24-slim AS runtime
-
-WORKDIR /app
 
 # Copy compiled JS output
 COPY --from=build /app/packages/api/dist/ ./packages/api/dist/
@@ -59,16 +47,16 @@ COPY --from=build /app/packages/api/dist/ ./packages/api/dist/
 # exports raw .ts files and tsc doesn't rewrite import paths
 COPY --from=build /app/packages/shared/ ./packages/shared/
 
-# Copy production-only node_modules (no dev deps)
-COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/packages/api/node_modules ./packages/api/node_modules
-COPY --from=prod-deps /app/packages/shared/node_modules ./packages/shared/node_modules
+# Copy node_modules (includes drizzle-kit for running migrations during deploy)
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/api/node_modules ./packages/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 
 # Copy package.json files (needed for pnpm workspace resolution)
-COPY --from=prod-deps /app/package.json ./
-COPY --from=prod-deps /app/pnpm-workspace.yaml ./
-COPY --from=prod-deps /app/packages/api/package.json ./packages/api/
-COPY --from=prod-deps /app/packages/shared/package.json ./packages/shared/
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm-workspace.yaml ./
+COPY --from=deps /app/packages/api/package.json ./packages/api/
+COPY --from=deps /app/packages/shared/package.json ./packages/shared/
 
 # Copy drizzle config + schema (needed for drizzle-kit push during deploy)
 COPY --from=build /app/packages/api/drizzle.config.ts ./packages/api/
