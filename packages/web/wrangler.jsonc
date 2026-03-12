@@ -5,7 +5,7 @@
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
-  "vars": {
-    "NEXT_PUBLIC_API_URL": "https://api-staging.wheresreligion.org"
-  }
+  "routes": [
+    { "pattern": "staging.wheresreligion.org", "custom_domain": true }
+  ]
 }

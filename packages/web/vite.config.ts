@@ -14,7 +14,16 @@ export default defineConfig({
       projects: ['./tsconfig.json'],
     }),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
-    tanstackStart(),
+    tanstackStart({
+      prerender: {
+        enabled: true,
+        crawlLinks: false,
+        filter: ({ path }) => {
+          const staticPaths = ['/', '/resources', '/wheres-religion']
+          return staticPaths.includes(path)
+        },
+      },
+    }),
     viteReact(),
   ],
 })

@@ -3,8 +3,8 @@ node_modules
 **/.next/
 .DS_Store
 yarn.lock
-.env.local
-.env
+.env*
+!.env.example
 pnpm-lock.yaml
 
 all_notes.json
