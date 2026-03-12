@@ -90,7 +90,7 @@ app.doc('/openapi.json', {
   servers: [
     {
       url: env.BETTER_AUTH_URL,
-      description: env.ENVIRONMENT === 'production' ? 'Production' : 'Development',
+      description: env.ENVIRONMENT === 'development' ? 'Development' : env.ENVIRONMENT.charAt(0).toUpperCase() + env.ENVIRONMENT.slice(1),
     },
   ],
 });

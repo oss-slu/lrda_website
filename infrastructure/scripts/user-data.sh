@@ -101,6 +101,7 @@ module.exports = {
     script: 'src/index.ts',
     interpreter: 'node',
     interpreter_args: '--env-file=/home/ubuntu/lrda/.env --import tsx',
+    exec_mode: 'fork',
     instances: 1,
     max_memory_restart: '512M',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
