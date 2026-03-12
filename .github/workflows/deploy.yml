@@ -104,6 +104,9 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'staging' }}
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Deploy via SSH
