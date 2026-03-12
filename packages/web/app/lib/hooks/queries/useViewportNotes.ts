@@ -12,6 +12,7 @@ const STALE_TIME = 60_000;
 
 /**
  * Hook for fetching notes within the current map viewport in summary mode.
+ * - Fetches globally on initial load (before map bounds are available).
  * - Debounces bounds changes by 400ms to avoid spamming the API during pan/zoom.
  * - Uses keepPreviousData so markers/panel never flash empty.
  * - When searchQuery is set, fetches globally (no bounds) for full-dataset search.
@@ -40,11 +41,13 @@ export function useViewportNotes() {
       if (isSearchMode) {
         return notesService.fetchViewport({ search: debouncedSearch });
       }
-      if (!debouncedBounds) return [];
+      // Before map bounds are available, fetch without spatial filter
+      if (!debouncedBounds) {
+        return notesService.fetchViewport({});
+      }
       return notesService.fetchViewport(debouncedBounds);
     },
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME,
-    enabled: isSearchMode || debouncedBounds !== null,
   });
 }

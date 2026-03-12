@@ -213,7 +213,7 @@ pnpm install
 
 # Development
 pnpm dev                              # Start API + web together
-pnpm dev:api                          # API server only (wrangler dev, port 8787)
+pnpm dev:api                          # API server only (port 3002)
 pnpm dev:web                          # Web app only (Next.js, port 3000)
 
 # Database

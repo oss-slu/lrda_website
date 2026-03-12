@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 
-const API_URL = import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+const API_URL = import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
 
 /**
  * Fetch the current user from the API using server-side cookies.
