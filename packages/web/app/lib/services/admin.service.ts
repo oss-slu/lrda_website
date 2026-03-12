@@ -8,6 +8,7 @@
  */
 
 import { fetchWithAuth } from './api';
+import { authClient } from '@/app/lib/auth/client';
 import type { AdminUser, PendingApplication, Stats } from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility
@@ -80,4 +81,51 @@ export async function rejectApplication(userId: string, reason?: string): Promis
     console.error('Error rejecting application:', error);
     throw error;
   }
+}
+
+/**
+ * Set a user's role via Better Auth admin plugin.
+ */
+export async function setUserRole(userId: string, role: 'admin' | 'user') {
+  const result = await authClient.admin.setRole({ userId, role });
+  if (result.error) {
+    throw new Error(result.error.message || 'Failed to set user role');
+  }
+  return result.data;
+}
+
+/**
+ * Ban a user via Better Auth admin plugin.
+ */
+export async function banUser(userId: string, reason?: string) {
+  const result = await authClient.admin.banUser({
+    userId,
+    banReason: reason,
+  });
+  if (result.error) {
+    throw new Error(result.error.message || 'Failed to ban user');
+  }
+  return result.data;
+}
+
+/**
+ * Unban a user via Better Auth admin plugin.
+ */
+export async function unbanUser(userId: string) {
+  const result = await authClient.admin.unbanUser({ userId });
+  if (result.error) {
+    throw new Error(result.error.message || 'Failed to unban user');
+  }
+  return result.data;
+}
+
+/**
+ * Remove a user via Better Auth admin plugin.
+ */
+export async function removeUser(userId: string) {
+  const result = await authClient.admin.removeUser({ userId });
+  if (result.error) {
+    throw new Error(result.error.message || 'Failed to remove user');
+  }
+  return result.data;
 }

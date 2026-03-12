@@ -5,6 +5,10 @@ import {
   getAdminStats,
   approveApplication,
   rejectApplication,
+  setUserRole,
+  banUser,
+  unbanUser,
+  removeUser,
 } from '@/app/lib/services';
 import type { AdminUserData, PendingApplication, AdminStats } from '@/app/lib/services';
 import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
@@ -36,8 +40,16 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Users,
   Shield,
+  ShieldOff,
   GraduationCap,
   UserCheck,
   ClipboardList,
@@ -46,6 +58,10 @@ import {
   X,
   Loader2,
   RefreshCw,
+  MoreHorizontal,
+  Ban,
+  UserX,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -118,6 +134,66 @@ export default function AdminDashboard({
     } catch (error) {
       console.error('Error rejecting application:', error);
       toast.error('Failed to reject application');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleSetRole = async (user: AdminUserData, role: 'admin' | 'user') => {
+    setProcessingId(user.id);
+    try {
+      await setUserRole(user.id, role);
+      toast.success(`Set ${user.name} role to ${role}`);
+      await fetchData();
+    } catch (error) {
+      console.error('Error setting role:', error);
+      toast.error('Failed to update role');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleBan = async (user: AdminUserData) => {
+    setProcessingId(user.id);
+    try {
+      await banUser(user.id);
+      toast.success(`Banned ${user.name}`);
+      await fetchData();
+    } catch (error) {
+      console.error('Error banning user:', error);
+      toast.error('Failed to ban user');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleUnban = async (user: AdminUserData) => {
+    setProcessingId(user.id);
+    try {
+      await unbanUser(user.id);
+      toast.success(`Unbanned ${user.name}`);
+      await fetchData();
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      toast.error('Failed to unban user');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const [userToRemove, setUserToRemove] = useState<AdminUserData | null>(null);
+
+  const handleRemove = async () => {
+    if (!userToRemove) return;
+    setProcessingId(userToRemove.id);
+    try {
+      await removeUser(userToRemove.id);
+      toast.success(`Removed ${userToRemove.name}`);
+      setUserToRemove(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Error removing user:', error);
+      toast.error('Failed to remove user');
     } finally {
       setProcessingId(null);
     }
@@ -348,17 +424,20 @@ export default function AdminDashboard({
                           <TableHead>Email</TableHead>
                           <TableHead>Roles</TableHead>
                           <TableHead>Joined</TableHead>
+                          <TableHead className='w-12'>
+                            <span className='sr-only'>Actions</span>
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredUsers.length === 0 ?
                           <TableRow>
-                            <TableCell colSpan={4} className='py-8 text-center text-gray-500'>
+                            <TableCell colSpan={5} className='py-8 text-center text-gray-500'>
                               No users found
                             </TableCell>
                           </TableRow>
                         : filteredUsers.map(u => (
-                            <TableRow key={u.id}>
+                            <TableRow key={u.id} className={u.banned ? 'opacity-60' : ''}>
                               <TableCell className='font-medium'>{u.name}</TableCell>
                               <TableCell className='text-gray-500'>{u.email}</TableCell>
                               <TableCell>
@@ -378,6 +457,11 @@ export default function AdminDashboard({
                                       User
                                     </Badge>
                                   )}
+                                  {u.banned && (
+                                    <Badge variant='destructive' className='text-xs'>
+                                      Banned
+                                    </Badge>
+                                  )}
                                   {u.pendingInstructorDescription && (
                                     <Badge variant='outline' className='text-xs text-orange-600'>
                                       Pending
@@ -387,6 +471,57 @@ export default function AdminDashboard({
                               </TableCell>
                               <TableCell className='text-gray-500'>
                                 {formatDate(u.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      className='h-8 w-8 p-0'
+                                      disabled={processingId === u.id}
+                                    >
+                                      {processingId === u.id ?
+                                        <Loader2 className='h-4 w-4 animate-spin' />
+                                      : <MoreHorizontal className='h-4 w-4' />}
+                                      <span className='sr-only'>Open menu</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align='end'>
+                                    {isAdminUser(u) ?
+                                      <DropdownMenuItem onClick={() => handleSetRole(u, 'user')}>
+                                        <ShieldOff className='mr-2 h-4 w-4' />
+                                        Remove admin
+                                      </DropdownMenuItem>
+                                    : <DropdownMenuItem onClick={() => handleSetRole(u, 'admin')}>
+                                        <ShieldCheck className='mr-2 h-4 w-4' />
+                                        Make admin
+                                      </DropdownMenuItem>
+                                    }
+                                    <DropdownMenuSeparator />
+                                    {u.banned ?
+                                      <DropdownMenuItem onClick={() => handleUnban(u)}>
+                                        <UserCheck className='mr-2 h-4 w-4' />
+                                        Unban user
+                                      </DropdownMenuItem>
+                                    : <DropdownMenuItem
+                                        onClick={() => handleBan(u)}
+                                        className='text-orange-600 focus:text-orange-600'
+                                      >
+                                        <Ban className='mr-2 h-4 w-4' />
+                                        Ban user
+                                      </DropdownMenuItem>
+                                    }
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => setUserToRemove(u)}
+                                      className='text-red-600 focus:text-red-600'
+                                    >
+                                      <UserX className='mr-2 h-4 w-4' />
+                                      Remove user
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </TableCell>
                             </TableRow>
                           ))
@@ -406,6 +541,28 @@ export default function AdminDashboard({
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Remove user confirmation dialog */}
+        <AlertDialog open={!!userToRemove} onOpenChange={open => !open && setUserToRemove(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove User?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete {userToRemove?.name} ({userToRemove?.email}) and all
+                their data. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRemove}
+                className='bg-red-600 hover:bg-red-700'
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

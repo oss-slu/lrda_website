@@ -68,5 +68,9 @@ export {
   getStats as getAdminStats,
   approveApplication,
   rejectApplication,
+  setUserRole,
+  banUser,
+  unbanUser,
+  removeUser,
 } from './admin.service';
 export type { AdminUserData, PendingApplication, AdminStats } from './admin.service';

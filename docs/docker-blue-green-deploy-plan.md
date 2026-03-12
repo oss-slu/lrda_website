@@ -1,38 +1,38 @@
-# Docker Blue/Green Deployment with Local Prod-Like Testing
+# Docker Blue/Green Zero-Downtime Deployment Plan
 
 ## Context
 
-The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to test the production topology locally. This plan containerizes the API, adds blue/green zero-downtime deploys on the single EC2 instance, creates a local Docker Compose stack that mirrors production, and wires up a manual-dispatch GitHub Actions deploy workflow. SSL is handled by Cloudflare Origin CA (configured via OpenTofu in `infrastructure/cloudflare.tf`), not certbot.
+The LRDA API runs on a single Lightsail instance ($10/mo, 2GB RAM) with PM2 managing the Node.js process. Deploys currently require SSH + git pull + PM2 reload, which causes brief downtime. This plan containerizes the API and adds blue/green switching via Nginx upstream config files, so deploys have zero downtime and automatic rollback on failure.
 
-**Cost impact:** $0 additional -- Docker CE is free, same single EC2 instance.
+**Cost impact:** $0 additional -- Docker CE is free, same single Lightsail instance.
 
 ---
 
 ## Architecture
 
-### Production (EC2)
+### Production (Lightsail)
 
 ```
-  GitHub Actions (CI)                        EC2 (t3.small)
-  +-----------------------+
-  | test -> build image   |     docker pull   [Nginx (native, systemd)]
-  | -> push to GHCR       | ----SSH----->       port 80/443 + Cloudflare Origin CA SSL
-  +-----------------------+                          |
-                                             upstream lrda_api
-                                                     |
-                                        +------------+------------+
-                                        |                         |
-                               [lrda-api-blue]          [lrda-api-green]
-                                Docker :3002              Docker :3003
-                                        |                         |
-                                        +------------+------------+
-                                                     |
-                                            [PostgreSQL 16 (native)]
-                                                 port 5432
+  GitHub Actions (CI)                        Lightsail (2GB RAM)
+  +--------------------------+
+  | test -> build image      |   docker pull   [Nginx (native, systemd)]
+  | -> push to GHCR          | ----SSH----->     port 80/443 + Cloudflare Origin CA
+  +--------------------------+                          |
+                                              upstream lrda_api
+                                                        |
+                                           +------------+------------+
+                                           |                         |
+                                  [lrda-api-blue]          [lrda-api-green]
+                                   Docker :3002              Docker :3003
+                                           |                         |
+                                           +------------+------------+
+                                                        |
+                                               [PostgreSQL 17 (native)]
+                                                    port 5432
 ```
 
-- Docker images are built in GitHub Actions (7GB RAM) and pushed to GHCR -- the t3.small (2GB RAM) only pulls pre-built images
-- PostgreSQL runs natively via systemd (already set up by user-data.sh)
+- Docker images are built in GitHub Actions (7GB RAM) and pushed to GHCR -- the Lightsail instance (2GB RAM) only pulls pre-built images
+- PostgreSQL 17 runs natively via systemd (already set up by user-data.sh)
 - Nginx runs natively with Cloudflare Origin CA cert for SSL
 - Only the API runs in Docker containers (blue on port 3002, green on port 3003)
 - At any given time, only one container serves traffic; the other is stopped or being deployed
@@ -44,10 +44,10 @@ The LRDA API currently has no deploy pipeline, no Dockerfiles, and no way to tes
                |
       [api-blue (Docker)] :3002   [api-green (Docker)] :3003
                |                           |
-      [PostgreSQL 16 (Docker)] :5434
+      [PostgreSQL 17 (Docker)] :5434
 ```
 
-Same Dockerfile, same topology. Tests the full deploy flow before pushing to EC2.
+Same Dockerfile, same topology. Tests the full deploy flow before pushing to Lightsail.
 
 ---
 
@@ -61,10 +61,10 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to EC2
 
 **Deploy flow:**
 1. GitHub Actions builds Docker image and pushes to GHCR (tagged `sha-<commit>` + `latest`)
-2. GitHub Actions SSHs into EC2 and runs `deploy.sh <image_tag>`
+2. GitHub Actions SSHs into Lightsail and runs `deploy.sh <image_tag>`
 3. deploy.sh determines which color is currently active
-4. Pull pre-built image from GHCR (no build on EC2 -- saves RAM/CPU)
-5. Run DB migrations from temporary container
+4. Pull pre-built image from GHCR (no build on Lightsail -- saves RAM/CPU)
+5. Run `drizzle-kit push` from a temporary container
 6. Start inactive color container on its port
 7. Health check new container directly (bypasses Nginx, hits container port)
 8. If healthy: write new upstream file, rename old to `.disabled`, reload Nginx
@@ -82,83 +82,91 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to EC2
 
 ### 1. `packages/api/Dockerfile`
 
-Three-stage Bun build (deps cached separately for faster CI rebuilds):
+Three-stage Node.js build (deps -> build -> runtime):
 
 ```dockerfile
 # ---- Stage 1: Install dependencies ----
-FROM oven/bun:1 AS deps
+FROM node:24-slim AS deps
 
 WORKDIR /app
 
+# Enable pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+
 # Copy workspace configuration + package.json files only (cache layer)
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc* ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
-# Bun reads pnpm-lock.yaml natively -- no pnpm needed
-RUN bun install --frozen-lockfile
+# Install deps (--no-optional skips firebase-admin)
+RUN pnpm install --frozen-lockfile --no-optional
 
 # ---- Stage 2: Build ----
-FROM oven/bun:1 AS build
+FROM node:24-slim AS build
 
 WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
 # Copy installed node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/api/node_modules ./packages/api/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 
-# Copy source (shared package exports raw .ts, needed at bundle time)
+# Copy source (shared package exports raw .ts, needed at compile time)
 COPY packages/shared/ packages/shared/
 COPY packages/api/ packages/api/
 
-# Bundle into a single file targeting Bun runtime
+# Compile TypeScript -> dist/
 WORKDIR /app/packages/api
-RUN bun build src/index.ts --outdir dist --target bun
+RUN npx tsc --project tsconfig.build.json
 
-# ---- Stage 3: Runtime (slim) ----
-FROM oven/bun:1-slim AS runtime
+# ---- Stage 3: Runtime ----
+FROM node:24-slim AS runtime
 
 WORKDIR /app
 
-# Copy the bundled output
-COPY --from=build /app/packages/api/dist/ ./dist/
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
-# Copy migration files and drizzle config (needed for drizzle-kit migrate)
-COPY --from=build /app/packages/api/src/db/migrations/ ./src/db/migrations/
-COPY --from=build /app/packages/api/drizzle.config.ts ./
+# Copy compiled JS output
+COPY --from=build /app/packages/api/dist/ ./packages/api/dist/
 
-# pg has native deps that Bun can't bundle -- copy node_modules for runtime
-COPY --from=deps /app/packages/api/package.json ./
-COPY --from=deps /app/packages/api/node_modules/ ./node_modules/
+# Copy shared package source -- tsx needed at runtime because @lrda/shared
+# exports raw .ts files and tsc doesn't rewrite import paths
+COPY --from=build /app/packages/shared/ ./packages/shared/
 
-USER bun
+# Copy node_modules (pg has native deps that can't be bundled)
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/api/node_modules ./packages/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy package.json files (needed for pnpm workspace resolution)
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm-workspace.yaml ./
+COPY --from=deps /app/packages/api/package.json ./packages/api/
+
+# Copy drizzle config + schema (needed for drizzle-kit push during deploy)
+COPY --from=build /app/packages/api/drizzle.config.ts ./packages/api/
+COPY --from=build /app/packages/api/src/db/schema.ts ./packages/api/src/db/
+
+USER node
 ENV NODE_ENV=production
 EXPOSE 3002
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun -e "fetch('http://localhost:' + (process.env.PORT || 3002) + '/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+  CMD node -e "fetch('http://localhost:' + (process.env.PORT || 3002) + '/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-CMD ["bun", "run", "dist/index.js"]
+# tsx registers as a loader so @lrda/shared .ts imports resolve at runtime
+CMD ["node", "--import", "tsx", "packages/api/dist/index.js"]
 ```
 
-### 2. `packages/api/.dockerignore`
+**Key design decisions:**
+- `--no-optional` skips `firebase-admin` (~100MB) -- only needed for sync scripts which don't run in the container
+- `tsx` is required at runtime because `@lrda/shared` exports raw `.ts` files and `tsc` doesn't rewrite import specifiers (e.g., `from '@lrda/shared/schemas'` resolves to `packages/shared/src/schemas/index.ts`)
+- `drizzle-kit` + schema are included so deploy.sh can run `drizzle-kit push` from a temporary container
+- `~300MB` image, `~200MB` RAM per container
 
-```
-node_modules/
-dist/
-.env
-.env.*
-*.log
-.git/
-firebase-service-account.json
-*-service-account.json
-src/__tests__/
-vitest.config.ts
-README.md
-```
-
-### 3. `.dockerignore` (root)
+### 2. `.dockerignore` (root)
 
 ```
 .git/
@@ -174,11 +182,49 @@ public/
 .next/
 playwright-report/
 test-results/
-plans/
 .claude/
 ```
 
-### 4. `docker-compose.prod-local.yml` (root)
+### 3. `packages/api/.dockerignore`
+
+```
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.git/
+firebase-service-account.json
+*-service-account.json
+src/__tests__/
+src/scripts/
+vitest.config.ts
+README.md
+```
+
+### 4. `infrastructure/nginx/local.conf`
+
+```nginx
+upstream lrda_api {
+    server api-blue:3002;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://lrda_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### 5. `docker-compose.prod-local.yml` (root)
 
 Local prod-like stack:
 
@@ -186,14 +232,14 @@ Local prod-like stack:
 # Local production-like testing stack
 # Usage: docker compose -f docker-compose.prod-local.yml up --build -d
 #
-# Mirrors EC2 production topology:
-#   - PostgreSQL 16 (like native PG on EC2)
+# Mirrors Lightsail production topology:
+#   - PostgreSQL 17 (like native PG on Lightsail)
 #   - Two API containers for blue/green testing
 #   - Nginx reverse proxy with upstream switching
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: lrda-prod-local-pg
     restart: unless-stopped
     ports:
@@ -274,12 +320,12 @@ networks:
     driver: bridge
 ```
 
-### 5. `docker-compose.prod.yml` (root -- deployed to EC2)
+### 6. `docker-compose.prod.yml` (root -- deployed to Lightsail)
 
-API containers only (PG + Nginx are native on EC2):
+API containers only (PostgreSQL + Nginx are native on Lightsail):
 
 ```yaml
-# Production EC2 deployment
+# Production Lightsail deployment
 # PostgreSQL and Nginx run natively on the host.
 # Only the API containers are managed by Docker.
 #
@@ -299,7 +345,7 @@ services:
     environment:
       PORT: 3002
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       start_period: 5s
@@ -317,41 +363,18 @@ services:
     profiles:
       - green
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3003/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3003/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       start_period: 5s
       retries: 3
 ```
 
-With `network_mode: host`, each container binds directly to the host's network stack. Blue listens on host port 3002, green on 3003. PostgreSQL is reachable at `localhost:5432` with no extra networking config. The `.env` file on EC2 uses `DATABASE_URL=postgresql://lrda_app:<password>@localhost:5432/lrda_<env>` -- same as a non-Docker setup.
+With `network_mode: host`, each container binds directly to the host's network stack. Blue listens on host port 3002, green on 3003. PostgreSQL is reachable at `localhost:5432` with no extra networking config. The `.env` file on Lightsail uses `DATABASE_URL=postgresql://lrda_app:<password>@localhost:5432/lrda_<env>` -- same as a non-Docker setup.
 
-### 6. `infrastructure/nginx/local.conf`
+### 7. `infrastructure/scripts/deploy.sh` (rewrite)
 
-```nginx
-upstream lrda_api {
-    server api-blue:3002;
-}
-
-server {
-    listen 80;
-    server_name localhost;
-
-    location / {
-        proxy_pass http://lrda_api;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 7. `scripts/deploy.sh`
-
-Blue/green deploy script (runs on EC2 via SSH from GitHub Actions).
-Takes an image tag as argument -- the image is pre-built in CI and pulled from GHCR.
+Blue/green deploy script (runs on Lightsail via SSH from GitHub Actions). Takes an image tag as argument -- the image is pre-built in CI and pulled from GHCR.
 
 ```bash
 #!/usr/bin/env bash
@@ -404,12 +427,12 @@ log "Pulling image: ${FULL_IMAGE}"
 docker pull "${FULL_IMAGE}"
 
 # ---- Run database migrations ----
-log "Running database migrations..."
+log "Running database migrations (drizzle-kit push)..."
 docker run --rm \
     --network host \
     --env-file "${APP_DIR}/.env" \
     "${FULL_IMAGE}" \
-    bun x drizzle-kit migrate
+    npx drizzle-kit push
 
 # ---- Start inactive container ----
 log "Starting ${INACTIVE} container..."
@@ -586,12 +609,12 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
           script: |
             set -e
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             export GITHUB_REPOSITORY="${{ github.repository }}"
             export IMAGE_TAG="sha-${{ github.sha }}"
             sudo -E /home/ubuntu/lrda/deploy.sh "${IMAGE_TAG}"
@@ -617,57 +640,36 @@ jobs:
 ### 10. `infrastructure/scripts/user-data.sh`
 
 Key changes:
-- **Remove**: Node.js installation, PM2 installation, PM2 systemd setup
-- **Remove**: certbot installation -- SSL handled by Cloudflare Origin CA (cert generated via OpenTofu, installed post-deploy)
-- **Add**: Docker CE installation (`docker-ce docker-ce-cli containerd.io docker-compose-plugin`)
-- **Add**: `usermod -aG docker ubuntu` (allow non-root Docker)
-- ~~**Fix**: Nginx proxy port `3001` -> `3002`~~ **DONE**
-- ~~**Fix**: Health path `/health` -> `/api/health`~~ **DONE**
-- ~~**Fix**: Comment "proxy to Fastify" -> "proxy to Hono"~~ **DONE**
-- **Add**: Nginx upstream config file: `upstream-blue.conf` in `/etc/nginx/conf.d/`
-- **Add**: Nginx SSL config using `/etc/ssl/cloudflare/origin.pem` and `origin-key.pem`
-- **Remove CORS headers from Nginx**: The Hono CORS middleware in `src/index.ts` already handles CORS. Having Nginx also set `Access-Control-Allow-*` headers causes duplicate headers.
-- **Add**: `.env` with all required vars (`DATABASE_URL` using `localhost`, `BETTER_AUTH_SECRET`, `CORS_ORIGINS`)
-- **Add**: Copy `deploy.sh` and `docker-compose.prod.yml` to `/home/ubuntu/lrda/`
-- **Remove**: No git clone needed on EC2 -- images are pre-built in CI and pulled from GHCR
+- **Remove**: Node.js installation (`nodesource`), pnpm global install, PM2 installation, PM2 ecosystem config, PM2 systemd setup (`pm2 startup`)
+- **Add**: Docker CE installation (`curl -fsSL https://get.docker.com | bash`), `usermod -aG docker ubuntu`
+- **Change**: Nginx `proxy_pass` from `http://localhost:3002` to `http://lrda_api` (upstream block in separate file)
+- **Add**: Nginx upstream config: `upstream-blue.conf` in `/etc/nginx/conf.d/`
+- **Add**: Copy `docker-compose.prod.yml` and `deploy.sh` to `/home/ubuntu/lrda/`
 - **Add**: Backup cron: `0 3 * * *`
 - **Add**: Directories: `/home/ubuntu/lrda/logs`, `/home/ubuntu/backups/db`
+- **Keep**: PostgreSQL 17, Cloudflare Origin CA cert, `.env` file, Nginx SSL config
 
 Note: With `network_mode: host`, containers access PostgreSQL at `localhost:5432` directly. No `pg_hba.conf` or `listen_addresses` changes needed beyond the existing `127.0.0.1/32` entry.
 
-### 11. `infrastructure/variables.tf` + `infrastructure/main.tf`
-
-- Add `better_auth_secret` variable (type: string, sensitive: true)
-- Pass `better_auth_secret` in the `templatefile()` call in `main.tf`
-
-### 12. `.github/workflows/ci-cd.yml`
+### 11. `.github/workflows/ci-cd.yml`
 
 - Add `workflow_call:` to `on:` triggers (so deploy.yml can reuse it as a prerequisite)
-- Remove stale `NEXT_PUBLIC_FIREBASE_*` env vars from both jobs
-- Add `NEXT_PUBLIC_API_URL: 'http://localhost:3002'`
 
-### 13. `docs/aws-deploy-plan.md`
+### 12. `docs/docker-blue-green-deploy-plan.md`
 
-- Update to reflect Docker-based approach replacing PM2
-- ~~Update SSL references from Let's Encrypt/certbot to Cloudflare Origin CA~~ **DONE**
+This file -- already updated.
 
 ---
 
-## Required GitHub Secrets
+## GitHub Secrets Needed
 
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `EC2_SSH_PRIVATE_KEY` | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
-| `EC2_HOST` | Elastic IP of EC2 instance | `54.123.45.67` |
-| `API_DOMAIN` | API domain for external health checks | `api-staging.wheresreligion.org` |
-| `GHCR_TOKEN` | PAT with `read:packages` scope for EC2 to pull from GHCR | `ghp_...` |
-| `AWS_ACCESS_KEY_ID` | (already exists) | -- |
-| `AWS_SECRET_ACCESS_KEY` | (already exists) | -- |
-| `DB_PASSWORD` | (already exists) | -- |
-| `DOMAIN_NAME` | (already exists) | -- |
-| `SSH_ALLOWED_IPS` | (already exists) | -- |
-| `KEY_PAIR_NAME` | (already exists) | -- |
-| `BETTER_AUTH_SECRET` | New -- for Terraform variable | -- |
+| Secret | Description |
+|--------|-------------|
+| `LIGHTSAIL_SSH_PRIVATE_KEY` | PEM content of Lightsail key pair |
+| `LIGHTSAIL_HOST` | Static IP (`100.51.5.142`) |
+| `API_DOMAIN` | `api-staging.wheresreligion.org` |
+
+`GITHUB_TOKEN` (automatic) handles GHCR auth with `packages: write` permission. No separate `GHCR_TOKEN` PAT is needed.
 
 Optional: Create GitHub Environments (`staging`, `production`) with required reviewers on `production`.
 
@@ -675,38 +677,26 @@ Optional: Create GitHub Environments (`staging`, `production`) with required rev
 
 ## Implementation Order
 
-| Step | File | Notes |
+| Step | What | Notes |
 |------|------|-------|
-| 1 | `packages/api/Dockerfile` | Core deliverable |
-| 2 | `packages/api/.dockerignore` | Keeps image small |
-| 3 | `.dockerignore` (root) | Keeps build context small |
-| 4 | `infrastructure/nginx/local.conf` | Simple static file |
-| 5 | `docker-compose.prod-local.yml` | Local testing stack |
-| 6 | **Test locally**: build image + run stack | Verify before continuing |
-| 7 | `docker-compose.prod.yml` | EC2 compose file |
-| 8 | `scripts/deploy.sh` | Blue/green logic |
-| 9 | `scripts/backup-db.sh` | Independent |
-| 10 | `infrastructure/scripts/user-data.sh` | Big update |
-| 11 | `infrastructure/variables.tf` + `main.tf` | New variable |
-| 12 | `.github/workflows/ci-cd.yml` | Add workflow_call, clean env |
-| 13 | `.github/workflows/deploy.yml` | Manual deploy workflow |
-| 14 | `docs/aws-deploy-plan.md` | Update docs |
+| 1 | `packages/api/Dockerfile` + `.dockerignore` files | Core deliverable |
+| 2 | `docker-compose.prod-local.yml` + `infrastructure/nginx/local.conf` | Local test stack |
+| 3 | **Test locally**: build image, run stack, verify health | Catch issues before touching server |
+| 4 | `docker-compose.prod.yml` | Production compose |
+| 5 | `infrastructure/scripts/deploy.sh` | Blue/green logic |
+| 6 | `scripts/backup-db.sh` | Independent |
+| 7 | `infrastructure/scripts/user-data.sh` | Docker CE replaces PM2/Node.js |
+| 8 | `.github/workflows/ci-cd.yml` | Add `workflow_call` trigger |
+| 9 | `.github/workflows/deploy.yml` | Manual deploy workflow |
+| 10 | Update docs | Reflect new architecture |
 
 ---
 
 ## Verification Checklist
 
-### Phase 1: Dockerfile
+### Phase 1: Docker build
 ```bash
 docker build -t lrda-api:test -f packages/api/Dockerfile .
-pnpm --filter @lrda/api docker:up  # start dev PG on 5433
-docker run --rm -p 3002:3002 \
-  -e DATABASE_URL=postgresql://lrda:lrda_dev@host.docker.internal:5433/lrda_api \
-  -e BETTER_AUTH_SECRET=test-secret \
-  -e BETTER_AUTH_URL=http://localhost:3002 \
-  --add-host=host.docker.internal:host-gateway \
-  lrda-api:test
-curl http://localhost:3002/api/health  # expect 200
 ```
 
 ### Phase 2: Local prod stack
@@ -719,12 +709,10 @@ curl http://localhost:3003/api/health   # direct to green
 docker compose -f docker-compose.prod-local.yml --profile green down -v
 ```
 
-### Phase 3: EC2 first deploy
+### Phase 3: Lightsail first deploy
 ```bash
-# Push image to GHCR first (or use GH Actions), then:
-ssh ubuntu@<ip> 'export GITHUB_REPOSITORY=<owner>/<repo> && \
-  docker login ghcr.io && \
-  sudo -E /home/ubuntu/lrda/deploy.sh sha-<commit>'
+tofu destroy && tofu apply  # Fresh instance with Docker CE
+# Upload compose + deploy files, push image to GHCR, run deploy.sh
 curl https://api-staging.wheresreligion.org/api/health  # 200
 docker ps  # lrda-api-blue running
 ```
@@ -732,24 +720,23 @@ docker ps  # lrda-api-blue running
 ### Phase 4: Blue/green swap
 ```bash
 # Deploy again with a new image tag -- should swap to green
-ssh ubuntu@<ip> 'export GITHUB_REPOSITORY=<owner>/<repo> && \
-  sudo -E /home/ubuntu/lrda/deploy.sh sha-<new-commit>'
 docker ps  # lrda-api-green running, blue stopped
 ```
 
 ### Phase 5: GitHub Actions
 ```
 Actions > Deploy API > Run workflow > staging
-Watch: tests -> SSH deploy -> external health check
+Watch: tests -> build -> SSH deploy -> external health check
 ```
 
 ---
 
 ## Notes
 
-- **Graceful shutdown is already implemented.** The API handles SIGTERM/SIGINT in `src/index.ts`: it marks itself as shutting down (causing `/api/health` to return 503), stops `Bun.serve()`, and closes the DB connection pool. This means `docker compose stop` (which sends SIGTERM) will drain in-flight requests before the container exits. The deploy script's drain sleep is a safety buffer on top of this.
-- **DB migrations are forward-only.** If a migration breaks the app, code rollback happens but schema stays at the new version. Manual intervention needed. Mitigation: always write backward-compatible migrations.
-- **Docker image size:** Bun base ~150MB + bundled API ~2.2MB + drizzle-kit deps. Final image ~250MB. Two containers during deploy use ~200MB RAM total. t3.small (2GB) has plenty of headroom.
-- **SSL:** Cloudflare Origin CA cert (15-year, no renewal). Generated via OpenTofu (`infrastructure/cloudflare.tf`), installed on EC2 at `/etc/ssl/cloudflare/`. The upstream config is in separate files (`/etc/nginx/conf.d/`), so SSL config doesn't interfere with blue/green switching.
-- **CORS is handled by the API, not Nginx.** The Hono CORS middleware in `src/index.ts` manages `Access-Control-Allow-*` headers based on `CORS_ORIGINS` env var. The Nginx config should NOT add its own CORS headers (the current `user-data.sh` does, which needs to be fixed).
+- **Graceful shutdown is already implemented.** The API handles SIGTERM/SIGINT in `src/index.ts`: it closes the HTTP server and drains the DB connection pool. `docker compose stop` sends SIGTERM, so in-flight requests complete before the container exits.
+- **DB migrations are forward-only.** `drizzle-kit push` applies schema changes directly. If a migration breaks the app, code rollback happens but schema stays at the new version. Manual intervention needed. Mitigation: always write backward-compatible migrations.
+- **Docker image size:** Node 24 slim base ~200MB + compiled API + node_modules. Final image ~300MB. Two containers during deploy use ~400MB RAM total. Lightsail (2GB) has enough headroom with PostgreSQL and Nginx also running.
+- **SSL:** Cloudflare Origin CA cert (15-year, no renewal). Generated via OpenTofu (`infrastructure/cloudflare.tf`), installed on Lightsail at `/etc/ssl/cloudflare/`. The upstream config is in separate files (`/etc/nginx/conf.d/`), so SSL config doesn't interfere with blue/green switching.
+- **CORS is handled by the API, not Nginx.** The Hono CORS middleware in `src/index.ts` manages `Access-Control-Allow-*` headers based on `CORS_ORIGINS` env var. The Nginx config should NOT add its own CORS headers.
 - **`network_mode: host` trade-off:** Using host networking is simpler (no port mapping, no bridge config for PostgreSQL) but means containers can't use the same port simultaneously. Blue gets 3002, green gets 3003 -- they must use different `PORT` env values.
+- **tsx at runtime:** Required because `@lrda/shared` exports raw `.ts` files via its `package.json` exports map (`"main": "./src/index.ts"`). `tsc` compiles the API code but doesn't rewrite import specifiers, so the compiled JS still imports from `@lrda/shared` which resolves to `.ts` files. `tsx` registers as a Node.js loader to handle this transparently.

@@ -7,6 +7,9 @@ export const AdminUserSchema = z.object({
   image: z.string().nullable().optional(),
   role: z.string().nullable().optional(),
   isInstructor: z.boolean(),
+  banned: z.boolean().nullable().optional(),
+  banReason: z.string().nullable().optional(),
+  banExpires: z.string().or(z.date()).nullable().optional(),
   pendingInstructorDescription: z.string().nullable().optional(),
   createdAt: z.string().or(z.date()),
 });

@@ -1,10 +1,12 @@
 import { createAuthClient } from 'better-auth/react';
+import { adminClient } from 'better-auth/client/plugins';
 
 const apiUrl = import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 export const authClient = createAuthClient({
   baseURL: apiUrl,
   basePath: '/api/auth',
+  plugins: [adminClient()],
 });
 
 // Typed wrapper for email sign in
