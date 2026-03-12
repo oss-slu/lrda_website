@@ -4,6 +4,7 @@ import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin } from 'lucide-reac
 import { fetchCreatorName } from '../../services';
 import { getCachedLocation } from '../../utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
+import { formatDateCompact, format12hourTime } from '../../utils/data_conversion';
 
 interface StoriesCardPreviewProps {
   note: Note;
@@ -38,27 +39,8 @@ const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
   }
 };
 
-// Utility function to format the date
-function formatDate(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-  return parsedDate.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-// Utility function to format time
-function formatTime(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-  const hours = parsedDate.getHours();
-  const minutes = parsedDate.getMinutes();
-  const ampm = hours < 12 ? 'AM' : 'PM';
-  return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-}
+const formatDate = formatDateCompact;
+const formatTime = format12hourTime;
 
 /**
  * Safely extract a tag label from either a string or Tag object

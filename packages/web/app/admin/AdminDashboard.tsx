@@ -13,6 +13,7 @@ import {
 import type { AdminUserData, PendingApplication, AdminStats } from '@/app/lib/services';
 import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
 import { toast } from 'sonner';
+import { formatDateShort } from '@/app/lib/utils/data_conversion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -199,14 +200,7 @@ export default function AdminDashboard({
     }
   };
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(dateObj);
-  };
+  const formatDate = formatDateShort;
 
   return (
     <div className='min-h-screen bg-gray-50'>

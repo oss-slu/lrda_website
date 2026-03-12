@@ -16,35 +16,9 @@ import AudioPicker from './NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from './media_viewer';
 import { PopoverClose } from '@radix-ui/react-popover';
 import { useNoteDetail } from '../hooks/queries/useNotes';
+import { formatDate, format12hourTime } from '../utils/data_conversion';
 
-// Utility function to format the date into a readable string
-function formatDate(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-
-  const dateString = parsedDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  return `${dateString}`;
-}
-
-// Utility function to format the time into a readable string
-function formatTime(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-
-  const hours = parsedDate.getHours();
-  const minutes = parsedDate.getMinutes();
-  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
-
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-}
+const formatTime = format12hourTime;
 
 // Convert old tags (strings) to new format
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {

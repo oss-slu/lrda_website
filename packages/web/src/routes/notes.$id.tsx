@@ -4,6 +4,7 @@ import { Note, Tag } from '@/app/types';
 import { notesService } from '@/app/lib/services/notes.service';
 import { fetchCreatorName } from '@/app/lib/services';
 import { sanitizeHtml } from '@/app/lib/utils/sanitize';
+import { formatDate, format12hourTime } from '@/app/lib/utils/data_conversion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,26 +29,7 @@ export const Route = createFileRoute('/notes/$id')({
   component: NoteDetailPage,
 })
 
-function formatDate(date: string | number | Date) {
-  const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) return 'Invalid Date';
-  return parsed.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatTime(date: string | number | Date) {
-  const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) return 'Invalid Date';
-  const h = parsed.getHours();
-  const m = parsed.getMinutes();
-  const formattedH = h % 12 === 0 ? 12 : h % 12;
-  const formattedM = m < 10 ? `0${m}` : m;
-  return `${formattedH}:${formattedM} ${h < 12 ? 'AM' : 'PM'}`;
-}
+const formatTime = format12hourTime;
 
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   if (!Array.isArray(tags)) return [];

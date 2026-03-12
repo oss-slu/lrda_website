@@ -18,33 +18,14 @@ import AudioPicker from '@/app/lib/components/NoteEditor/NoteElements/AudioPicke
 import MediaViewer from '../media_viewer';
 import { StoryMapPopover } from './StoryMapPopover';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { formatDate, format12hourTime } from '../../utils/data_conversion';
 
 interface StoryDetailDialogProps {
   note: Note;
   children: React.ReactNode;
 }
 
-// Utility function to format the date
-function formatDate(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-  return parsedDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-// Utility function to format time
-function formatTime(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-  const hours = parsedDate.getHours();
-  const minutes = parsedDate.getMinutes();
-  const ampm = hours < 12 ? 'AM' : 'PM';
-  return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-}
+const formatTime = format12hourTime;
 
 // Convert old tags (strings) to the new format
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {

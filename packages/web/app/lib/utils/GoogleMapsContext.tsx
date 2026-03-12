@@ -1,18 +1,29 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 interface GoogleMapsContextType {
   isMapsApiLoaded: boolean;
+  requestLoad: () => void;
 }
 
 const GoogleMapsContext = createContext<GoogleMapsContextType>({
   isMapsApiLoaded: false,
+  requestLoad: () => {},
 });
 
-export const useGoogleMaps = () => useContext(GoogleMapsContext);
+/**
+ * Returns { isMapsApiLoaded } and triggers Google Maps script loading on mount.
+ * The script only loads when a component calling this hook mounts, so pages
+ * without maps never pay the ~200KB cost.
+ */
+export function useGoogleMaps() {
+  const { isMapsApiLoaded, requestLoad } = useContext(GoogleMapsContext);
 
-interface GoogleMapsProviderProps {
-  children: ReactNode;
+  useEffect(() => {
+    requestLoad();
+  }, [requestLoad]);
+
+  return { isMapsApiLoaded };
 }
 
 const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
@@ -36,17 +47,32 @@ function GoogleMapsLoader({ setLoaded }: { setLoaded: (v: boolean) => void }) {
   return null;
 }
 
-export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
+/**
+ * Provides Google Maps loading state to the component tree.
+ * The Maps JS API is lazily loaded -- the ~200KB script is only fetched
+ * when a descendant component calls useGoogleMaps().
+ */
+export const GoogleMapsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  const requestLoad = useCallback(() => {
+    setShouldLoad(true);
+  }, []);
+
+  const value = useMemo(
+    () => ({ isMapsApiLoaded, requestLoad }),
+    [isMapsApiLoaded, requestLoad],
+  );
+
   return (
-    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>
-      {isClient && <GoogleMapsLoader setLoaded={setIsMapsApiLoaded} />}
+    <GoogleMapsContext.Provider value={value}>
+      {isClient && shouldLoad && <GoogleMapsLoader setLoaded={setIsMapsApiLoaded} />}
       {children}
     </GoogleMapsContext.Provider>
   );

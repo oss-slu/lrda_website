@@ -4,16 +4,12 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { formatDateTime } from '@/app/lib/utils/data_conversion';
 
 interface TimePickerProps {
-  initialDate?: Date; // Now optional — will fall back to today if not provided
+  initialDate?: Date; // Now optional -- will fall back to today if not provided
   onTimeChange?: (date: Date) => void;
   disabled?: boolean; // Whether the time picker is disabled (read-only)
-}
-
-function formatDateTime(date: Date) {
-  if (!date) return 'Pick a date';
-  return `${date.toDateString()}`;
 }
 
 function CaptionDropdowns(props: any) {

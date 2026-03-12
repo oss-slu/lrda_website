@@ -17,22 +17,10 @@ import { useComments, useCommentMutations } from '../hooks/queries/useComments';
 import { CommentThreadList } from './comments/CommentThreadList';
 import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '../hooks/queries/useNotes';
+import { formatDateShort, format12hourTime } from '../utils/data_conversion';
 
-// Utility functions
-const formatDate = (date: string | number | Date) =>
-  new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-
-const formatTime = (date: string | number | Date) => {
-  const d = new Date(date);
-  const h = d.getHours();
-  const m = d.getMinutes().toString().padStart(2, '0');
-  const ampm = h < 12 ? 'AM' : 'PM';
-  return `${h % 12 || 12}:${m} ${ampm}`;
-};
+const formatDate = formatDateShort;
+const formatTime = format12hourTime;
 
 const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
   const [creatorName, setCreatorName] = useState('Loading...');
