@@ -19,12 +19,3 @@ export const getItem = (key: string) => {
   return null;
 };
 
-export const removeItem = (key: string) => {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.log('Error removing value: ', error);
-    }
-  }
-};

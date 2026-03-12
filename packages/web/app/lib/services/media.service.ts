@@ -109,57 +109,8 @@ export async function getVideoDuration(file: File): Promise<string> {
   });
 }
 
-/**
- * Get the duration of an audio file.
- * @param file - The audio file
- * @returns Formatted duration string
- */
-export async function getAudioDuration(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const audio = document.createElement('audio');
-    audio.preload = 'metadata';
-
-    audio.onloadedmetadata = () => {
-      URL.revokeObjectURL(audio.src);
-      resolve(formatDuration(audio.duration));
-    };
-
-    audio.onerror = () => {
-      URL.revokeObjectURL(audio.src);
-      reject(new Error('Failed to load audio metadata'));
-    };
-
-    audio.src = URL.createObjectURL(file);
-  });
-}
-
-/**
- * Check if a file is a video based on MIME type.
- */
-export function isVideo(file: File): boolean {
-  return file.type.startsWith('video/');
-}
-
-/**
- * Check if a file is an image based on MIME type.
- */
-export function isImage(file: File): boolean {
-  return file.type.startsWith('image/');
-}
-
-/**
- * Check if a file is audio based on MIME type.
- */
-export function isAudio(file: File): boolean {
-  return file.type.startsWith('audio/');
-}
-
 export const mediaService = {
   getVideoThumbnail,
   getVideoDuration,
-  getAudioDuration,
   formatDuration,
-  isVideo,
-  isImage,
-  isAudio,
 };

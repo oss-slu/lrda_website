@@ -2,3 +2,5 @@
 export * from './useNotes';
 export * from './useUsers';
 export * from './useNoteMutations';
+export * from './useComments';
+export * from './useViewportNotes';

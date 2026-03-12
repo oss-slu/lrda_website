@@ -1,11 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { getItem, setItem } from '../utils/local_storage';
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+import type { Location } from '../utils/mapUtils';
 
 const DEFAULT_LOCATION: Location = { lat: 38.637334, lng: -90.286021 };
 const DEFAULT_ZOOM = 10;

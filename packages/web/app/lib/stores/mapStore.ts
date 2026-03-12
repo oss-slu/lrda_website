@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import { Note } from '@/app/types';
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+import type { Location } from '@/app/lib/utils/mapUtils';
 
 interface MapState {
   // Map viewport state
@@ -35,7 +31,6 @@ interface MapState {
   setMapBounds: (bounds: google.maps.LatLngBounds | null) => void;
   setLocationFound: (found: boolean) => void;
   setIsPanelOpen: (open: boolean) => void;
-  togglePanel: () => void;
   setIsLoading: (loading: boolean) => void;
   setActiveNote: (note: Note | null) => void;
   setHoveredNoteId: (id: string | null) => void;
@@ -43,15 +38,6 @@ interface MapState {
   setIsNoteSelectedFromSearch: (selected: boolean) => void;
   setSearchQuery: (query: string) => void;
   setIsGlobalView: (global: boolean) => void;
-  toggleGlobalView: () => void;
-
-  // Compound actions
-  resetMapState: () => void;
-  updateMapViewport: (
-    center: Location,
-    zoom: number,
-    bounds?: google.maps.LatLngBounds | null,
-  ) => void;
 }
 
 const DEFAULT_CENTER: Location = { lat: 38.005984, lng: -24.334449 };
@@ -78,7 +64,6 @@ export const useMapStore = create<MapState>()((set) => ({
   setMapBounds: bounds => set({ mapBounds: bounds }),
   setLocationFound: found => set({ locationFound: found }),
   setIsPanelOpen: open => set({ isPanelOpen: open }),
-  togglePanel: () => set(state => ({ isPanelOpen: !state.isPanelOpen })),
   setIsLoading: loading => set({ isLoading: loading }),
   setActiveNote: note => set({ activeNote: note }),
   setHoveredNoteId: id => set({ hoveredNoteId: id }),
@@ -86,25 +71,4 @@ export const useMapStore = create<MapState>()((set) => ({
   setIsNoteSelectedFromSearch: selected => set({ isNoteSelectedFromSearch: selected }),
   setSearchQuery: query => set({ searchQuery: query }),
   setIsGlobalView: global => set({ isGlobalView: global }),
-  toggleGlobalView: () => set(state => ({ isGlobalView: !state.isGlobalView })),
-
-  // Compound actions
-  resetMapState: () =>
-    set({
-      mapCenter: DEFAULT_CENTER,
-      mapZoom: DEFAULT_ZOOM,
-      mapBounds: null,
-      activeNote: null,
-      hoveredNoteId: null,
-      modalNoteId: null,
-      isNoteSelectedFromSearch: false,
-      searchQuery: '',
-    }),
-
-  updateMapViewport: (center, zoom, bounds = null) =>
-    set({
-      mapCenter: center,
-      mapZoom: zoom,
-      mapBounds: bounds,
-    }),
 }));

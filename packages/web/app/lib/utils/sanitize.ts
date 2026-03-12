@@ -268,21 +268,4 @@ export function extractTextFromHtml(html: string): string {
   return tempDiv.textContent || tempDiv.innerText || '';
 }
 
-/**
- * Sanitizes HTML and returns both sanitized HTML and plain text.
- * Convenient when you need both versions.
- *
- * @param dirty - The untrusted HTML string
- * @param options - Sanitization options
- * @returns Object with both sanitized HTML and extracted text
- */
-export async function sanitizeAndExtract(
-  dirty: string,
-  options: SanitizeOptions = {},
-): Promise<{ html: string; text: string }> {
-  const html = await sanitizeHtml(dirty, options);
-  const text = extractTextFromHtml(html);
-  return { html, text };
-}
-
 export default sanitizeHtml;

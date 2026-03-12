@@ -58,20 +58,6 @@ export type UserProfile = {
   } | null;
 };
 
-// Session type from better-auth
-export type AuthSession = {
-  token: string;
-  userId: string;
-  expiresAt: Date;
-};
-
-// Signup data type
-export type SignUpData = {
-  email: string;
-  password: string;
-  name: string;
-};
-
 export type Note = {
   id: string;
   title: string;
@@ -110,7 +96,3 @@ export type newNote = {
   tags: Tag[];
 };
 
-export type ImageNote = {
-  image: string;
-  note: Note;
-};

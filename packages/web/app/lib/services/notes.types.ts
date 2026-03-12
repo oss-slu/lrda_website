@@ -49,9 +49,3 @@ export interface CreateNotePayload {
   isReturned?: boolean;
 }
 
-/**
- * Payload for updating an existing note.
- */
-export interface UpdateNotePayload extends CreateNotePayload {
-  id: string;
-}

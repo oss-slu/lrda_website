@@ -101,7 +101,7 @@ export function useCommentMutations(noteId: string) {
 
   const deleteComment = useMutation({
     mutationFn: async (commentId: string) => {
-      await commentsService.archive(commentId);
+      await commentsService.delete(commentId);
       return commentId;
     },
     onMutate: async commentId => {

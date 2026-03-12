@@ -75,14 +75,6 @@ async function deleteComment(commentId: string): Promise<boolean> {
 }
 
 /**
- * Archive a comment.
- * @deprecated Use deleteComment() instead - we now use hard deletes.
- */
-async function archive(commentId: string): Promise<boolean> {
-  return deleteComment(commentId);
-}
-
-/**
  * Update a comment's text.
  */
 async function updateComment(commentId: string, updates: Partial<CommentData>): Promise<ApiCommentData> {
@@ -101,6 +93,5 @@ export const commentsService = {
   create,
   resolveThread,
   delete: deleteComment,
-  archive,
   update: updateComment,
 };

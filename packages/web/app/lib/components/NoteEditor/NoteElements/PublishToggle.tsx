@@ -1,6 +1,6 @@
 import React from 'react';
 import { UploadIcon, XCircle, ArrowDownToLine } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { hasInstructorAccess } from '@/app/lib/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';

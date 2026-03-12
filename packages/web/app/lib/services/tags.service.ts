@@ -113,17 +113,6 @@ async function generateTags(noteContent: string): Promise<string[]> {
   return generateTagsOnServer({ data: { noteContent } })
 }
 
-/**
- * Generate tags for multiple notes.
- * @param noteContents - Array of note text contents
- * @returns Array of tag strings (combined from all notes)
- */
-async function generateTagsForMultiple(noteContents: string[]): Promise<string[]> {
-  const combined = noteContents.join('\n')
-  return generateTags(combined)
-}
-
 export const tagsService = {
   generateTags,
-  generateTagsForMultiple,
 }

@@ -15,7 +15,6 @@ export { notesService } from './notes.service';
 export type {
   NoteQueryOptions,
   CreateNotePayload,
-  UpdateNotePayload,
   ApiNoteData,
 } from './notes.types';
 
@@ -47,8 +46,6 @@ export type {
 export { fetchStudents } from './instructor.service';
 export type {
   StudentInfo,
-  SerializedMediaItem,
-  SerializedAudioItem,
 } from './instructor.types';
 
 // Media service
