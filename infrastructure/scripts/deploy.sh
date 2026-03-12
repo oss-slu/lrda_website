@@ -48,12 +48,12 @@ log "Pulling image: ${FULL_IMAGE}"
 docker pull "${FULL_IMAGE}"
 
 # ---- Run database migrations ----
-log "Running database migrations (drizzle-kit push)..."
+log "Running database migrations..."
 docker run --rm \
     --network host \
     --env-file "${APP_DIR}/.env" \
     "${FULL_IMAGE}" \
-    pnpm exec drizzle-kit push
+    pnpm exec drizzle-kit migrate
 
 # ---- Start inactive container ----
 log "Starting ${INACTIVE} container..."

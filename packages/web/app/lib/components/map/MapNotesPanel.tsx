@@ -24,7 +24,7 @@ interface MapNotesPanelProps {
   activeNoteId: string | null;
   noteRefs: React.MutableRefObject<Refs>;
   onNoteHover: (noteId: string | null) => void;
-  onNoteClick: (note: Note) => void;
+  onNoteClick: (noteId: string) => void;
   onTogglePanel: () => void;
 }
 
@@ -145,7 +145,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
                   }}
                   onMouseEnter={() => onNoteHover(note.id)}
                   onMouseLeave={handleMouseLeave}
-                  onClick={() => onNoteClick(note)}
+                  onClick={() => onNoteClick(note.id)}
                 >
                   <NoteCard note={note} isActive={note.id === activeNoteId} />
                 </div>

@@ -184,12 +184,12 @@ FULL_IMAGE="ghcr.io/$${GITHUB_REPOSITORY}/api:$${IMAGE_TAG}"
 log "Pulling image: $${FULL_IMAGE}"
 docker pull "$${FULL_IMAGE}"
 
-log "Running database migrations (drizzle-kit push)..."
+log "Running database migrations..."
 docker run --rm \
     --network host \
     --env-file "$${APP_DIR}/.env" \
     "$${FULL_IMAGE}" \
-    pnpm exec drizzle-kit push
+    pnpm exec drizzle-kit migrate
 
 log "Starting $${INACTIVE} container..."
 if [ "$${INACTIVE}" = "green" ]; then

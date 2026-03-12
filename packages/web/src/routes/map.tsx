@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState, useRef, useMemo, useCallback, useDeferredValue } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
 import { useAuthStore } from '@/app/lib/stores/authStore';
@@ -10,13 +10,13 @@ import { MapControls, MapNotesPanel } from '@/app/lib/components/map';
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from '@/app/lib/hooks/useInfiniteNotes';
 import { useGoogleMaps } from '@/app/lib/utils/GoogleMapsContext';
 import { Dialog } from '@/components/ui/dialog';
-import { useGlobalMapNotes, usePersonalMapNotes } from '@/app/lib/hooks/queries/useNotes';
+import { usePersonalMapNotes } from '@/app/lib/hooks/queries/useNotes';
+import { useViewportNotes } from '@/app/lib/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/app/lib/hooks/useMapLocation';
 import { useMapMarkers } from '@/app/lib/hooks/useMapMarkers';
 import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
 import {
   filterNotesByMapBounds,
-  filterNotesByQuery,
   filterNotesByTitleAndTags,
 } from '@/app/lib/utils/mapUtils';
 import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
@@ -38,8 +38,9 @@ function MapPage() {
     locationFound,
     isPanelOpen,
     activeNote,
-    modalNote,
+    modalNoteId,
     isNoteSelectedFromSearch,
+    searchQuery,
     isGlobalView,
     setMapCenter,
     setMapZoom,
@@ -49,8 +50,9 @@ function MapPage() {
     setIsLoading,
     setActiveNote,
     setHoveredNoteId,
-    setModalNote,
+    setModalNoteId,
     setIsNoteSelectedFromSearch,
+    setSearchQuery,
     setIsGlobalView,
   } = useMapStore(
     useShallow(state => ({
@@ -60,8 +62,9 @@ function MapPage() {
       locationFound: state.locationFound,
       isPanelOpen: state.isPanelOpen,
       activeNote: state.activeNote,
-      modalNote: state.modalNote,
+      modalNoteId: state.modalNoteId,
       isNoteSelectedFromSearch: state.isNoteSelectedFromSearch,
+      searchQuery: state.searchQuery,
       isGlobalView: state.isGlobalView,
       setMapCenter: state.setMapCenter,
       setMapZoom: state.setMapZoom,
@@ -71,8 +74,9 @@ function MapPage() {
       setIsLoading: state.setIsLoading,
       setActiveNote: state.setActiveNote,
       setHoveredNoteId: state.setHoveredNoteId,
-      setModalNote: state.setModalNote,
+      setModalNoteId: state.setModalNoteId,
       setIsNoteSelectedFromSearch: state.setIsNoteSelectedFromSearch,
+      setSearchQuery: state.setSearchQuery,
       setIsGlobalView: state.setIsGlobalView,
     })),
   );
@@ -88,12 +92,15 @@ function MapPage() {
   const { isMapsApiLoaded } = useGoogleMaps();
 
   // TanStack Query for notes data
+  // Global view: viewport-based fetching with summary mode (debounced, server-side filtering)
   const {
-    data: globalNotes = [],
-    isPending: isGlobalPending,
-    isError: isGlobalError,
-    error: globalError,
-  } = useGlobalMapNotes();
+    data: viewportNotes = [],
+    isPending: isViewportPending,
+    isError: isViewportError,
+    error: viewportError,
+  } = useViewportNotes();
+
+  // Personal view: load all user notes (small dataset, client-side filtering)
   const {
     data: personalNotes = [],
     isPending: isPersonalPending,
@@ -102,27 +109,23 @@ function MapPage() {
   } = usePersonalMapNotes(authUser?.id ?? null);
 
   // Derived loading and error states based on current view
-  const notesLoading = isGlobalView ? isGlobalPending : isPersonalPending;
-  const notesError = isGlobalView ? isGlobalError : isPersonalError;
-  const notesErrorMessage = isGlobalView ? globalError?.message : personalError?.message;
+  const notesLoading = isGlobalView ? isViewportPending : isPersonalPending;
+  const notesError = isGlobalView ? isViewportError : isPersonalError;
+  const notesErrorMessage = isGlobalView ? viewportError?.message : personalError?.message;
 
-  // Derived state - current notes based on global/personal view
-  const notes = useMemo(() => {
-    return isGlobalView ? globalNotes : personalNotes;
-  }, [isGlobalView, globalNotes, personalNotes]);
-
-  // Filtered notes based on map bounds - derived from notes and search state
-  const [searchFilteredNotes, setSearchFilteredNotes] = useState<Note[] | null>(null);
-
-  // Compute filtered notes - either from search or from map bounds
+  // Filtered notes:
+  // Global view: viewport notes come pre-filtered from the server (bounds + search)
+  // Personal view: client-side filtering by bounds or search
   const filteredNotes = useMemo(() => {
-    // If search filter is active and not selecting a note from search, use it
-    if (searchFilteredNotes !== null && !isNoteSelectedFromSearch) {
-      return searchFilteredNotes;
+    if (isGlobalView) {
+      return viewportNotes;
     }
-    // Otherwise filter by map bounds
-    return filterNotesByMapBounds(mapBounds, notes);
-  }, [searchFilteredNotes, mapBounds, notes, isNoteSelectedFromSearch]);
+    // Personal view: client-side filtering
+    if (searchQuery && !isNoteSelectedFromSearch) {
+      return filterNotesByTitleAndTags(personalNotes, searchQuery);
+    }
+    return filterNotesByMapBounds(mapBounds, personalNotes);
+  }, [isGlobalView, viewportNotes, personalNotes, searchQuery, mapBounds, isNoteSelectedFromSearch]);
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -205,37 +208,30 @@ function MapPage() {
     }
   }, [setActiveNote]);
 
-  // Map load handler
+  // Map load handler -- uses 'idle' event to batch drag+zoom into a single bounds update
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
 
-      const updateBounds = () => {
+      const updateViewport = () => {
         const lat = map.getCenter()?.lat();
         const lng = map.getCenter()?.lng();
+        const zoom = map.getZoom();
 
         if (typeof lat === 'number' && typeof lng === 'number') {
           setMapCenter({ lat, lng });
           setMapBounds(map.getBounds() ?? null);
-        } else {
-          console.warn('Map bounds update skipped: invalid center');
         }
-      };
-
-      const updateZoom = () => {
-        const zoom = map.getZoom();
         if (typeof zoom === 'number') {
           setMapZoom(zoom);
         }
       };
 
-      map.addListener('dragend', updateBounds);
-      map.addListener('zoom_changed', () => {
-        updateBounds();
-        updateZoom();
-      });
+      // 'idle' fires once after all pan/zoom/tile loading completes
+      map.addListener('idle', updateViewport);
 
-      setTimeout(updateBounds, 100);
+      // Initial bounds
+      setTimeout(updateViewport, 100);
     },
     [setMapCenter, setMapBounds, setMapZoom],
   );
@@ -247,8 +243,12 @@ function MapPage() {
         setIsNoteSelectedFromSearch(true);
       } else {
         setIsNoteSelectedFromSearch(false);
-        const filtered = filterNotesByQuery(notes, address);
-        setSearchFilteredNotes(filtered);
+        // Only update search query for text searches, not coordinate pans
+        if (lat === undefined && lng === undefined) {
+          setSearchQuery(address);
+        } else {
+          setSearchQuery('');
+        }
       }
 
       if (lat !== undefined && lng !== undefined) {
@@ -257,24 +257,23 @@ function MapPage() {
         mapRef.current?.setZoom(10);
       }
     },
-    [notes, setIsNoteSelectedFromSearch],
+    [setIsNoteSelectedFromSearch, setSearchQuery],
   );
 
   const handleNotesSearch = useCallback(
     (searchText: string) => {
-      const filtered = filterNotesByTitleAndTags(notes, searchText);
-      setSearchFilteredNotes(filtered);
+      setIsNoteSelectedFromSearch(false);
+      setSearchQuery(searchText);
     },
-    [notes],
+    [setSearchQuery, setIsNoteSelectedFromSearch],
   );
 
   // Toggle between global and personal view
   const toggleFilter = useCallback(() => {
     const newGlobal = !isGlobalView;
     setIsGlobalView(newGlobal);
-    // Clear search filter when toggling view
-    setSearchFilteredNotes(null);
-  }, [isGlobalView, setIsGlobalView]);
+    setSearchQuery('');
+  }, [isGlobalView, setIsGlobalView, setSearchQuery]);
 
   return (
     <div className='relative h-full w-screen overflow-hidden'>
@@ -341,20 +340,20 @@ function MapPage() {
         activeNoteId={activeNote?.id ?? null}
         noteRefs={noteRefs}
         onNoteHover={setHoveredNoteId}
-        onNoteClick={setModalNote}
+        onNoteClick={setModalNoteId}
         onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
       />
 
       {/* Note Detail Modal */}
       <Dialog
-        open={modalNote !== null}
+        open={modalNoteId !== null}
         onOpenChange={isOpen => {
           if (!isOpen) {
-            setModalNote(null);
+            setModalNoteId(null);
           }
         }}
       >
-        {modalNote && <ClickableNote note={modalNote} />}
+        {modalNoteId && <ClickableNote noteId={modalNoteId} />}
       </Dialog>
     </div>
   );

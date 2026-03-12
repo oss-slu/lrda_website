@@ -20,8 +20,11 @@ interface MapState {
   // Note interaction state
   activeNote: Note | null;
   hoveredNoteId: string | null;
-  modalNote: Note | null;
+  modalNoteId: string | null;
   isNoteSelectedFromSearch: boolean;
+
+  // Search state
+  searchQuery: string;
 
   // Global/personal toggle
   isGlobalView: boolean;
@@ -36,8 +39,9 @@ interface MapState {
   setIsLoading: (loading: boolean) => void;
   setActiveNote: (note: Note | null) => void;
   setHoveredNoteId: (id: string | null) => void;
-  setModalNote: (note: Note | null) => void;
+  setModalNoteId: (id: string | null) => void;
   setIsNoteSelectedFromSearch: (selected: boolean) => void;
+  setSearchQuery: (query: string) => void;
   setIsGlobalView: (global: boolean) => void;
   toggleGlobalView: () => void;
 
@@ -63,8 +67,9 @@ export const useMapStore = create<MapState>()((set) => ({
   isLoading: true,
   activeNote: null,
   hoveredNoteId: null,
-  modalNote: null,
+  modalNoteId: null,
   isNoteSelectedFromSearch: false,
+  searchQuery: '',
   isGlobalView: true,
 
   // Simple setters
@@ -77,8 +82,9 @@ export const useMapStore = create<MapState>()((set) => ({
   setIsLoading: loading => set({ isLoading: loading }),
   setActiveNote: note => set({ activeNote: note }),
   setHoveredNoteId: id => set({ hoveredNoteId: id }),
-  setModalNote: note => set({ modalNote: note }),
+  setModalNoteId: id => set({ modalNoteId: id }),
   setIsNoteSelectedFromSearch: selected => set({ isNoteSelectedFromSearch: selected }),
+  setSearchQuery: query => set({ searchQuery: query }),
   setIsGlobalView: global => set({ isGlobalView: global }),
   toggleGlobalView: () => set(state => ({ isGlobalView: !state.isGlobalView })),
 
@@ -90,8 +96,9 @@ export const useMapStore = create<MapState>()((set) => ({
       mapBounds: null,
       activeNote: null,
       hoveredNoteId: null,
-      modalNote: null,
+      modalNoteId: null,
       isNoteSelectedFromSearch: false,
+      searchQuery: '',
     }),
 
   updateMapViewport: (center, zoom, bounds = null) =>

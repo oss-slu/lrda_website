@@ -114,6 +114,19 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
 }
 
 /**
+ * Hook for fetching a single note's full details (text, all media, audio).
+ * Used by the modal when a user clicks a note card.
+ */
+export function useNoteDetail(noteId: string | null) {
+  return useQuery({
+    queryKey: notesKeys.detail(noteId ?? ''),
+    queryFn: () => notesService.fetchById(noteId!),
+    enabled: !!noteId,
+    staleTime: 60_000,
+  });
+}
+
+/**
  * Hook for infinite scroll of published notes (for StoriesPage)
  */
 export function useInfinitePublishedNotes(

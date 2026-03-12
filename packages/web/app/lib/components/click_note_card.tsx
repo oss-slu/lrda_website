@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'; // comment test
+import React, { useState, useEffect } from 'react';
 import { fetchCreatorName } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
-import { Note, Tag } from '@/app/types';
-import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 'lucide-react';
+import { Tag } from '@/app/types';
+import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X, Loader2 } from 'lucide-react';
 import {
   DialogContent,
   DialogDescription,
@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import AudioPicker from './NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from './media_viewer';
 import { PopoverClose } from '@radix-ui/react-popover';
+import { useNoteDetail } from '../hooks/queries/useNotes';
 
 // Utility function to format the date into a readable string
 function formatDate(date: string | number | Date) {
@@ -51,30 +52,40 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   return tags.map(tag => (typeof tag === 'string' ? { label: tag, origin: 'user' } : tag));
 };
 
-// ClickableNote component
+// ClickableNote component - fetches full note detail by ID
 const ClickableNote: React.FC<{
-  note: Note;
-}> = ({ note }) => {
+  noteId: string;
+}> = ({ noteId }) => {
+  const { data: note, isPending } = useNoteDetail(noteId);
   const [creator, setCreator] = useState<string>('Loading...');
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
-  const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
+  const tags: Tag[] = convertOldTags(note?.tags);
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
+    if (!note?.creator) return;
     fetchCreatorName(note.creator)
       .then((name: string) => setCreator(name))
       .catch((error: Error) => {
         console.error('Error fetching creator name:', error, note.creator);
         setCreator('Error loading name');
       });
-  }, [note.creator]);
+  }, [note?.creator]);
 
   // Sanitize note content
   useEffect(() => {
-    if (note.text) {
+    if (note?.text) {
       sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
     }
-  }, [note.text]);
+  }, [note?.text]);
+
+  if (isPending || !note) {
+    return (
+      <DialogContent className='flex h-[100vh] flex-col items-center justify-center p-0 sm:max-w-[80%]'>
+        <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+      </DialogContent>
+    );
+  }
 
   return (
     <DialogContent className='flex h-[100vh] flex-col p-0 sm:max-w-[80%]'>

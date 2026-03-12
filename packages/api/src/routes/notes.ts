@@ -23,6 +23,7 @@ const ListNotesQuerySchema = z.object({
   creatorId: z.string().optional(),
   search: z.string().optional(),
   sort: z.enum(['newest', 'oldest', 'alphabetical']).optional(),
+  fields: z.enum(['summary', 'full']).optional(),
   minLat: z.string().transform(Number).optional(),
   maxLat: z.string().transform(Number).optional(),
   minLng: z.string().transform(Number).optional(),
@@ -251,6 +252,8 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       orderBy = asc(note.title);
     }
 
+    const isSummary = query.fields === 'summary';
+
     const results = await db.query.note.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
       with: {
@@ -261,6 +264,16 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       offset: query.offset,
       orderBy: orderBy,
     });
+
+    if (isSummary) {
+      const summaries = results.map(r => ({
+        ...r,
+        text: '',
+        media: r.media.slice(0, 1),
+        audio: [],
+      }));
+      return c.json(summaries, 200);
+    }
 
     return c.json(results, 200);
   })

@@ -227,6 +227,40 @@ async function fetchMessages(
 }
 
 /**
+ * Query params for viewport/search fetching in summary mode.
+ * Bounds are optional -- omit them for a global search.
+ */
+export interface ViewportParams {
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Fetch published notes in summary mode (no text, first media only, no audio).
+ * Pass bounds for viewport filtering, or omit for global search.
+ */
+async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
+  const qs = buildQueryString({
+    published: true,
+    fields: 'summary',
+    minLat: params.minLat,
+    maxLat: params.maxLat,
+    minLng: params.minLng,
+    maxLng: params.maxLng,
+    search: params.search,
+    limit: params.limit ?? 200,
+    offset: params.offset ?? 0,
+  });
+  const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
+  return (data ?? []).map(transformApiNote);
+}
+
+/**
  * Fetch a single note by ID.
  */
 async function fetchById(id: string): Promise<Note | null> {
@@ -244,6 +278,7 @@ export const notesService = {
   fetchByStudents,
   fetchUserNotes,
   fetchById,
+  fetchViewport,
   create,
   update,
   delete: deleteNote,

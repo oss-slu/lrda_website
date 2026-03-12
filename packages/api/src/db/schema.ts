@@ -127,6 +127,7 @@ export const note = pgTable('note', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('note_creator_id_idx').on(table.creatorId),
+  index('note_published_coords_idx').on(table.isPublished, table.latitude, table.longitude),
 ]);
 
 export const noteRelations = relations(note, ({ one, many }) => ({

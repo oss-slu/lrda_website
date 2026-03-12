@@ -11,13 +11,13 @@ This is the **Where's Religion?** desktop web application - a Next.js project fo
 
 ### Migration Context
 
-This codebase is on a **migration branch** moving off **both** the legacy RERUM backend **and** Firebase Auth to a new Cloudflare-hosted stack: Hono API on Workers with D1 (SQLite) and Better Auth. **Production still uses RERUM and Firebase.** There is a companion **mobile app** (`lrda_mobile`) that also still uses RERUM and Firebase.
+This codebase has migrated off the legacy RERUM backend and Firebase Auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that still uses RERUM and Firebase.
 
-**Migration plan:**
-1. This web app migrates first (RERUM + Firebase -> D1/Hono + Better Auth on Cloudflare)
+**Migration status:**
+1. The web app has migrated (RERUM + Firebase -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
 2. During the transition:
-   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) run as **cron jobs** to keep the mobile app's RERUM data in sync with the new D1 backend
-   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into D1
+   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
+   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
 3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
 
 **Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period.
@@ -26,8 +26,8 @@ This codebase is on a **migration branch** moving off **both** the legacy RERUM 
 
 This is a **monorepo** containing:
 
-- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + Cloudflare D1 (port 8787 via `wrangler dev`). This is the backend the web frontend talks to.
-- **Web package** (`packages/web/`): Next.js App Router application, deployed to Cloudflare Workers via `@opennextjs/cloudflare`.
+- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL, deployed to AWS Lightsail via Docker (blue/green deploys). Port 3002 locally.
+- **Web package** (`packages/web/`): TanStack Start application, deployed to Cloudflare Workers.
 
 ## Architecture
 
