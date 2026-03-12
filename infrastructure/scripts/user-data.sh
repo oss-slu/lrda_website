@@ -189,7 +189,7 @@ docker run --rm \
     --network host \
     --env-file "$${APP_DIR}/.env" \
     "$${FULL_IMAGE}" \
-    npx drizzle-kit push
+    pnpm exec drizzle-kit push
 
 log "Starting $${INACTIVE} container..."
 if [ "$${INACTIVE}" = "green" ]; then

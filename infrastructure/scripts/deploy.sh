@@ -53,7 +53,7 @@ docker run --rm \
     --network host \
     --env-file "${APP_DIR}/.env" \
     "${FULL_IMAGE}" \
-    npx drizzle-kit push
+    pnpm exec drizzle-kit push
 
 # ---- Start inactive container ----
 log "Starting ${INACTIVE} container..."
