@@ -9,6 +9,7 @@ IMAGE_TAG="${1:?Usage: deploy.sh <image_tag>}"
 APP_DIR="/home/ubuntu/lrda"
 COMPOSE_FILE="${APP_DIR}/docker-compose.prod.yml"
 NGINX_CONF_DIR="/etc/nginx/conf.d"
+UPSTREAM_FILE="${NGINX_CONF_DIR}/upstream-api.conf"
 BLUE_PORT=3002
 GREEN_PORT=3003
 HEALTH_RETRIES=20
@@ -19,18 +20,22 @@ log() { echo "${LOG_PREFIX} $(date -u +%H:%M:%S) $*"; }
 
 cd "${APP_DIR}"
 
-# ---- Determine active color ----
-if [ -f "${NGINX_CONF_DIR}/upstream-blue.conf" ] && \
-   ! [ -f "${NGINX_CONF_DIR}/upstream-blue.conf.disabled" ]; then
-    ACTIVE="blue"; INACTIVE="green"
-    ACTIVE_PORT="${BLUE_PORT}"; INACTIVE_PORT="${GREEN_PORT}"
-elif [ -f "${NGINX_CONF_DIR}/upstream-green.conf" ] && \
-     ! [ -f "${NGINX_CONF_DIR}/upstream-green.conf.disabled" ]; then
-    ACTIVE="green"; INACTIVE="blue"
-    ACTIVE_PORT="${GREEN_PORT}"; INACTIVE_PORT="${BLUE_PORT}"
+# ---- Determine active color by reading current upstream port ----
+if [ -f "${UPSTREAM_FILE}" ]; then
+    CURRENT_PORT=$(grep -oE '[0-9]+' "${UPSTREAM_FILE}" | tail -1)
+    if [ "${CURRENT_PORT}" = "${BLUE_PORT}" ]; then
+        ACTIVE="blue"; INACTIVE="green"
+        ACTIVE_PORT="${BLUE_PORT}"; INACTIVE_PORT="${GREEN_PORT}"
+    elif [ "${CURRENT_PORT}" = "${GREEN_PORT}" ]; then
+        ACTIVE="green"; INACTIVE="blue"
+        ACTIVE_PORT="${GREEN_PORT}"; INACTIVE_PORT="${BLUE_PORT}"
+    else
+        log "Unknown port ${CURRENT_PORT}. Defaulting to blue."
+        ACTIVE="none"; INACTIVE="blue"
+        ACTIVE_PORT="0"; INACTIVE_PORT="${BLUE_PORT}"
+    fi
 else
-    # First deploy
-    log "No active upstream found. First deploy, defaulting to blue."
+    log "No upstream config found. First deploy, defaulting to blue."
     ACTIVE="none"; INACTIVE="blue"
     ACTIVE_PORT="0"; INACTIVE_PORT="${BLUE_PORT}"
 fi
@@ -39,7 +44,6 @@ log "Active: ${ACTIVE} (:${ACTIVE_PORT}), deploying to: ${INACTIVE} (:${INACTIVE
 log "Image tag: ${IMAGE_TAG}"
 
 # ---- Pull pre-built image from GHCR ----
-# GITHUB_REPOSITORY is set by the CI/CD pipeline (e.g., "owner/repo")
 export IMAGE_TAG
 export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set}"
 
@@ -87,12 +91,7 @@ fi
 # ---- Switch Nginx upstream ----
 log "Switching Nginx to ${INACTIVE} (:${INACTIVE_PORT})..."
 echo "upstream lrda_api { server 127.0.0.1:${INACTIVE_PORT}; }" | \
-    sudo tee "${NGINX_CONF_DIR}/upstream-${INACTIVE}.conf" > /dev/null
-
-if [ "${ACTIVE}" != "none" ]; then
-    sudo mv "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf" \
-            "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf.disabled" 2>/dev/null || true
-fi
+    sudo tee "${UPSTREAM_FILE}" > /dev/null
 
 if sudo nginx -t 2>/dev/null; then
     sudo systemctl reload nginx
@@ -100,16 +99,17 @@ if sudo nginx -t 2>/dev/null; then
 else
     log "ERROR: Nginx config test failed, rolling back"
     if [ "${ACTIVE}" != "none" ]; then
-        sudo mv "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf.disabled" \
-                "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf" 2>/dev/null || true
+        echo "upstream lrda_api { server 127.0.0.1:${ACTIVE_PORT}; }" | \
+            sudo tee "${UPSTREAM_FILE}" > /dev/null
     fi
-    sudo rm -f "${NGINX_CONF_DIR}/upstream-${INACTIVE}.conf"
     docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
     exit 1
 fi
 
-# ---- Stop old container ----
+# ---- Drain old connections, then stop old container ----
 if [ "${ACTIVE}" != "none" ]; then
+    log "Waiting for old Nginx workers to drain..."
+    sleep 5
     log "Stopping old ${ACTIVE} container..."
     docker compose -f "${COMPOSE_FILE}" stop "api-${ACTIVE}"
 fi
