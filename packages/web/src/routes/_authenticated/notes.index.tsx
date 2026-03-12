@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import Notes from '@/app/notes/Notes';
 
-export const Route = createFileRoute('/notes/')({
+export const Route = createFileRoute('/_authenticated/notes/')({
   head: () => ({
     meta: [{ title: "My Notes | Where's Religion?" }],
   }),

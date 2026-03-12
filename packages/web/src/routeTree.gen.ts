@@ -17,13 +17,14 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as InstructorDashboardRouteImport } from './routes/instructor-dashboard'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ConfirmRouteImport } from './routes/confirm'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as NotesIndexRouteImport } from './routes/notes.index'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
+import { Route as AuthenticatedInstructorDashboardRouteImport } from './routes/_authenticated/instructor-dashboard'
+import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes.index'
 
 const WheresReligionRoute = WheresReligionRouteImport.update({
   id: '/wheres-religion',
@@ -65,11 +66,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InstructorDashboardRoute = InstructorDashboardRouteImport.update({
-  id: '/instructor-dashboard',
-  path: '/instructor-dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -85,14 +81,13 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotesIndexRoute = NotesIndexRouteImport.update({
-  id: '/notes/',
-  path: '/notes/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesIdRoute = NotesIdRouteImport.update({
@@ -100,13 +95,23 @@ const NotesIdRoute = NotesIdRouteImport.update({
   path: '/notes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedInstructorDashboardRoute =
+  AuthenticatedInstructorDashboardRouteImport.update({
+    id: '/instructor-dashboard',
+    path: '/instructor-dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
+  id: '/notes/',
+  path: '/notes/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/confirm': typeof ConfirmRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/instructor-dashboard': typeof InstructorDashboardRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -115,15 +120,15 @@ export interface FileRoutesByFullPath {
   '/stories': typeof StoriesRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wheres-religion': typeof WheresReligionRoute
+  '/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
   '/notes/$id': typeof NotesIdRoute
-  '/notes/': typeof NotesIndexRoute
+  '/notes/': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/confirm': typeof ConfirmRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/instructor-dashboard': typeof InstructorDashboardRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -132,16 +137,17 @@ export interface FileRoutesByTo {
   '/stories': typeof StoriesRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wheres-religion': typeof WheresReligionRoute
+  '/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
   '/notes/$id': typeof NotesIdRoute
-  '/notes': typeof NotesIndexRoute
+  '/notes': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/admin': typeof AdminRoute
   '/confirm': typeof ConfirmRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/instructor-dashboard': typeof InstructorDashboardRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -150,8 +156,9 @@ export interface FileRoutesById {
   '/stories': typeof StoriesRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wheres-religion': typeof WheresReligionRoute
+  '/_authenticated/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
   '/notes/$id': typeof NotesIdRoute
-  '/notes/': typeof NotesIndexRoute
+  '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,7 +167,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/confirm'
     | '/forgot-password'
-    | '/instructor-dashboard'
     | '/login'
     | '/map'
     | '/reset-password'
@@ -169,6 +175,7 @@ export interface FileRouteTypes {
     | '/stories'
     | '/verify-email'
     | '/wheres-religion'
+    | '/instructor-dashboard'
     | '/notes/$id'
     | '/notes/'
   fileRoutesByTo: FileRoutesByTo
@@ -177,7 +184,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/confirm'
     | '/forgot-password'
-    | '/instructor-dashboard'
     | '/login'
     | '/map'
     | '/reset-password'
@@ -186,15 +192,16 @@ export interface FileRouteTypes {
     | '/stories'
     | '/verify-email'
     | '/wheres-religion'
+    | '/instructor-dashboard'
     | '/notes/$id'
     | '/notes'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/admin'
     | '/confirm'
     | '/forgot-password'
-    | '/instructor-dashboard'
     | '/login'
     | '/map'
     | '/reset-password'
@@ -203,16 +210,17 @@ export interface FileRouteTypes {
     | '/stories'
     | '/verify-email'
     | '/wheres-religion'
+    | '/_authenticated/instructor-dashboard'
     | '/notes/$id'
-    | '/notes/'
+    | '/_authenticated/notes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AdminRoute: typeof AdminRoute
   ConfirmRoute: typeof ConfirmRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  InstructorDashboardRoute: typeof InstructorDashboardRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -222,7 +230,6 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   WheresReligionRoute: typeof WheresReligionRoute
   NotesIdRoute: typeof NotesIdRoute
-  NotesIndexRoute: typeof NotesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,13 +290,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/instructor-dashboard': {
-      id: '/instructor-dashboard'
-      path: '/instructor-dashboard'
-      fullPath: '/instructor-dashboard'
-      preLoaderRoute: typeof InstructorDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -311,18 +311,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notes/': {
-      id: '/notes/'
-      path: '/notes'
-      fullPath: '/notes/'
-      preLoaderRoute: typeof NotesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes/$id': {
@@ -332,15 +332,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/instructor-dashboard': {
+      id: '/_authenticated/instructor-dashboard'
+      path: '/instructor-dashboard'
+      fullPath: '/instructor-dashboard'
+      preLoaderRoute: typeof AuthenticatedInstructorDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notes/': {
+      id: '/_authenticated/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
+      preLoaderRoute: typeof AuthenticatedNotesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedInstructorDashboardRoute: typeof AuthenticatedInstructorDashboardRoute
+  AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedInstructorDashboardRoute: AuthenticatedInstructorDashboardRoute,
+  AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AdminRoute: AdminRoute,
   ConfirmRoute: ConfirmRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  InstructorDashboardRoute: InstructorDashboardRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -350,7 +378,6 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   WheresReligionRoute: WheresReligionRoute,
   NotesIdRoute: NotesIdRoute,
-  NotesIndexRoute: NotesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

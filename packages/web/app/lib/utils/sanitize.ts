@@ -257,12 +257,6 @@ export function extractTextFromHtml(html: string): string {
     return '';
   }
 
-  // SSR safety check
-  if (typeof window === 'undefined') {
-    // Basic tag stripping for SSR - not perfect but functional
-    return html.replace(/<[^>]*>/g, '').trim();
-  }
-
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   return tempDiv.textContent || tempDiv.innerText || '';
