@@ -43,5 +43,6 @@ docs/issues/*
 **/.wrangler**
 .open-next
 rerum-notes-dump.json
+firebase-users-dump.json
 d1-seed-dump.sql
 dist/

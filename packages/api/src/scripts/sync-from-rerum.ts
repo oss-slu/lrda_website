@@ -1,21 +1,18 @@
 /**
- * RERUM to D1 Sync Script
+ * RERUM to PostgreSQL Sync Script
  *
- * This script syncs data from RERUM (MongoDB) to the local D1 (SQLite) database.
- * Run as a cron job or background process during the migration period.
+ * By default, reads from rerum-notes-dump.json (local file).
+ * With --remote, fetches live from the RERUM API instead.
  *
  * Usage:
- *   bun run src/scripts/sync-from-rerum.ts           # Dry-run (preview only, no writes)
- *   bun run src/scripts/sync-from-rerum.ts --yolo    # Actually write to database
- *   bun run src/scripts/sync-from-rerum.ts --watch   # Continuous sync (every 30s)
- *   bun run src/scripts/sync-from-rerum.ts --full    # Full re-sync (ignore last sync time)
+ *   bun run src/scripts/sync-from-rerum.ts                    # Dry-run from local file
+ *   bun run src/scripts/sync-from-rerum.ts --yolo             # Write to DB from local file
+ *   bun run src/scripts/sync-from-rerum.ts --yolo --full      # Full re-sync from local file
+ *   bun run src/scripts/sync-from-rerum.ts --yolo --remote    # Fetch from RERUM API
+ *   bun run src/scripts/sync-from-rerum.ts --watch --remote   # Continuous sync from API
  *
- * Flags can be combined:
- *   bun run src/scripts/sync-from-rerum.ts --yolo --full --watch
- *
- * Environment variables:
- *   RERUM_API_URL - RERUM API base URL (e.g., https://lived-religion-dev.rerum.io/deer-lr/v1/)
- *   D1_DB_PATH    - (optional) Override path to local D1 SQLite file
+ * Environment variables (only needed with --remote):
+ *   RERUM_API_URL - RERUM API base URL
  */
 
 import { eq } from 'drizzle-orm';
@@ -32,10 +29,12 @@ const SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
 const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 const SYNC_INTERVAL_MS = 30_000; // 30 seconds
 const BATCH_SIZE = 100;
+const DUMP_PATH = new URL('../../rerum-notes-dump.json', import.meta.url).pathname;
 
 // Runtime flags (set by CLI)
 // DRY_RUN is true by default for safety - use --yolo to actually write to database
 let DRY_RUN = true;
+let USE_REMOTE = false;
 
 // Initialize database connection
 const { db, pool } = openLocalDb();
@@ -129,6 +128,34 @@ async function rerumQueryAll<T>(queryObj: object): Promise<T[]> {
   return allResults;
 }
 
+// Normalize tags from RERUM (can be plain strings or {label, origin} objects)
+function normalizeTags(tags?: RerumNote['tags']): Tag[] {
+  if (!tags || tags.length === 0) return [];
+  return tags
+    .map((t): Tag | null => {
+      if (typeof t === 'string') {
+        return t.trim() ? { label: t.trim(), origin: 'user' } : null;
+      }
+      if (typeof t === 'object' && t.label) {
+        return { label: t.label, origin: (t.origin === 'ai' ? 'ai' : 'user') };
+      }
+      return null;
+    })
+    .filter((t): t is Tag => t !== null);
+}
+
+// Load notes from local JSON dump file
+async function loadNotesFromFile(): Promise<RerumNote[]> {
+  log('info', `Loading notes from ${DUMP_PATH}...`);
+  const file = Bun.file(DUMP_PATH);
+  if (!(await file.exists())) {
+    throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from RERUM API instead.`);
+  }
+  const notes: RerumNote[] = JSON.parse(await file.text());
+  log('info', `Loaded ${notes.length} notes from file`);
+  return notes;
+}
+
 // Extract ID from RERUM @id URL
 function extractId(rerumId: string): string {
   if (!rerumId) return '';
@@ -169,7 +196,7 @@ interface RerumNote {
   longitude?: string;
   published?: boolean;
   approvalRequested?: boolean;
-  tags?: Array<{ label: string; origin: string }>;
+  tags?: Array<string | { label?: string; origin?: string }>;
   media?: Array<{
     type: string;
     uri: string;
@@ -177,7 +204,7 @@ interface RerumNote {
     uuid?: string;
   }>;
   audio?: Array<{
-    uri: string;
+    uri: unknown; // Can be string or empty object {} in dump
     name?: string;
     duration?: string;
     uuid?: string;
@@ -187,6 +214,7 @@ interface RerumNote {
   __rerum?: {
     createdAt?: string;
     modifiedAt?: string;
+    isOverwritten?: string;
   };
 }
 
@@ -295,13 +323,15 @@ async function syncNotes(fullSync = false) {
   const lastSync = fullSync ? null : await getLastSyncTime('notes');
   const syncStartTime = new Date();
 
-  // Build query - fetch all non-deleted notes
-  const queryObj: Record<string, unknown> = {
-    type: 'message',
-  };
-
-  const rerumNotes = await rerumQueryAll<RerumNote>(queryObj);
-  log('info', `Fetched ${rerumNotes.length} notes from RERUM`);
+  // Load notes from file or API
+  let rerumNotes: RerumNote[];
+  if (USE_REMOTE) {
+    const queryObj: Record<string, unknown> = { type: 'message' };
+    rerumNotes = await rerumQueryAll<RerumNote>(queryObj);
+    log('info', `Fetched ${rerumNotes.length} notes from RERUM API`);
+  } else {
+    rerumNotes = await loadNotesFromFile();
+  }
 
   let created = 0;
   let updated = 0;
@@ -345,7 +375,9 @@ async function syncNotes(fullSync = false) {
       }
 
       const modifiedAt =
-        rerumNote.__rerum?.modifiedAt ? new Date(rerumNote.__rerum.modifiedAt) : new Date();
+        rerumNote.__rerum?.modifiedAt ? new Date(rerumNote.__rerum.modifiedAt)
+        : rerumNote.__rerum?.isOverwritten ? new Date(rerumNote.__rerum.isOverwritten)
+        : new Date();
 
       // Skip if not modified since last sync (incremental mode)
       if (lastSync && modifiedAt <= lastSync) {
@@ -363,10 +395,7 @@ async function syncNotes(fullSync = false) {
         longitude: rerumNote.longitude ? parseFloat(rerumNote.longitude) || null : null,
         isPublished: rerumNote.published === true,
         approvalRequested: rerumNote.approvalRequested === true,
-        tags: (rerumNote.tags || []).map(t => ({
-          label: t.label,
-          origin: (t.origin === 'ai' ? 'ai' : 'user') as 'user' | 'ai',
-        })) as Tag[],
+        tags: normalizeTags(rerumNote.tags),
         time: rerumNote.time ? new Date(rerumNote.time) : new Date(),
         createdAt:
           rerumNote.__rerum?.createdAt ? new Date(rerumNote.__rerum.createdAt) : new Date(),
@@ -412,15 +441,18 @@ async function syncNotes(fullSync = false) {
         // Sync audio (delete and re-insert for simplicity)
         await db.delete(schema.audio).where(eq(schema.audio.noteId, noteId));
         if (rerumNote.audio?.length) {
-          await db.insert(schema.audio).values(
-            rerumNote.audio.map(a => ({
-              noteId,
-              uri: a.uri,
-              name: a.name || null,
-              duration: a.duration || null,
-              uuid: a.uuid || null,
-            })),
-          );
+          const validAudio = rerumNote.audio.filter(a => typeof a.uri === 'string' && a.uri);
+          if (validAudio.length) {
+            await db.insert(schema.audio).values(
+              validAudio.map(a => ({
+                noteId,
+                uri: a.uri as string,
+                name: a.name || null,
+                duration: a.duration || null,
+                uuid: a.uuid || null,
+              })),
+            );
+          }
         }
       }
     } catch (error) {
@@ -612,19 +644,18 @@ async function main() {
   const fullSync = args.includes('--full');
   const yoloMode = args.includes('--yolo');
 
-  if (yoloMode) {
-    DRY_RUN = false;
-  }
+  if (yoloMode) DRY_RUN = false;
+  if (args.includes('--remote')) USE_REMOTE = true;
 
-  if (!RERUM_API_URL) {
+  if (USE_REMOTE && !RERUM_API_URL) {
     console.error(
-      'Error: RERUM_API_URL or NEXT_PUBLIC_RERUM_PREFIX environment variable is required',
+      'Error: RERUM_API_URL or NEXT_PUBLIC_RERUM_PREFIX environment variable is required for --remote mode',
     );
     process.exit(1);
   }
 
   log('info', 'RERUM Sync Script starting...');
-  log('info', `RERUM API: ${RERUM_API_URL}`);
+  log('info', `Source: ${USE_REMOTE ? `RERUM API (${RERUM_API_URL})` : `Local file (${DUMP_PATH})`}`);
   log('info', `Mode: ${watchMode ? 'watch' : 'one-time'}, Full sync: ${fullSync}`);
   log(
     'info',

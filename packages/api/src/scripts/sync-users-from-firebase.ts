@@ -1,18 +1,18 @@
 /**
- * Firebase to D1 User Sync Script
+ * Firebase to PostgreSQL User Sync Script
  *
- * This script syncs users from Firebase Auth to the local D1 (SQLite) database.
- * Run this BEFORE syncing notes/comments from RERUM.
+ * By default, reads from firebase-users-dump.json (local file).
+ * With --remote, fetches live from Firebase Auth + Firestore instead.
  *
  * Usage:
- *   bun run src/scripts/sync-users-from-firebase.ts           # Dry-run (preview only)
- *   bun run src/scripts/sync-users-from-firebase.ts --yolo    # Actually write to database
+ *   bun run src/scripts/sync-users-from-firebase.ts                    # Dry-run from local file
+ *   bun run src/scripts/sync-users-from-firebase.ts --yolo             # Write to DB from local file
+ *   bun run src/scripts/sync-users-from-firebase.ts --yolo --remote    # Fetch from Firebase API
  *
- * Environment variables:
+ * Environment variables (only needed with --remote):
  *   FIREBASE_SERVICE_ACCOUNT_PATH   - Path to service account JSON file
  *   OR
  *   FIREBASE_SERVICE_ACCOUNT        - Service account JSON as string (for CI/CD)
- *   D1_DB_PATH                      - (optional) Override path to local D1 SQLite file
  */
 
 import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
@@ -26,9 +26,11 @@ import { openLocalDb } from './local-db';
 // Configuration
 const SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
 const SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT || '';
+const DUMP_PATH = new URL('../../firebase-users-dump.json', import.meta.url).pathname;
 
 // Runtime flags
 let DRY_RUN = true;
+let USE_REMOTE = false;
 
 // Initialize database connection
 const { db, pool } = openLocalDb();
@@ -118,12 +120,63 @@ async function fetchFirestoreUser(uid: string): Promise<Record<string, unknown> 
   }
 }
 
-// Sync users to D1
-async function syncUsers() {
-  log('info', 'Starting user sync from Firebase...');
+// Dump file user structure
+interface DumpUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  emailVerified: boolean;
+  photoURL: string | null;
+  createdAt: string | null;
+  lastSignIn: string | null;
+  customClaims: Record<string, unknown> | null;
+  firestore: Record<string, unknown> | null;
+}
 
-  const firebaseUsers = await fetchAllFirebaseUsers();
-  log('info', `Fetched ${firebaseUsers.length} users from Firebase`);
+// Load users from local JSON dump file
+async function loadUsersFromFile() {
+  log('info', `Loading users from ${DUMP_PATH}...`);
+  const file = Bun.file(DUMP_PATH);
+  if (!(await file.exists())) {
+    throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from Firebase API instead.`);
+  }
+  const dumpUsers: DumpUser[] = JSON.parse(await file.text());
+  log('info', `Loaded ${dumpUsers.length} users from file`);
+
+  return dumpUsers.map(u => ({
+    uid: u.uid,
+    email: u.email ?? undefined,
+    displayName: u.displayName ?? undefined,
+    emailVerified: u.emailVerified,
+    photoURL: u.photoURL ?? undefined,
+    createdAt: u.createdAt ? new Date(u.createdAt) : new Date(),
+    customClaims: u.customClaims ?? undefined,
+    firestoreData: u.firestore,
+  }));
+}
+
+// Sync users to PostgreSQL
+async function syncUsers() {
+  log('info', 'Starting user sync...');
+
+  let firebaseUsers: Array<{
+    uid: string;
+    email: string | undefined;
+    displayName: string | undefined;
+    emailVerified: boolean;
+    photoURL: string | undefined;
+    createdAt: Date;
+    customClaims: Record<string, unknown> | undefined;
+    firestoreData?: Record<string, unknown> | null;
+  }>;
+
+  if (USE_REMOTE) {
+    const rawUsers = await fetchAllFirebaseUsers();
+    firebaseUsers = rawUsers.map(u => ({ ...u, firestoreData: null }));
+    log('info', `Fetched ${firebaseUsers.length} users from Firebase API`);
+  } else {
+    firebaseUsers = await loadUsersFromFile();
+  }
 
   let created = 0;
   let updated = 0;
@@ -140,7 +193,7 @@ async function syncUsers() {
         continue;
       }
 
-      const firestoreData = await fetchFirestoreUser(fbUser.uid);
+      const firestoreData = USE_REMOTE ? await fetchFirestoreUser(fbUser.uid) : (fbUser.firestoreData ?? null);
 
       const isInstructor =
         firestoreData?.isInstructor === true ||
@@ -249,15 +302,13 @@ async function syncUsers() {
 // CLI entry point
 async function main() {
   const args = process.argv.slice(2);
-  const yoloMode = args.includes('--yolo');
 
-  if (yoloMode) {
-    DRY_RUN = false;
-  }
+  if (args.includes('--yolo')) DRY_RUN = false;
+  if (args.includes('--remote')) USE_REMOTE = true;
 
-  if (!SERVICE_ACCOUNT_PATH && !SERVICE_ACCOUNT_JSON) {
+  if (USE_REMOTE && !SERVICE_ACCOUNT_PATH && !SERVICE_ACCOUNT_JSON) {
     console.error(
-      'Error: FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT environment variable is required',
+      'Error: FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT environment variable is required for --remote mode',
     );
     console.error('');
     console.error('To get a service account:');
@@ -268,6 +319,7 @@ async function main() {
   }
 
   log('info', 'Firebase User Sync Script starting...');
+  log('info', `Source: ${USE_REMOTE ? 'Firebase API' : `Local file (${DUMP_PATH})`}`);
   log(
     'info',
     DRY_RUN ?
@@ -276,7 +328,7 @@ async function main() {
   );
 
   try {
-    initializeFirebase();
+    if (USE_REMOTE) initializeFirebase();
     await syncUsers();
     await pool.end();
     process.exit(0);
