@@ -39,29 +39,3 @@ export async function signOut() {
   return authClient.signOut();
 }
 
-// Forgot password - sends reset email
-export async function forgotPassword(email: string) {
-  return authClient.forgetPassword({
-    email,
-    redirectTo: '/reset-password',
-  });
-}
-
-// Reset password with token
-export async function resetPassword(newPassword: string) {
-  return authClient.resetPassword({
-    newPassword,
-  });
-}
-
-// Verify email with token
-export async function verifyEmail(token: string) {
-  return authClient.verifyEmail({
-    query: {
-      token,
-    },
-  });
-}
-
-// Export the useSession hook for components that need reactive session state
-export const useSession = authClient.useSession;

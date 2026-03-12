@@ -194,39 +194,6 @@ async function deleteNote(id: string): Promise<boolean> {
 }
 
 /**
- * Query notes with custom parameters.
- */
-async function query(queryObj: Record<string, unknown>, limit = 150, skip = 0): Promise<Note[]> {
-  const qs = buildQueryString({ ...queryObj, limit, offset: skip });
-  const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
-  return (data ?? []).map(transformApiNote);
-}
-
-/**
- * Fetch messages with pagination support (legacy API compatibility).
- */
-async function fetchMessages(
-  global: boolean,
-  published: boolean,
-  userId: string,
-  limit = 150,
-  skip = 0,
-): Promise<Note[]> {
-  const params: Record<string, unknown> = { limit, offset: skip };
-
-  if (!global) {
-    params.creatorId = userId;
-  }
-  if (published) {
-    params.published = true;
-  }
-
-  const qs = buildQueryString(params);
-  const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
-  return (data ?? []).map(transformApiNote);
-}
-
-/**
  * Query params for viewport/search fetching in summary mode.
  * Bounds are optional -- omit them for a global search.
  */
@@ -282,6 +249,4 @@ export const notesService = {
   create,
   update,
   delete: deleteNote,
-  query,
-  fetchMessages,
 };

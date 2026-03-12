@@ -47,40 +47,6 @@ export function filterNotesByMapBounds(
 }
 
 /**
- * Filter notes by search query (title, text, tags).
- */
-export function filterNotesByQuery(notes: Note[], query: string): Note[] {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (!normalizedQuery) {
-    return [...notes];
-  }
-
-  return notes.filter(note => {
-    const titleMatch =
-      note.title && typeof note.title === 'string' ?
-        note.title.toLowerCase().includes(normalizedQuery)
-      : false;
-
-    const textMatch =
-      note.text && typeof note.text === 'string' ?
-        note.text.toLowerCase().includes(normalizedQuery)
-      : false;
-
-    const tagsMatch =
-      Array.isArray(note.tags) &&
-      note.tags.some(
-        tag =>
-          tag.label &&
-          typeof tag.label === 'string' &&
-          tag.label.toLowerCase().includes(normalizedQuery),
-      );
-
-    return titleMatch || textMatch || tagsMatch;
-  });
-}
-
-/**
  * Filter notes by title and tags only (for notes panel search).
  */
 export function filterNotesByTitleAndTags(notes: Note[], query: string): Note[] {

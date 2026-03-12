@@ -8,25 +8,12 @@ export const notesKeys = {
   published: () => [...notesKeys.all, 'published'] as const,
   publishedPaginated: (limit: number) => [...notesKeys.published(), 'paginated', limit] as const,
   personal: (userId: string) => [...notesKeys.all, 'personal', userId] as const,
-  globalMap: () => [...notesKeys.all, 'globalMap'] as const,
   personalMap: (userId: string) => [...notesKeys.all, 'personalMap', userId] as const,
   detail: (id: string) => [...notesKeys.all, 'detail', id] as const,
   pendingReview: (instructorId: string) =>
     [...notesKeys.all, 'pendingReview', instructorId] as const,
   pendingFeedback: (userId: string) => [...notesKeys.all, 'pendingFeedback', userId] as const,
 };
-
-/**
- * Hook for fetching published notes (for StoriesPage)
- */
-export function usePublishedNotes(limit = 150, skip = 0) {
-  return useQuery({
-    queryKey: notesKeys.published(),
-    queryFn: async (): Promise<Note[]> => {
-      return notesService.fetchPublished(limit, skip);
-    },
-  });
-}
 
 /**
  * Hook for fetching personal notes for a user
@@ -59,21 +46,6 @@ async function fetchAllPages(
     offset += pageSize;
   }
   return all;
-}
-
-/**
- * Hook for fetching global notes for Map page (published, non-archived, reversed)
- */
-export function useGlobalMapNotes() {
-  return useQuery({
-    queryKey: notesKeys.globalMap(),
-    queryFn: async (): Promise<Note[]> => {
-      const data = await fetchAllPages(
-        (limit, offset) => notesService.fetchPublished(limit, offset),
-      );
-      return data.reverse().filter(note => note.published === true);
-    },
-  });
 }
 
 /**
