@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.git/
+firebase-service-account.json
+*-service-account.json
+src/__tests__/
+src/scripts/
+vitest.config.ts
+README.md
