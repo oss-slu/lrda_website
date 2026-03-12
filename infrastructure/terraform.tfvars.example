@@ -13,17 +13,27 @@ environment = "staging"
 # Your domain name
 domain_name = "wheresreligion.org"
 
-# EC2 instance type (t3.small is sufficient for API-only workload)
-instance_type = "t3.small"
+# Lightsail bundle: nano_3_0=$5/mo (1GB), small_3_0=$10/mo (2GB), medium_3_0=$20/mo (4GB)
+bundle_id = "small_3_0"
 
 # Your public IP address for SSH access (use CIDR notation)
-# Find your IP: curl ifconfig.me
-# Example: ["1.2.3.4/32"]
+# Find your IP: curl -4 ifconfig.me
 ssh_allowed_ips = ["YOUR_IP/32"]
 
 # PostgreSQL database password (use a strong, unique password)
+# Generate one: openssl rand -base64 24
 db_password = "your_secure_password_here"
 
-# Name of your EC2 key pair (must exist in AWS before running terraform)
-# See README.md for instructions on creating a key pair
-key_pair_name = "lrda-staging-keypair"
+# Name of your Lightsail key pair
+key_pair_name = "lrda-ec2"
+
+# Cloudflare Configuration
+# Account ID: Dashboard > Overview > right sidebar
+cloudflare_account_id = "your_cloudflare_account_id"
+
+# API Token: My Profile > API Tokens > Create Token
+# Needs: Zone:DNS:Edit, Zone:SSL:Edit, Zone:Settings:Read for your domain
+cloudflare_api_token = "your_cloudflare_api_token"
+
+# Set to true AFTER instance is up to create api-staging.wheresreligion.org DNS record
+create_api_dns = false

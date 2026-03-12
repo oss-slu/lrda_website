@@ -20,10 +20,10 @@ variable "domain_name" {
   type        = string
 }
 
-variable "instance_type" {
-  description = "EC2 instance type (t3.small is sufficient for API-only)"
+variable "bundle_id" {
+  description = "Lightsail bundle (nano_3_0=$5/mo 1GB, small_3_0=$10/mo 2GB, medium_3_0=$20/mo 4GB)"
   type        = string
-  default     = "t3.small"
+  default     = "small_3_0"
 }
 
 variable "ssh_allowed_ips" {
@@ -38,7 +38,7 @@ variable "db_password" {
 }
 
 variable "key_pair_name" {
-  description = "Name of existing EC2 key pair for SSH access"
+  description = "Name of existing Lightsail key pair for SSH access"
   type        = string
 }
 
@@ -59,7 +59,7 @@ variable "cloudflare_account_id" {
 }
 
 variable "create_api_dns" {
-  description = "Create API DNS record pointing to AWS (set true after EC2 is deployed)"
+  description = "Create API DNS record pointing to AWS (set true after instance is deployed)"
   type        = bool
   default     = false
 }

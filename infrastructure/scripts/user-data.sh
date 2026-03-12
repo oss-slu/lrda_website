@@ -1,6 +1,6 @@
 #!/bin/bash
-# EC2 bootstrap script for LRDA API server
-# Installs: Node.js 24, pnpm, PostgreSQL 16, Nginx, PM2
+# Lightsail bootstrap script for LRDA API server
+# Installs: Node.js 24, pnpm, PostgreSQL 17, Nginx, PM2
 # API runs on port 3002 via PM2, proxied through Nginx with Cloudflare Origin CA
 set -e
 
@@ -20,11 +20,11 @@ apt-get install -y nodejs
 # Install pnpm and PM2
 npm install -g pnpm pm2
 
-# Install PostgreSQL 16
+# Install PostgreSQL 17
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 apt-get update
-apt-get install -y postgresql-16
+apt-get install -y postgresql-17
 
 # Install Nginx and git
 apt-get install -y nginx git
@@ -32,17 +32,18 @@ apt-get install -y nginx git
 # Create directory for Cloudflare Origin CA cert
 mkdir -p /etc/ssl/cloudflare
 
-# Configure PostgreSQL
+# Configure PostgreSQL (use ALTER USER to avoid SQL injection from special chars in password)
 sudo -u postgres psql << EOF
-CREATE USER lrda_app WITH PASSWORD '${db_password}';
+CREATE USER lrda_app;
 CREATE DATABASE lrda_${environment} OWNER lrda_app;
 GRANT ALL PRIVILEGES ON DATABASE lrda_${environment} TO lrda_app;
 \c lrda_${environment}
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 EOF
+sudo -u postgres psql -c "ALTER USER lrda_app PASSWORD '$(echo "${db_password}" | sed "s/'/''/g")';"
 
 # Configure PostgreSQL to allow local connections
-echo "host lrda_${environment} lrda_app 127.0.0.1/32 md5" >> /etc/postgresql/16/main/pg_hba.conf
+echo "host lrda_${environment} lrda_app 127.0.0.1/32 md5" >> /etc/postgresql/17/main/pg_hba.conf
 systemctl restart postgresql
 
 # Create app directory
@@ -104,7 +105,7 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name ${api_subdomain}.${domain_name};
 
     ssl_certificate     /etc/ssl/cloudflare/origin.pem;

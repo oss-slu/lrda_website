@@ -9,7 +9,7 @@ data "cloudflare_zone" "main" {
   }
 }
 
-# Cloudflare IP ranges (used to lock down AWS security group)
+# Cloudflare IP ranges (used to lock down Lightsail firewall)
 data "cloudflare_ip_ranges" "cloudflare" {}
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,6 @@ locals {
     security_level           = "medium"
     browser_check            = "on"
     automatic_https_rewrites = "on"
-    always_online            = "on"
     opportunistic_encryption = "on"
   }
 }
@@ -43,7 +42,7 @@ resource "cloudflare_zone_setting" "settings" {
 }
 
 # -----------------------------------------------------------------------------
-# DNS Records - API (AWS EC2, created when deployed)
+# DNS Records - API (AWS Lightsail, created when deployed)
 #
 # Frontend DNS is NOT here -- Workers custom domains (configured in
 # wrangler.jsonc) create DNS records automatically when deployed.
@@ -52,15 +51,15 @@ resource "cloudflare_dns_record" "api" {
   count   = var.create_api_dns ? 1 : 0
   zone_id = local.zone_id
   name    = var.environment == "production" ? "api" : "api-staging"
-  content = aws_eip.web.public_ip
+  content = aws_lightsail_static_ip.web.ip_address
   type    = "A"
   proxied = true
   ttl     = 1 # auto (required when proxied)
-  comment = "API on AWS EC2"
+  comment = "API on AWS Lightsail"
 }
 
 # -----------------------------------------------------------------------------
-# Origin CA Certificate (for AWS EC2 API origin)
+# Origin CA Certificate (for AWS Lightsail API origin)
 #
 # Trusted only by Cloudflare's edge -- all traffic is proxied so this is fine.
 # 15-year validity, no renewal needed. Install cert + key on nginx.

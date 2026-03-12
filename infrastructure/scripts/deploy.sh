@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy script for LRDA API on EC2
+# Deploy script for LRDA API on Lightsail
 # Run on the server: ./deploy.sh [branch]
 set -e
 
@@ -11,10 +11,14 @@ echo "=== LRDA API Deploy ==="
 echo "Branch: $BRANCH"
 echo ""
 
-# Clone or pull
+# Clone or pull (git init handles pre-existing files from user-data)
 if [ ! -d "$APP_DIR/.git" ]; then
-  echo "Cloning repository..."
-  git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+  echo "Initializing repository..."
+  cd "$APP_DIR"
+  git init
+  git remote add origin "$REPO_URL"
+  git fetch origin
+  git checkout -b "$BRANCH" "origin/$BRANCH"
 else
   echo "Pulling latest changes..."
   cd "$APP_DIR"
