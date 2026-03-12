@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link  } from '@tanstack/react-router';
 import { useState, useCallback } from 'react';
 import { authClient } from '@/app/lib/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,16 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { ResendButton } from '@/components/ui/resend-button';
-import { Link } from '@tanstack/react-router';
 import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react';
 
 export const Route = createFileRoute('/forgot-password')({
-  head: () => ({
-    meta: [{ title: "Forgot Password | Where's Religion?" }],
-  }),
-  component: ForgotPasswordPage,
   validateSearch: (search: Record<string, unknown>): { email?: string } => ({
     email: typeof search.email === 'string' ? search.email : undefined,
+  }),
+  component: ForgotPasswordPage,
+  head: () => ({
+    meta: [{ title: "Forgot Password | Where's Religion?" }],
   }),
 });
 
@@ -27,7 +26,7 @@ function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
 
   const sendResetEmail = useCallback(async (emailAddress: string) => {
-    await authClient.forgetPassword({
+    await authClient.requestPasswordReset({
       email: emailAddress,
       redirectTo: `${window.location.origin}/reset-password`,
     });

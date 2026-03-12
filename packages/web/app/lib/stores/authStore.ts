@@ -167,15 +167,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-store',
       version: 1,
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? localStorage : (
-          {
-            getItem: () => null,
-            setItem: () => {},
-            removeItem: () => {},
-          }
-        ),
-      ),
+      storage: createJSONStorage(() => localStorage),
       partialize: state => ({
         // Only persist user data, not loading/initialized states
         user: state.user,

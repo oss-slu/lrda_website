@@ -167,12 +167,6 @@ export async function sanitizeHtml(dirty: string, options: SanitizeOptions = {})
     return '';
   }
 
-  // SSR safety check - return the input if window is undefined
-  // DOMPurify requires a DOM environment
-  if (typeof window === 'undefined') {
-    return dirty;
-  }
-
   const DOMPurify = await getDOMPurify();
 
   const {
@@ -218,7 +212,7 @@ export async function sanitizeHtml(dirty: string, options: SanitizeOptions = {})
   };
 
   // Sanitize the HTML
-  let sanitized = DOMPurify.sanitize(processed, config) as string;
+  let sanitized = DOMPurify.sanitize(processed, config);
 
   // Post-process: validate iframe sources if iframes are allowed
   if (allowIframes && sanitized.includes('<iframe')) {

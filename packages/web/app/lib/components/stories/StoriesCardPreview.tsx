@@ -15,7 +15,6 @@ interface StoriesCardPreviewProps {
  * Extracts the first few sentences from a string of HTML content.
  */
 const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
-  if (typeof document === 'undefined') return '';
   if (!bodyText || typeof bodyText !== 'string') return '';
 
   try {

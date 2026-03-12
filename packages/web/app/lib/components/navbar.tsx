@@ -32,7 +32,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logout();
-      if (typeof window !== 'undefined') window.location.href = '/';
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout failed', error);
     }

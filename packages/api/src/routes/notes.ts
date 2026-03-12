@@ -32,8 +32,8 @@ const ListNotesQuerySchema = z.object({
     .string()
     .transform(v => v === 'true')
     .optional(),
-  limit: z.string().transform(Number).default('20').pipe(z.number().int().positive().max(200)),
-  offset: z.string().transform(Number).default('0').pipe(z.number().int().min(0)),
+  limit: z.string().default('20').transform(Number).pipe(z.number().int().positive().max(200)),
+  offset: z.string().default('0').transform(Number).pipe(z.number().int().min(0)),
 });
 
 // Routes
@@ -206,7 +206,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   .openapi(listNotesRoute, async c => {
     const db = getDb(c);
     const query = c.req.valid('query');
-    const authUser = c.get('user') as AppEnv['Variables']['user'];
+    const authUser = c.get('user');
     const conditions = [];
 
     // Determine if the authenticated user is the owner of the queried notes
@@ -282,7 +282,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
   .openapi(getNoteRoute, async c => {
     const db = getDb(c);
     const { id } = c.req.valid('param');
-    const authUser = c.get('user') as AppEnv['Variables']['user'];
+    const authUser = c.get('user');
 
     const result = await db.query.note.findFirst({
       where: eq(note.id, id),

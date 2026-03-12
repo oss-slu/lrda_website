@@ -41,7 +41,7 @@ export const StoryMapPopover: React.FC<StoryMapPopoverProps> = ({
     }
 
     // Create new AdvancedMarkerElement
-    if (typeof window !== 'undefined' && (window as any).google?.maps?.marker) {
+    if ((window as any).google?.maps?.marker) {
       const google = (window as any).google;
       const position = new google.maps.LatLng(noteLat!, noteLng!);
 

@@ -5,7 +5,7 @@ const DownloadNote = () => {
   const router = useRouter();
   const { title, content, tags, time, longitude, latitude } = useSearch({
     strict: false,
-  }) as Record<string, string | string[] | undefined>;
+  });
 
   const handleDownload = async (format: string) => {
     const noteContent = {

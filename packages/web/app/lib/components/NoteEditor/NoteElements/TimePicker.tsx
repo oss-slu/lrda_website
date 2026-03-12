@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -6,57 +5,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input';
 import { formatDateTime } from '@/app/lib/utils/data_conversion';
 
+const START_MONTH = new Date(1200, 0);
+const END_MONTH = new Date(new Date().getFullYear(), 11);
+
 interface TimePickerProps {
   initialDate?: Date; // Now optional -- will fall back to today if not provided
   onTimeChange?: (date: Date) => void;
   disabled?: boolean; // Whether the time picker is disabled (read-only)
-}
-
-function CaptionDropdowns(props: any) {
-  const { displayMonth, onMonthChange, onDayClick } = props;
-  const fromYear = 1200;
-  const toYear = new Date().getFullYear();
-
-  const months = Array.from({ length: 12 }, (_, i) =>
-    new Date(0, i).toLocaleString('default', { month: 'long' }),
-  );
-  const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
-
-  const handleChange = (newMonth: number, newYear: number) => {
-    const newDate = new Date(displayMonth);
-    newDate.setMonth(newMonth);
-    newDate.setFullYear(newYear);
-    newDate.setDate(1);
-    onMonthChange?.(newDate);
-    onDayClick?.(newDate);
-  };
-
-  return (
-    <div className='flex space-x-2 px-3 py-2'>
-      <select
-        className='rounded-md border px-2 py-1 text-sm'
-        value={displayMonth.getMonth()}
-        onChange={e => handleChange(parseInt(e.target.value), displayMonth.getFullYear())}
-      >
-        {months.map((month, idx) => (
-          <option key={idx} value={idx}>
-            {month}
-          </option>
-        ))}
-      </select>
-      <select
-        className='rounded-md border px-2 py-1 text-sm'
-        value={displayMonth.getFullYear()}
-        onChange={e => handleChange(displayMonth.getMonth(), parseInt(e.target.value))}
-      >
-        {years.map(year => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 }
 
 export default function TimePicker({
@@ -122,18 +77,10 @@ export default function TimePicker({
           onDayClick={handleDayClick}
           month={viewMonth}
           onMonthChange={setViewMonth}
-          initialFocus
-          components={
-            {
-              Caption: (props: any) => (
-                <CaptionDropdowns
-                  {...props}
-                  onMonthChange={setViewMonth}
-                  onDayClick={handleDayClick}
-                />
-              ),
-            } as any
-          }
+          captionLayout='dropdown'
+          startMonth={START_MONTH}
+          endMonth={END_MONTH}
+          autoFocus
         />
         <Input
           type='time'

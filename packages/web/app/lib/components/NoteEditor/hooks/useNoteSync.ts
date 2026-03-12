@@ -32,7 +32,7 @@ export const useNoteSync = ({
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
-  // eslint-disable-next-line react-hooks/refs -- intentional pattern to keep ref in sync
+   
   noteHandlersRef.current = noteHandlers;
 
   // Destructure noteState for stable dependencies
@@ -116,7 +116,7 @@ export const useNoteSync = ({
     let sourceNote: Note | undefined = undefined;
     if (initialNote && 'id' in initialNote) {
       if (initialNote.id === currentNoteId) {
-        sourceNote = initialNote as Note;
+        sourceNote = initialNote;
       }
     }
 

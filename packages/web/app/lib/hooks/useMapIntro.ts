@@ -13,8 +13,6 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Reset on mount to allow intro to run if conditions are met
     introStartedRef.current = false;
 

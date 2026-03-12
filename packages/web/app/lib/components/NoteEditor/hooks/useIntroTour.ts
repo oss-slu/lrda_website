@@ -12,8 +12,6 @@ export const useIntroTour = (refs: IntroTourRefs) => {
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Check if intro has already been shown
     const hasAddNoteIntroBeenShown = getCookie('addNoteIntroShown');
     if (hasAddNoteIntroBeenShown) return;

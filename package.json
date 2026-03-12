@@ -2,6 +2,7 @@
   "name": "lrda_website",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "pnpm clear-ports && pnpm api:docker:up && pnpm api:db:push && concurrently -k -n api,web -c blue,cyan \"pnpm dev:api\" \"sleep 2 && pnpm --filter web dev\"",
     "dev:api": "pnpm --filter @lrda/api dev",
@@ -18,8 +19,8 @@
     "typecheck": "pnpm --filter @lrda/api typecheck && pnpm --filter web typecheck",
     "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
-    "lint": "pnpm --filter web lint",
-    "lint:fix": "pnpm --filter web lint:fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "pnpm --filter web test",
     "test:unit": "pnpm --filter web test:unit",
@@ -58,8 +59,12 @@
     ]
   },
   "devDependencies": {
+    "@tanstack/eslint-config": "^0.4.0",
+    "@tanstack/eslint-plugin-router": "^1.161.4",
     "concurrently": "^9.2.1",
-    "prettier": "^3.7.4",
+    "eslint": "^10.0.3",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2"
   }
 }

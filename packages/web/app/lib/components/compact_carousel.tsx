@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense  } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/carousel';
 import { type CarouselApi } from '@/components/ui/carousel';
 import type { NoteMedia } from '@/app/types';
-import { lazy, Suspense } from 'react';
 
 const ReactPlayer = lazy(() => import('react-player'));
 
@@ -23,7 +22,7 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize from carousel API
+     
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 

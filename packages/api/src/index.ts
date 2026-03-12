@@ -71,7 +71,7 @@ app.post('/api/auth/reset-password', async c => {
 app.post('/api/auth/migration-status', async c => {
   try {
     const json = await c.req.json();
-    const parsed = z.object({ email: z.string().email() }).safeParse(json);
+    const parsed = z.object({ email: z.email() }).safeParse(json);
     if (!parsed.success) {
       return c.json({ error: 'Invalid request' }, 400);
     }
@@ -133,9 +133,7 @@ app.doc('/openapi.json', {
 app.get(
   '/docs',
   apiReference({
-    spec: {
-      url: '/openapi.json',
-    },
+    url: '/openapi.json',
     theme: 'purple',
     layout: 'modern',
     defaultHttpClient: {

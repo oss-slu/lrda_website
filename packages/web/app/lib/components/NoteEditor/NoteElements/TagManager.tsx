@@ -31,7 +31,7 @@ const TagManager: React.FC<TagManagerProps> = ({
 
   useEffect(() => {
     const newTags = convertOldTags(inputTags);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync pattern
+     
     setTags(prevTags => {
       if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
         return newTags;

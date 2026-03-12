@@ -5,9 +5,8 @@
  * Uses the REST API backend (Hono/D1).
  */
 
-import type { Note } from '@/app/types';
+import type { Note, VideoMedia, PhotoMedia, AudioMedia  } from '@/app/types';
 import { fetchWithAuth, buildQueryString } from './api';
-import type { VideoMedia, PhotoMedia, AudioMedia } from '@/app/types';
 import type {
   NoteQueryOptions,
   CreateNotePayload,

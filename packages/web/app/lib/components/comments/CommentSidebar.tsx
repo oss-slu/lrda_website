@@ -80,13 +80,11 @@ export default function CommentSidebar({
 
     // Notify editor to refresh highlights
     try {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('note:comment-added', {
-            detail: { noteId, position: newComment.position },
-          }),
-        );
-      }
+      window.dispatchEvent(
+        new CustomEvent('note:comment-added', {
+          detail: { noteId, position: newComment.position },
+        }),
+      );
     } catch {}
   };
 

@@ -90,7 +90,7 @@ describe('convertToJpeg', () => {
       width: 100,
       height: 100,
     };
-    global.Image = vi.fn(() => mockImageInstance) as any;
+    global.Image = vi.fn(function () { return mockImageInstance; }) as any;
 
     const jpegFile = await convertToJpeg(fakeFile);
     expect(jpegFile.type).toBe('image/jpeg');

@@ -1,20 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link  } from '@tanstack/react-router';
 import { useState, useCallback } from 'react';
 import { authClient } from '@/app/lib/auth/client';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResendButton } from '@/components/ui/resend-button';
-import { Link } from '@tanstack/react-router';
 import { Mail, ArrowLeft, Inbox } from 'lucide-react';
 
 export const Route = createFileRoute('/confirm')({
-  head: () => ({
-    meta: [{ title: "Confirm Email | Where's Religion?" }],
-  }),
   validateSearch: (search: Record<string, unknown>) => ({
     email: typeof search.email === 'string' ? search.email : '',
     sent: search.sent === true || search.sent === 'true',
+  }),
+  head: () => ({
+    meta: [{ title: "Confirm Email | Where's Religion?" }],
   }),
   component: ConfirmPage,
 });

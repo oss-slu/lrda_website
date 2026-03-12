@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link  } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/lib/stores/authStore';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Link } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/login')({
   head: () => ({

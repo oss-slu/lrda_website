@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, useState, lazy, Suspense  } from 'react';
 
 const AudioPlayer = lazy(() => import('react-h5-audio-player'));
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';

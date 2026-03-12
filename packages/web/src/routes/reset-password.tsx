@@ -9,11 +9,11 @@ import StrengthIndicator from '@/components/ui/strength-indicator';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 export const Route = createFileRoute('/reset-password')({
-  head: () => ({
-    meta: [{ title: "Reset Password | Where's Religion?" }],
-  }),
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === 'string' ? search.token : '',
+  }),
+  head: () => ({
+    meta: [{ title: "Reset Password | Where's Religion?" }],
   }),
   component: ResetPasswordPage,
 });

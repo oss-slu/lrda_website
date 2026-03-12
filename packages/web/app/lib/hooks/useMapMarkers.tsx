@@ -123,7 +123,7 @@ export function useMapMarkers({
   // so marker event handlers never go stale.
   const createMarker = useCallback(
     (note: Note, map: google.maps.Map): google.maps.marker.AdvancedMarkerElement => {
-      const position = new google.maps.LatLng(note.latitude!, note.longitude!);
+      const position = new google.maps.LatLng(note.latitude!, note.longitude);
       const iconNode = createMarkerIcon();
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position,
@@ -163,7 +163,7 @@ export function useMapMarkers({
           );
 
           const popup = new popupClassRef.current(
-            new google.maps.LatLng(note.latitude!, note.longitude!),
+            new google.maps.LatLng(note.latitude!, note.longitude),
             popupContent,
             false,
           );
@@ -213,7 +213,7 @@ export function useMapMarkers({
         mapClickListenerRef.current = null;
       }
     };
-  }, [isMapsApiLoaded, mapRef]);
+  }, [isMapsApiLoaded, mapRef, closePopup]);
 
   // Diff-based marker sync: only add/remove markers that changed
   useEffect(() => {
@@ -276,15 +276,16 @@ export function useMapMarkers({
 
   // Cleanup on unmount
   useEffect(() => {
+    const markers = markersRef.current;
     return () => {
       if (markerClustererRef.current) {
         markerClustererRef.current.clearMarkers();
         markerClustererRef.current = null;
       }
-      markersRef.current.forEach(marker => {
+      markers.forEach(marker => {
         marker.map = null;
       });
-      markersRef.current.clear();
+      markers.clear();
     };
   }, []);
 

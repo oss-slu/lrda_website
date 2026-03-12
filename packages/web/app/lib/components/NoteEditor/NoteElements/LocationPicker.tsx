@@ -53,7 +53,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   // Sync when lat/long props change from parent (e.g., loading different note)
   useEffect(() => {
     if (lat != null && long != null) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from props
+       
       setLatitude(prev => (prev !== lat ? lat : prev));
       setLongitude(prev => (prev !== long ? long : prev));
     }
@@ -93,23 +93,19 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {
     // this method should be used somewhere
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const newLongitude = position.coords.longitude;
-          const newLatitude = position.coords.latitude;
-          setLongitude(newLongitude);
-          setLatitude(newLatitude);
-          onLocationChange(newLongitude, newLatitude);
-        },
-        error => {
-          console.error('Error fetching location', error);
-          setGeoError('Unable to fetch your location. please check your browser settings.');
-        },
-      );
-    } else {
-      console.log('Geolocation is not supported by this browser.');
-    }
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const newLongitude = position.coords.longitude;
+        const newLatitude = position.coords.latitude;
+        setLongitude(newLongitude);
+        setLatitude(newLatitude);
+        onLocationChange(newLongitude, newLatitude);
+      },
+      error => {
+        console.error('Error fetching location', error);
+        setGeoError('Unable to fetch your location. please check your browser settings.');
+      },
+    );
   }, [onLocationChange]);
 
   {

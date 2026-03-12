@@ -1,5 +1,6 @@
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { IconLink } from './lib/components/IconLink';
+
 const ANIMATE_CLASS = 'animate-fade-in opacity-0';
 
 function WelcomeHero() {

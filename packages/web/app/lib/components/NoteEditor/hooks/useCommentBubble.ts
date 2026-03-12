@@ -31,7 +31,7 @@ export const useCommentBubble = ({
   );
 
   const showCommentBubbleRef = useRef(showCommentBubble);
-  // eslint-disable-next-line react-hooks/refs -- intentional pattern to avoid stale closure in scroll handler
+   
   showCommentBubbleRef.current = showCommentBubble;
 
   useEffect(() => {

@@ -10,7 +10,7 @@
     "./schemas/*": "./src/schemas/*.ts"
   },
   "dependencies": {
-    "zod": "^3.24.2"
+    "zod": "^4.3.6"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

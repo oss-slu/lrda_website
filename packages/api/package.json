@@ -26,25 +26,25 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "@hono/zod-openapi": "^0.18.4",
+    "@hono/zod-openapi": "^1.2.2",
     "@lrda/shared": "workspace:*",
-    "@scalar/hono-api-reference": "^0.5.175",
-    "better-auth": "^1.3.34",
-    "drizzle-orm": "^0.39.3",
-    "hono": "^4.7.4",
-    "pg": "^8.15.6",
+    "@scalar/hono-api-reference": "^0.10.2",
+    "better-auth": "^1.5.5",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.7",
+    "pg": "^8.20.0",
     "resend": "^6.9.3",
     "tsx": "^4.21.0",
-    "zod": "^3.24.2"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "24.9.2",
-    "@types/pg": "^8.11.14",
-    "drizzle-kit": "^0.31.0",
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.9",
     "typescript": "^5.8.3",
-    "vitest": "^3.0.5"
+    "vitest": "^4.1.0"
   },
   "optionalDependencies": {
-    "firebase-admin": "^13.6.0"
+    "firebase-admin": "^13.7.0"
   }
 }
