@@ -43,11 +43,13 @@ resource "aws_lightsail_static_ip_attachment" "web" {
 resource "aws_lightsail_instance_public_ports" "web" {
   instance_name = aws_lightsail_instance.web.name
 
+  # SSH open to all -- GitHub Actions runners use rotating IPs.
+  # Instance is protected by SSH key pair auth.
   port_info {
     protocol  = "tcp"
     from_port = 22
     to_port   = 22
-    cidrs     = var.ssh_allowed_ips
+    cidrs     = ["0.0.0.0/0"]
   }
 
   port_info {

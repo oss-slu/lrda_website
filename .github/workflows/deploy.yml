@@ -78,14 +78,13 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ubuntu
           key: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
             set -e
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             export GITHUB_REPOSITORY="${{ github.repository }}"
-            export IMAGE_TAG="sha-${{ github.sha }}"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image_tag }}"
             sudo -E /home/ubuntu/lrda/deploy.sh "${IMAGE_TAG}"
-          script_stop: true
-        timeout-minutes: 10
 
       - name: Verify deployment externally
         run: |
