@@ -8,6 +8,7 @@ const HealthResponseSchema = z.object({
   timestamp: z.string(),
   database: z.enum(['connected', 'disconnected']),
   environment: z.string(),
+  slot: z.string().optional(),
 });
 
 const getHealthRoute = createRoute({
@@ -45,6 +46,7 @@ export const healthRoutes = new OpenAPIHono<AppEnv>().openapi(getHealthRoute, as
       timestamp: new Date().toISOString(),
       database: dbConnected ? ('connected' as const) : ('disconnected' as const),
       environment: env.ENVIRONMENT ?? 'unknown',
+      slot: env.PORT === 3002 ? 'blue' : env.PORT === 3003 ? 'green' : undefined,
     },
     healthy ? 200 : 503,
   );
