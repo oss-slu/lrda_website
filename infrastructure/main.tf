@@ -16,6 +16,8 @@ resource "aws_lightsail_instance" "web" {
     environment         = var.environment
     api_subdomain       = var.environment == "production" ? "api" : "api-staging"
     frontend_origin     = var.environment == "production" ? var.domain_name : "staging.${var.domain_name}"
+    origin_ca_cert      = cloudflare_origin_ca_certificate.api.certificate
+    origin_ca_key       = tls_private_key.origin.private_key_pem
   })
 
   tags = {

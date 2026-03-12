@@ -29,12 +29,14 @@ apt-get install -y postgresql-17
 # Install Nginx and git
 apt-get install -y nginx git
 
-# Create directory and placeholder self-signed cert for Cloudflare Origin CA
-# (nginx needs a cert to start; replace with real Origin CA cert after terraform apply)
+# Install Cloudflare Origin CA certificate (injected by Terraform)
 mkdir -p /etc/ssl/cloudflare
-openssl req -x509 -newkey rsa:2048 -keyout /etc/ssl/cloudflare/origin-key.pem \
-  -out /etc/ssl/cloudflare/origin.pem -days 1 -nodes \
-  -subj "/CN=placeholder.${domain_name}" 2>/dev/null
+cat > /etc/ssl/cloudflare/origin.pem << 'CERT'
+${origin_ca_cert}
+CERT
+cat > /etc/ssl/cloudflare/origin-key.pem << 'KEY'
+${origin_ca_key}
+KEY
 chmod 600 /etc/ssl/cloudflare/origin-key.pem
 
 # Configure PostgreSQL
@@ -112,9 +114,6 @@ PMCONF
 chown ubuntu:ubuntu /home/ubuntu/lrda/ecosystem.config.cjs
 
 # Configure Nginx for API-only (frontend is on Cloudflare Workers)
-# SSL: Cloudflare Origin CA cert. Install cert/key after terraform apply:
-#   terraform output -raw origin_ca_certificate > /etc/ssl/cloudflare/origin.pem
-#   terraform output -raw origin_ca_private_key > /etc/ssl/cloudflare/origin-key.pem
 # NOTE: This heredoc is intentionally UNQUOTED so \$ becomes $ in the nginx config
 cat > /etc/nginx/sites-available/lrda << NGINX
 server {
@@ -155,8 +154,4 @@ systemctl enable pm2-ubuntu
 echo "LRDA server setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Install Origin CA cert from Terraform outputs:"
-echo "   tofu output -raw origin_ca_certificate | ssh ubuntu@<IP> 'sudo tee /etc/ssl/cloudflare/origin.pem > /dev/null'"
-echo "   tofu output -raw origin_ca_private_key | ssh ubuntu@<IP> 'sudo tee /etc/ssl/cloudflare/origin-key.pem > /dev/null && sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem'"
-echo "   ssh ubuntu@<IP> 'sudo nginx -t && sudo systemctl reload nginx'"
-echo "2. Run deploy.sh on the server"
+echo "1. Run deploy.sh on the server"
