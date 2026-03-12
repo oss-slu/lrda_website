@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
+import { useEffect, useRef, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
 import { useAuthStore } from '@/app/lib/stores/authStore';
@@ -15,7 +15,6 @@ import { useViewportNotes } from '@/app/lib/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/app/lib/hooks/useMapLocation';
 import { useMapMarkers } from '@/app/lib/hooks/useMapMarkers';
 import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
-import { filterNotesByMapBounds, filterNotesByTitleAndTags } from '@/app/lib/utils/mapUtils';
 import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
 
 export const Route = createFileRoute('/map')({
@@ -39,8 +38,6 @@ function MapPage() {
     isPanelOpen,
     activeNote,
     modalNoteId,
-    isNoteSelectedFromSearch,
-    searchQuery,
     isGlobalView,
     setMapCenter,
     setMapZoom,
@@ -63,8 +60,6 @@ function MapPage() {
       isPanelOpen: state.isPanelOpen,
       activeNote: state.activeNote,
       modalNoteId: state.modalNoteId,
-      isNoteSelectedFromSearch: state.isNoteSelectedFromSearch,
-      searchQuery: state.searchQuery,
       isGlobalView: state.isGlobalView,
       setMapCenter: state.setMapCenter,
       setMapZoom: state.setMapZoom,
@@ -100,7 +95,7 @@ function MapPage() {
     error: viewportError,
   } = useViewportNotes();
 
-  // Personal view: load all user notes (small dataset, client-side filtering)
+  // Personal view: viewport-based fetching with summary mode (debounced, server-side filtering)
   const {
     data: personalNotes = [],
     isPending: isPersonalPending,
@@ -113,26 +108,8 @@ function MapPage() {
   const notesError = isGlobalView ? isViewportError : isPersonalError;
   const notesErrorMessage = isGlobalView ? viewportError?.message : personalError?.message;
 
-  // Filtered notes:
-  // Global view: viewport notes come pre-filtered from the server (bounds + search)
-  // Personal view: client-side filtering by bounds or search
-  const filteredNotes = useMemo(() => {
-    if (isGlobalView) {
-      return viewportNotes;
-    }
-    // Personal view: client-side filtering
-    if (searchQuery && !isNoteSelectedFromSearch) {
-      return filterNotesByTitleAndTags(personalNotes, searchQuery);
-    }
-    return filterNotesByMapBounds(mapBounds, personalNotes);
-  }, [
-    isGlobalView,
-    viewportNotes,
-    personalNotes,
-    searchQuery,
-    mapBounds,
-    isNoteSelectedFromSearch,
-  ]);
+  // Both views are now server-filtered (viewport bounds + search + summary mode)
+  const filteredNotes = isGlobalView ? viewportNotes : personalNotes;
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);

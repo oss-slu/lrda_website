@@ -1,6 +1,11 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { notesService } from '../../services';
 import { Note } from '@/app/types';
+import { useMapStore } from '../../stores/mapStore';
+import { useShallow } from 'zustand/react/shallow';
+import { useDebounce } from '../useDebounce';
+import { boundsToParams } from '../../utils/mapUtils';
 
 // Query key factory for notes
 export const notesKeys = {
@@ -29,39 +34,46 @@ export function usePersonalNotes(userId: string | null, limit = 150, skip = 0) {
   });
 }
 
-/**
- * Fetch all pages of a paginated endpoint until exhausted.
- */
-async function fetchAllPages(
-  fetcher: (limit: number, offset: number) => Promise<Note[]>,
-  pageSize = 200,
-): Promise<Note[]> {
-  const all: Note[] = [];
-  let offset = 0;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const page = await fetcher(pageSize, offset);
-    all.push(...page);
-    if (page.length < pageSize) break;
-    offset += pageSize;
-  }
-  return all;
-}
+const PERSONAL_MAP_DEBOUNCE_MS = 400;
+const PERSONAL_MAP_STALE_TIME = 60_000;
 
 /**
- * Hook for fetching personal notes for Map page (non-archived, reversed)
+ * Hook for fetching personal notes for Map page using viewport-based
+ * server-side filtering with summary mode.
+ * Mirrors useViewportNotes but scoped to the authenticated user's notes.
  */
 export function usePersonalMapNotes(userId: string | null) {
+  const { mapBounds, searchQuery } = useMapStore(
+    useShallow(state => ({
+      mapBounds: state.mapBounds,
+      searchQuery: state.searchQuery,
+    })),
+  );
+
+  const boundsParams = useMemo(() => boundsToParams(mapBounds), [mapBounds]);
+  const debouncedBounds = useDebounce(boundsParams, PERSONAL_MAP_DEBOUNCE_MS);
+  const debouncedSearch = useDebounce(searchQuery, PERSONAL_MAP_DEBOUNCE_MS);
+
+  const isSearchMode = debouncedSearch.length > 0;
+
   return useQuery({
-    queryKey: notesKeys.personalMap(userId ?? ''),
+    queryKey:
+      isSearchMode
+        ? [...notesKeys.personalMap(userId ?? ''), 'search', debouncedSearch]
+        : [...notesKeys.personalMap(userId ?? ''), debouncedBounds],
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await fetchAllPages((limit, offset) =>
-        notesService.fetchUserNotes(userId, limit, offset),
-      );
-      return data.reverse();
+      if (isSearchMode) {
+        return notesService.fetchViewport({ creatorId: userId, search: debouncedSearch });
+      }
+      if (!debouncedBounds) {
+        return notesService.fetchViewport({ creatorId: userId });
+      }
+      return notesService.fetchViewport({ creatorId: userId, ...debouncedBounds });
     },
     enabled: !!userId,
+    placeholderData: keepPreviousData,
+    staleTime: PERSONAL_MAP_STALE_TIME,
   });
 }
 

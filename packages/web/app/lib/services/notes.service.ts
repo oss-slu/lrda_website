@@ -201,17 +201,20 @@ export interface ViewportParams {
   minLng?: number;
   maxLng?: number;
   search?: string;
+  creatorId?: string;
   limit?: number;
   offset?: number;
 }
 
 /**
- * Fetch published notes in summary mode (no text, first media only, no audio).
+ * Fetch notes in summary mode (no text, first media only, no audio).
  * Pass bounds for viewport filtering, or omit for global search.
+ * Pass creatorId for personal view (shows all user notes including drafts).
+ * Omit creatorId for global/public view (shows only published notes).
  */
 async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
   const qs = buildQueryString({
-    published: true,
+    ...(params.creatorId ? { creatorId: params.creatorId } : { published: true }),
     fields: 'summary',
     minLat: params.minLat,
     maxLat: params.maxLat,
