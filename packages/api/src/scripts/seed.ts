@@ -5,9 +5,9 @@
  * Safe to run multiple times (deletes and re-inserts).
  *
  * Usage:
- *   bun run src/scripts/seed.ts                  # Dry-run (preview only)
- *   bun run src/scripts/seed.ts --yolo           # Write to LOCAL database
- *   bun run src/scripts/seed.ts --yolo --remote  # Write to REMOTE (production) D1
+ *   pnpm db:seed                  # Dry-run (preview only)
+ *   pnpm db:seed --yolo           # Write to LOCAL database
+ *   pnpm db:seed --yolo --remote  # Write to REMOTE (production) D1
  *
  * From project root:
  *   pnpm api:db:seed                             # Local with --yolo

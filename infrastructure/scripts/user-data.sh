@@ -1,5 +1,7 @@
 #!/bin/bash
 # EC2 bootstrap script for LRDA API server
+# Installs: Node.js 24, pnpm, PostgreSQL 16, Nginx, PM2
+# API runs on port 3002 via PM2, proxied through Nginx with Cloudflare Origin CA
 set -e
 
 # Log everything
@@ -15,8 +17,8 @@ DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 apt-get install -y nodejs
 
-# Install pnpm
-npm install -g pnpm
+# Install pnpm and PM2
+npm install -g pnpm pm2
 
 # Install PostgreSQL 16
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-archive-keyring.gpg
@@ -24,11 +26,8 @@ echo "deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] http://
 apt-get update
 apt-get install -y postgresql-16
 
-# Install Nginx
-apt-get install -y nginx
-
-# Install PM2
-npm install -g pm2
+# Install Nginx and git
+apt-get install -y nginx git
 
 # Create directory for Cloudflare Origin CA cert
 mkdir -p /etc/ssl/cloudflare
@@ -50,35 +49,54 @@ systemctl restart postgresql
 mkdir -p /home/ubuntu/lrda
 chown ubuntu:ubuntu /home/ubuntu/lrda
 
-# Create environment file
+# Create environment file (populate secrets after first deploy)
 cat > /home/ubuntu/lrda/.env << EOF
-NODE_ENV=production
-DATABASE_URL=postgresql://lrda_app:${db_password}@localhost:5432/lrda_${environment}
-AWS_REGION=${aws_region}
-DOMAIN=${domain_name}
 ENVIRONMENT=${environment}
+PORT=3002
+DATABASE_URL=postgresql://lrda_app:${db_password}@localhost:5432/lrda_${environment}
 
-# Keep using RERUM S3 proxy for media (no migration needed initially)
-S3_PROXY_URL=http://s3-proxy.rerum.io/S3/
+# Better Auth
+BETTER_AUTH_SECRET=CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+BETTER_AUTH_URL=https://${api_subdomain}.${domain_name}
+WEB_URL=https://${frontend_origin}
 
-# Uncomment below when ready to use your own S3 bucket
-# S3_BUCKET=your-bucket-name
+# CORS
+CORS_ORIGINS=https://${frontend_origin}
+
+# Email (Resend)
+RESEND_API_KEY=
+EMAIL_FROM=noreply@wheresreligion.org
+
+# Google Maps (for reverse geocoding)
+GOOGLE_MAPS_API_KEY=
 EOF
 chown ubuntu:ubuntu /home/ubuntu/lrda/.env
 chmod 600 /home/ubuntu/lrda/.env
 
+# Create PM2 ecosystem file
+cat > /home/ubuntu/lrda/ecosystem.config.cjs << 'PMCONF'
+module.exports = {
+  apps: [{
+    name: 'lrda-api',
+    cwd: '/home/ubuntu/lrda/packages/api',
+    script: 'src/index.ts',
+    interpreter: 'node',
+    interpreter_args: '--import tsx',
+    env_file: '/home/ubuntu/lrda/.env',
+    instances: 1,
+    max_memory_restart: '512M',
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    merge_logs: true,
+  }],
+};
+PMCONF
+chown ubuntu:ubuntu /home/ubuntu/lrda/ecosystem.config.cjs
+
 # Configure Nginx for API-only (frontend is on Cloudflare Workers)
-# server_name is environment-aware:
-#   staging:    api-staging.wheresreligion.org
-#   production: api.wheresreligion.org
-#
 # SSL: Cloudflare Origin CA cert. Install cert/key after terraform apply:
 #   terraform output -raw origin_ca_certificate > /etc/ssl/cloudflare/origin.pem
 #   terraform output -raw origin_ca_private_key > /etc/ssl/cloudflare/origin-key.pem
-#
-# Note: Terraform templatefile uses $${var}, Nginx uses $var (escaped as \$var)
 cat > /etc/nginx/sites-available/lrda << NGINX
-# Redirect HTTP to HTTPS (Cloudflare also does this, but belt-and-suspenders)
 server {
     listen 80;
     server_name ${api_subdomain}.${domain_name};
@@ -89,41 +107,19 @@ server {
     listen 443 ssl;
     server_name ${api_subdomain}.${domain_name};
 
-    # Cloudflare Origin CA certificate
     ssl_certificate     /etc/ssl/cloudflare/origin.pem;
     ssl_certificate_key /etc/ssl/cloudflare/origin-key.pem;
     ssl_protocols       TLSv1.2 TLSv1.3;
 
-    # API routes - proxy to Hono
     location / {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3002;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-
-        # CORS headers for frontend on Cloudflare Workers
-        add_header Access-Control-Allow-Origin "https://${frontend_origin}" always;
-        add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
-        add_header Access-Control-Allow-Credentials "true" always;
-
-        # Handle preflight requests
-        if (\$request_method = 'OPTIONS') {
-            add_header Access-Control-Allow-Origin "https://${frontend_origin}" always;
-            add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-            add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
-            add_header Access-Control-Allow-Credentials "true" always;
-            add_header Content-Length 0;
-            add_header Content-Type text/plain;
-            return 204;
-        }
-    }
-
-    # Health check endpoint
-    location /health {
-        proxy_pass http://localhost:3001/health;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 NGINX
@@ -137,10 +133,12 @@ sudo -u ubuntu pm2 startup systemd -u ubuntu --hp /home/ubuntu
 systemctl enable pm2-ubuntu
 
 echo "LRDA server setup complete!"
+echo ""
 echo "Next steps:"
 echo "1. Install Origin CA cert from Terraform outputs:"
 echo "   terraform output -raw origin_ca_certificate | sudo tee /etc/ssl/cloudflare/origin.pem"
 echo "   terraform output -raw origin_ca_private_key | sudo tee /etc/ssl/cloudflare/origin-key.pem"
 echo "   sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem"
 echo "   sudo nginx -t && sudo systemctl reload nginx"
-echo "2. Deploy application code"
+echo "2. Edit /home/ubuntu/lrda/.env with real secrets"
+echo "3. Run: /home/ubuntu/lrda/deploy.sh"

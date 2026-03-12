@@ -5,11 +5,11 @@
  * With --remote, fetches live from the RERUM API instead.
  *
  * Usage:
- *   bun run src/scripts/sync-from-rerum.ts                    # Dry-run from local file
- *   bun run src/scripts/sync-from-rerum.ts --yolo             # Write to DB from local file
- *   bun run src/scripts/sync-from-rerum.ts --yolo --full      # Full re-sync from local file
- *   bun run src/scripts/sync-from-rerum.ts --yolo --remote    # Fetch from RERUM API
- *   bun run src/scripts/sync-from-rerum.ts --watch --remote   # Continuous sync from API
+ *   pnpm sync:from-rerum                    # Dry-run from local file
+ *   pnpm sync:from-rerum --yolo             # Write to DB from local file
+ *   pnpm sync:from-rerum --yolo --full      # Full re-sync from local file
+ *   pnpm sync:from-rerum --yolo --remote    # Fetch from RERUM API
+ *   pnpm sync:from-rerum --watch --remote   # Continuous sync from API
  *
  * Environment variables (only needed with --remote):
  *   RERUM_API_URL - RERUM API base URL
@@ -147,11 +147,10 @@ function normalizeTags(tags?: RerumNote['tags']): Tag[] {
 // Load notes from local JSON dump file
 async function loadNotesFromFile(): Promise<RerumNote[]> {
   log('info', `Loading notes from ${DUMP_PATH}...`);
-  const file = Bun.file(DUMP_PATH);
-  if (!(await file.exists())) {
+  if (!fs.existsSync(DUMP_PATH)) {
     throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from RERUM API instead.`);
   }
-  const notes: RerumNote[] = JSON.parse(await file.text());
+  const notes: RerumNote[] = JSON.parse(fs.readFileSync(DUMP_PATH, 'utf-8'));
   log('info', `Loaded ${notes.length} notes from file`);
   return notes;
 }

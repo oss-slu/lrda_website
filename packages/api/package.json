@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
-    "start": "bun run dist/index.js",
+    "dev": "node --env-file=.env --import tsx --watch-path src src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "start": "node --import tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
@@ -13,18 +13,19 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "bun run src/scripts/seed.ts --yolo",
+    "db:seed": "node --import tsx src/scripts/seed.ts --yolo",
     "docker:up": "docker compose up -d --wait",
     "docker:down-v": "docker compose down -v",
-    "promote-admin": "bun run src/scripts/promote-admin.ts",
-    "sync:users": "bun run src/scripts/sync-users-from-firebase.ts",
-    "sync:users:yolo": "bun run src/scripts/sync-users-from-firebase.ts --yolo",
-    "sync:from-rerum": "bun run src/scripts/sync-from-rerum.ts",
-    "sync:from-rerum:yolo": "bun run src/scripts/sync-from-rerum.ts --yolo",
-    "sync:to-rerum": "bun run src/scripts/sync-to-rerum.ts",
-    "sync:to-rerum:yolo": "bun run src/scripts/sync-to-rerum.ts --yolo"
+    "promote-admin": "node --import tsx src/scripts/promote-admin.ts",
+    "sync:users": "node --import tsx src/scripts/sync-users-from-firebase.ts",
+    "sync:users:yolo": "node --import tsx src/scripts/sync-users-from-firebase.ts --yolo",
+    "sync:from-rerum": "node --import tsx src/scripts/sync-from-rerum.ts",
+    "sync:from-rerum:yolo": "node --import tsx src/scripts/sync-from-rerum.ts --yolo",
+    "sync:to-rerum": "node --import tsx src/scripts/sync-to-rerum.ts",
+    "sync:to-rerum:yolo": "node --import tsx src/scripts/sync-to-rerum.ts --yolo"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.11",
     "@hono/zod-openapi": "^0.18.4",
     "@lrda/shared": "workspace:*",
     "@scalar/hono-api-reference": "^0.5.175",
@@ -33,11 +34,13 @@
     "hono": "^4.7.4",
     "pg": "^8.15.6",
     "resend": "^6.9.3",
+    "tsx": "^4.21.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/node": "24.9.2",
     "@types/pg": "^8.11.14",
-    "bun-types": "^1.2.8",
+
     "drizzle-kit": "^0.31.0",
     "typescript": "^5.8.3",
     "vitest": "^3.0.5"

@@ -131,13 +131,12 @@ app.notFound(c => {
 });
 
 // Start server
-const server = Bun.serve({
-  port: env.PORT,
-  fetch: app.fetch,
-});
+import { serve } from '@hono/node-server';
 
-console.log(`API server running at http://${server.hostname}:${server.port}`);
-console.log(`API docs available at http://${server.hostname}:${server.port}/docs`);
+const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+  console.log(`API server running at http://localhost:${info.port}`);
+  console.log(`API docs available at http://localhost:${info.port}/docs`);
+});
 
 // Graceful shutdown
 let shuttingDown = false;
@@ -148,7 +147,7 @@ async function gracefulShutdown(signal: string) {
 
   console.log(`Received ${signal}, starting graceful shutdown...`);
 
-  server.stop();
+  server.close();
   await closePool();
 
   console.log('Graceful shutdown complete.');

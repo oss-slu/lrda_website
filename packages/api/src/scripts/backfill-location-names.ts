@@ -2,7 +2,7 @@
  * Backfill location names for notes that have lat/lng but no locationName.
  *
  * Usage:
- *   bun run src/scripts/backfill-location-names.ts
+ *   node --import tsx src/scripts/backfill-location-names.ts
  *
  * Environment variables:
  *   GOOGLE_MAPS_API_KEY - Required for reverse geocoding

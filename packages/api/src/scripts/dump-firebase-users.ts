@@ -4,7 +4,7 @@
  * Outputs to packages/api/firebase-users-dump.json
  *
  * Usage:
- *   bun run src/scripts/dump-firebase-users.ts
+ *   node --import tsx src/scripts/dump-firebase-users.ts
  *
  * Environment variables:
  *   FIREBASE_SERVICE_ACCOUNT_PATH   - Path to service account JSON file

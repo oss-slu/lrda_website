@@ -5,9 +5,9 @@
  * With --remote, fetches live from Firebase Auth + Firestore instead.
  *
  * Usage:
- *   bun run src/scripts/sync-users-from-firebase.ts                    # Dry-run from local file
- *   bun run src/scripts/sync-users-from-firebase.ts --yolo             # Write to DB from local file
- *   bun run src/scripts/sync-users-from-firebase.ts --yolo --remote    # Fetch from Firebase API
+ *   pnpm sync:users                    # Dry-run from local file
+ *   pnpm sync:users --yolo             # Write to DB from local file
+ *   pnpm sync:users --yolo --remote    # Fetch from Firebase API
  *
  * Environment variables (only needed with --remote):
  *   FIREBASE_SERVICE_ACCOUNT_PATH   - Path to service account JSON file
@@ -136,11 +136,10 @@ interface DumpUser {
 // Load users from local JSON dump file
 async function loadUsersFromFile() {
   log('info', `Loading users from ${DUMP_PATH}...`);
-  const file = Bun.file(DUMP_PATH);
-  if (!(await file.exists())) {
+  if (!fs.existsSync(DUMP_PATH)) {
     throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from Firebase API instead.`);
   }
-  const dumpUsers: DumpUser[] = JSON.parse(await file.text());
+  const dumpUsers: DumpUser[] = JSON.parse(fs.readFileSync(DUMP_PATH, 'utf-8'));
   log('info', `Loaded ${dumpUsers.length} users from file`);
 
   return dumpUsers.map(u => ({

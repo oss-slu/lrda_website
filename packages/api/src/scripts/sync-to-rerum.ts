@@ -5,12 +5,12 @@
  * so the mobile app can still read it while being migrated.
  *
  * Usage:
- *   bun run src/scripts/sync-to-rerum.ts           # Dry-run (preview only, no writes)
- *   bun run src/scripts/sync-to-rerum.ts --yolo    # Actually write to RERUM
- *   bun run src/scripts/sync-to-rerum.ts --watch   # Continuous sync (every 30s)
+ *   pnpm sync:to-rerum           # Dry-run (preview only, no writes)
+ *   pnpm sync:to-rerum --yolo    # Actually write to RERUM
+ *   pnpm sync:to-rerum --watch   # Continuous sync (every 30s)
  *
  * Flags can be combined:
- *   bun run src/scripts/sync-to-rerum.ts --yolo --watch
+ *   pnpm sync:to-rerum --yolo --watch
  *
  * Environment variables:
  *   RERUM_API_URL - RERUM API base URL

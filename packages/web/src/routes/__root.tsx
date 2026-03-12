@@ -15,6 +15,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext'
 import QueryProvider from '@/app/lib/components/QueryProvider'
 import { AuthProvider } from '@/app/lib/components/AuthProvider'
+import NotFound from '@/app/lib/components/NotFound'
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -38,12 +39,7 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
-  notFoundComponent: () => (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2">
-      <h1 className="text-2xl font-semibold text-gray-800">Page not found</h1>
-      <p className="text-gray-500">The page you are looking for does not exist.</p>
-    </div>
-  ),
+  notFoundComponent: NotFound,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

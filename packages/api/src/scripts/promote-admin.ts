@@ -2,7 +2,7 @@
  * Promote an existing user to admin role.
  *
  * Usage:
- *   bun run src/scripts/promote-admin.ts <email>
+ *   pnpm promote-admin <email>
  *
  * From project root:
  *   pnpm --filter api promote-admin <email>
@@ -16,7 +16,7 @@ async function main() {
   const email = process.argv[2];
 
   if (!email) {
-    console.error('Usage: bun run src/scripts/promote-admin.ts <email>');
+    console.error('Usage: pnpm promote-admin <email>');
     process.exit(1);
   }
 
