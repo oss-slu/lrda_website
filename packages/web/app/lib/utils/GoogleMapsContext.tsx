@@ -42,9 +42,9 @@ const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
  */
 function GoogleMapsLoader({ setLoaded }: { setLoaded: (v: boolean) => void }) {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.NEXT_PUBLIC_MAP_KEY || '',
+    googleMapsApiKey: import.meta.env.VITE_MAP_KEY || '',
     libraries: GOOGLE_MAPS_LIBRARIES,
-    mapIds: [import.meta.env.NEXT_PUBLIC_MAP_ID || ''],
+    mapIds: [import.meta.env.VITE_MAP_ID || ''],
     id: 'google-map-script',
   });
 

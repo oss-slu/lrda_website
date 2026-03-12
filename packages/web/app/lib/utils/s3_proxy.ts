@@ -1,4 +1,4 @@
-const S3_PROXY_PREFIX = import.meta.env.NEXT_PUBLIC_S3_PROXY_PREFIX;
+const S3_PROXY_PREFIX = import.meta.env.VITE_S3_PROXY_PREFIX;
 
 async function uploadMedia(file: File, mediaType: string): Promise<string> {
   const data = new FormData();

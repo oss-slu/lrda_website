@@ -1,22 +1,25 @@
-name: CI/CD Pipeline
+name: Deploy Web
+
+on:
+  push:
+    branches: [301-improve-admin]
+    paths:
+      - 'packages/web/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-on:
-  pull_request:
-    branches: [301-improve-admin]
-  workflow_call:
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
-  cancel-in-progress: true
+  group: deploy-web
+  cancel-in-progress: false
 
 jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -87,3 +90,33 @@ jobs:
             packages/web/playwright-report/
             packages/web/test-results/
           retention-days: 30
+
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.20.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and deploy
+        run: pnpm --filter web deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_MAP_KEY: ${{ secrets.VITE_MAP_KEY }}
+          VITE_MAP_ID: ${{ secrets.VITE_MAP_ID }}

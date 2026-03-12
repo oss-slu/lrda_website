@@ -98,7 +98,7 @@ lrda_website/
 
 ### Testing
 
-- **Unit Tests**: Jest
+- **Unit Tests**: Vitest
 - **E2E Tests**: Playwright
 - **Test Location**: `app/__tests__/` (unit), `app/__e2e__/` (e2e)
 
@@ -222,7 +222,7 @@ pnpm api:db:generate                  # Generate migrations from schema changes
 
 # Testing
 pnpm test                             # Run all tests
-pnpm test:unit                        # Jest unit tests
+pnpm test:unit                        # Vitest unit tests
 pnpm test:e2e                         # Playwright e2e tests
 
 # Building
@@ -245,7 +245,7 @@ pnpm lint:fix                         # ESLint with auto-fix
 - **Only write tests when explicitly requested**
 - Do not automatically generate tests without being asked
 - When writing tests:
-  - Unit tests: `app/__tests__/` using Jest
+  - Unit tests: `app/__tests__/` using Vitest
   - E2E tests: `app/__e2e__/` using Playwright
   - Use React Testing Library for component tests
 

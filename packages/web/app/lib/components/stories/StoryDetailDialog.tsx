@@ -58,7 +58,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
       return;
     }
     if (hasValidCoordinates) {
-      const apiKey = import.meta.env.NEXT_PUBLIC_MAP_KEY;
+      const apiKey = import.meta.env.VITE_MAP_KEY;
       if (apiKey) {
         getCachedLocation(note.latitude!, note.longitude!, apiKey)
           .then(loc => setLocation(loc))

@@ -8,7 +8,7 @@ const fetchMock = vi.fn(() =>
 vi.stubGlobal('fetch', fetchMock);
 
 // Ensure API env var exists in test environment
-process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+process.env.VITE_API_URL = process.env.VITE_API_URL || 'http://localhost:3002';
 
 // Suppress noisy console output from component code during tests
 const suppressedMessages = [

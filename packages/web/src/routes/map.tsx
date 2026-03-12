@@ -288,7 +288,7 @@ function MapPage() {
               mapTypeControl: false,
               fullscreenControl: false,
               disableDefaultUI: true,
-              mapId: import.meta.env.NEXT_PUBLIC_MAP_ID,
+              mapId: import.meta.env.VITE_MAP_ID,
             }}
           />
         )}

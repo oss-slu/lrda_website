@@ -1,6 +1,12 @@
 name: Deploy API
 
 on:
+  push:
+    branches: [301-improve-admin]
+    paths:
+      - 'packages/api/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       environment:
@@ -10,23 +16,48 @@ on:
         type: choice
         options:
           - staging
-          - production
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-${{ github.event.inputs.environment }}
+  group: deploy-api
   cancel-in-progress: false
 
 jobs:
-  # TODO: Re-enable tests once CI test suite is fixed
-  # tests:
-  #   name: Run Tests
-  #   uses: ./.github/workflows/ci-cd.yml
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.20.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:unit --silent --no-coverage
+        env:
+          VITE_API_URL: 'http://localhost:3002'
+          VITE_OPENAI_API_KEY: 'mock-openai-key'
+          VITE_OPENAI_API_URL: 'https://api.openai.com/v1'
+          CI: 'true'
+          SUPPRESS_CONSOLE: 'true'
 
   build-and-push:
     name: Build & Push Docker Image
+    needs: unit-tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,10 +100,10 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to ${{ github.event.inputs.environment }}
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ github.event.inputs.environment || 'staging' }}
 
     steps:
       - name: Deploy via SSH
