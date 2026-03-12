@@ -65,6 +65,11 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 5 * 60, // 5 minutes
     },
+    ...(env.COOKIE_DOMAIN && {
+      cookie: {
+        domain: env.COOKIE_DOMAIN,
+      },
+    }),
   },
   plugins: [
     admin({
