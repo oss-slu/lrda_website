@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react';
-import { Note, Tag } from '@/app/types';
-import { notesService } from '@/app/lib/services/notes.service';
+import { Tag } from '@/app/types';
 import { fetchCreatorName } from '@/app/lib/services';
 import { sanitizeHtml } from '@/app/lib/utils/sanitize';
 import { formatDate, format12hourTime } from '@/app/lib/utils/data_conversion';
+import { useNoteDetail } from '@/app/lib/hooks/queries/useNotes';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -39,42 +39,21 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
 function NoteDetailPage() {
   const { id: noteId } = Route.useParams();
 
-  const [note, setNote] = useState<Note | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: note, isLoading, error: queryError } = useNoteDetail(noteId);
   const [creator, setCreator] = useState('Loading...');
   const [sanitizedContent, setSanitizedContent] = useState('');
 
   useEffect(() => {
-    if (!noteId) {
-      setError('Invalid note id');
-      setLoading(false);
-      return;
+    if (!note) return;
+    fetchCreatorName(note.creator)
+      .then((name: string) => setCreator(name))
+      .catch(() => setCreator('Unknown'));
+    if (note.text) {
+      sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
     }
+  }, [note]);
 
-    notesService
-      .fetchById(noteId)
-      .then((n: Note | null) => {
-        if (n) {
-          setNote(n);
-          fetchCreatorName(n.creator)
-            .then((name: string) => setCreator(name))
-            .catch(() => setCreator('Unknown'));
-          if (n.text) {
-            sanitizeHtml(n.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
-          }
-        } else {
-          setError('Note not found');
-        }
-      })
-      .catch((err: unknown) => {
-        console.error('fetchById error', err);
-        setError('Failed to load note');
-      })
-      .finally(() => setLoading(false));
-  }, [noteId]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className='flex h-screen items-center justify-center text-muted-foreground'>
         Loading...
@@ -82,10 +61,12 @@ function NoteDetailPage() {
     );
   }
 
-  if (error || !note) {
+  if (queryError || !note) {
     return (
       <div className='flex h-screen flex-col items-center justify-center gap-4'>
-        <p className='text-lg font-semibold text-destructive'>{error ?? 'Note not available'}</p>
+        <p className='text-lg font-semibold text-destructive'>
+          {queryError ? 'Failed to load note' : 'Note not found'}
+        </p>
         <Button onClick={() => window.history.back()}>
           <ArrowLeft className='mr-2 h-4 w-4' />
           Back to map
