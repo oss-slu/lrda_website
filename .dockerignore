@@ -1,0 +1,14 @@
+.git/
+.github/
+node_modules/
+packages/web/
+docs/
+infrastructure/
+scripts/
+public/
+*.md
+.env*
+.next/
+playwright-report/
+test-results/
+.claude/

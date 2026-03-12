@@ -1,67 +1,121 @@
-#!/bin/bash
-# Deploy script for LRDA API on Lightsail
-# Run on the server: ./deploy.sh [branch]
-set -e
+#!/usr/bin/env bash
+# Blue/green deploy script for LRDA API
+# Usage: deploy.sh <image_tag>
+# Example: deploy.sh sha-abc1234
+set -euo pipefail
 
-BRANCH="${1:-main}"
+IMAGE_TAG="${1:?Usage: deploy.sh <image_tag>}"
+
 APP_DIR="/home/ubuntu/lrda"
-REPO_URL="https://github.com/oss-slu/lrda_website.git"
+COMPOSE_FILE="${APP_DIR}/docker-compose.prod.yml"
+NGINX_CONF_DIR="/etc/nginx/conf.d"
+BLUE_PORT=3002
+GREEN_PORT=3003
+HEALTH_RETRIES=20
+HEALTH_DELAY=3
+LOG_PREFIX="[deploy]"
 
-echo "=== LRDA API Deploy ==="
-echo "Branch: $BRANCH"
-echo ""
+log() { echo "${LOG_PREFIX} $(date -u +%H:%M:%S) $*"; }
 
-# Clone or pull (git init handles pre-existing files from user-data)
-if [ ! -d "$APP_DIR/.git" ]; then
-  echo "Initializing repository..."
-  cd "$APP_DIR"
-  git init
-  git remote add origin "$REPO_URL"
-  git fetch origin
-  git checkout -b "$BRANCH" "origin/$BRANCH"
+cd "${APP_DIR}"
+
+# ---- Determine active color ----
+if [ -f "${NGINX_CONF_DIR}/upstream-blue.conf" ] && \
+   ! [ -f "${NGINX_CONF_DIR}/upstream-blue.conf.disabled" ]; then
+    ACTIVE="blue"; INACTIVE="green"
+    ACTIVE_PORT="${BLUE_PORT}"; INACTIVE_PORT="${GREEN_PORT}"
+elif [ -f "${NGINX_CONF_DIR}/upstream-green.conf" ] && \
+     ! [ -f "${NGINX_CONF_DIR}/upstream-green.conf.disabled" ]; then
+    ACTIVE="green"; INACTIVE="blue"
+    ACTIVE_PORT="${GREEN_PORT}"; INACTIVE_PORT="${BLUE_PORT}"
 else
-  echo "Pulling latest changes..."
-  cd "$APP_DIR"
-  git fetch origin
-  git checkout "$BRANCH"
-  git pull origin "$BRANCH"
+    # First deploy
+    log "No active upstream found. First deploy, defaulting to blue."
+    ACTIVE="none"; INACTIVE="blue"
+    ACTIVE_PORT="0"; INACTIVE_PORT="${BLUE_PORT}"
 fi
 
-cd "$APP_DIR"
+log "Active: ${ACTIVE} (:${ACTIVE_PORT}), deploying to: ${INACTIVE} (:${INACTIVE_PORT})"
+log "Image tag: ${IMAGE_TAG}"
 
-# Symlink .env into API package (PM2 env_file loads root, but drizzle-kit needs it in packages/api)
-if [ -f "$APP_DIR/.env" ] && [ ! -L "$APP_DIR/packages/api/.env" ]; then
-  ln -sf "$APP_DIR/.env" "$APP_DIR/packages/api/.env"
-fi
+# ---- Pull pre-built image from GHCR ----
+# GITHUB_REPOSITORY is set by the CI/CD pipeline (e.g., "owner/repo")
+export IMAGE_TAG
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set}"
 
-# Install dependencies
-echo "Installing dependencies..."
-pnpm install --frozen-lockfile
+FULL_IMAGE="ghcr.io/${GITHUB_REPOSITORY}/api:${IMAGE_TAG}"
+log "Pulling image: ${FULL_IMAGE}"
+docker pull "${FULL_IMAGE}"
 
-# Run database migrations
-echo "Running database migrations..."
-pnpm --filter @lrda/api db:push
+# ---- Run database migrations ----
+log "Running database migrations (drizzle-kit push)..."
+docker run --rm \
+    --network host \
+    --env-file "${APP_DIR}/.env" \
+    "${FULL_IMAGE}" \
+    npx drizzle-kit push
 
-# Restart API via PM2
-echo "Restarting API server..."
-if pm2 describe lrda-api > /dev/null 2>&1; then
-  pm2 reload ecosystem.config.cjs
+# ---- Start inactive container ----
+log "Starting ${INACTIVE} container..."
+if [ "${INACTIVE}" = "green" ]; then
+    docker compose -f "${COMPOSE_FILE}" --profile green up -d api-green
 else
-  pm2 start ecosystem.config.cjs
+    docker compose -f "${COMPOSE_FILE}" up -d api-blue
 fi
 
-pm2 save
+# ---- Health check new container ----
+log "Health checking ${INACTIVE} on :${INACTIVE_PORT}..."
+HEALTHY=false
+for i in $(seq 1 ${HEALTH_RETRIES}); do
+    sleep ${HEALTH_DELAY}
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+        "http://localhost:${INACTIVE_PORT}/api/health" 2>/dev/null || echo "000")
+    if [ "${HTTP_STATUS}" = "200" ]; then
+        HEALTHY=true
+        log "Health check passed (attempt ${i})"
+        break
+    fi
+    log "Attempt ${i}/${HEALTH_RETRIES}: HTTP ${HTTP_STATUS}"
+done
 
-# Health check
-echo "Waiting for health check..."
-sleep 3
-if curl -sf http://localhost:3002/api/health > /dev/null; then
-  echo ""
-  echo "=== Deploy successful ==="
-  pm2 status lrda-api
+if [ "${HEALTHY}" = "false" ]; then
+    log "FAILED -- ${INACTIVE} not healthy. Keeping ${ACTIVE} running."
+    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
+    exit 1
+fi
+
+# ---- Switch Nginx upstream ----
+log "Switching Nginx to ${INACTIVE} (:${INACTIVE_PORT})..."
+echo "upstream lrda_api { server 127.0.0.1:${INACTIVE_PORT}; }" | \
+    sudo tee "${NGINX_CONF_DIR}/upstream-${INACTIVE}.conf" > /dev/null
+
+if [ "${ACTIVE}" != "none" ]; then
+    sudo mv "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf" \
+            "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf.disabled" 2>/dev/null || true
+fi
+
+if sudo nginx -t 2>/dev/null; then
+    sudo systemctl reload nginx
+    log "Nginx reloaded"
 else
-  echo ""
-  echo "=== Health check failed ==="
-  pm2 logs lrda-api --lines 20 --nostream
-  exit 1
+    log "ERROR: Nginx config test failed, rolling back"
+    if [ "${ACTIVE}" != "none" ]; then
+        sudo mv "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf.disabled" \
+                "${NGINX_CONF_DIR}/upstream-${ACTIVE}.conf" 2>/dev/null || true
+    fi
+    sudo rm -f "${NGINX_CONF_DIR}/upstream-${INACTIVE}.conf"
+    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
+    exit 1
 fi
+
+# ---- Stop old container ----
+if [ "${ACTIVE}" != "none" ]; then
+    log "Stopping old ${ACTIVE} container..."
+    docker compose -f "${COMPOSE_FILE}" stop "api-${ACTIVE}"
+fi
+
+# ---- Cleanup old images ----
+docker image prune -f --filter "until=168h" 2>/dev/null || true
+
+log "Deploy complete. Active: ${INACTIVE} on :${INACTIVE_PORT}"
+log "Image: ${FULL_IMAGE}"
