@@ -199,23 +199,6 @@ function MapPage() {
     }
   }, [isPanelOpen]);
 
-  // Setup map click and drag listeners
-  useEffect(() => {
-    const map = mapRef.current;
-    if (map) {
-      const mapClickListener = map.addListener('click', () => {
-        setActiveNote(null);
-      });
-      const mapDragListener = map.addListener('dragstart', () => {
-        setActiveNote(null);
-      });
-      return () => {
-        google.maps.event.removeListener(mapClickListener);
-        google.maps.event.removeListener(mapDragListener);
-      };
-    }
-  }, [setActiveNote]);
-
   // Map load handler -- uses 'idle' event to batch drag+zoom into a single bounds update
   const onMapLoad = useCallback(
     (map: google.maps.Map) => {

@@ -60,6 +60,7 @@ export function useMapMarkers({
 
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
+  const currentPopupRootRef = useRef<ReactDOM.Root | null>(null);
   const currentPopupNoteIdRef = useRef<string | null>(null);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const markerHoveredRef = useRef(false);
@@ -67,6 +68,19 @@ export function useMapMarkers({
   const markersRef = useRef(new Map<string, google.maps.marker.AdvancedMarkerElement>());
   const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const popupClassRef = useRef<ReturnType<typeof createPopupClass> | null>(null);
+
+  // Close popup and unmount its React root to prevent memory leaks
+  const closePopup = useCallback(() => {
+    if (currentPopupRef.current) {
+      currentPopupRef.current.setMap(null);
+    }
+    if (currentPopupRootRef.current) {
+      currentPopupRootRef.current.unmount();
+      currentPopupRootRef.current = null;
+    }
+    currentPopupRef.current = null;
+    currentPopupNoteIdRef.current = null;
+  }, []);
 
   // Start popup close timer with delay
   const startPopupCloseTimer = useCallback(() => {
@@ -76,27 +90,21 @@ export function useMapMarkers({
 
     hoverTimerRef.current = setTimeout(() => {
       if (!markerHoveredRef.current && !popupHoveredRef.current && currentPopupRef.current) {
-        currentPopupRef.current.setMap(null);
-        currentPopupRef.current = null;
-        currentPopupNoteIdRef.current = null;
+        closePopup();
         setHoveredNoteIdRef.current(null);
         setActiveNoteRef.current(null);
       }
     }, 300);
-  }, []);
+  }, [closePopup]);
 
   const startPopupCloseTimerRef = useRef(startPopupCloseTimer);
   startPopupCloseTimerRef.current = startPopupCloseTimer;
 
   // Handle map click to close popup
   const handleMapClick = useCallback(() => {
-    if (currentPopupRef.current) {
-      currentPopupRef.current.setMap(null);
-    }
-    currentPopupRef.current = null;
-    currentPopupNoteIdRef.current = null;
+    closePopup();
     setActiveNoteRef.current(null);
-  }, []);
+  }, [closePopup]);
 
   // Create marker icon element
   const createMarkerIcon = useCallback((): HTMLElement => {
@@ -127,11 +135,7 @@ export function useMapMarkers({
       // Click -> navigate to note page
       iconNode.addEventListener('click', e => {
         e.stopPropagation();
-        if (currentPopupRef.current) {
-          currentPopupRef.current.setMap(null);
-          currentPopupRef.current = null;
-          currentPopupNoteIdRef.current = null;
-        }
+        closePopup();
         navigateRef.current({ to: `/notes/${note.id}` });
       });
 
@@ -145,14 +149,13 @@ export function useMapMarkers({
 
         // Open popup if not already showing for this note
         if (currentPopupNoteIdRef.current !== note.id || !currentPopupRef.current) {
-          if (currentPopupRef.current) {
-            currentPopupRef.current.setMap(null);
-          }
+          closePopup();
 
           if (!popupClassRef.current) return;
 
           const popupContent = document.createElement('div');
           const root = ReactDOM.createRoot(popupContent);
+          currentPopupRootRef.current = root;
           root.render(
             <QueryClientProvider client={queryClientRef.current}>
               <NoteCard note={note} />
@@ -182,7 +185,7 @@ export function useMapMarkers({
 
       return marker;
     },
-    [createMarkerIcon],
+    [createMarkerIcon, closePopup],
   );
 
   // One-time setup: map click listener and Popup class
@@ -200,11 +203,7 @@ export function useMapMarkers({
 
     // Map click listener -- set up once
     mapClickListenerRef.current = map.addListener('click', () => {
-      if (currentPopupRef.current) {
-        currentPopupRef.current.setMap(null);
-        currentPopupRef.current = null;
-        currentPopupNoteIdRef.current = null;
-      }
+      closePopup();
       setActiveNoteRef.current(null);
     });
 
