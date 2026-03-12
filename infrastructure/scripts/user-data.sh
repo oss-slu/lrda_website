@@ -4,8 +4,8 @@
 # API runs on port 3002 via PM2, proxied through Nginx with Cloudflare Origin CA
 set -e
 
-# Log everything
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+# Log everything (POSIX-compatible -- Lightsail prepends a #!/bin/sh wrapper)
+exec > /var/log/user-data.log 2>&1
 
 echo "Starting LRDA server setup..."
 
@@ -37,15 +37,20 @@ openssl req -x509 -newkey rsa:2048 -keyout /etc/ssl/cloudflare/origin-key.pem \
   -subj "/CN=placeholder.${domain_name}" 2>/dev/null
 chmod 600 /etc/ssl/cloudflare/origin-key.pem
 
-# Configure PostgreSQL (use ALTER USER to avoid SQL injection from special chars in password)
-sudo -u postgres psql << EOF
+# Configure PostgreSQL
+# Quoted heredocs ('EOF') prevent shell from expanding $ in Terraform-resolved values
+sudo -u postgres psql << 'EOF'
 CREATE USER lrda_app;
 CREATE DATABASE lrda_${environment} OWNER lrda_app;
 GRANT ALL PRIVILEGES ON DATABASE lrda_${environment} TO lrda_app;
 \c lrda_${environment}
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 EOF
-sudo -u postgres psql -c "ALTER USER lrda_app PASSWORD '$(echo "${db_password}" | sed "s/'/''/g")';"
+
+# Set password with quoted heredoc (password may contain $ or other shell-special chars)
+sudo -u postgres psql << 'EOF'
+ALTER USER lrda_app PASSWORD '${db_password}';
+EOF
 
 # Configure PostgreSQL to allow local connections
 echo "host lrda_${environment} lrda_app 127.0.0.1/32 md5" >> /etc/postgresql/17/main/pg_hba.conf
@@ -55,14 +60,18 @@ systemctl restart postgresql
 mkdir -p /home/ubuntu/lrda
 chown ubuntu:ubuntu /home/ubuntu/lrda
 
-# Create environment file (populate secrets after first deploy)
-cat > /home/ubuntu/lrda/.env << EOF
+# Generate a real BETTER_AUTH_SECRET
+AUTH_SECRET=$(openssl rand -hex 32)
+
+# Create environment file
+# Quoted heredoc ('EOF') prevents shell expansion of $ in password and other values
+cat > /home/ubuntu/lrda/.env << 'EOF'
 ENVIRONMENT=${environment}
 PORT=3002
 DATABASE_URL=postgresql://lrda_app:${db_password}@localhost:5432/lrda_${environment}
 
 # Better Auth
-BETTER_AUTH_SECRET=CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+BETTER_AUTH_SECRET=__AUTH_SECRET__
 BETTER_AUTH_URL=https://${api_subdomain}.${domain_name}
 WEB_URL=https://${frontend_origin}
 
@@ -76,6 +85,10 @@ EMAIL_FROM=noreply@wheresreligion.org
 # Google Maps (for reverse geocoding)
 GOOGLE_MAPS_API_KEY=
 EOF
+
+# Inject generated auth secret (openssl rand -hex only produces [0-9a-f], safe for sed)
+sed -i "s/__AUTH_SECRET__/$AUTH_SECRET/" /home/ubuntu/lrda/.env
+
 chown ubuntu:ubuntu /home/ubuntu/lrda/.env
 chmod 600 /home/ubuntu/lrda/.env
 
@@ -101,6 +114,7 @@ chown ubuntu:ubuntu /home/ubuntu/lrda/ecosystem.config.cjs
 # SSL: Cloudflare Origin CA cert. Install cert/key after terraform apply:
 #   terraform output -raw origin_ca_certificate > /etc/ssl/cloudflare/origin.pem
 #   terraform output -raw origin_ca_private_key > /etc/ssl/cloudflare/origin-key.pem
+# NOTE: This heredoc is intentionally UNQUOTED so \$ becomes $ in the nginx config
 cat > /etc/nginx/sites-available/lrda << NGINX
 server {
     listen 80;
@@ -141,9 +155,7 @@ echo "LRDA server setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Install Origin CA cert from Terraform outputs:"
-echo "   terraform output -raw origin_ca_certificate | sudo tee /etc/ssl/cloudflare/origin.pem"
-echo "   terraform output -raw origin_ca_private_key | sudo tee /etc/ssl/cloudflare/origin-key.pem"
-echo "   sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem"
-echo "   sudo nginx -t && sudo systemctl reload nginx"
-echo "2. Edit /home/ubuntu/lrda/.env with real secrets"
-echo "3. Run: /home/ubuntu/lrda/deploy.sh"
+echo "   tofu output -raw origin_ca_certificate | ssh ubuntu@<IP> 'sudo tee /etc/ssl/cloudflare/origin.pem > /dev/null'"
+echo "   tofu output -raw origin_ca_private_key | ssh ubuntu@<IP> 'sudo tee /etc/ssl/cloudflare/origin-key.pem > /dev/null && sudo chmod 600 /etc/ssl/cloudflare/origin-key.pem'"
+echo "   ssh ubuntu@<IP> 'sudo nginx -t && sudo systemctl reload nginx'"
+echo "2. Run deploy.sh on the server"

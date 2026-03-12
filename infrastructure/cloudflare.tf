@@ -91,32 +91,6 @@ resource "cloudflare_origin_ca_certificate" "api" {
 }
 
 # -----------------------------------------------------------------------------
-# Redirect: www -> apex
-# -----------------------------------------------------------------------------
-resource "cloudflare_ruleset" "redirects" {
-  zone_id = local.zone_id
-  name    = "Redirects"
-  kind    = "zone"
-  phase   = "http_request_dynamic_redirect"
-
-  rules = [{
-    action      = "redirect"
-    enabled     = true
-    expression  = "(http.host eq \"www.${var.domain_name}\")"
-    description = "www to apex redirect"
-
-    action_parameters = {
-      from_value = {
-        status_code = 301
-        target_url = {
-          expression = "concat(\"https://${var.domain_name}\", http.request.uri.path)"
-        }
-      }
-    }
-  }]
-}
-
-# -----------------------------------------------------------------------------
 # Cache Rules - bypass cache for API
 # -----------------------------------------------------------------------------
 resource "cloudflare_ruleset" "cache" {
