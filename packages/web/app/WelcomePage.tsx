@@ -62,7 +62,7 @@ export default function WelcomePage() {
         <div className='flex h-screen flex-1 flex-col justify-center px-6 py-16 sm:px-12 lg:px-20 lg:py-24'>
           <div className='max-w-2xl'>
             {/* Main heading */}
-            <h1
+            <h2
               className={`mb-6 text-5xl leading-tight font-black text-gray-900 sm:text-6xl lg:text-7xl ${ANIMATE_CLASS}`}
               style={{ animationDelay: '0.2s' }}
             >
@@ -70,7 +70,7 @@ export default function WelcomePage() {
               <span className='bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700 bg-clip-text text-transparent'>
                 religious landscape
               </span>
-            </h1>
+            </h2>
 
             {/* Subheading */}
             <p
