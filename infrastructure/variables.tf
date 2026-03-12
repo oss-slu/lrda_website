@@ -53,11 +53,6 @@ variable "cloudflare_api_token" {
   default     = ""
 }
 
-variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (Dashboard -> Overview -> right sidebar)"
-  type        = string
-}
-
 variable "create_api_dns" {
   description = "Create API DNS record pointing to AWS (set true after instance is deployed)"
   type        = bool

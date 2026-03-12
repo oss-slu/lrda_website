@@ -29,8 +29,13 @@ apt-get install -y postgresql-17
 # Install Nginx and git
 apt-get install -y nginx git
 
-# Create directory for Cloudflare Origin CA cert
+# Create directory and placeholder self-signed cert for Cloudflare Origin CA
+# (nginx needs a cert to start; replace with real Origin CA cert after terraform apply)
 mkdir -p /etc/ssl/cloudflare
+openssl req -x509 -newkey rsa:2048 -keyout /etc/ssl/cloudflare/origin-key.pem \
+  -out /etc/ssl/cloudflare/origin.pem -days 1 -nodes \
+  -subj "/CN=placeholder.${domain_name}" 2>/dev/null
+chmod 600 /etc/ssl/cloudflare/origin-key.pem
 
 # Configure PostgreSQL (use ALTER USER to avoid SQL injection from special chars in password)
 sudo -u postgres psql << EOF
@@ -82,8 +87,7 @@ module.exports = {
     cwd: '/home/ubuntu/lrda/packages/api',
     script: 'src/index.ts',
     interpreter: 'node',
-    interpreter_args: '--import tsx',
-    env_file: '/home/ubuntu/lrda/.env',
+    interpreter_args: '--env-file=/home/ubuntu/lrda/.env --import tsx',
     instances: 1,
     max_memory_restart: '512M',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -129,8 +133,8 @@ ln -sf /etc/nginx/sites-available/lrda /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
-# Set up PM2 to run on boot
-sudo -u ubuntu pm2 startup systemd -u ubuntu --hp /home/ubuntu
+# Set up PM2 to run on boot (user-data runs as root, so this installs the systemd unit directly)
+pm2 startup systemd -u ubuntu --hp /home/ubuntu
 systemctl enable pm2-ubuntu
 
 echo "LRDA server setup complete!"

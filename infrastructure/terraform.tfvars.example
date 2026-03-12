@@ -28,9 +28,6 @@ db_password = "your_secure_password_here"
 key_pair_name = "lrda-ec2"
 
 # Cloudflare Configuration
-# Account ID: Dashboard > Overview > right sidebar
-cloudflare_account_id = "your_cloudflare_account_id"
-
 # API Token: My Profile > API Tokens > Create Token
 # Needs: Zone:DNS:Edit, Zone:SSL:Edit, Zone:Settings:Read for your domain
 cloudflare_api_token = "your_cloudflare_api_token"
