@@ -9,12 +9,13 @@ resource "aws_lightsail_instance" "web" {
   key_pair_name     = var.key_pair_name
 
   user_data = templatefile("${path.module}/scripts/user-data.sh", {
-    db_password = var.db_password
-    domain_name = var.domain_name
-    aws_region  = var.aws_region
-    environment = var.environment
-    api_subdomain   = var.environment == "production" ? "api" : "api-staging"
-    frontend_origin = var.environment == "production" ? var.domain_name : "staging.${var.domain_name}"
+    db_password         = var.db_password
+    db_password_encoded = urlencode(var.db_password)
+    domain_name         = var.domain_name
+    aws_region          = var.aws_region
+    environment         = var.environment
+    api_subdomain       = var.environment == "production" ? "api" : "api-staging"
+    frontend_origin     = var.environment == "production" ? var.domain_name : "staging.${var.domain_name}"
   })
 
   tags = {

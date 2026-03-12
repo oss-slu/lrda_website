@@ -68,7 +68,7 @@ AUTH_SECRET=$(openssl rand -hex 32)
 cat > /home/ubuntu/lrda/.env << 'EOF'
 ENVIRONMENT=${environment}
 PORT=3002
-DATABASE_URL=postgresql://lrda_app:${db_password}@localhost:5432/lrda_${environment}
+DATABASE_URL=postgresql://lrda_app:${db_password_encoded}@localhost:5432/lrda_${environment}
 
 # Better Auth
 BETTER_AUTH_SECRET=__AUTH_SECRET__
