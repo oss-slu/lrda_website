@@ -58,9 +58,10 @@ COPY --from=deps /app/pnpm-workspace.yaml ./
 COPY --from=deps /app/packages/api/package.json ./packages/api/
 COPY --from=deps /app/packages/shared/package.json ./packages/shared/
 
-# Copy drizzle config + schema (needed for drizzle-kit push during deploy)
+# Copy drizzle config, schema, and migration files (needed for drizzle-kit migrate during deploy)
 COPY --from=build /app/packages/api/drizzle.config.ts ./packages/api/
 COPY --from=build /app/packages/api/src/db/schema.ts ./packages/api/src/db/
+COPY --from=build /app/packages/api/drizzle/ ./packages/api/drizzle/
 
 WORKDIR /app/packages/api
 
