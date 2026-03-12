@@ -56,10 +56,12 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to Lig
 ### How It Works
 
 **State tracking:** Nginx upstream config files in `/etc/nginx/conf.d/`:
+
 - `upstream-blue.conf` active + `upstream-green.conf.disabled` = Blue serving traffic
 - `upstream-green.conf` active + `upstream-blue.conf.disabled` = Green serving traffic
 
 **Deploy flow:**
+
 1. GitHub Actions builds Docker image and pushes to GHCR (tagged `sha-<commit>` + `latest`)
 2. GitHub Actions SSHs into Lightsail and runs `deploy.sh <image_tag>`
 3. deploy.sh determines which color is currently active
@@ -72,6 +74,7 @@ Same Dockerfile, same topology. Tests the full deploy flow before pushing to Lig
 10. If unhealthy: stop new container, keep old running. Zero downtime.
 
 **Why this approach:**
+
 - `nginx reload` is graceful -- new workers fork with new config while old workers finish existing connections. No dropped requests.
 - Health check bypasses Nginx to test the container directly before switching traffic
 - Rollback is automatic on failure -- old container never stops if new one is unhealthy
@@ -161,6 +164,7 @@ CMD ["node", "--import", "tsx", "packages/api/dist/index.js"]
 ```
 
 **Key design decisions:**
+
 - `--no-optional` skips `firebase-admin` (~100MB) -- only needed for sync scripts which don't run in the container
 - `tsx` is required at runtime because `@lrda/shared` exports raw `.ts` files and `tsc` doesn't rewrite import specifiers (e.g., `from '@lrda/shared/schemas'` resolves to `packages/shared/src/schemas/index.ts`)
 - `drizzle-kit` + schema are included so deploy.sh can run `drizzle-kit push` from a temporary container
@@ -243,7 +247,7 @@ services:
     container_name: lrda-prod-local-pg
     restart: unless-stopped
     ports:
-      - "5434:5432"  # Different host port to avoid conflict with dev PG on 5433
+      - '5434:5432' # Different host port to avoid conflict with dev PG on 5433
     environment:
       POSTGRES_USER: lrda_app
       POSTGRES_PASSWORD: lrda_local_prod
@@ -251,7 +255,7 @@ services:
     volumes:
       - prod_local_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lrda_app -d lrda_production"]
+      test: ['CMD-SHELL', 'pg_isready -U lrda_app -d lrda_production']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -264,7 +268,7 @@ services:
       dockerfile: packages/api/Dockerfile
     container_name: lrda-api-blue
     ports:
-      - "3002:3002"
+      - '3002:3002'
     environment:
       NODE_ENV: production
       PORT: 3002
@@ -284,7 +288,7 @@ services:
       dockerfile: packages/api/Dockerfile
     container_name: lrda-api-green
     ports:
-      - "3003:3002"
+      - '3003:3002'
     environment:
       NODE_ENV: production
       PORT: 3002
@@ -296,7 +300,7 @@ services:
       postgres:
         condition: service_healthy
     profiles:
-      - green  # Only started when explicitly requested
+      - green # Only started when explicitly requested
     networks:
       - lrda-prod-local
 
@@ -304,7 +308,7 @@ services:
     image: nginx:alpine
     container_name: lrda-prod-local-nginx
     ports:
-      - "8080:80"
+      - '8080:80'
     volumes:
       - ./infrastructure/nginx/local.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -345,7 +349,13 @@ services:
     environment:
       PORT: 3002
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3002/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 3s
       start_period: 5s
@@ -363,7 +373,13 @@ services:
     profiles:
       - green
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3003/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3003/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 3s
       start_period: 5s
@@ -640,6 +656,7 @@ jobs:
 ### 10. `infrastructure/scripts/user-data.sh`
 
 Key changes:
+
 - **Remove**: Node.js installation (`nodesource`), pnpm global install, PM2 installation, PM2 ecosystem config, PM2 systemd setup (`pm2 startup`)
 - **Add**: Docker CE installation (`curl -fsSL https://get.docker.com | bash`), `usermod -aG docker ubuntu`
 - **Change**: Nginx `proxy_pass` from `http://localhost:3002` to `http://lrda_api` (upstream block in separate file)
@@ -663,11 +680,11 @@ This file -- already updated.
 
 ## GitHub Secrets Needed
 
-| Secret | Description |
-|--------|-------------|
+| Secret                      | Description                       |
+| --------------------------- | --------------------------------- |
 | `LIGHTSAIL_SSH_PRIVATE_KEY` | PEM content of Lightsail key pair |
-| `LIGHTSAIL_HOST` | Static IP (`100.51.5.142`) |
-| `API_DOMAIN` | `api-staging.wheresreligion.org` |
+| `LIGHTSAIL_HOST`            | Static IP (`100.51.5.142`)        |
+| `API_DOMAIN`                | `api-staging.wheresreligion.org`  |
 
 `GITHUB_TOKEN` (automatic) handles GHCR auth with `packages: write` permission. No separate `GHCR_TOKEN` PAT is needed.
 
@@ -677,29 +694,31 @@ Optional: Create GitHub Environments (`staging`, `production`) with required rev
 
 ## Implementation Order
 
-| Step | What | Notes |
-|------|------|-------|
-| 1 | `packages/api/Dockerfile` + `.dockerignore` files | Core deliverable |
-| 2 | `docker-compose.prod-local.yml` + `infrastructure/nginx/local.conf` | Local test stack |
-| 3 | **Test locally**: build image, run stack, verify health | Catch issues before touching server |
-| 4 | `docker-compose.prod.yml` | Production compose |
-| 5 | `infrastructure/scripts/deploy.sh` | Blue/green logic |
-| 6 | `scripts/backup-db.sh` | Independent |
-| 7 | `infrastructure/scripts/user-data.sh` | Docker CE replaces PM2/Node.js |
-| 8 | `.github/workflows/ci-cd.yml` | Add `workflow_call` trigger |
-| 9 | `.github/workflows/deploy.yml` | Manual deploy workflow |
-| 10 | Update docs | Reflect new architecture |
+| Step | What                                                                | Notes                               |
+| ---- | ------------------------------------------------------------------- | ----------------------------------- |
+| 1    | `packages/api/Dockerfile` + `.dockerignore` files                   | Core deliverable                    |
+| 2    | `docker-compose.prod-local.yml` + `infrastructure/nginx/local.conf` | Local test stack                    |
+| 3    | **Test locally**: build image, run stack, verify health             | Catch issues before touching server |
+| 4    | `docker-compose.prod.yml`                                           | Production compose                  |
+| 5    | `infrastructure/scripts/deploy.sh`                                  | Blue/green logic                    |
+| 6    | `scripts/backup-db.sh`                                              | Independent                         |
+| 7    | `infrastructure/scripts/user-data.sh`                               | Docker CE replaces PM2/Node.js      |
+| 8    | `.github/workflows/ci-cd.yml`                                       | Add `workflow_call` trigger         |
+| 9    | `.github/workflows/deploy.yml`                                      | Manual deploy workflow              |
+| 10   | Update docs                                                         | Reflect new architecture            |
 
 ---
 
 ## Verification Checklist
 
 ### Phase 1: Docker build
+
 ```bash
 docker build -t lrda-api:test -f packages/api/Dockerfile .
 ```
 
 ### Phase 2: Local prod stack
+
 ```bash
 docker compose -f docker-compose.prod-local.yml up --build -d
 curl http://localhost:8080/api/health   # through Nginx
@@ -710,6 +729,7 @@ docker compose -f docker-compose.prod-local.yml --profile green down -v
 ```
 
 ### Phase 3: Lightsail first deploy
+
 ```bash
 tofu destroy && tofu apply  # Fresh instance with Docker CE
 # Upload compose + deploy files, push image to GHCR, run deploy.sh
@@ -718,12 +738,14 @@ docker ps  # lrda-api-blue running
 ```
 
 ### Phase 4: Blue/green swap
+
 ```bash
 # Deploy again with a new image tag -- should swap to green
 docker ps  # lrda-api-green running, blue stopped
 ```
 
 ### Phase 5: GitHub Actions
+
 ```
 Actions > Deploy API > Run workflow > staging
 Watch: tests -> build -> SSH deploy -> external health check

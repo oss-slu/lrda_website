@@ -1,10 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import {
-  ErrorSchema,
-  UserSchema,
-  PublicUserSchema,
-  UserDetailSchema,
-} from '@lrda/shared';
+import { ErrorSchema, UserSchema, PublicUserSchema, UserDetailSchema } from '@lrda/shared';
 import { eq } from 'drizzle-orm';
 import { user } from '../db/schema';
 import { requireAuth } from '../middleware/auth';

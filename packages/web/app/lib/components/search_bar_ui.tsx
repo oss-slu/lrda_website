@@ -26,14 +26,14 @@ const SearchBarUI: React.FC<SearchBarUIProps> = ({
   return (
     <div className='relative w-full'>
       <Search
-        className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
+        className={`absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transition-colors ${
           isActive ? 'text-blue-500' : 'text-muted-foreground'
         }`}
       />
       <input
         type='text'
         placeholder={placeholder}
-        className={`h-10 w-full rounded-full border bg-white pl-10 pr-10 text-sm shadow-sm transition-all placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 md:h-11 md:text-base ${
+        className={`placeholder:text-muted-foreground h-10 w-full rounded-full border bg-white pr-10 pl-10 text-sm shadow-sm transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none md:h-11 md:text-base ${
           isActive ? 'border-blue-300 bg-blue-50/50' : 'border-border'
         }`}
         value={searchText}
@@ -46,7 +46,7 @@ const SearchBarUI: React.FC<SearchBarUIProps> = ({
         <button
           type='button'
           onClick={onClear}
-          className='absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600'
+          className='absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600'
           aria-label='Clear search'
         >
           <X className='h-4 w-4' />

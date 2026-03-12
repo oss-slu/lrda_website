@@ -2,7 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { fetchCreatorName } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Tag } from '@/app/types';
-import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X, Loader2 } from 'lucide-react';
+import {
+  CalendarDays,
+  UserCircle,
+  Tags,
+  Clock3,
+  FileAudio,
+  ImageIcon,
+  X,
+  Loader2,
+} from 'lucide-react';
 import {
   DialogContent,
   DialogDescription,
@@ -56,7 +65,7 @@ const ClickableNote: React.FC<{
   if (isPending || !note) {
     return (
       <DialogContent className='flex h-[100vh] flex-col items-center justify-center p-0 sm:max-w-[80%]'>
-        <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+        <Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
       </DialogContent>
     );
   }
@@ -96,7 +105,7 @@ const ClickableNote: React.FC<{
           </DialogDescription>
         )}
 
-        <div className='h-1 w-full rounded-full bg-black bg-opacity-70' />
+        <div className='h-1 w-full rounded-full bg-black/70' />
       </DialogHeader>
 
       {/* This is the scrollable main area */}
@@ -119,7 +128,7 @@ const ClickableNote: React.FC<{
           {note.audio.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <div className='flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border border-border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
+                <div className='border-border flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
                   <FileAudio className='h-6 w-6 stroke-[1.75]' />
                 </div>
               </PopoverTrigger>
@@ -132,7 +141,7 @@ const ClickableNote: React.FC<{
           {note.media.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <div className='flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border border-border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
+                <div className='border-border flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
                   <ImageIcon className='h-6 w-6 stroke-[1.75]' />
                 </div>
               </PopoverTrigger>

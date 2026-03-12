@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { useState, lazy, Suspense } from 'react';
 
-const ReactQueryDevtools = lazy(
-  () => import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
+const ReactQueryDevtools = lazy(() =>
+  import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
 );
 
 export default function QueryProvider({ children }: { children: React.ReactNode }) {

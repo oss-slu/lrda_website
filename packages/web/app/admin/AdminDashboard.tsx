@@ -394,7 +394,7 @@ export default function AdminDashboard({
               <CardContent>
                 {/* Search */}
                 <div className='relative mb-4'>
-                  <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
+                  <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400' />
                   <Input
                     placeholder='Search by name or email...'
                     value={searchQuery}
@@ -548,10 +548,7 @@ export default function AdminDashboard({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleRemove}
-                className='bg-red-600 hover:bg-red-700'
-              >
+              <AlertDialogAction onClick={handleRemove} className='bg-red-600 hover:bg-red-700'>
                 Remove
               </AlertDialogAction>
             </AlertDialogFooter>

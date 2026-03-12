@@ -44,8 +44,12 @@ describe('Login Page Component', () => {
 
   it('captures username input', () => {
     render(<Page />);
-    fireEvent.change(screen.getByPlaceholderText('m@example.com'), { target: { value: 'testuser' } });
-    expect((screen.getByPlaceholderText('m@example.com') as HTMLInputElement).value).toBe('testuser');
+    fireEvent.change(screen.getByPlaceholderText('m@example.com'), {
+      target: { value: 'testuser' },
+    });
+    expect((screen.getByPlaceholderText('m@example.com') as HTMLInputElement).value).toBe(
+      'testuser',
+    );
   });
 
   it('captures password input', () => {

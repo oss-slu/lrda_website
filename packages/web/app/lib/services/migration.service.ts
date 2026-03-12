@@ -17,10 +17,10 @@ interface MigrationStatus {
  */
 export async function checkMigrationStatus(email: string): Promise<boolean> {
   try {
-    const result = await fetchWithAuth<MigrationStatus>(
-      '/api/auth/migration-status',
-      { method: 'POST', body: JSON.stringify({ email }) },
-    );
+    const result = await fetchWithAuth<MigrationStatus>('/api/auth/migration-status', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
     return result.needsPasswordReset;
   } catch {
     return false;

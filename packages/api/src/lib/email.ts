@@ -20,7 +20,10 @@ async function sendEmail({ to, subject, text, url }: SendEmailParams): Promise<v
   }
 
   if (!resend) {
-    console.error('[email] Resend not initialized -- RESEND_API_KEY is missing', JSON.stringify({ to, subject }));
+    console.error(
+      '[email] Resend not initialized -- RESEND_API_KEY is missing',
+      JSON.stringify({ to, subject }),
+    );
     throw new Error('Email service not configured: RESEND_API_KEY is missing');
   }
 

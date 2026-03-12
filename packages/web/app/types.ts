@@ -4,7 +4,6 @@ import type { Tag, CommentPosition } from '@lrda/shared';
 // Re-export shared types so existing imports from '@/app/types' keep working
 export type { Tag, CommentPosition };
 
-
 export type Comment = CommentData;
 
 // Media types -- discriminated union on the `type` field.
@@ -95,4 +94,3 @@ export type newNote = {
   approvalRequested?: boolean | undefined;
   tags: Tag[];
 };
-

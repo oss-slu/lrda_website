@@ -126,8 +126,8 @@ export default function CommentSidebar({
   };
 
   return (
-    <div className='flex h-full w-full flex-col overflow-hidden border-t bg-white p-2.5 sm:p-3 md:w-80 md:border-l md:border-t-0'>
-      <h2 className='mb-2.5 flex-shrink-0 text-sm font-semibold sm:mb-3 sm:text-base'>Comments</h2>
+    <div className='flex h-full w-full flex-col overflow-hidden border-t bg-white p-2.5 sm:p-3 md:w-80 md:border-t-0 md:border-l'>
+      <h2 className='mb-2.5 shrink-0 text-sm font-semibold sm:mb-3 sm:text-base'>Comments</h2>
 
       <ScrollArea className='min-h-0 flex-1 overflow-y-auto pr-1'>
         <CommentThreadList
@@ -143,7 +143,7 @@ export default function CommentSidebar({
       </ScrollArea>
 
       {canComment && (
-        <div className='mt-auto border-t bg-white pb-2 pt-2'>
+        <div className='mt-auto border-t bg-white pt-2 pb-2'>
           {showPopover ?
             <CommentPopover
               initialValue={commentDraft}

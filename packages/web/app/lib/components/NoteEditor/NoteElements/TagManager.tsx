@@ -116,9 +116,7 @@ const TagManager: React.FC<TagManagerProps> = ({
           <span
             key={index}
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              tag.origin === 'ai'
-                ? 'bg-purple-50 text-purple-700'
-                : 'bg-gray-100 text-gray-700'
+              tag.origin === 'ai' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'
             }`}
           >
             {tag.label}
@@ -126,9 +124,9 @@ const TagManager: React.FC<TagManagerProps> = ({
               <button
                 onClick={() => removeTag(tag.label)}
                 className={`-mr-0.5 ml-0.5 rounded-full p-0.5 transition-colors ${
-                  tag.origin === 'ai'
-                    ? 'hover:bg-purple-200 hover:text-purple-900'
-                    : 'hover:bg-gray-300 hover:text-gray-900'
+                  tag.origin === 'ai' ?
+                    'hover:bg-purple-200 hover:text-purple-900'
+                  : 'hover:bg-gray-300 hover:text-gray-900'
                 }`}
               >
                 <X className='h-3 w-3' />

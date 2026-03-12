@@ -47,11 +47,9 @@ export function CommentThreadList({
             <div className='min-w-0'>
               <p className='truncate text-[13px] font-semibold sm:text-sm'>
                 {root.authorName}
-                {root.resolved && (
-                  <span className='ml-2 text-xs text-green-600'>(Resolved)</span>
-                )}
+                {root.resolved && <span className='ml-2 text-xs text-green-600'>(Resolved)</span>}
               </p>
-              <p className='whitespace-pre-wrap break-words text-[12px] text-gray-700 sm:text-xs'>
+              <p className='text-[12px] break-words whitespace-pre-wrap text-gray-700 sm:text-xs'>
                 {root.text}
               </p>
               <p className='text-[10px] text-gray-400 sm:text-[11px]'>
@@ -86,10 +84,8 @@ export function CommentThreadList({
             <div className='ml-2 space-y-1.5 border-l-2 border-blue-200 pl-2 sm:ml-3 sm:pl-3'>
               {replies.map(r => (
                 <div key={r.id}>
-                  <p className='truncate text-[12px] font-medium sm:text-xs'>
-                    {r.authorName}
-                  </p>
-                  <p className='whitespace-pre-wrap break-words text-[12px] text-gray-700 sm:text-xs'>
+                  <p className='truncate text-[12px] font-medium sm:text-xs'>{r.authorName}</p>
+                  <p className='text-[12px] break-words whitespace-pre-wrap text-gray-700 sm:text-xs'>
                     {r.text}
                   </p>
                   <div className='flex items-center justify-between'>
@@ -115,12 +111,10 @@ export function CommentThreadList({
           {canComment && !root.resolved && (
             <div className='mt-1.5 flex gap-1.5'>
               <input
-                className='flex-1 rounded border border-gray-300 px-2 py-1 text-[12px] focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-200 sm:text-xs'
+                className='flex-1 rounded border border-gray-300 px-2 py-1 text-[12px] focus:border-blue-400 focus:ring-1 focus:ring-blue-200 focus:outline-none sm:text-xs'
                 placeholder='Reply...'
                 value={replyDrafts[root.threadId || root.id] || ''}
-                onChange={e =>
-                  onReplyDraftChange(root.threadId || root.id, e.target.value)
-                }
+                onChange={e => onReplyDraftChange(root.threadId || root.id, e.target.value)}
               />
               <Button
                 size='sm'

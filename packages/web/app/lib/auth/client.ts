@@ -37,4 +37,3 @@ export async function getCurrentSession() {
 export async function signOut() {
   return authClient.signOut();
 }
-

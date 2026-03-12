@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/app/types';
@@ -15,10 +15,7 @@ import { useViewportNotes } from '@/app/lib/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/app/lib/hooks/useMapLocation';
 import { useMapMarkers } from '@/app/lib/hooks/useMapMarkers';
 import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
-import {
-  filterNotesByMapBounds,
-  filterNotesByTitleAndTags,
-} from '@/app/lib/utils/mapUtils';
+import { filterNotesByMapBounds, filterNotesByTitleAndTags } from '@/app/lib/utils/mapUtils';
 import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
 
 export const Route = createFileRoute('/map')({
@@ -26,7 +23,7 @@ export const Route = createFileRoute('/map')({
     meta: [{ title: "Map | Where's Religion?" }],
   }),
   component: MapPage,
-})
+});
 
 interface Refs {
   [key: string]: HTMLElement | undefined;
@@ -128,7 +125,14 @@ function MapPage() {
       return filterNotesByTitleAndTags(personalNotes, searchQuery);
     }
     return filterNotesByMapBounds(mapBounds, personalNotes);
-  }, [isGlobalView, viewportNotes, personalNotes, searchQuery, mapBounds, isNoteSelectedFromSearch]);
+  }, [
+    isGlobalView,
+    viewportNotes,
+    personalNotes,
+    searchQuery,
+    mapBounds,
+    isNoteSelectedFromSearch,
+  ]);
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);

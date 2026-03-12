@@ -51,7 +51,7 @@ export default function ContributorCard({
 
           {/* Role tag */}
           <div className='mb-2 inline-block self-start'>
-            <span className='rounded border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/90 backdrop-blur-sm'>
+            <span className='rounded border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white/90 uppercase backdrop-blur-sm'>
               {role}
             </span>
           </div>
@@ -61,7 +61,7 @@ export default function ContributorCard({
 
           {/* Social links bottom right */}
           {socials && (
-            <div className='absolute bottom-5 right-5 flex gap-2'>
+            <div className='absolute right-5 bottom-5 flex gap-2'>
               {socials.github && (
                 <a
                   href={socials.github}

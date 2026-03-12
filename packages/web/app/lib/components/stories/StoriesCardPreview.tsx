@@ -111,7 +111,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
     >
       {/* Cover Image - Reduced height */}
       {isValidImageUrl ?
-        <div className='relative h-40 w-full flex-shrink-0'>
+        <div className='relative h-40 w-full shrink-0'>
           {isImageLoading && (
             <div className='absolute inset-0 z-10 flex items-center justify-center bg-gray-100'>
               <div className='h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600' />
@@ -125,7 +125,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
             onError={() => setIsImageLoading(false)}
           />
         </div>
-      : <div className='flex h-40 w-full flex-shrink-0 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200'>
+      : <div className='flex h-40 w-full shrink-0 items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200'>
           <ImageIcon
             aria-label='No photo present'
             className='text-gray-400'
@@ -144,15 +144,15 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
 
         {/* Creator */}
         <div className='mb-2 flex items-center text-xs text-gray-600'>
-          <UserCircle size={14} className='mr-1.5 flex-shrink-0' />
+          <UserCircle size={14} className='mr-1.5 shrink-0' />
           <span className='truncate text-sm'>{creator}</span>
         </div>
 
         {/* Date - Compact */}
         <div className='mb-2 flex items-center gap-2 text-xs text-gray-500'>
-          <CalendarDays size={12} className='flex-shrink-0' />
+          <CalendarDays size={12} className='shrink-0' />
           <span className='truncate'>{formatDate(note.time)}</span>
-          <Clock3 size={12} className='flex-shrink-0' />
+          <Clock3 size={12} className='shrink-0' />
           <span className='truncate'>{formatTime(note.time)}</span>
         </div>
 
@@ -171,7 +171,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
                   e.stopPropagation();
                 }}
               >
-                <MapPin size={12} className='flex-shrink-0' />
+                <MapPin size={12} className='shrink-0' />
                 <span className='truncate text-xs'>{location}</span>
               </button>
             </StoryMapPopover>

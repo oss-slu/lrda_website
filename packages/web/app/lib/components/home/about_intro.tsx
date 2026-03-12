@@ -12,7 +12,7 @@ export default function AboutIntro() {
     >
       {/* Background elements */}
       <div className='absolute inset-0 bg-gradient-to-bl from-slate-50 via-white to-blue-100/30'></div>
-      <div className='absolute right-10 top-20 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
+      <div className='absolute top-20 right-10 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
 
       <div className='relative z-10 mx-auto max-w-6xl px-4'>
         {/* Header section */}
@@ -34,7 +34,7 @@ export default function AboutIntro() {
             className={`rounded-r-lg border-l-4 border-blue-600 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 sm:p-8 ${motionVariants.fadeInUp}`}
             data-reveal={isVisible}
           >
-            <p className='text-lg italic leading-relaxed text-slate-800 sm:text-xl'>
+            <p className='text-lg leading-relaxed text-slate-800 italic sm:text-xl'>
               "Advancing the study of lived religion through rigorous scholarly methods that account
               for embodied experiences, improvised practices, material cultures, and shared spaces."
             </p>
@@ -136,7 +136,7 @@ export default function AboutIntro() {
               <div className='flex flex-col flex-wrap items-center justify-center gap-3 sm:flex-row'>
                 <Link
                   to='/wheres-religion'
-                  className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50'
+                  className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-md shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:ring-4 focus-visible:ring-blue-400/50 focus-visible:outline-none'
                 >
                   <span className='absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
                   <span className='relative flex items-center gap-2'>
@@ -158,7 +158,7 @@ export default function AboutIntro() {
                 </Link>
                 <a
                   href='/wheres-religion#faqs'
-                  className='inline-flex transform items-center justify-center rounded-xl border-2 border-blue-300 bg-white px-6 py-3 font-semibold text-blue-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2'
+                  className='inline-flex transform items-center justify-center rounded-xl border-2 border-blue-300 bg-white px-6 py-3 font-semibold text-blue-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:outline-none'
                 >
                   FAQs
                 </a>

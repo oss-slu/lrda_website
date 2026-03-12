@@ -97,7 +97,9 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
 
   return (
     <div className='flex items-center gap-2'>
-      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
+      >
         {badge.label}
       </span>
       <TooltipProvider>
@@ -105,17 +107,11 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
           <TooltipTrigger asChild>
             <button
               id={id}
-              className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+              className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none'
               onClick={handlePublishClick}
             >
-              <IconComponent
-                className={`h-4 w-4 ${iconClass}`}
-              />
-              <span
-                className={iconClass}
-              >
-                {labelText}
-              </span>
+              <IconComponent className={`h-4 w-4 ${iconClass}`} />
+              <span className={iconClass}>{labelText}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>{tooltipText}</TooltipContent>

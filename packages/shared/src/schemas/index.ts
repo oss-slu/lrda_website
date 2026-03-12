@@ -1,7 +1,4 @@
-export {
-  ErrorSchema,
-  SuccessSchema,
-} from './common';
+export { ErrorSchema, SuccessSchema } from './common';
 
 export {
   TagSchema,
@@ -22,14 +19,6 @@ export {
   UpdateCommentInputSchema,
 } from './comment';
 
-export {
-  UserSchema,
-  PublicUserSchema,
-  UserDetailSchema,
-} from './user';
+export { UserSchema, PublicUserSchema, UserDetailSchema } from './user';
 
-export {
-  AdminUserSchema,
-  PendingApplicationSchema,
-  StatsSchema,
-} from './admin';
+export { AdminUserSchema, PendingApplicationSchema, StatsSchema } from './admin';

@@ -210,7 +210,7 @@ Configure these secrets in your repository settings (Settings > Secrets and vari
 | `AWS_ACCESS_KEY_ID`     | IAM user access key          | `AKIA...`                 |
 | `AWS_SECRET_ACCESS_KEY` | IAM user secret key          | `wJalr...`                |
 | `DB_PASSWORD`           | PostgreSQL database password | `strong_password_123`     |
-| `DOMAIN_NAME`           | Your domain name             | `wheresreligion.org`       |
+| `DOMAIN_NAME`           | Your domain name             | `wheresreligion.org`      |
 | `SSH_ALLOWED_IPS`       | JSON array of allowed IPs    | `["1.2.3.4/32"]`          |
 | `KEY_PAIR_NAME`         | EC2 key pair name            | `lrda-staging-keypair`    |
 | `TF_ENVIRONMENT`        | (Optional) Environment name  | `staging` or `production` |
@@ -221,8 +221,8 @@ Note: If `TF_ENVIRONMENT` is not set, it defaults to `staging`.
 
 This configuration supports two environments:
 
-| Environment | API Subdomain                 | Frontend Origin           |
-| ----------- | ----------------------------- | ------------------------- |
+| Environment | API Subdomain                  | Frontend Origin            |
+| ----------- | ------------------------------ | -------------------------- |
 | staging     | api-staging.wheresreligion.org | staging.wheresreligion.org |
 | production  | api.wheresreligion.org         | wheresreligion.org         |
 

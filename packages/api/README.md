@@ -36,33 +36,33 @@ The API will be available at `http://localhost:3002` with docs at `http://localh
 
 Secrets are stored in `.env` (loaded via `--env-file`).
 
-| Variable             | Description                    |
-| -------------------- | ------------------------------ |
-| `PORT`               | Server port (default 3002)     |
-| `DATABASE_URL`       | PostgreSQL connection string   |
-| `BETTER_AUTH_SECRET` | Auth secret key                |
-| `BETTER_AUTH_URL`    | Auth callback URL              |
-| `RESEND_API_KEY`     | Email sending API key          |
-| `GOOGLE_MAPS_API_KEY`| Geocoding API key              |
-| `CORS_ORIGINS`       | Allowed origins                |
-| `WEB_URL`            | Frontend URL (for email links) |
+| Variable              | Description                    |
+| --------------------- | ------------------------------ |
+| `PORT`                | Server port (default 3002)     |
+| `DATABASE_URL`        | PostgreSQL connection string   |
+| `BETTER_AUTH_SECRET`  | Auth secret key                |
+| `BETTER_AUTH_URL`     | Auth callback URL              |
+| `RESEND_API_KEY`      | Email sending API key          |
+| `GOOGLE_MAPS_API_KEY` | Geocoding API key              |
+| `CORS_ORIGINS`        | Allowed origins                |
+| `WEB_URL`             | Frontend URL (for email links) |
 
 ## Scripts
 
 ### Development
 
-| Command         | Description                              |
-| --------------- | ---------------------------------------- |
-| `pnpm dev`      | Start dev server with file watching      |
-| `pnpm start`    | Start server (no watch)                  |
-| `pnpm test`     | Run tests in watch mode                  |
-| `pnpm test:run` | Run tests once                           |
+| Command         | Description                         |
+| --------------- | ----------------------------------- |
+| `pnpm dev`      | Start dev server with file watching |
+| `pnpm start`    | Start server (no watch)             |
+| `pnpm test`     | Run tests in watch mode             |
+| `pnpm test:run` | Run tests once                      |
 
 ### Docker
 
-| Command            | Description                          |
-| ------------------ | ------------------------------------ |
-| `pnpm docker:up`   | Start PostgreSQL container           |
+| Command              | Description                          |
+| -------------------- | ------------------------------------ |
+| `pnpm docker:up`     | Start PostgreSQL container           |
 | `pnpm docker:down-v` | Stop and remove PostgreSQL container |
 
 ### Database

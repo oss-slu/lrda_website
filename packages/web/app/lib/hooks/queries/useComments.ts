@@ -79,7 +79,9 @@ export function useCommentMutations(noteId: string) {
       await queryClient.cancelQueries({ queryKey: commentsKeys.forNote(noteId) });
 
       // Snapshot previous value
-      const previousComments = queryClient.getQueryData<CommentData[]>(commentsKeys.forNote(noteId));
+      const previousComments = queryClient.getQueryData<CommentData[]>(
+        commentsKeys.forNote(noteId),
+      );
 
       // Optimistically update
       queryClient.setQueryData<CommentData[]>(commentsKeys.forNote(noteId), old =>
@@ -107,7 +109,9 @@ export function useCommentMutations(noteId: string) {
     onMutate: async commentId => {
       await queryClient.cancelQueries({ queryKey: commentsKeys.forNote(noteId) });
 
-      const previousComments = queryClient.getQueryData<CommentData[]>(commentsKeys.forNote(noteId));
+      const previousComments = queryClient.getQueryData<CommentData[]>(
+        commentsKeys.forNote(noteId),
+      );
 
       // Optimistically remove the comment
       queryClient.setQueryData<CommentData[]>(commentsKeys.forNote(noteId), old =>

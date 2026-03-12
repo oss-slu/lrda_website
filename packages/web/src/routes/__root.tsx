@@ -1,30 +1,27 @@
 /// <reference types="vite/client" />
-import {
-  HeadContent,
-  Scripts,
-  createRootRoute,
-} from '@tanstack/react-router'
-import * as React from 'react'
+import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
+import * as React from 'react';
 
-import globalsCss from '@/app/globals.css?url'
-import introjsCustomCss from '@/app/introjs-custom.css?url'
-import introjsCss from 'intro.js/introjs.css?url'
+import globalsCss from '@/app/globals.css?url';
+import introjsCustomCss from '@/app/introjs-custom.css?url';
+import introjsCss from 'intro.js/introjs.css?url';
 
-import Navbar from '@/app/lib/components/navbar'
-import { Toaster } from '@/components/ui/sonner'
-import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext'
-import QueryProvider from '@/app/lib/components/QueryProvider'
-import { AuthProvider } from '@/app/lib/components/AuthProvider'
-import NotFound from '@/app/lib/components/NotFound'
-import RootError from '@/app/lib/components/RootError'
+import Navbar from '@/app/lib/components/navbar';
+import { Toaster } from '@/components/ui/sonner';
+import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext';
+import QueryProvider from '@/app/lib/components/QueryProvider';
+import { AuthProvider } from '@/app/lib/components/AuthProvider';
+import NotFound from '@/app/lib/components/NotFound';
+import RootError from '@/app/lib/components/RootError';
 
-const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null
+const TanStackRouterDevtools =
+  import.meta.env.PROD ?
+    () => null
   : React.lazy(() =>
-      import('@tanstack/react-router-devtools').then((res) => ({
+      import('@tanstack/react-router-devtools').then(res => ({
         default: res.TanStackRouterDevtools,
       })),
-    )
+    );
 
 export const Route = createRootRoute({
   head: () => ({
@@ -32,7 +29,10 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: "Where's Religion?" },
-      { name: 'description', content: 'Document and map lived religion research with rich text, media, and geolocation.' },
+      {
+        name: 'description',
+        content: 'Document and map lived religion research with rich text, media, and geolocation.',
+      },
     ],
     links: [
       { rel: 'stylesheet', href: globalsCss },
@@ -44,31 +44,29 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
   errorComponent: RootError,
-})
+});
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <head>
         <HeadContent />
       </head>
-      <body className="flex h-screen flex-col">
+      <body className='flex h-screen flex-col'>
         <QueryProvider>
           <AuthProvider>
             <GoogleMapsProvider>
               <Navbar />
-              <div className="flex-grow overflow-y-auto scroll-smooth">
-                {children}
-              </div>
+              <div className='flex-grow overflow-y-auto scroll-smooth'>{children}</div>
               <Toaster />
             </GoogleMapsProvider>
           </AuthProvider>
         </QueryProvider>
         <React.Suspense fallback={null}>
-          <TanStackRouterDevtools position="bottom-right" />
+          <TanStackRouterDevtools position='bottom-right' />
         </React.Suspense>
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

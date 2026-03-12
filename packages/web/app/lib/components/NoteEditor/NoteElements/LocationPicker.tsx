@@ -114,7 +114,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   {
     geoError && (
-      <div className='tranform absolute left-1/2 top-16 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 text-red-600 shadow'>
+      <div className='tranform absolute top-16 left-1/2 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 text-red-600 shadow'>
         {geoError}
       </div>
     );
@@ -167,7 +167,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       <button
         onClick={handleToggleMap}
         // Allow viewing map even when disabled (read-only mode for instructors)
-        className={`group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
           disabled ? 'opacity-75' : ''
         }`}
         aria-label={disabled ? 'View location (read-only)' : 'Toggle map visibility'}
@@ -200,7 +200,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             aria-hidden='true'
           />
 
-          <div className='absolute left-2 top-2 z-50'>
+          <div className='absolute top-2 left-2 z-50'>
             <button
               onClick={handleToggleMap}
               className='rounded-full bg-white p-3 text-xl text-black shadow-md hover:bg-gray-200'
@@ -210,7 +210,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             </button>
           </div>
 
-          <div className='absolute left-1/2 top-2 z-50 w-4/5 -translate-x-1/2 transform md:w-2/5'>
+          <div className='absolute top-2 left-1/2 z-50 w-4/5 -translate-x-1/2 transform md:w-2/5'>
             <Autocomplete onLoad={auto => setAutocomplete(auto)} onPlaceChanged={onPlaceChanged}>
               <input
                 ref={searchBarRef}

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import EnhancedClickableNote from '@/app/lib/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/stories')({
     meta: [{ title: "Stories | Where's Religion?" }],
   }),
   component: StoriesPage,
-})
+});
 
 // Component to display user name with caching via TanStack Query
 const UserOption = ({ uid }: { uid: string }) => {
@@ -49,9 +49,11 @@ function StoriesPage() {
   const uniqueCreatorIds = useMemo(() => {
     if (!data?.pages) return [];
     const creators = new Set<string>();
-    data.pages.flatMap(page => page.data).forEach(note => {
-      if (note.creator) creators.add(note.creator);
-    });
+    data.pages
+      .flatMap(page => page.data)
+      .forEach(note => {
+        if (note.creator) creators.add(note.creator);
+      });
     return Array.from(creators);
   }, [data]);
 
@@ -148,12 +150,12 @@ function StoriesPage() {
 
       {/* Infinite Scroll Loader */}
       {allNotes.length > 0 && (
-        <div className='mb-4 mt-6 flex justify-center'>
+        <div className='mt-6 mb-4 flex justify-center'>
           {hasNextPage ?
             <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
               {isFetchingNextPage && (
                 <div
-                  className='h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary'
+                  className='border-t-primary h-6 w-6 animate-spin rounded-full border-2 border-gray-300'
                   aria-label='Loading more stories'
                 />
               )}

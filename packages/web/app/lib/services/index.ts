@@ -12,11 +12,7 @@ export { fetchWithAuth, buildQueryString, API_URL } from './api';
 
 // Notes service
 export { notesService } from './notes.service';
-export type {
-  NoteQueryOptions,
-  CreateNotePayload,
-  ApiNoteData,
-} from './notes.types';
+export type { NoteQueryOptions, CreateNotePayload, ApiNoteData } from './notes.types';
 
 // Users service
 export {
@@ -27,11 +23,7 @@ export {
   assignInstructor,
   fetchCreatorName,
 } from './users.service';
-export type {
-  UserProfile,
-  UpdateProfileOptions,
-  InstructorInfo,
-} from './users.types';
+export type { UserProfile, UpdateProfileOptions, InstructorInfo } from './users.types';
 
 // Comments service
 export { commentsService } from './comments.service';
@@ -44,16 +36,10 @@ export type {
 
 // Instructor service
 export { fetchStudents } from './instructor.service';
-export type {
-  StudentInfo,
-} from './instructor.types';
+export type { StudentInfo } from './instructor.types';
 
 // Media service
-export {
-  mediaService,
-  getVideoThumbnail,
-  getVideoDuration,
-} from './media.service';
+export { mediaService, getVideoThumbnail, getVideoDuration } from './media.service';
 
 // Tags service
 export { tagsService } from './tags.service';

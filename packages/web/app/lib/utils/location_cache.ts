@@ -68,4 +68,3 @@ export const getCachedLocation = async (
     return notFound;
   }
 };
-

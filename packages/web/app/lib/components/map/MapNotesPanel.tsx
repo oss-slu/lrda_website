@@ -34,10 +34,7 @@ const skeletonIndices = Array.from({ length: SKELETON_COUNT }, (_, i) => i);
 
 function SkeletonCard({ index }: { index: number }) {
   return (
-    <Card
-      className='overflow-hidden'
-      style={{ animationDelay: `${index * 75}ms` }}
-    >
+    <Card className='overflow-hidden' style={{ animationDelay: `${index * 75}ms` }}>
       <Skeleton className='aspect-[4/3] w-full' />
       <div className='space-y-2 p-3'>
         <Skeleton className='h-4 w-full' />
@@ -93,13 +90,13 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
         {/* Notes Panel */}
         <div
           className={cn(
-            'absolute right-0 top-0 z-30 h-full w-full overflow-y-auto border-l bg-background transition-transform duration-300 ease-in-out md:w-[34rem]',
+            'bg-background absolute top-0 right-0 z-30 h-full w-full overflow-y-auto border-l transition-transform duration-300 ease-in-out md:w-[34rem]',
             isPanelOpen ? 'translate-x-0' : 'translate-x-full',
           )}
           ref={notesListRef}
         >
           {/* Mobile header */}
-          <div className='sticky top-0 z-10 flex items-center justify-between border-b bg-card p-4 md:hidden'>
+          <div className='bg-card sticky top-0 z-10 flex items-center justify-between border-b p-4 md:hidden'>
             <h2 className='text-lg font-semibold'>Notes</h2>
             <Button
               variant='ghost'
@@ -115,17 +112,15 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
           <div className='grid grid-cols-1 content-start gap-4 p-4 lg:grid-cols-2'>
             {isLoading ?
               // Loading skeletons with staggered pulse
-              skeletonIndices.map(index => (
-                <SkeletonCard key={index} index={index} />
-              ))
+              skeletonIndices.map(index => <SkeletonCard key={index} index={index} />)
             : isError ?
               // Error state
               <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
-                <div className='mb-4 rounded-full bg-destructive/10 p-4'>
-                  <AlertCircle className='h-8 w-8 text-destructive' />
+                <div className='bg-destructive/10 mb-4 rounded-full p-4'>
+                  <AlertCircle className='text-destructive h-8 w-8' />
                 </div>
-                <h3 className='text-xl font-semibold text-foreground'>Failed to Load Notes</h3>
-                <p className='mt-2 max-w-sm text-center text-sm text-muted-foreground'>
+                <h3 className='text-foreground text-xl font-semibold'>Failed to Load Notes</h3>
+                <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
                   {errorMessage ||
                     'Something went wrong while loading notes. Please try again later.'}
                 </p>
@@ -138,7 +133,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
                   ref={el => {
                     if (el) noteRefs.current[note.id] = el;
                   }}
-                  className='cursor-pointer animate-in fade-in duration-200'
+                  className='animate-in fade-in cursor-pointer duration-200'
                   style={{
                     contentVisibility: 'auto',
                     containIntrinsicSize: 'auto 280px',
@@ -152,11 +147,11 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
               ))
               // Empty state
             : <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
-                <div className='mb-4 rounded-full bg-muted p-4'>
-                  <MapPin className='h-8 w-8 text-muted-foreground' />
+                <div className='bg-muted mb-4 rounded-full p-4'>
+                  <MapPin className='text-muted-foreground h-8 w-8' />
                 </div>
-                <h3 className='text-xl font-semibold text-foreground'>No Notes Found</h3>
-                <p className='mt-2 max-w-sm text-center text-sm text-muted-foreground'>
+                <h3 className='text-foreground text-xl font-semibold'>No Notes Found</h3>
+                <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
                   Try zooming out or moving the map to discover notes in other areas.
                 </p>
               </div>
@@ -167,8 +162,8 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
               <div className='col-span-full mt-4 flex min-h-10 justify-center'>
                 <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
                   {isLoadingMore && (
-                    <div className='flex items-center gap-2 text-muted-foreground'>
-                      <div className='h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                    <div className='text-muted-foreground flex items-center gap-2'>
+                      <div className='border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent' />
                       <span className='text-sm'>Loading more...</span>
                     </div>
                   )}

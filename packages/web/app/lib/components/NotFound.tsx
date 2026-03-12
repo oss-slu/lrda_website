@@ -10,19 +10,19 @@ export default function NotFound() {
     >
       {/* Animated background elements */}
       <div className='pointer-events-none absolute inset-0 overflow-hidden' aria-hidden='true'>
-        <div className='absolute left-10 top-20 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
+        <div className='absolute top-20 left-10 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
         <div
-          className='absolute bottom-20 right-10 h-96 w-96 animate-pulse rounded-full bg-sky-500/20 blur-3xl'
+          className='absolute right-10 bottom-20 h-96 w-96 animate-pulse rounded-full bg-sky-500/20 blur-3xl'
           style={{ animationDelay: '1s' }}
         />
-        <div className='animate-float absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-400/10 blur-3xl' />
+        <div className='animate-float absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-400/10 blur-3xl' />
       </div>
 
       {/* Main content */}
       <div className='relative z-10 mx-auto max-w-4xl px-6 py-12 text-center'>
         {/* 404 Number */}
         <div className='mb-8'>
-          <h1 className='bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 bg-clip-text text-9xl font-black leading-none text-transparent sm:text-[12rem]'>
+          <h1 className='bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 bg-clip-text text-9xl leading-none font-black text-transparent sm:text-[12rem]'>
             404
           </h1>
         </div>

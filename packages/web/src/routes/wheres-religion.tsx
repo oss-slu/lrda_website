@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/wheres-religion')({
     meta: [{ title: "About | Where's Religion?" }],
   }),
   component: WheresReligionPage,
-})
+});
 
 function WheresReligionPage() {
   const { ref: heroRef, isVisible: heroVisible } = useReveal<HTMLDivElement>();
@@ -24,9 +24,9 @@ function WheresReligionPage() {
       >
         {/* Animated background elements */}
         <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-          <div className='absolute left-10 top-20 h-72 w-72 animate-pulse rounded-full bg-blue-400/20 blur-3xl' />
+          <div className='absolute top-20 left-10 h-72 w-72 animate-pulse rounded-full bg-blue-400/20 blur-3xl' />
           <div
-            className='absolute bottom-20 right-10 h-96 w-96 animate-pulse rounded-full bg-blue-400/20 blur-3xl'
+            className='absolute right-10 bottom-20 h-96 w-96 animate-pulse rounded-full bg-blue-400/20 blur-3xl'
             style={{ animationDelay: '1s' }}
           />
         </div>
@@ -42,9 +42,9 @@ function WheresReligionPage() {
             <Button
               variant='outline'
               size='lg'
-              className='rounded-xl border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white/20 hover:text-white hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600'
+              className='rounded-xl border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white/20 hover:text-white hover:shadow-lg focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:outline-none'
             >
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back to About
+              <ArrowLeft className='mr-2 h-4 w-4' /> Back to About
             </Button>
           </Link>
         </div>
@@ -110,8 +110,8 @@ function WheresReligionPage() {
                 files and fractured across multiple digital projects. When researching and teaching
                 around religion in St. Louis, Rachel McBride Lindsey and Pauline Chen Lee, both
                 faculty at Saint Louis University, realized that there could be more generative uses
-                of digital research methods to increase knowledge--both public and academic--from the
-                materials they were encountering and collecting.
+                of digital research methods to increase knowledge--both public and academic--from
+                the materials they were encountering and collecting.
               </p>
               <p className='leading-relaxed'>
                 Where's Religion? is not finished. As a digital application, we envision several
@@ -170,7 +170,7 @@ function WheresReligionPage() {
                     Registered researchers agree to conduct their research ethically and in
                     accordance with the terms of use.
                   </p>
-                  <p className='rounded border border-slate-200 bg-white/50 p-3 italic leading-relaxed text-slate-600'>
+                  <p className='rounded border border-slate-200 bg-white/50 p-3 leading-relaxed text-slate-600 italic'>
                     Note: it is the responsibility of each researcher to determine if their research
                     requires approval through their local Institutional Review Board (IRB). Where's
                     Religion? is a platform for collecting and sharing research across multiple
@@ -207,7 +207,7 @@ function WheresReligionPage() {
 
           <CollapsibleSection title='What is "religion"?'>
             <div className='space-y-4 text-slate-700'>
-              <p className='font-medium italic leading-relaxed text-blue-700'>
+              <p className='leading-relaxed font-medium text-blue-700 italic'>
                 Spoiler: this is a trick question! Sort of.
               </p>
               <p className='leading-relaxed'>
@@ -286,11 +286,11 @@ function WheresReligionPage() {
                 <p className='mb-2 text-sm font-semibold text-slate-900'>
                   For bibliographic citations of the project:
                 </p>
-                <p className='mb-2 text-sm italic text-slate-700'>
+                <p className='mb-2 text-sm text-slate-700 italic'>
                   Lindsey, Rachel McBride and Miles Adam Park. Where's Religion?. Desktop ed., v.
                   1.0. Center on Lived Religion, Saint Louis University, [date of last access].
                 </p>
-                <p className='mb-2 text-sm italic text-slate-700'>
+                <p className='mb-2 text-sm text-slate-700 italic'>
                   Lindsey, Rachel McBride and Miles Adam Park. Where's Religion?. Mobile ed., v.
                   1.0. Center on Lived Religion, Saint Louis University, [date of last access].
                 </p>
@@ -405,9 +405,9 @@ function WheresReligionPage() {
             <Button
               variant='outline'
               size='lg'
-              className='rounded-xl border-2 border-blue-300 bg-white transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-white hover:text-slate-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2'
+              className='rounded-xl border-2 border-blue-300 bg-white transition-all duration-200 hover:scale-105 hover:border-blue-400 hover:bg-white hover:text-slate-900 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:outline-none'
             >
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back to About
+              <ArrowLeft className='mr-2 h-4 w-4' /> Back to About
             </Button>
           </Link>
         </div>

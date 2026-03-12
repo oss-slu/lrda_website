@@ -137,7 +137,9 @@ interface DumpUser {
 async function loadUsersFromFile() {
   log('info', `Loading users from ${DUMP_PATH}...`);
   if (!fs.existsSync(DUMP_PATH)) {
-    throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from Firebase API instead.`);
+    throw new Error(
+      `Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from Firebase API instead.`,
+    );
   }
   const dumpUsers: DumpUser[] = JSON.parse(fs.readFileSync(DUMP_PATH, 'utf-8'));
   log('info', `Loaded ${dumpUsers.length} users from file`);
@@ -192,26 +194,24 @@ async function syncUsers() {
         continue;
       }
 
-      const firestoreData = USE_REMOTE ? await fetchFirestoreUser(fbUser.uid) : (fbUser.firestoreData ?? null);
+      const firestoreData =
+        USE_REMOTE ? await fetchFirestoreUser(fbUser.uid) : (fbUser.firestoreData ?? null);
 
       const isInstructor =
-        firestoreData?.isInstructor === true ||
-        fbUser.customClaims?.instructor === true;
+        firestoreData?.isInstructor === true || fbUser.customClaims?.instructor === true;
 
       const firestoreRoles = firestoreData?.roles as Record<string, boolean> | undefined;
-      const isAdmin =
-        fbUser.customClaims?.admin === true ||
-        firestoreRoles?.administrator === true;
+      const isAdmin = fbUser.customClaims?.admin === true || firestoreRoles?.administrator === true;
 
       const instructorId =
-        typeof firestoreData?.parentInstructorId === 'string'
-          ? firestoreData.parentInstructorId
-          : null;
+        typeof firestoreData?.parentInstructorId === 'string' ?
+          firestoreData.parentInstructorId
+        : null;
 
       const pendingInstructorDescription =
-        typeof firestoreData?.pendingInstructorDescription === 'string'
-          ? firestoreData.pendingInstructorDescription
-          : null;
+        typeof firestoreData?.pendingInstructorDescription === 'string' ?
+          firestoreData.pendingInstructorDescription
+        : null;
 
       const name =
         (typeof firestoreData?.name === 'string' && firestoreData.name) ||
@@ -283,12 +283,13 @@ async function syncUsers() {
         log('info', `[DRY RUN] Would set instructorId=${instructorId} for user ${uid}`);
       } else {
         try {
-          await db
-            .update(schema.user)
-            .set({ instructorId })
-            .where(eq(schema.user.id, uid));
+          await db.update(schema.user).set({ instructorId }).where(eq(schema.user.id, uid));
         } catch (error) {
-          log('warn', `Failed to set instructorId for ${uid} (instructor ${instructorId} may not exist)`, error);
+          log(
+            'warn',
+            `Failed to set instructorId for ${uid} (instructor ${instructorId} may not exist)`,
+            error,
+          );
         }
       }
     }

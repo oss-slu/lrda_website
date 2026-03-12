@@ -8,15 +8,15 @@ Reference plan for setting up CI/CD, zero-downtime deploys, database backups, an
 
 ## Overview
 
-| Component | Tool | Notes |
-|-----------|------|-------|
-| Runtime | Bun | API is built and runs on Bun, not Node |
-| Process Manager | PM2 (fork mode) | Bun doesn't support Node cluster mode |
-| Reverse Proxy | Nginx | SSL via Cloudflare Origin CA (15-year cert, no renewal) |
-| Deploy Trigger | GitHub Actions (manual) | `workflow_dispatch` with environment choice |
-| DB Migrations | Auto on deploy | `drizzle-kit migrate` runs during each deploy |
-| DB Backups | Nightly cron | `pg_dump` to local disk, 7-day retention, optional S3 |
-| Rollback | Automatic | Health check failure triggers rollback to previous commit |
+| Component       | Tool                    | Notes                                                     |
+| --------------- | ----------------------- | --------------------------------------------------------- |
+| Runtime         | Bun                     | API is built and runs on Bun, not Node                    |
+| Process Manager | PM2 (fork mode)         | Bun doesn't support Node cluster mode                     |
+| Reverse Proxy   | Nginx                   | SSL via Cloudflare Origin CA (15-year cert, no renewal)   |
+| Deploy Trigger  | GitHub Actions (manual) | `workflow_dispatch` with environment choice               |
+| DB Migrations   | Auto on deploy          | `drizzle-kit migrate` runs during each deploy             |
+| DB Backups      | Nightly cron            | `pg_dump` to local disk, 7-day retention, optional S3     |
+| Rollback        | Automatic               | Health check failure triggers rollback to previous commit |
 
 ---
 
@@ -43,8 +43,12 @@ Shared shutdown flag (avoids circular imports between `index.ts` and `health.ts`
 
 ```typescript
 let _shutting = false;
-export function setShuttingDown(v: boolean) { _shutting = v; }
-export function isShuttingDown() { return _shutting; }
+export function setShuttingDown(v: boolean) {
+  _shutting = v;
+}
+export function isShuttingDown() {
+  return _shutting;
+}
 ```
 
 ### 2. `packages/api/ecosystem.config.cjs`
@@ -53,29 +57,31 @@ PM2 configuration for Bun in fork mode:
 
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'lrda-api',
-    interpreter: '/home/ubuntu/.bun/bin/bun',
-    script: 'dist/index.js',
-    cwd: '/home/ubuntu/lrda/packages/api',
-    exec_mode: 'fork',
-    instances: 1,
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3002,
+  apps: [
+    {
+      name: 'lrda-api',
+      interpreter: '/home/ubuntu/.bun/bin/bun',
+      script: 'dist/index.js',
+      cwd: '/home/ubuntu/lrda/packages/api',
+      exec_mode: 'fork',
+      instances: 1,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3002,
+      },
+      kill_timeout: 10000, // 10s for graceful shutdown before SIGKILL
+      listen_timeout: 10000,
+      error_file: '/home/ubuntu/lrda/logs/api-error.log',
+      out_file: '/home/ubuntu/lrda/logs/api-out.log',
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      max_restarts: 10,
+      min_uptime: 5000,
+      restart_delay: 1000,
+      autorestart: true,
+      watch: false,
     },
-    kill_timeout: 10000,       // 10s for graceful shutdown before SIGKILL
-    listen_timeout: 10000,
-    error_file: '/home/ubuntu/lrda/logs/api-error.log',
-    out_file: '/home/ubuntu/lrda/logs/api-out.log',
-    merge_logs: true,
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-    max_restarts: 10,
-    min_uptime: 5000,
-    restart_delay: 1000,
-    autorestart: true,
-    watch: false,
-  }],
+  ],
 };
 ```
 
@@ -185,6 +191,7 @@ echo "[backup] Done. $(find "${BACKUP_DIR}" -name "${DB_NAME}_*.sql.gz" | wc -l)
 ```
 
 Cron entry (added by `user-data.sh`):
+
 ```
 0 3 * * * DB_NAME=lrda_<environment> /home/ubuntu/lrda/scripts/backup-db.sh >> /home/ubuntu/logs/backup.log 2>&1
 ```
@@ -210,7 +217,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.event.inputs.environment }}
-  cancel-in-progress: false  # Never cancel an in-progress deploy
+  cancel-in-progress: false # Never cancel an in-progress deploy
 
 jobs:
   tests:
@@ -342,17 +349,17 @@ aws dynamodb create-table \
 
 ## Required GitHub Secrets
 
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `EC2_SSH_PRIVATE_KEY` | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
-| `EC2_HOST` | Elastic IP of EC2 instance | `54.123.45.67` |
-| `API_DOMAIN` | API domain for health checks | `api-staging.wheresreligion.org` |
-| `AWS_ACCESS_KEY_ID` | (already exists) | -- |
-| `AWS_SECRET_ACCESS_KEY` | (already exists) | -- |
-| `DB_PASSWORD` | (already exists) | -- |
-| `DOMAIN_NAME` | (already exists) | -- |
-| `SSH_ALLOWED_IPS` | (already exists) | -- |
-| `KEY_PAIR_NAME` | (already exists) | -- |
+| Secret                  | Description                             | Example                              |
+| ----------------------- | --------------------------------------- | ------------------------------------ |
+| `EC2_SSH_PRIVATE_KEY`   | PEM content of EC2 key pair private key | `-----BEGIN RSA PRIVATE KEY-----...` |
+| `EC2_HOST`              | Elastic IP of EC2 instance              | `54.123.45.67`                       |
+| `API_DOMAIN`            | API domain for health checks            | `api-staging.wheresreligion.org`     |
+| `AWS_ACCESS_KEY_ID`     | (already exists)                        | --                                   |
+| `AWS_SECRET_ACCESS_KEY` | (already exists)                        | --                                   |
+| `DB_PASSWORD`           | (already exists)                        | --                                   |
+| `DOMAIN_NAME`           | (already exists)                        | --                                   |
+| `SSH_ALLOWED_IPS`       | (already exists)                        | --                                   |
+| `KEY_PAIR_NAME`         | (already exists)                        | --                                   |
 
 Optionally: Create GitHub Environments (`staging`, `production`) with required reviewers on `production` for an extra approval gate.
 
@@ -378,6 +385,7 @@ Steps 1-4 are complete and can be tested locally. Steps 5-10 take effect when th
 ## Verification Checklist
 
 **Local testing (steps 1-4):**
+
 ```bash
 cd packages/api && bun run build && bun run dist/index.js &
 curl -v http://localhost:3002/api/health        # expect 200
@@ -387,6 +395,7 @@ curl -v http://localhost:3002/api/health        # expect 503
 ```
 
 **After EC2 is provisioned:**
+
 1. SSH in, verify `bun --version` works
 2. Verify Nginx: `cat /etc/nginx/sites-available/lrda` shows port 3002
 3. Clone repo, place `.env` at `packages/api/.env`, run `scripts/deploy.sh`
@@ -395,12 +404,14 @@ curl -v http://localhost:3002/api/health        # expect 503
 6. `pm2 logs` shows structured JSON output
 
 **CI/CD:**
+
 1. Push all changes to main
 2. GitHub Actions > Deploy API > Run workflow > staging
 3. Watch: tests pass -> SSH deploy -> external health check
 4. `curl https://api-staging.wheresreligion.org/api/health` returns 200
 
 **Backups:**
+
 ```bash
 DB_NAME=lrda_staging bash scripts/backup-db.sh
 ls -la /home/ubuntu/backups/db/    # expect timestamped .sql.gz file

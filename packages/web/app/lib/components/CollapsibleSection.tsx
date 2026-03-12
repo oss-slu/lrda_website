@@ -33,7 +33,7 @@ export function CollapsibleSection({
           <h3 className='text-xl font-bold text-slate-800 transition-colors group-hover:text-blue-700'>
             {title}
           </h3>
-          <div className='ml-4 flex-shrink-0'>
+          <div className='ml-4 shrink-0'>
             {isOpen ?
               <ChevronUp className='h-5 w-5 text-blue-600' />
             : <ChevronDown className='h-5 w-5 text-blue-600' />}

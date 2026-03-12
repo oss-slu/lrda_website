@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 interface GoogleMapsContextType {
@@ -65,10 +73,7 @@ export const GoogleMapsProvider: React.FC<{ children: ReactNode }> = ({ children
     setShouldLoad(true);
   }, []);
 
-  const value = useMemo(
-    () => ({ isMapsApiLoaded, requestLoad }),
-    [isMapsApiLoaded, requestLoad],
-  );
+  const value = useMemo(() => ({ isMapsApiLoaded, requestLoad }), [isMapsApiLoaded, requestLoad]);
 
   return (
     <GoogleMapsContext.Provider value={value}>

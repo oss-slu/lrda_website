@@ -14,6 +14,7 @@ This is the **Where's Religion?** desktop web application -- a TanStack Start pr
 This codebase has migrated off the legacy RERUM backend and Firebase Auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that still uses RERUM and Firebase.
 
 **Migration status:**
+
 1. The web app has migrated (RERUM + Firebase -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
 2. During the transition:
    - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend

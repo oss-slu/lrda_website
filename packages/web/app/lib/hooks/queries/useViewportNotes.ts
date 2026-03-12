@@ -34,8 +34,9 @@ export function useViewportNotes() {
   const isSearchMode = debouncedSearch.length > 0;
 
   return useQuery({
-    queryKey: isSearchMode
-      ? [...notesKeys.all, 'viewport', 'search', debouncedSearch]
+    queryKey:
+      isSearchMode ?
+        [...notesKeys.all, 'viewport', 'search', debouncedSearch]
       : [...notesKeys.all, 'viewport', debouncedBounds],
     queryFn: async () => {
       if (isSearchMode) {

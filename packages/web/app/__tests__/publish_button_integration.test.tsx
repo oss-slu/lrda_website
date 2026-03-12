@@ -36,7 +36,12 @@ describe('PublishToggle Integration Test', () => {
     });
 
     const { rerender } = render(
-      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={isPublished} onPublishClick={onPublishClickMock} />,
+      <PublishToggle
+        noteId='test-note'
+        userId='mockUserId'
+        isPublished={isPublished}
+        onPublishClick={onPublishClickMock}
+      />,
     );
 
     const button = screen.getByRole('button');
@@ -46,15 +51,18 @@ describe('PublishToggle Integration Test', () => {
 
     // Simulate parent state change
     rerender(
-      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={true} onPublishClick={onPublishClickMock} />,
+      <PublishToggle
+        noteId='test-note'
+        userId='mockUserId'
+        isPublished={true}
+        onPublishClick={onPublishClickMock}
+      />,
     );
     expect(screen.getByText('Unpublish')).toBeInTheDocument();
   });
 
   it('does not crash when onPublishClick is not provided', () => {
-    render(
-      <PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} />,
-    );
+    render(<PublishToggle noteId='test-note' userId='mockUserId' isPublished={false} />);
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     fireEvent.click(button);

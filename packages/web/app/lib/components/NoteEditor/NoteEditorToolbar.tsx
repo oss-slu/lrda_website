@@ -56,7 +56,9 @@ export default function NoteEditorToolbar({
               }),
               new Paragraph(`Content: ${plainTextContent}`),
               new Paragraph(`Tags: ${noteState.tags.map(tag => tag.label).join(', ')}`),
-              new Paragraph(`Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}`),
+              new Paragraph(
+                `Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}`,
+              ),
               new Paragraph(`Time: ${noteState.time}`),
             ],
           },
@@ -76,17 +78,17 @@ export default function NoteEditorToolbar({
   };
 
   const dateDisplay =
-    noteState.time instanceof Date && !isNaN(noteState.time.getTime())
-      ? noteState.time.toDateString()
-      : 'No date';
+    noteState.time instanceof Date && !isNaN(noteState.time.getTime()) ?
+      noteState.time.toDateString()
+    : 'No date';
   const locationDisplay =
-    noteState.latitude && noteState.longitude
-      ? `${noteState.latitude.toFixed(4)}, ${noteState.longitude.toFixed(4)}`
-      : 'No location';
+    noteState.latitude && noteState.longitude ?
+      `${noteState.latitude.toFixed(4)}, ${noteState.longitude.toFixed(4)}`
+    : 'No location';
 
   return (
     <>
-      {isViewingStudentNote ? (
+      {isViewingStudentNote ?
         <>
           <span className='inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-600'>
             <CalendarIcon className='h-4 w-4 text-gray-400' />
@@ -97,8 +99,7 @@ export default function NoteEditorToolbar({
             {locationDisplay}
           </span>
         </>
-      ) : (
-        <>
+      : <>
           <div ref={dateRef}>
             <TimePicker
               initialDate={noteState.time || new Date()}
@@ -127,11 +128,11 @@ export default function NoteEditorToolbar({
             />
           </div>
         </>
-      )}
+      }
       <Popover open={isDownloadPopoverOpen} onOpenChange={setIsDownloadPopoverOpen}>
         <PopoverTrigger asChild>
           <button
-            className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            className='group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
             aria-label='Download note'
           >
             <Download

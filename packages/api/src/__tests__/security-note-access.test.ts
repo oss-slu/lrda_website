@@ -40,8 +40,14 @@ describe('Security: Note Access Control (H1, H2)', () => {
   });
 
   afterAll(async () => {
-    await db.delete(note).where(eq(note.id, publishedNoteId)).catch(() => {});
-    await db.delete(note).where(eq(note.id, draftNoteId)).catch(() => {});
+    await db
+      .delete(note)
+      .where(eq(note.id, publishedNoteId))
+      .catch(() => {});
+    await db
+      .delete(note)
+      .where(eq(note.id, draftNoteId))
+      .catch(() => {});
     await cleanupUser(userA.userId);
     await cleanupUser(userB.userId);
   });

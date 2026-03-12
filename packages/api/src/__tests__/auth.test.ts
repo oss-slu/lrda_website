@@ -78,10 +78,7 @@ describe('Auth endpoints', () => {
 
       // Verify email in DB (requireEmailVerification is enabled)
       const signUpJson = signUpRes.json as { user: { id: string } };
-      await db
-        .update(user)
-        .set({ emailVerified: true })
-        .where(eq(user.id, signUpJson.user.id));
+      await db.update(user).set({ emailVerified: true }).where(eq(user.id, signUpJson.user.id));
 
       // Then sign in
       const res = await request(app, 'POST', '/api/auth/sign-in/email', {

@@ -81,10 +81,7 @@ app.post('/api/auth/migration-status', async c => {
     const result = await db
       .select({ userId: user.id, accountId: account.id })
       .from(user)
-      .leftJoin(
-        account,
-        and(eq(account.userId, user.id), eq(account.providerId, 'credential')),
-      )
+      .leftJoin(account, and(eq(account.userId, user.id), eq(account.providerId, 'credential')))
       .where(eq(user.email, emailValue))
       .limit(1);
 
@@ -104,10 +101,8 @@ app.all('/api/auth/*', async c => {
     new Request(c.req.raw.url, {
       method: c.req.method,
       headers: c.req.raw.headers,
-      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ?
-        c.req.raw.body :
-        undefined,
-    })
+      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? c.req.raw.body : undefined,
+    }),
   );
   return response;
 });
@@ -126,7 +121,10 @@ app.doc('/openapi.json', {
   servers: [
     {
       url: env.BETTER_AUTH_URL,
-      description: env.ENVIRONMENT === 'development' ? 'Development' : env.ENVIRONMENT.charAt(0).toUpperCase() + env.ENVIRONMENT.slice(1),
+      description:
+        env.ENVIRONMENT === 'development' ?
+          'Development'
+        : env.ENVIRONMENT.charAt(0).toUpperCase() + env.ENVIRONMENT.slice(1),
     },
   ],
 });
@@ -169,7 +167,7 @@ app.notFound(c => {
 // Start server
 import { serve } from '@hono/node-server';
 
-const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+const server = serve({ fetch: app.fetch, port: env.PORT }, info => {
   console.log(`API server running at http://localhost:${info.port}`);
   console.log(`API docs available at http://localhost:${info.port}/docs`);
 });

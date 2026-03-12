@@ -21,7 +21,7 @@ function getDatabaseUrl(): string {
   if (!url) {
     throw new Error(
       'DATABASE_URL not set.\n' +
-      'Make sure packages/api/.env exists with DATABASE_URL=postgresql://...',
+        'Make sure packages/api/.env exists with DATABASE_URL=postgresql://...',
     );
   }
   return url;

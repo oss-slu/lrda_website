@@ -1,137 +1,131 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-@layer utilities {
-  .card-container {
-    @apply aspect-w-1 aspect-h-1 m-4 overflow-hidden rounded-xl bg-white shadow-md;
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+
+  --primary: hsl(217.2 91.2% 59.8%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(210 40% 96.1%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
+
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
+
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(217.2 91.2% 59.8%);
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(222.2 84% 4.9%);
+  --foreground: hsl(210 40% 98%);
+
+  --card: hsl(222.2 84% 4.9%);
+  --card-foreground: hsl(210 40% 98%);
+
+  --popover: hsl(222.2 84% 4.9%);
+  --popover-foreground: hsl(210 40% 98%);
+
+  --primary: hsl(217.2 91.2% 59.8%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(217.2 32.6% 17.5%);
+  --secondary-foreground: hsl(210 40% 98%);
+
+  --muted: hsl(217.2 32.6% 17.5%);
+  --muted-foreground: hsl(215 20.2% 65.1%);
+
+  --accent: hsl(217.2 32.6% 17.5%);
+  --accent-foreground: hsl(210 40% 98%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --border: hsl(217.2 32.6% 17.5%);
+  --input: hsl(217.2 32.6% 17.5%);
+  --ring: hsl(217.2 91.2% 59.8%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-fade-in: fadeIn 1s ease-in forwards;
+  --animate-zoom-slow: zoomIn 10s ease-in-out infinite alternate;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
   }
-
-  /* Mobile-friendly utilities */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Mobile-first responsive containers */
-  .container-mobile {
-    @apply w-full px-4 sm:px-6 lg:px-8;
-  }
-
-  /* Touch-friendly button sizes */
-  .btn-touch {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  /* Mobile-safe spacing */
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .safe-left {
-    padding-left: env(safe-area-inset-left);
-  }
-
-  .safe-right {
-    padding-right: env(safe-area-inset-right);
+  100% {
+    opacity: 1;
   }
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217.2 91.2% 59.8%;
-
-    --radius: 0.5rem;
+@keyframes zoomIn {
+  0% {
+    transform: scale(1);
   }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 91.2% 59.8%;
+  100% {
+    transform: scale(1.1);
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+* {
+  border-color: var(--border);
+}
+body {
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 @media (max-width: 768px) {
   h1.text-9xl {
-    font-size: 4rem; /* Adjust the font size to fit the text on one line */
+    font-size: 4rem;
   }
 }
 
 @media (max-width: 640px) {
   h1.text-9xl {
-    font-size: 3rem; /* Further adjust the font size for even smaller screens */
+    font-size: 3rem;
   }
 }
 
@@ -273,7 +267,7 @@
   height: 20px;
   margin-left: -10px;
   top: -8px;
-  background: black; /* this would need to be changed w/ dark mode */
+  background: black;
   border-radius: 50px;
   box-shadow: rgba(134, 134, 134, 0.5) 0 0 5px;
 }
@@ -372,7 +366,7 @@
   margin-left: -6px;
   left: 0;
   top: -4px;
-  background: black; /* this would need to be changed w/ dark mode */
+  background: black;
   opacity: 0.9;
   border-radius: 50px;
   cursor: pointer;
@@ -422,10 +416,6 @@
   white-space: nowrap;
 }
 
-.text-gradient {
-  @apply text-transparent;
-}
-
 .clickable-note {
   transition:
     box-shadow 0.3s ease,
@@ -440,8 +430,6 @@
   transform: scale(1.05);
 }
 
-/*Always set the map height explicitly to define the size of the div element that contains the map.  */
-
 #map {
   height: 100%;
 }
@@ -453,18 +441,15 @@ body {
   padding: 0;
 }
 
-/* The popup container - positioned by JavaScript */
 .popup-container {
   position: absolute;
   cursor: auto;
 }
 
-/* The anchor just wraps the bubble */
 .popup-bubble-anchor {
   position: relative;
 }
 
-/* The popup bubble styling */
 .popup-bubble {
   background-color: white;
   padding: 0;
@@ -479,7 +464,6 @@ body {
   width: 220px;
 }
 
-/* Remove card border/shadow inside popup since popup has its own */
 .popup-bubble .rounded-lg {
   border: none;
   box-shadow: none;
@@ -494,19 +478,16 @@ body {
   }
 }
 
-/* Add this to your global stylesheet */
 .scroll-shadow::after {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 20px; /* Adjust width as needed */
+  width: 20px;
   background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 100%);
-  pointer-events: none; /* This ensures the shadow doesn't interfere with clicking or scrolling */
+  pointer-events: none;
 }
-
-/* Intro.js custom styles are imported from introjs-custom.css */
 
 @keyframes pulse-subtle {
   0%,
@@ -573,21 +554,19 @@ body {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-/* Hover effect */
 .custom-marker:hover {
   transform: scale(1.15);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .custom-marker:hover .marker-body {
-  fill: #2563eb; /* Change to blue when hovering */
+  fill: #2563eb;
 }
 
 .custom-marker .marker-body {
   transition: fill 0.2s ease;
 }
 
-/* Adds spacing to all img tags for note content */
 .note-content img {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;

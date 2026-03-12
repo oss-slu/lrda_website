@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import { formatCitation } from '@/app/lib/utils/citation_formatter';
 
 export const Route = createFileRoute('/resources')({
@@ -6,7 +6,7 @@ export const Route = createFileRoute('/resources')({
     meta: [{ title: "Resources | Where's Religion?" }],
   }),
   component: ResourcesPage,
-})
+});
 
 type OnlineResource = {
   title: string;
@@ -64,7 +64,7 @@ function ResourcesPage() {
                 href={resource.url}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='text-blue-600 hover:underline [&_span]:italic [&_span]:text-blue-600'
+                className='text-blue-600 hover:underline [&_span]:text-blue-600 [&_span]:italic'
               >
                 {resource.plain ? resource.title : formatCitation(resource.title)}
               </a>

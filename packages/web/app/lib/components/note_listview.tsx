@@ -150,14 +150,12 @@ const NoteListView: React.FC<NoteListViewProps> = ({
                 <h3 className='flex-1 truncate text-sm font-semibold text-gray-900'>
                   {note.title || 'Untitled'}
                 </h3>
-                <span className='flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
+                <span className='shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
                   {handleGetTime(note.time)}
                 </span>
               </div>
               <div className='flex items-center gap-2'>
-                <Badge className={badge.className}>
-                  {badge.label}
-                </Badge>
+                <Badge className={badge.className}>{badge.label}</Badge>
               </div>
               <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>
                 {noteTextContent}

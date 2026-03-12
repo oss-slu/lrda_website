@@ -56,8 +56,8 @@ export function usePersonalMapNotes(userId: string | null) {
     queryKey: notesKeys.personalMap(userId ?? ''),
     queryFn: async (): Promise<Note[]> => {
       if (!userId) return [];
-      const data = await fetchAllPages(
-        (limit, offset) => notesService.fetchUserNotes(userId, limit, offset),
+      const data = await fetchAllPages((limit, offset) =>
+        notesService.fetchUserNotes(userId, limit, offset),
       );
       return data.reverse();
     },

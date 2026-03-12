@@ -117,8 +117,8 @@ export default function TeamGrid() {
     <section className='relative w-full overflow-hidden'>
       {/* Animated background elements */}
       <div className='absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-100/30'></div>
-      <div className='absolute left-10 top-20 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
-      <div className='absolute bottom-20 right-10 h-96 w-96 rounded-full bg-gradient-to-br from-blue-600/15 to-blue-400/15 blur-3xl'></div>
+      <div className='absolute top-20 left-10 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
+      <div className='absolute right-10 bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-600/15 to-blue-400/15 blur-3xl'></div>
 
       <div className='relative z-10 py-20 sm:py-32'>
         <div className='mx-auto max-w-7xl px-4'>

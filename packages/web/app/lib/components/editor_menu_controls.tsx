@@ -232,10 +232,10 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
         createPortal(
           <>
             <div
-              className='fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm'
+              className='fixed inset-0 z-40 bg-black/50 backdrop-blur-sm'
               onClick={() => setIsPopupOpen(false)}
             />
-            <div className='fixed left-1/2 top-1/2 z-50 min-w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white p-8 shadow-2xl'>
+            <div className='fixed top-1/2 left-1/2 z-50 min-w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white p-8 shadow-2xl'>
               <div className='mb-6 flex items-center gap-3'>
                 <div className='rounded-lg bg-blue-100 p-2'>
                   <svg

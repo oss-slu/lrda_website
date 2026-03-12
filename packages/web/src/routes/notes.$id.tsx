@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Tag } from '@/app/types';
 import { fetchCreatorName } from '@/app/lib/services';
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/notes/$id')({
     meta: [{ title: "Note | Where's Religion?" }],
   }),
   component: NoteDetailPage,
-})
+});
 
 const formatTime = format12hourTime;
 
@@ -55,7 +55,7 @@ function NoteDetailPage() {
 
   if (isLoading) {
     return (
-      <div className='flex h-screen items-center justify-center text-muted-foreground'>
+      <div className='text-muted-foreground flex h-screen items-center justify-center'>
         Loading...
       </div>
     );
@@ -64,7 +64,7 @@ function NoteDetailPage() {
   if (queryError || !note) {
     return (
       <div className='flex h-screen flex-col items-center justify-center gap-4'>
-        <p className='text-lg font-semibold text-destructive'>
+        <p className='text-destructive text-lg font-semibold'>
           {queryError ? 'Failed to load note' : 'Note not found'}
         </p>
         <Button onClick={() => window.history.back()}>
@@ -78,17 +78,22 @@ function NoteDetailPage() {
   const tags = convertOldTags(note.tags);
 
   return (
-    <div className='flex h-screen flex-col bg-background'>
+    <div className='bg-background flex h-screen flex-col'>
       {/* Header */}
       <div className='border-b px-6 py-4'>
-        <Button variant='ghost' size='sm' onClick={() => window.history.back()} className='mb-4 -ml-2'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => window.history.back()}
+          className='mb-4 -ml-2'
+        >
           <ArrowLeft className='mr-2 h-4 w-4' />
           Back to map
         </Button>
 
         <h1 className='text-3xl font-bold'>{note.title}</h1>
 
-        <div className='mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground'>
+        <div className='text-muted-foreground mt-2 flex flex-wrap gap-4 text-sm'>
           <span className='flex items-center gap-1'>
             <CalendarDays className='h-4 w-4' />
             {formatDate(note.time)}
@@ -105,14 +110,14 @@ function NoteDetailPage() {
 
         {tags.length > 0 && (
           <div className='mt-3 flex flex-wrap items-center gap-2'>
-            <Tags className='h-4 w-4 text-muted-foreground' />
+            <Tags className='text-muted-foreground h-4 w-4' />
             {tags.map((tag, i) => (
               <span
                 key={i}
                 className={`flex h-5 items-center rounded px-2 text-xs font-semibold ${
-                  tag.origin === 'user'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-purple-200 text-purple-800'
+                  tag.origin === 'user' ?
+                    'bg-blue-100 text-blue-800'
+                  : 'bg-purple-200 text-purple-800'
                 }`}
               >
                 {tag.label}
@@ -121,20 +126,18 @@ function NoteDetailPage() {
           </div>
         )}
 
-        <div className='mt-4 h-px w-full bg-border' />
+        <div className='bg-border mt-4 h-px w-full' />
       </div>
 
       {/* Scrollable content */}
       <ScrollArea className='flex-1'>
         <div className='px-6 py-4 pb-24'>
-          {note.text && note.text.length > 0 ? (
+          {note.text && note.text.length > 0 ?
             <div
               dangerouslySetInnerHTML={{ __html: sanitizedContent }}
               className='note-content prose max-w-none'
             />
-          ) : (
-            <p className='text-muted-foreground'>This note has no content.</p>
-          )}
+          : <p className='text-muted-foreground'>This note has no content.</p>}
         </div>
       </ScrollArea>
 

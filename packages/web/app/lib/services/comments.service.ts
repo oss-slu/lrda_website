@@ -60,10 +60,9 @@ async function create(comment: CommentData): Promise<ApiCommentData> {
  * Resolve all comments in a thread.
  */
 async function resolveThread(threadId: string): Promise<ResolveThreadResult> {
-  return fetchWithAuth<ResolveThreadResult>(
-    `/api/comments/thread/${threadId}/resolve`,
-    { method: 'POST' },
-  );
+  return fetchWithAuth<ResolveThreadResult>(`/api/comments/thread/${threadId}/resolve`, {
+    method: 'POST',
+  });
 }
 
 /**
@@ -77,7 +76,10 @@ async function deleteComment(commentId: string): Promise<boolean> {
 /**
  * Update a comment's text.
  */
-async function updateComment(commentId: string, updates: Partial<CommentData>): Promise<ApiCommentData> {
+async function updateComment(
+  commentId: string,
+  updates: Partial<CommentData>,
+): Promise<ApiCommentData> {
   const payload: Record<string, unknown> = {};
   if (updates.text !== undefined) payload.text = updates.text;
   if (updates.resolved !== undefined) payload.isResolved = updates.resolved;

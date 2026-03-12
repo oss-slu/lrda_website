@@ -105,15 +105,20 @@ async function saveIdMapping(localId: string, rerumId: string, type: string) {
     return;
   }
 
-  await pool.query(`
+  await pool.query(
+    `
     INSERT INTO id_mapping (id, rerum_id, type) VALUES ($1, $2, $3)
     ON CONFLICT (id) DO UPDATE SET rerum_id = EXCLUDED.rerum_id
-  `, [localId, rerumId, type]);
+  `,
+    [localId, rerumId, type],
+  );
 }
 
 // Get last sync time
 async function getLastSyncTime(): Promise<Date> {
-  const { rows } = await pool.query('SELECT last_sync_at FROM reverse_sync_state WHERE id = $1', ['main']);
+  const { rows } = await pool.query('SELECT last_sync_at FROM reverse_sync_state WHERE id = $1', [
+    'main',
+  ]);
   return rows[0] ? new Date(rows[0].last_sync_at) : new Date(0);
 }
 
@@ -124,10 +129,13 @@ async function updateLastSyncTime(time: Date) {
     return;
   }
 
-  await pool.query(`
+  await pool.query(
+    `
     INSERT INTO reverse_sync_state (id, last_sync_at, updated_at) VALUES ($1, $2, NOW())
     ON CONFLICT (id) DO UPDATE SET last_sync_at = EXCLUDED.last_sync_at, updated_at = NOW()
-  `, ['main', time.toISOString()]);
+  `,
+    ['main', time.toISOString()],
+  );
 }
 
 // Sync notes from D1 to RERUM

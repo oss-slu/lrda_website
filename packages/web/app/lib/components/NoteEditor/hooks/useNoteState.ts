@@ -23,9 +23,7 @@ const useNoteState = (initialNote: Note | undefined) => {
   const [approvalRequested, setApprovalRequested] = useState<boolean>(
     initialNote?.approvalRequested || false,
   );
-  const [isReturned, setIsReturned] = useState<boolean>(
-    initialNote?.isReturned || false,
-  );
+  const [isReturned, setIsReturned] = useState<boolean>(initialNote?.isReturned || false);
   const [counter, setCounter] = useState<number>(0);
 
   return {

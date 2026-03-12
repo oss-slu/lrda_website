@@ -18,4 +18,3 @@ export const getItem = (key: string) => {
   }
   return null;
 };
-

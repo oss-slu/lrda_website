@@ -42,7 +42,12 @@ export function filterNotesByMapBounds(
 
   return notes.filter(note => {
     if (note.latitude == null || note.longitude == null) return false;
-    return note.latitude >= sw.lat() && note.latitude <= ne.lat() && note.longitude >= sw.lng() && note.longitude <= ne.lng();
+    return (
+      note.latitude >= sw.lat() &&
+      note.latitude <= ne.lat() &&
+      note.longitude >= sw.lng() &&
+      note.longitude <= ne.lng()
+    );
   });
 }
 

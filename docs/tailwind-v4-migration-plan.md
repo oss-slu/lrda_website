@@ -14,6 +14,7 @@
 Update `packages/web/package.json`:
 
 **Remove:**
+
 - `tailwindcss` (v3)
 - `autoprefixer`
 - `postcss-import`
@@ -22,15 +23,18 @@ Update `packages/web/package.json`:
 - `tailwindcss-animate`
 
 **Add:**
+
 - `tailwindcss` (v4, `^4.1.0`)
 - `@tailwindcss/postcss`
 - `tw-animate-css` (CSS-only replacement for tailwindcss-animate)
 
 **Keep as-is:**
+
 - `tailwind-merge` v3.3.1 (already v4-compatible)
 - `class-variance-authority`
 
 Then run the automated upgrade tool:
+
 ```bash
 cd packages/web && npx @tailwindcss/upgrade
 ```
@@ -60,6 +64,7 @@ All configuration moves into `globals.css` via `@theme`.
 ### 3.2: Update CSS imports
 
 Replace:
+
 ```css
 @tailwind base;
 @tailwind components;
@@ -67,20 +72,26 @@ Replace:
 ```
 
 With:
+
 ```css
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 ```
 
 ### 3.3: CSS variable color migration (biggest change)
 
 Currently, `:root` stores raw HSL channels and `tailwind.config.js` wraps them:
+
 ```css
 /* globals.css */
-:root { --primary: 217.2 91.2% 59.8%; }
+:root {
+  --primary: 217.2 91.2% 59.8%;
+}
 
 /* tailwind.config.js */
-primary: { DEFAULT: 'hsl(var(--primary))' }
+primary: {
+  default: 'hsl(var(--primary))';
+}
 ```
 
 In v4, wrap `hsl()` into the variable definitions and register with `@theme inline`:
@@ -147,18 +158,26 @@ Accordion keyframes are provided by `tw-animate-css` out of the box. Custom ones
 
 ```css
 @theme {
-  --animate-fadeIn: fadeIn 1.0s ease-in forwards;
+  --animate-fadeIn: fadeIn 1s ease-in forwards;
   --animate-zoom-slow: zoomIn 10s ease-in-out infinite alternate;
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes zoomIn {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
 }
 ```
 
@@ -173,7 +192,9 @@ Accordion keyframes are provided by `tw-animate-css` out of the box. Custom ones
 ```css
 /* Old */
 @layer utilities {
-  .container-mobile { @apply w-full px-4 sm:px-6 lg:px-8; }
+  .container-mobile {
+    @apply w-full px-4 sm:px-6 lg:px-8;
+  }
 }
 
 /* New */
@@ -201,12 +222,18 @@ Remove `@layer base` wrapping -- use plain CSS. Replace `@apply` with equivalent
 ```css
 /* Old */
 @layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* New */
-* { border-color: var(--border); }
+* {
+  border-color: var(--border);
+}
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -226,6 +253,7 @@ Convert to `@utility` directive or replace with `text-transparent` class directl
 ### 4.4: Plain CSS blocks (no changes needed)
 
 These are pure CSS and stay as-is:
+
 - `.tiptap` styles
 - `.rhap_*` audio player styles (~260 lines)
 - `.custom-marker-label`, `.clickable-note`, `.popup-*` styles
@@ -247,6 +275,7 @@ background: var(--card) !important;
 ```
 
 For opacity patterns:
+
 ```css
 /* Old */
 background: hsl(var(--muted-foreground) / 0.5);
@@ -259,10 +288,10 @@ background: color-mix(in srgb, var(--muted-foreground) 50%, transparent);
 
 Mostly handled by the upgrade tool:
 
-| Pattern | Replacement | Count |
-|---------|-------------|-------|
-| `flex-shrink-0` | `shrink-0` | ~19 files |
-| `bg-opacity-*` | `bg-black/70` syntax | 2 files |
+| Pattern         | Replacement          | Count     |
+| --------------- | -------------------- | --------- |
+| `flex-shrink-0` | `shrink-0`           | ~19 files |
+| `bg-opacity-*`  | `bg-black/70` syntax | 2 files   |
 
 Ring utilities already use explicit widths (`ring-1`, `ring-2`), no issues with v4's changed default.
 
@@ -287,25 +316,25 @@ Ring utilities already use explicit widths (`ring-1`, `ring-2`), no issues with 
 
 ## Files Changed Summary
 
-| File | Action |
-|------|--------|
-| `packages/web/package.json` | Update/remove deps |
-| `packages/web/postcss.config.js` | Simplify to 1 plugin |
-| `packages/web/tailwind.config.js` | **Delete** |
-| `packages/web/app/globals.css` | Major rewrite (imports, @theme, @utility, hsl wrapping) |
-| `packages/web/app/introjs-custom.css` | ~30 `hsl(var(...))` -> `var(...)` |
-| `packages/web/components.json` | Remove config reference |
-| `~19 TSX files` | Class renames (mostly automated) |
-| `29 shadcn components` | Optional re-generation |
+| File                                  | Action                                                  |
+| ------------------------------------- | ------------------------------------------------------- |
+| `packages/web/package.json`           | Update/remove deps                                      |
+| `packages/web/postcss.config.js`      | Simplify to 1 plugin                                    |
+| `packages/web/tailwind.config.js`     | **Delete**                                              |
+| `packages/web/app/globals.css`        | Major rewrite (imports, @theme, @utility, hsl wrapping) |
+| `packages/web/app/introjs-custom.css` | ~30 `hsl(var(...))` -> `var(...)`                       |
+| `packages/web/components.json`        | Remove config reference                                 |
+| `~19 TSX files`                       | Class renames (mostly automated)                        |
+| `29 shadcn components`                | Optional re-generation                                  |
 
 ## Risk Assessment
 
-| Area | Risk | Notes |
-|------|------|-------|
-| CSS variable color system | **Medium** | Must update globals.css AND introjs-custom.css in lockstep; missed `hsl(var(...))` causes double-wrapping |
-| `@layer` to `@utility` migration | **Medium** | Custom utility definitions need careful conversion |
-| Dependency updates | Low | Straightforward swap |
-| PostCSS simplification | Low | Drop-in replacement |
-| `tailwindcss-animate` -> `tw-animate-css` | Low | Same class API, CSS import instead of JS plugin |
-| `tailwind-merge` | Low | v3.3.1 already compatible |
-| TSX class renames | Low | Automated by upgrade tool |
+| Area                                      | Risk       | Notes                                                                                                     |
+| ----------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| CSS variable color system                 | **Medium** | Must update globals.css AND introjs-custom.css in lockstep; missed `hsl(var(...))` causes double-wrapping |
+| `@layer` to `@utility` migration          | **Medium** | Custom utility definitions need careful conversion                                                        |
+| Dependency updates                        | Low        | Straightforward swap                                                                                      |
+| PostCSS simplification                    | Low        | Drop-in replacement                                                                                       |
+| `tailwindcss-animate` -> `tw-animate-css` | Low        | Same class API, CSS import instead of JS plugin                                                           |
+| `tailwind-merge`                          | Low        | v3.3.1 already compatible                                                                                 |
+| TSX class renames                         | Low        | Automated by upgrade tool                                                                                 |

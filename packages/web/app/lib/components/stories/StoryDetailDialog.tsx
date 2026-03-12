@@ -81,7 +81,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className='flex h-[95vh] max-w-[98vw] flex-col p-0 sm:max-w-[95%] lg:max-w-[90%]'>
-        <DialogHeader className='flex-shrink-0 px-6 pb-4 pt-6'>
+        <DialogHeader className='shrink-0 px-6 pt-6 pb-4'>
           <DialogTitle className='text-3xl font-bold'>{note.title}</DialogTitle>
           <DialogDescription className='sr-only'>
             Note content by {creator} from {formatDate(note.time)}
@@ -155,7 +155,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
         </ScrollArea>
 
         {/* Footer - Media Controls */}
-        <DialogFooter className='flex flex-shrink-0 gap-4 border-t px-6 pb-6 pt-4'>
+        <DialogFooter className='flex shrink-0 gap-4 border-t px-6 pt-4 pb-6'>
           {note.audio.length > 0 && (
             <Popover>
               <PopoverTrigger>

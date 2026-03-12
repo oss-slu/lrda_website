@@ -2,7 +2,11 @@
  * Perform reverse geocoding using Google Maps Geocoding API.
  * Returns the first formatted address or null if unavailable.
  */
-export async function reverseGeocode(lat: number, lng: number, apiKey?: string): Promise<string | null> {
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+  apiKey?: string,
+): Promise<string | null> {
   if (!apiKey) {
     return null;
   }

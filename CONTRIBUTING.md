@@ -105,17 +105,17 @@ pnpm dev:web
 
 ## Available Commands
 
-| Command              | Description                              |
-| -------------------- | ---------------------------------------- |
-| `pnpm dev`           | Start API + frontend together            |
-| `pnpm dev:api`       | Start API server only (port 8787)        |
-| `pnpm dev:web`       | Start frontend only (port 3000)          |
-| `pnpm api:db:migrate`| Apply D1 database migrations             |
-| `pnpm api:db:generate`| Generate migrations from schema changes |
-| `pnpm api:db:seed`   | Seed database with sample data           |
-| `pnpm setup`         | Create .env files from examples          |
-| `pnpm test`          | Run unit and e2e tests                   |
-| `pnpm lint`          | Run ESLint                               |
+| Command                | Description                             |
+| ---------------------- | --------------------------------------- |
+| `pnpm dev`             | Start API + frontend together           |
+| `pnpm dev:api`         | Start API server only (port 8787)       |
+| `pnpm dev:web`         | Start frontend only (port 3000)         |
+| `pnpm api:db:migrate`  | Apply D1 database migrations            |
+| `pnpm api:db:generate` | Generate migrations from schema changes |
+| `pnpm api:db:seed`     | Seed database with sample data          |
+| `pnpm setup`           | Create .env files from examples         |
+| `pnpm test`            | Run unit and e2e tests                  |
+| `pnpm lint`            | Run ESLint                              |
 
 Open [http://localhost:3000](http://localhost:3000) - you should see the app running.
 

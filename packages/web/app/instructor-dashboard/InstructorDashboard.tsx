@@ -156,9 +156,7 @@ export default function InstructorDashboard() {
       <div className='flex h-full w-full items-center justify-center bg-gray-100'>
         <div className='flex max-w-md flex-col items-center rounded-sm bg-white px-12 py-16 text-center shadow-sm'>
           <h2 className='mb-2 text-2xl font-semibold text-gray-800'>Access Denied</h2>
-          <p className='text-sm text-gray-500'>
-            This page is only available to instructors.
-          </p>
+          <p className='text-sm text-gray-500'>This page is only available to instructors.</p>
         </div>
       </div>
     );
@@ -166,11 +164,7 @@ export default function InstructorDashboard() {
 
   return (
     <div className='flex h-full'>
-      <InstructorSidebar
-        notes={studentNotes}
-        students={students}
-        onNoteSelect={handleNoteSelect}
-      />
+      <InstructorSidebar notes={studentNotes} students={students} onNoteSelect={handleNoteSelect} />
 
       <div className='relative flex min-w-0 flex-1 flex-col'>
         {selectedNote && isUnreviewed(selectedNote) && (
@@ -237,11 +231,7 @@ export default function InstructorDashboard() {
             >
               Cancel
             </Button>
-            <Button
-              variant='destructive'
-              onClick={handleDeclineConfirm}
-              disabled={isSubmitting}
-            >
+            <Button variant='destructive' onClick={handleDeclineConfirm} disabled={isSubmitting}>
               {isSubmitting ? 'Returning...' : 'Return to Student'}
             </Button>
           </DialogFooter>

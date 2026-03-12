@@ -9,6 +9,7 @@ Current state of every page in the web app, what it does, and known issues.
 **Always visible (logged out or in):** Home, Map, Stories, Resources
 
 **Authenticated users:**
+
 - Notes (instructors see a dropdown: "My Notes" / "Student Notes")
 - Dashboard (routes to `/instructor-dashboard` or `/student-dashboard` based on role)
 
@@ -47,6 +48,7 @@ Comprehensive info page with collapsible sections covering FAQs, a getting start
 ### `/admin` -- Admin Dashboard
 
 Admin-only (redirects non-admins server-side). Three sections:
+
 - Admin statistics (user counts, note counts, etc.)
 - User management with role badges
 - Pending instructor application approvals
@@ -56,6 +58,7 @@ Admin-only (redirects non-admins server-side). Three sections:
 Shows student submissions with search and student filter dropdown. Instructors can review notes, approve/reject them, and leave comments.
 
 **Known issues:**
+
 - No server-side route guard (unlike `/admin`). Non-instructors can navigate here and see an empty page.
 
 ### `/student-dashboard` -- Student Dashboard
@@ -69,6 +72,7 @@ Email/password login form with "forgot password" link. Redirects to `/map` on su
 ### `/signup` -- Sign Up
 
 Registration form with name, email, password, and role selection (none / student / instructor). Conditionally shows:
+
 - **Student:** instructor selector dropdown (fetched from API)
 - **Instructor:** text area describing why they want to be an instructor (creates a pending application for admin approval)
 

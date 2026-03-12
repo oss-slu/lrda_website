@@ -10,25 +10,23 @@ export default function RootError({ error }: { error: Error }) {
     >
       {/* Animated background elements */}
       <div className='pointer-events-none absolute inset-0 overflow-hidden' aria-hidden='true'>
-        <div className='absolute left-10 top-20 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
+        <div className='absolute top-20 left-10 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
         <div
-          className='absolute bottom-20 right-10 h-96 w-96 animate-pulse rounded-full bg-sky-500/20 blur-3xl'
+          className='absolute right-10 bottom-20 h-96 w-96 animate-pulse rounded-full bg-sky-500/20 blur-3xl'
           style={{ animationDelay: '1s' }}
         />
-        <div className='animate-float absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-400/10 blur-3xl' />
+        <div className='animate-float absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-blue-400/10 blur-3xl' />
       </div>
 
       {/* Main content */}
       <div className='relative z-10 mx-auto max-w-4xl px-6 py-12 text-center'>
         <div className='mb-8'>
-          <h1 className='bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 bg-clip-text text-9xl font-black leading-none text-transparent sm:text-[10rem]'>
+          <h1 className='bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 bg-clip-text text-9xl leading-none font-black text-transparent sm:text-[10rem]'>
             Oops
           </h1>
         </div>
 
-        <h2 className='mb-6 text-4xl font-bold text-white sm:text-5xl'>
-          Something went wrong
-        </h2>
+        <h2 className='mb-6 text-4xl font-bold text-white sm:text-5xl'>Something went wrong</h2>
         <p className='mx-auto mb-4 max-w-2xl text-xl text-blue-200 sm:text-2xl'>
           An unexpected error occurred. Please try refreshing the page.
         </p>

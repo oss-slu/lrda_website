@@ -167,10 +167,7 @@ export async function createAuthenticatedUser(
   const signUpJson = signUpRes.json as { user: { id: string } };
 
   // Step 2: Verify email in DB (bypass the email verification flow for tests)
-  await db
-    .update(user)
-    .set({ emailVerified: true })
-    .where(eq(user.id, signUpJson.user.id));
+  await db.update(user).set({ emailVerified: true }).where(eq(user.id, signUpJson.user.id));
 
   // Step 3: Sign in to get a proper session with cookie
   const signInRes = await request(app, 'POST', '/api/auth/sign-in/email', {
@@ -230,8 +227,20 @@ export async function createAuthenticatedUser(
 
 // Clean up a test user and all related data
 export async function cleanupUser(userId: string) {
-  await db.delete(note).where(eq(note.creatorId, userId)).catch(() => {});
-  await db.delete(session).where(eq(session.userId, userId)).catch(() => {});
-  await db.delete(account).where(eq(account.userId, userId)).catch(() => {});
-  await db.delete(user).where(eq(user.id, userId)).catch(() => {});
+  await db
+    .delete(note)
+    .where(eq(note.creatorId, userId))
+    .catch(() => {});
+  await db
+    .delete(session)
+    .where(eq(session.userId, userId))
+    .catch(() => {});
+  await db
+    .delete(account)
+    .where(eq(account.userId, userId))
+    .catch(() => {});
+  await db
+    .delete(user)
+    .where(eq(user.id, userId))
+    .catch(() => {});
 }

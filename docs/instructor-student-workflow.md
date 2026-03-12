@@ -136,6 +136,7 @@ The sidebar has two tabs: **Unpublished** and **Published**. Each note card show
 ```
 
 Status badges (from `noteStatus.ts`):
+
 - **Draft** (gray) -- not yet submitted
 - **Pending** (yellow) -- `approvalRequested=true`, waiting for instructor review
 - **Returned** (orange) -- `isReturned=true`, declined by instructor
@@ -187,6 +188,7 @@ The sidebar shows student notes with tabs for **Unreviewed** and **Reviewed**, p
 ```
 
 Tab filtering (from `noteStatus.ts`):
+
 - **Unreviewed**: `approvalRequested && !published && !isReturned`
 - **Reviewed**: `published || isReturned`
 
@@ -238,6 +240,7 @@ When the instructor clicks "Decline", a dialog prompts for optional feedback. Th
 ```
 
 On confirm:
+
 - If feedback text is provided, a comment is created on the note
 - Note is updated: `published=false`, `approvalRequested=false`, `isReturned=true`
 - Note moves from the "Unreviewed" tab to the "Reviewed" tab
@@ -245,6 +248,7 @@ On confirm:
 ### Approving a Note
 
 Clicking "Approve" immediately publishes the note:
+
 - Note is updated: `published=true`, `approvalRequested=false`, `isReturned=false`
 - Selection is cleared
 
@@ -272,6 +276,7 @@ Clicking "Approve" immediately publishes the note:
 ```
 
 `isReturned` is a boolean field on the `Note` type. The status is determined by `getNoteStatus()` in `noteStatus.ts` with this priority order:
+
 1. `published` -> "published"
 2. `isReturned` -> "returned"
 3. `approvalRequested` -> "pending"
@@ -281,31 +286,31 @@ Clicking "Approve" immediately publishes the note:
 
 ## Pages
 
-| Page | Purpose | Who uses it |
-|------|---------|-------------|
-| `/` | Home / about | Everyone |
-| `/map` | Browse notes geographically | Everyone |
-| `/notes` | Write, edit, track status, read feedback | Everyone |
-| `/stories` | Browse published notes as a list | Everyone |
-| `/resources` | Research resources and citations | Everyone |
-| `/wheres-religion` | FAQs, getting started, project info | Everyone |
-| `/instructor-dashboard` | Review student submissions | Instructors |
-| `/admin` | User management, instructor approvals, stats | Admins |
+| Page                    | Purpose                                      | Who uses it |
+| ----------------------- | -------------------------------------------- | ----------- |
+| `/`                     | Home / about                                 | Everyone    |
+| `/map`                  | Browse notes geographically                  | Everyone    |
+| `/notes`                | Write, edit, track status, read feedback     | Everyone    |
+| `/stories`              | Browse published notes as a list             | Everyone    |
+| `/resources`            | Research resources and citations             | Everyone    |
+| `/wheres-religion`      | FAQs, getting started, project info          | Everyone    |
+| `/instructor-dashboard` | Review student submissions                   | Instructors |
+| `/admin`                | User management, instructor approvals, stats | Admins      |
 
 ---
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `app/lib/components/NoteEditor/NoteEditor.tsx` | Main editor orchestrator; toolbar layout, permission-based conditional rendering |
-| `app/lib/components/NoteEditor/NoteEditorToolbar.tsx` | Left toolbar segment: date, location (read-only or interactive), download |
-| `app/lib/components/NoteEditor/NoteElements/PublishToggle.tsx` | Role-aware publish/approval button |
-| `app/lib/components/NoteEditor/AutoSaveIndicator.tsx` | Save status display |
-| `app/lib/components/NoteEditor/NoteEditorComments.tsx` | Comments sidebar panel |
-| `app/lib/components/NoteEditor/hooks/useNotePermissions.ts` | Derives `isViewingStudentNote`, `canComment`, etc. from auth state |
-| `app/lib/utils/noteStatus.ts` | `getNoteStatus()`, `isUnreviewed()`, `isReviewed()` predicates |
-| `app/instructor-dashboard/InstructorDashboard.tsx` | Dashboard layout, approve/decline handlers, decline dialog |
-| `app/instructor-dashboard/InstructorSidebar.tsx` | Submission queue with tabs, student filter, search |
-| `app/lib/components/Sidebar.tsx` | Notes page sidebar with Unpublished/Published tabs |
-| `app/lib/components/note_listview.tsx` | Note card display with status badges |
+| File                                                           | Purpose                                                                          |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `app/lib/components/NoteEditor/NoteEditor.tsx`                 | Main editor orchestrator; toolbar layout, permission-based conditional rendering |
+| `app/lib/components/NoteEditor/NoteEditorToolbar.tsx`          | Left toolbar segment: date, location (read-only or interactive), download        |
+| `app/lib/components/NoteEditor/NoteElements/PublishToggle.tsx` | Role-aware publish/approval button                                               |
+| `app/lib/components/NoteEditor/AutoSaveIndicator.tsx`          | Save status display                                                              |
+| `app/lib/components/NoteEditor/NoteEditorComments.tsx`         | Comments sidebar panel                                                           |
+| `app/lib/components/NoteEditor/hooks/useNotePermissions.ts`    | Derives `isViewingStudentNote`, `canComment`, etc. from auth state               |
+| `app/lib/utils/noteStatus.ts`                                  | `getNoteStatus()`, `isUnreviewed()`, `isReviewed()` predicates                   |
+| `app/instructor-dashboard/InstructorDashboard.tsx`             | Dashboard layout, approve/decline handlers, decline dialog                       |
+| `app/instructor-dashboard/InstructorSidebar.tsx`               | Submission queue with tabs, student filter, search                               |
+| `app/lib/components/Sidebar.tsx`                               | Notes page sidebar with Unpublished/Published tabs                               |
+| `app/lib/components/note_listview.tsx`                         | Note card display with status badges                                             |

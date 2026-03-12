@@ -4,7 +4,7 @@ import type { z } from 'zod';
 export * from './schemas';
 
 // -- Inferred types from schemas --
-// Do NOT define these manually. 
+// Do NOT define these manually.
 // These are auto-derived from the imported Zod schemas above.
 
 import type {

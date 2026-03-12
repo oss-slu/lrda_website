@@ -10,7 +10,13 @@ interface StatsCardProps {
   highlight?: boolean;
 }
 
-export function StatsCard({ title, value, icon: Icon, loading, highlight = false }: StatsCardProps) {
+export function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  loading,
+  highlight = false,
+}: StatsCardProps) {
   return (
     <Card className={highlight ? 'border-orange-200 bg-orange-50' : ''}>
       <CardContent className='pt-6'>

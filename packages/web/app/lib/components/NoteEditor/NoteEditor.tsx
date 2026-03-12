@@ -160,9 +160,10 @@ export default function NoteEditor({
               const endPos = tr.doc.content.size;
               const paragraphNodeForNewLine = editor.schema.node('paragraph');
               const linkMark = editor.schema.marks.link;
-              const textNode = editor.schema.text(videoLink, linkMark ? [
-                linkMark.create({ href: media.uri }),
-              ] : []);
+              const textNode = editor.schema.text(
+                videoLink,
+                linkMark ? [linkMark.create({ href: media.uri })] : [],
+              );
               const paragraphNodeForLink = editor.schema.node('paragraph', null, [textNode]);
               const transaction = tr
                 .insert(endPos, paragraphNodeForNewLine)
@@ -316,102 +317,96 @@ export default function NoteEditor({
     lastEditTimeRef.current = Date.now();
   };
 
-
-
   return (
     <CacheProvider value={emotionCache}>
-    <RichTextEditorProvider editor={editor}>
-      <div className='flex h-full min-h-0 w-full flex-col'>
-        {/* Toolbar */}
-        <div className='shrink-0 border-b border-gray-200 bg-white'>
-          {/* Row 1: Metadata + actions */}
-          <div className='flex items-center gap-1 px-3 py-1.5'>
-            <NoteEditorToolbar
-              noteState={noteState}
-              noteHandlers={noteHandlers}
-              isViewingStudentNote={isViewingStudentNote}
-              onLocationChange={handleEdit}
-              onTimeChange={handleEdit}
-              dateRef={dateRef}
-              locationRef={locationRef}
-            />
+      <RichTextEditorProvider editor={editor}>
+        <div className='flex h-full min-h-0 w-full flex-col'>
+          {/* Toolbar */}
+          <div className='shrink-0 border-b border-gray-200 bg-white'>
+            {/* Row 1: Metadata + actions */}
+            <div className='flex items-center gap-1 px-3 py-1.5'>
+              <NoteEditorToolbar
+                noteState={noteState}
+                noteHandlers={noteHandlers}
+                isViewingStudentNote={isViewingStudentNote}
+                onLocationChange={handleEdit}
+                onTimeChange={handleEdit}
+                dateRef={dateRef}
+                locationRef={locationRef}
+              />
 
-            <div className='ml-auto flex shrink-0 items-center gap-2'>
-              {!isViewingStudentNote && (
-                <>
-                  <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
+              <div className='ml-auto flex shrink-0 items-center gap-2'>
+                {!isViewingStudentNote && (
+                  <>
+                    <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
 
-                  <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
+                    <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
 
-                  <PublishToggle
-                    id='publish-toggle-button'
-                    isPublished={Boolean(noteState.isPublished)}
-                    isApprovalRequested={noteState.approvalRequested || false}
-                    isReturned={noteState.isReturned || false}
-                    noteId={noteState.note?.id || ''}
-                    userId={userId}
-                    instructorId={instructorId}
-                    onPublishClick={handlePublishClick}
-                    onRequestApprovalClick={handleRequestApprovalClick}
-                    isInstructorReview={isViewingStudentNote}
-                  />
+                    <PublishToggle
+                      id='publish-toggle-button'
+                      isPublished={Boolean(noteState.isPublished)}
+                      isApprovalRequested={noteState.approvalRequested || false}
+                      isReturned={noteState.isReturned || false}
+                      noteId={noteState.note?.id || ''}
+                      userId={userId}
+                      instructorId={instructorId}
+                      onPublishClick={handlePublishClick}
+                      onRequestApprovalClick={handleRequestApprovalClick}
+                      isInstructorReview={isViewingStudentNote}
+                    />
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        disabled={!noteState.note?.id || isSaving}
-                        className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                        title={
-                          !noteState.note?.id ?
-                            'Please wait for note to save before deleting'
-                          : 'Delete this note'
-                        }
-                        ref={deleteRef}
-                      >
-                        <FileX2 className='h-4 w-4' />
-                        <span>Delete</span>
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete this note.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={async () => {
-                            const success = await handleDeleteNote();
-                            if (success && onNoteDeleted) {
-                              onNoteDeleted();
-                            }
-                          }}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          disabled={!noteState.note?.id || isSaving}
+                          className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
+                          title={
+                            !noteState.note?.id ?
+                              'Please wait for note to save before deleting'
+                            : 'Delete this note'
+                          }
+                          ref={deleteRef}
                         >
-                          Continue
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
+                          <FileX2 className='h-4 w-4' />
+                          <span>Delete</span>
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this note.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              const success = await handleDeleteNote();
+                              if (success && onNoteDeleted) {
+                                onNoteDeleted();
+                              }
+                            }}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
 
-              {noteId &&
-                canComment &&
-                (isViewingStudentNote || isStudentViewingOwnNote) && (
+                {noteId && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
                   <>
                     <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
                     <button
                       onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-                        isCommentSidebarOpen
-                          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        isCommentSidebarOpen ?
+                          'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
-                      aria-label={
-                        isCommentSidebarOpen ? 'Close comments' : 'Open comments'
-                      }
+                      aria-label={isCommentSidebarOpen ? 'Close comments' : 'Open comments'}
                     >
                       {isCommentSidebarOpen ?
                         <X className='h-4 w-4' />
@@ -420,53 +415,52 @@ export default function NoteEditor({
                     </button>
                   </>
                 )}
+              </div>
             </div>
+
+            {/* Row 2: Formatting controls */}
+            {!isViewingStudentNote && (
+              <div className='overflow-x-auto border-t border-gray-100 px-3 py-1'>
+                <EditorMenuControls onMediaUpload={handleMediaUpload} />
+              </div>
+            )}
           </div>
 
-          {/* Row 2: Formatting controls */}
-          {!isViewingStudentNote && (
-            <div className='overflow-x-auto border-t border-gray-100 px-3 py-1'>
-              <EditorMenuControls onMediaUpload={handleMediaUpload} />
-            </div>
-          )}
-        </div>
+          {/* Scrollable content area */}
+          <div className='relative flex min-h-0 flex-1'>
+            <ScrollArea className='min-w-0 flex-1 bg-gray-100'>
+              {/* Centered white canvas */}
+              <div className='mx-auto my-8 max-w-3xl rounded-sm bg-white px-12 py-10 shadow-sm'>
+                <NoteEditorHeader
+                  title={noteState.title}
+                  setTitle={noteHandlers.setTitle}
+                  isViewingStudentNote={isViewingStudentNote}
+                  onTitleChange={handleEdit}
+                  titleRef={titleRef}
+                />
 
-        {/* Scrollable content area */}
-        <div className='relative flex min-h-0 flex-1'>
-          <ScrollArea className='min-w-0 flex-1 bg-gray-100'>
-            {/* Centered white canvas */}
-            <div className='mx-auto my-8 max-w-3xl rounded-sm bg-white px-12 py-10 shadow-sm'>
-              <NoteEditorHeader
-                title={noteState.title}
-                setTitle={noteHandlers.setTitle}
-                isViewingStudentNote={isViewingStudentNote}
-                onTitleChange={handleEdit}
-                titleRef={titleRef}
-              />
+                <NoteEditorContent
+                  noteState={noteState}
+                  noteHandlers={noteHandlers}
+                  editor={editor}
+                  isViewingStudentNote={isViewingStudentNote}
+                  onEdit={handleEdit}
+                />
+              </div>
+            </ScrollArea>
 
-              <NoteEditorContent
-                noteState={noteState}
-                noteHandlers={noteHandlers}
+            {!!noteId && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
+              <CommentSidebarPanel
+                noteId={noteState.note?.id as string}
                 editor={editor}
-                isViewingStudentNote={isViewingStudentNote}
-                onEdit={handleEdit}
+                isInstructor={isInstructorUser}
+                canComment={canComment}
+                isOpen={isCommentSidebarOpen}
               />
-            </div>
-          </ScrollArea>
-
-          {!!noteId && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
-            <CommentSidebarPanel
-              noteId={noteState.note?.id as string}
-              editor={editor}
-              isInstructor={isInstructorUser}
-              canComment={canComment}
-              isOpen={isCommentSidebarOpen}
-            />
-          )}
+            )}
+          </div>
         </div>
-      </div>
-
-    </RichTextEditorProvider>
+      </RichTextEditorProvider>
     </CacheProvider>
   );
 }

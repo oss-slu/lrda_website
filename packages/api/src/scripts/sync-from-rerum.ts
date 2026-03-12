@@ -137,7 +137,7 @@ function normalizeTags(tags?: RerumNote['tags']): Tag[] {
         return t.trim() ? { label: t.trim(), origin: 'user' } : null;
       }
       if (typeof t === 'object' && t.label) {
-        return { label: t.label, origin: (t.origin === 'ai' ? 'ai' : 'user') };
+        return { label: t.label, origin: t.origin === 'ai' ? 'ai' : 'user' };
       }
       return null;
     })
@@ -148,7 +148,9 @@ function normalizeTags(tags?: RerumNote['tags']): Tag[] {
 async function loadNotesFromFile(): Promise<RerumNote[]> {
   log('info', `Loading notes from ${DUMP_PATH}...`);
   if (!fs.existsSync(DUMP_PATH)) {
-    throw new Error(`Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from RERUM API instead.`);
+    throw new Error(
+      `Dump file not found: ${DUMP_PATH}\nRun with --remote to fetch from RERUM API instead.`,
+    );
   }
   const notes: RerumNote[] = JSON.parse(fs.readFileSync(DUMP_PATH, 'utf-8'));
   log('info', `Loaded ${notes.length} notes from file`);
@@ -274,23 +276,29 @@ async function updateLastSyncTime(type: 'notes' | 'comments', time: Date) {
   }
 
   if (type === 'notes') {
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO sync_state (id, last_sync_at, last_notes_sync_at, updated_at)
       VALUES ($1, $2, $2, NOW())
       ON CONFLICT (id) DO UPDATE SET
         last_sync_at = EXCLUDED.last_sync_at,
         last_notes_sync_at = EXCLUDED.last_notes_sync_at,
         updated_at = NOW()
-    `, ['main', time.toISOString()]);
+    `,
+      ['main', time.toISOString()],
+    );
   } else {
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO sync_state (id, last_sync_at, last_comments_sync_at, updated_at)
       VALUES ($1, $2, $2, NOW())
       ON CONFLICT (id) DO UPDATE SET
         last_sync_at = EXCLUDED.last_sync_at,
         last_comments_sync_at = EXCLUDED.last_comments_sync_at,
         updated_at = NOW()
-    `, ['main', time.toISOString()]);
+    `,
+      ['main', time.toISOString()],
+    );
   }
 }
 
@@ -654,7 +662,10 @@ async function main() {
   }
 
   log('info', 'RERUM Sync Script starting...');
-  log('info', `Source: ${USE_REMOTE ? `RERUM API (${RERUM_API_URL})` : `Local file (${DUMP_PATH})`}`);
+  log(
+    'info',
+    `Source: ${USE_REMOTE ? `RERUM API (${RERUM_API_URL})` : `Local file (${DUMP_PATH})`}`,
+  );
   log('info', `Mode: ${watchMode ? 'watch' : 'one-time'}, Full sync: ${fullSync}`);
   log(
     'info',

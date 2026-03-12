@@ -10,4 +10,3 @@ export interface StudentInfo {
   name: string;
   email: string;
 }
-

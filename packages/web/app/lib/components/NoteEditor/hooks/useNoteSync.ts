@@ -52,8 +52,7 @@ export const useNoteSync = ({
 
   // Get current note ID
   const currentNoteId =
-    stateNoteId ||
-    (initialNote && 'id' in initialNote ? initialNote.id : undefined);
+    stateNoteId || (initialNote && 'id' in initialNote ? initialNote.id : undefined);
 
   // Find current note in query data
   const currentNoteFromQuery = useMemo(() => {

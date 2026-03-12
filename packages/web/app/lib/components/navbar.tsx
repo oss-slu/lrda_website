@@ -10,12 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '../stores/authStore';
 import { hasInstructorAccess } from '../stores/authHelpers';
@@ -48,23 +43,22 @@ export default function Navbar() {
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/notes', label: 'Notes', authRequired: true },
-    ...(isInstructor
-      ? [{ href: '/instructor-dashboard', label: 'Dashboard', authRequired: true }]
-      : []),
+    ...(isInstructor ?
+      [{ href: '/instructor-dashboard', label: 'Dashboard', authRequired: true }]
+    : []),
     { href: '/map', label: 'Map' },
     { href: '/stories', label: 'Stories' },
     { href: '/resources', label: 'Resources' },
   ];
 
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   const linkClass = (href: string) =>
     cn(
       'text-sm font-medium rounded-md px-3 py-1.5 transition-colors',
-      isActive(href)
-        ? 'bg-blue-50 text-blue-600'
-        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+      isActive(href) ?
+        'bg-blue-50 text-blue-600'
+      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
     );
 
   // Mobile nav link (closes sheet on click)
@@ -75,9 +69,9 @@ export default function Navbar() {
       onClick={() => setMobileOpen(false)}
       className={cn(
         'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
-        isActive(item.href)
-          ? 'bg-blue-50 text-blue-600'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+        isActive(item.href) ?
+          'bg-blue-50 text-blue-600'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
       )}
     >
       {item.label}
@@ -85,12 +79,12 @@ export default function Navbar() {
   );
 
   return (
-    <nav className='sticky top-0 z-50 flex w-full items-center justify-between bg-white border-b border-gray-200 px-6 py-3'>
+    <nav className='sticky top-0 z-50 flex w-full items-center justify-between border-b border-gray-200 bg-white px-6 py-3'>
       {/* Mobile hamburger */}
       <Button
         variant='ghost'
         size='icon'
-        className='md:hidden text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+        className='text-gray-600 hover:bg-gray-100 hover:text-blue-600 md:hidden'
         onClick={() => setMobileOpen(true)}
         aria-label='Open menu'
       >
@@ -98,28 +92,25 @@ export default function Navbar() {
       </Button>
 
       {/* Desktop links */}
-      <div className='hidden md:flex items-center gap-1'>
-        {navItems.map(item =>
-          (!item.authRequired || name) && (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={linkClass(item.href)}
-            >
-              {item.label}
-            </Link>
-          ),
+      <div className='hidden items-center gap-1 md:flex'>
+        {navItems.map(
+          item =>
+            (!item.authRequired || name) && (
+              <Link key={item.href} to={item.href} className={linkClass(item.href)}>
+                {item.label}
+              </Link>
+            ),
         )}
       </div>
 
       {/* Right side: auth */}
       <div className='flex items-center'>
-        {name ? (
+        {name ?
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant='ghost'
-                className='text-gray-600 hover:bg-gray-100 hover:text-blue-600 gap-2'
+                className='gap-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600'
               >
                 <User className='h-4 w-4' />
                 <span className='max-w-[120px] truncate text-sm'>{name}</span>
@@ -127,23 +118,19 @@ export default function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-48'>
               <DropdownMenuLabel className='font-normal'>
-                <p className='text-sm font-medium truncate'>{name}</p>
+                <p className='truncate text-sm font-medium'>{name}</p>
                 {user?.email && (
-                  <p className='text-xs text-muted-foreground truncate'>{user.email}</p>
+                  <p className='text-muted-foreground truncate text-xs'>{user.email}</p>
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className='cursor-pointer'
-              >
-                <LogOut className='h-4 w-4 mr-2' />
+              <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
+                <LogOut className='mr-2 h-4 w-4' />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
-          <div className='flex items-center gap-2'>
+        : <div className='flex items-center gap-2'>
             <Button variant='default' asChild className='whitespace-nowrap'>
               <Link to='/login'>Login</Link>
             </Button>
@@ -151,27 +138,23 @@ export default function Navbar() {
               <Link to='/signup'>Sign Up</Link>
             </Button>
           </div>
-        )}
+        }
       </div>
 
       {/* Mobile sheet drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side='left' className='bg-white border-gray-200 w-64'>
+        <SheetContent side='left' className='w-64 border-gray-200 bg-white'>
           <SheetHeader>
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
-          <nav className='flex flex-col gap-1 mt-4'>
-            {navItems.map(item =>
-              (!item.authRequired || name) && renderMobileLink(item),
-            )}
+          <nav className='mt-4 flex flex-col gap-1'>
+            {navItems.map(item => (!item.authRequired || name) && renderMobileLink(item))}
           </nav>
-          <div className='mt-auto pt-6 border-t border-gray-200'>
-            {name ? (
+          <div className='mt-auto border-t border-gray-200 pt-6'>
+            {name ?
               <div className='space-y-2'>
-                <p className='text-sm font-medium text-gray-900 truncate px-3'>{name}</p>
-                {user?.email && (
-                  <p className='text-xs text-gray-500 truncate px-3'>{user.email}</p>
-                )}
+                <p className='truncate px-3 text-sm font-medium text-gray-900'>{name}</p>
+                {user?.email && <p className='truncate px-3 text-xs text-gray-500'>{user.email}</p>}
                 <Button
                   variant='ghost'
                   className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
@@ -180,20 +163,23 @@ export default function Navbar() {
                     handleLogout();
                   }}
                 >
-                  <LogOut className='h-4 w-4 mr-2' />
+                  <LogOut className='mr-2 h-4 w-4' />
                   Log out
                 </Button>
               </div>
-            ) : (
-              <div className='flex flex-col gap-2 px-3'>
+            : <div className='flex flex-col gap-2 px-3'>
                 <Button variant='default' asChild>
-                  <Link to='/login' onClick={() => setMobileOpen(false)}>Login</Link>
+                  <Link to='/login' onClick={() => setMobileOpen(false)}>
+                    Login
+                  </Link>
                 </Button>
                 <Button variant='outline' asChild>
-                  <Link to='/signup' onClick={() => setMobileOpen(false)}>Sign Up</Link>
+                  <Link to='/signup' onClick={() => setMobileOpen(false)}>
+                    Sign Up
+                  </Link>
                 </Button>
               </div>
-            )}
+            }
           </div>
         </SheetContent>
       </Sheet>

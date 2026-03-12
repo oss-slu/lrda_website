@@ -38,7 +38,7 @@ export default function TeamCard({ name, role, src, socials, delay = 0 }: TeamCa
             <img
               src={src}
               alt={name}
-              className='group-hover:saturate-110 h-full w-full object-cover transition-all duration-500 group-hover:scale-110'
+              className='h-full w-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:saturate-110'
             />
           </div>
         </div>

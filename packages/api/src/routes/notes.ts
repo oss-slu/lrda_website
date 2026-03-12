@@ -314,7 +314,11 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     // Reverse geocode to get a human-readable address if coords are provided
     let computedLocation: string | null = null;
     if (body.latitude != null && body.longitude != null) {
-      computedLocation = await reverseGeocode(body.latitude, body.longitude, getEnv(c).GOOGLE_MAPS_API_KEY);
+      computedLocation = await reverseGeocode(
+        body.latitude,
+        body.longitude,
+        getEnv(c).GOOGLE_MAPS_API_KEY,
+      );
     }
     if (!computedLocation && body.locationName) {
       computedLocation = body.locationName;

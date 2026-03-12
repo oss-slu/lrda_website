@@ -148,9 +148,7 @@ async function fetchPublished(
  * Fetch notes from an instructor's students using the dedicated backend endpoint.
  */
 async function fetchByStudents(instructorId: string): Promise<Note[]> {
-  const data = await fetchWithAuth<ApiNoteData[]>(
-    `/api/notes/students/${instructorId}`,
-  );
+  const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes/students/${instructorId}`);
   return (data ?? []).map(transformApiNote);
 }
 

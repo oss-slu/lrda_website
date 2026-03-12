@@ -35,18 +35,13 @@ export function InstructorSidebar({ notes, students, onNoteSelect }: InstructorS
   const [activeTab, setActiveTab] = useState<'unreviewed' | 'reviewed'>('unreviewed');
   const [selectedStudentId, setSelectedStudentId] = useState('all');
 
-  const studentMap = useMemo(
-    () => new Map(students.map(s => [s.id, s.name])),
-    [students],
-  );
+  const studentMap = useMemo(() => new Map(students.map(s => [s.id, s.name])), [students]);
 
   const filteredNotes = useMemo(() => {
     const byTab = notes.filter(activeTab === 'unreviewed' ? isUnreviewed : isReviewed);
 
     const byStudent =
-      selectedStudentId !== 'all'
-        ? byTab.filter(n => n.creator === selectedStudentId)
-        : byTab;
+      selectedStudentId !== 'all' ? byTab.filter(n => n.creator === selectedStudentId) : byTab;
 
     if (!searchQuery.trim()) return byStudent;
     const q = searchQuery.toLowerCase();
@@ -86,10 +81,7 @@ export function InstructorSidebar({ notes, students, onNoteSelect }: InstructorS
         </div>
 
         <div className='mt-2'>
-          <Tabs
-            value={activeTab}
-            onValueChange={v => setActiveTab(v as 'unreviewed' | 'reviewed')}
-          >
+          <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'unreviewed' | 'reviewed')}>
             <TabsList className='grid w-full grid-cols-2'>
               <TabsTrigger value='unreviewed' className='text-sm font-semibold'>
                 Unreviewed
@@ -140,9 +132,9 @@ export function InstructorSidebar({ notes, students, onNoteSelect }: InstructorS
               <div
                 key={note.id}
                 className={`cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-                  isSelected
-                    ? 'border-blue-400 bg-blue-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                  isSelected ?
+                    'border-blue-400 bg-blue-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                 }`}
                 onClick={() => handleSelect(note)}
               >
@@ -151,10 +143,10 @@ export function InstructorSidebar({ notes, students, onNoteSelect }: InstructorS
                     <span className='truncate text-xs font-medium text-blue-600'>
                       {studentName}
                     </span>
-                    <span className='flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
-                      {note.time instanceof Date
-                        ? note.time.toLocaleDateString()
-                        : new Date(note.time).toLocaleDateString()}
+                    <span className='shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
+                      {note.time instanceof Date ?
+                        note.time.toLocaleDateString()
+                      : new Date(note.time).toLocaleDateString()}
                     </span>
                   </div>
                   <div className='flex items-center justify-between gap-2'>

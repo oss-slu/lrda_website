@@ -55,11 +55,13 @@ async function generateSql(): Promise<string> {
   const lines: string[] = [];
 
   // Delete in reverse FK order (PostgreSQL cascades handle FK constraints)
-  lines.push('TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE;');
+  lines.push(
+    'TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE;',
+  );
 
   // Users (non-students first for FK order)
-  const nonStudents = users.filter((u) => !u.instructorId);
-  const students = users.filter((u) => u.instructorId);
+  const nonStudents = users.filter(u => !u.instructorId);
+  const students = users.filter(u => u.instructorId);
   for (const u of [...nonStudents, ...students]) {
     lines.push(
       `INSERT INTO "user" (id, name, email, email_verified, role, is_instructor, instructor_id, created_at, updated_at) VALUES (${sqlVal(u.id)}, ${sqlVal(u.name)}, ${sqlVal(u.email)}, ${sqlVal(u.emailVerified)}, ${sqlVal(u.role)}, ${sqlVal(u.isInstructor)}, ${sqlVal((u as any).instructorId ?? null)}, ${sqlVal(u.createdAt)}, ${sqlVal(u.updatedAt)});`,
@@ -95,8 +97,8 @@ async function generateSql(): Promise<string> {
   }
 
   // Comments (parents first for FK order)
-  const parents = comments.filter((c) => c.parentId === null);
-  const replies = comments.filter((c) => c.parentId !== null);
+  const parents = comments.filter(c => c.parentId === null);
+  const replies = comments.filter(c => c.parentId !== null);
   for (const c of [...parents, ...replies]) {
     lines.push(
       `INSERT INTO "comment" (id, note_id, author_id, author_name, text, position, thread_id, parent_id, is_resolved, created_at, updated_at) VALUES (${sqlVal(c.id)}, ${sqlVal(c.noteId)}, ${sqlVal(c.authorId)}, ${sqlVal(c.authorName)}, ${sqlVal(c.text)}, ${sqlVal(c.position)}, ${sqlVal(c.threadId)}, ${sqlVal(c.parentId)}, ${sqlVal(c.isResolved)}, ${sqlVal(c.createdAt)}, ${sqlVal(c.updatedAt)});`,
@@ -116,12 +118,14 @@ async function seedLocal() {
     log('info', 'Database connection verified');
 
     log('info', 'Deleting all rows...');
-    await pool.query('TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE');
+    await pool.query(
+      'TRUNCATE "comment", "audio", "media", "note", "session", "account", "verification", "user" CASCADE',
+    );
     log('info', 'All tables cleared');
 
     log('info', 'Inserting users...');
-    const nonStudents = users.filter((u) => !u.instructorId);
-    const students = users.filter((u) => u.instructorId);
+    const nonStudents = users.filter(u => !u.instructorId);
+    const students = users.filter(u => u.instructorId);
     await db.insert(schema.user).values(nonStudents);
     if (students.length > 0) {
       await db.insert(schema.user).values(students);
@@ -130,7 +134,7 @@ async function seedLocal() {
 
     log('info', 'Creating account records (hashing password)...');
     const hashedPassword = await hashPassword(SEED_PASSWORD);
-    const accounts = users.map((u) => ({
+    const accounts = users.map(u => ({
       id: `${u.id}-credential`,
       accountId: u.id,
       providerId: 'credential',
@@ -153,13 +157,16 @@ async function seedLocal() {
     log('info', `  Inserted ${audio.length} audio`);
 
     log('info', 'Inserting comments...');
-    const parents = comments.filter((c) => c.parentId === null);
-    const replies = comments.filter((c) => c.parentId !== null);
+    const parents = comments.filter(c => c.parentId === null);
+    const replies = comments.filter(c => c.parentId !== null);
     await db.insert(schema.comment).values(parents);
     if (replies.length > 0) {
       await db.insert(schema.comment).values(replies);
     }
-    log('info', `  Inserted ${comments.length} comments (${parents.length} parents, ${replies.length} replies)`);
+    log(
+      'info',
+      `  Inserted ${comments.length} comments (${parents.length} parents, ${replies.length} replies)`,
+    );
 
     log('info', 'Seed complete', {
       users: users.length,
@@ -188,9 +195,9 @@ async function main() {
   log('info', 'Seed script starting...');
   log(
     'info',
-    DRY_RUN
-      ? 'DRY RUN MODE - No changes will be written (use --yolo to write)'
-      : 'YOLO MODE - Changes WILL be written to database',
+    DRY_RUN ?
+      'DRY RUN MODE - No changes will be written (use --yolo to write)'
+    : 'YOLO MODE - Changes WILL be written to database',
   );
 
   if (DRY_RUN) {

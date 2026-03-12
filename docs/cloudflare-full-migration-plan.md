@@ -27,35 +27,35 @@ No EC2, no Nginx, no PM2, no PostgreSQL, no security groups. Just Workers + D1 +
 
 ## Current vs Target
 
-| Component | Current (301-improve-admin) | Target (this branch) |
-|---|---|---|
-| API runtime | Bun on EC2 | Cloudflare Workers |
-| API framework | Hono | Hono (unchanged -- native Workers support) |
-| Database | PostgreSQL on EC2 | Cloudflare D1 (SQLite) |
-| ORM | Drizzle (pg dialect) | Drizzle (sqlite dialect) |
-| Auth | Better Auth (pg adapter) | Better Auth (sqlite adapter) |
-| Media storage | S3 via RERUM proxy | Cloudflare R2 |
-| Frontend | Next.js on Netlify | Next.js on Workers (OpenNext) |
-| SSL | Cloudflare Origin CA + Nginx | Automatic (Workers handle SSL) |
-| Process manager | PM2 | None needed (serverless) |
-| Reverse proxy | Nginx | None needed (Workers handle routing) |
-| Deploy | SSH + deploy.sh | `wrangler deploy` |
-| DB backups | pg_dump cron | D1 automatic + Time Travel (30-day point-in-time) |
-| Infrastructure | Terraform (AWS + Cloudflare) | Terraform (Cloudflare only) + wrangler |
+| Component       | Current (301-improve-admin)  | Target (this branch)                              |
+| --------------- | ---------------------------- | ------------------------------------------------- |
+| API runtime     | Bun on EC2                   | Cloudflare Workers                                |
+| API framework   | Hono                         | Hono (unchanged -- native Workers support)        |
+| Database        | PostgreSQL on EC2            | Cloudflare D1 (SQLite)                            |
+| ORM             | Drizzle (pg dialect)         | Drizzle (sqlite dialect)                          |
+| Auth            | Better Auth (pg adapter)     | Better Auth (sqlite adapter)                      |
+| Media storage   | S3 via RERUM proxy           | Cloudflare R2                                     |
+| Frontend        | Next.js on Netlify           | Next.js on Workers (OpenNext)                     |
+| SSL             | Cloudflare Origin CA + Nginx | Automatic (Workers handle SSL)                    |
+| Process manager | PM2                          | None needed (serverless)                          |
+| Reverse proxy   | Nginx                        | None needed (Workers handle routing)              |
+| Deploy          | SSH + deploy.sh              | `wrangler deploy`                                 |
+| DB backups      | pg_dump cron                 | D1 automatic + Time Travel (30-day point-in-time) |
+| Infrastructure  | Terraform (AWS + Cloudflare) | Terraform (Cloudflare only) + wrangler            |
 
 ---
 
 ## Cost
 
-| Resource | Free Tier | Paid ($5/mo Workers plan) |
-|---|---|---|
-| Workers requests | 100K/day | 10M/month |
-| Workers CPU time | 10ms/req | 30s/req |
-| D1 storage | 5 GB | 10 GB (then $0.75/GB) |
-| D1 reads | 5M/day | 25B/month |
-| D1 writes | 100K/day | 50M/month |
-| R2 storage | 10 GB | $0.015/GB/month |
-| R2 operations | 1M Class A, 10M Class B/month | $4.50/M Class A, $0.36/M Class B |
+| Resource         | Free Tier                     | Paid ($5/mo Workers plan)        |
+| ---------------- | ----------------------------- | -------------------------------- |
+| Workers requests | 100K/day                      | 10M/month                        |
+| Workers CPU time | 10ms/req                      | 30s/req                          |
+| D1 storage       | 5 GB                          | 10 GB (then $0.75/GB)            |
+| D1 reads         | 5M/day                        | 25B/month                        |
+| D1 writes        | 100K/day                      | 50M/month                        |
+| R2 storage       | 10 GB                         | $0.015/GB/month                  |
+| R2 operations    | 1M Class A, 10M Class B/month | $4.50/M Class A, $0.36/M Class B |
 
 For ~500 users and ~10K notes, free tier covers everything. Even with growth, the $5/mo paid plan is far cheaper than the ~$15/mo t3.small EC2.
 
@@ -69,16 +69,16 @@ Convert the Hono API from a Bun server with PostgreSQL to a Cloudflare Worker wi
 
 **File: `packages/api/src/db/schema.ts`**
 
-| Change | From | To |
-|---|---|---|
-| Import | `drizzle-orm/pg-core` | `drizzle-orm/sqlite-core` |
-| Table builder | `pgTable` | `sqliteTable` |
-| `timestamp` | `timestamp('x').defaultNow()` | `integer('x', { mode: 'timestamp' }).default(sql\`(unixepoch())\`)` |
-| `doublePrecision` | `doublePrecision('x')` | `real('x')` |
-| `jsonb` | `jsonb('x')` | `text('x', { mode: 'json' })` |
-| `boolean` | `boolean('x')` | `integer('x', { mode: 'boolean' })` |
-| `uuid` (import) | Remove unused import | -- |
-| `AnyPgColumn` | `type AnyPgColumn` | `type AnySQLiteColumn` |
+| Change            | From                          | To                                                                  |
+| ----------------- | ----------------------------- | ------------------------------------------------------------------- |
+| Import            | `drizzle-orm/pg-core`         | `drizzle-orm/sqlite-core`                                           |
+| Table builder     | `pgTable`                     | `sqliteTable`                                                       |
+| `timestamp`       | `timestamp('x').defaultNow()` | `integer('x', { mode: 'timestamp' }).default(sql\`(unixepoch())\`)` |
+| `doublePrecision` | `doublePrecision('x')`        | `real('x')`                                                         |
+| `jsonb`           | `jsonb('x')`                  | `text('x', { mode: 'json' })`                                       |
+| `boolean`         | `boolean('x')`                | `integer('x', { mode: 'boolean' })`                                 |
+| `uuid` (import)   | Remove unused import          | --                                                                  |
+| `AnyPgColumn`     | `type AnyPgColumn`            | `type AnySQLiteColumn`                                              |
 
 No changes needed for: `text`, `relations`, `$defaultFn(() => crypto.randomUUID())`, foreign keys with `onDelete`.
 
@@ -87,6 +87,7 @@ No changes needed for: `text`, `relations`, `$defaultFn(() => crypto.randomUUID(
 **File: `packages/api/src/db/index.ts`**
 
 Replace:
+
 ```typescript
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
@@ -95,6 +96,7 @@ export const db = drizzle(pool, { schema });
 ```
 
 With:
+
 ```typescript
 import { drizzle } from 'drizzle-orm/d1';
 export function createDb(d1: D1Database) {
@@ -145,6 +147,7 @@ export default {
 Remove: graceful shutdown handlers (`SIGTERM`, `SIGINT`), `shutdown-state.ts`, `closePool()` call.
 
 The main refactor here is threading `db` and `auth` through the app. Options:
+
 - **Option A**: Use Hono's `env()` helper -- `c.env.DB` gives the D1 binding, create db per-request in middleware.
 - **Option B**: Create db/auth in the fetch handler and pass via Hono context variables.
 
@@ -168,6 +171,7 @@ Minimal changes. The routes use Drizzle ORM (not raw SQL), which abstracts the d
 - `.returning()` on insert/update -- supported by D1 via Drizzle.
 
 Routes need access to the `db` instance from context instead of importing it directly. This means either:
+
 - Passing `db` through Hono context (set in middleware, read in routes)
 - Or using a factory pattern for the router
 
@@ -176,6 +180,7 @@ Routes need access to the `db` instance from context instead of importing it dir
 **File: `packages/api/src/routes/health.ts`**
 
 Replace PostgreSQL `SELECT 1` probe with a D1 equivalent:
+
 ```typescript
 await db.run(sql`SELECT 1`);
 ```
@@ -234,12 +239,12 @@ Migrations are applied to D1 via `wrangler d1 migrations apply`.
 
 **File: `packages/api/package.json`**
 
-| Remove | Add |
-|---|---|
-| `pg` | `@cloudflare/workers-types` |
-| `drizzle-orm/node-postgres` (import only) | -- |
-| `bun-types` | -- |
-| `pino` / `pino-pretty` (use console or Workers logging) | -- |
+| Remove                                                  | Add                         |
+| ------------------------------------------------------- | --------------------------- |
+| `pg`                                                    | `@cloudflare/workers-types` |
+| `drizzle-orm/node-postgres` (import only)               | --                          |
+| `bun-types`                                             | --                          |
+| `pino` / `pino-pretty` (use console or Workers logging) | --                          |
 
 Build script changes from `bun build` to `wrangler deploy` (wrangler handles bundling).
 
@@ -272,6 +277,7 @@ Remove or deprecate `docker-compose.yml`.
 ### 2.1 R2 bucket
 
 Create via wrangler:
+
 ```bash
 wrangler r2 bucket create lrda-media
 ```
@@ -284,7 +290,7 @@ Add a new route (or modify existing flow) for direct uploads from the web app to
 
 ```typescript
 // packages/api/src/routes/media.ts
-app.post('/api/media/upload', requireAuth, async (c) => {
+app.post('/api/media/upload', requireAuth, async c => {
   const formData = await c.req.formData();
   const file = formData.get('file') as File;
   const key = `${crypto.randomUUID()}-${file.name}`;
@@ -312,6 +318,7 @@ Update `NEXT_PUBLIC_S3_PROXY_PREFIX` to point to the new upload endpoint (or R2 
 ### 2.5 Data migration
 
 Existing media is on `livedreligion.s3.amazonaws.com` (via RERUM proxy). Migration options:
+
 - **Lazy**: Keep old URLs working, new uploads go to R2. Old S3 URLs remain valid.
 - **Full**: Write a one-time script to copy all media from S3 to R2, update URIs in D1.
 
@@ -332,6 +339,7 @@ pnpm --filter web remove @netlify/plugin-nextjs  # if present as dep
 ### 3.2 New files
 
 **`packages/web/wrangler.jsonc`**
+
 ```jsonc
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -341,14 +349,15 @@ pnpm --filter web remove @netlify/plugin-nextjs  # if present as dep
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
-    "directory": ".open-next/assets"
-  }
+    "directory": ".open-next/assets",
+  },
 }
 ```
 
 **`packages/web/open-next.config.ts`**
+
 ```typescript
-import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import { defineCloudflareConfig } from '@opennextjs/cloudflare';
 export default defineCloudflareConfig();
 ```
 
@@ -376,6 +385,7 @@ Delete `netlify.toml` (root) and `packages/web/netlify.toml`.
 ### 3.6 Environment variables
 
 Set in Cloudflare dashboard or `wrangler.jsonc` `[vars]`:
+
 - `NEXT_PUBLIC_API_URL` -- points to the API Worker URL
 - `NEXT_PUBLIC_MAP_KEY`, `NEXT_PUBLIC_MAP_ID`, `NEXT_PUBLIC_PLACES_KEY`
 - `NEXT_PUBLIC_S3_PROXY_PREFIX` -- points to R2 or media upload endpoint
@@ -434,6 +444,7 @@ Keep the scripts as-is (Node.js + pg), run them manually or via GitHub Actions c
 ### 5.1 Remove AWS Terraform
 
 Delete or gut these files:
+
 - `infrastructure/main.tf` -- remove all AWS resources (EC2, security group, EIP, data sources)
 - `infrastructure/scripts/user-data.sh` -- delete entirely
 - `infrastructure/scripts/deploy.sh` -- delete (if created)
@@ -452,6 +463,7 @@ Delete or gut these files:
 ### 5.3 Terraform scope
 
 With full Cloudflare, Terraform manages only:
+
 - Zone settings (SSL mode, TLS version, caching behavior, security level)
 - Redirect rules (www -> apex)
 - Cache rules (bypass for API)
@@ -463,12 +475,13 @@ Workers, D1, and R2 are managed by wrangler (deploy, migrations, bucket creation
 **`.github/workflows/infrastructure.yml`**: Simplify to Cloudflare-only. Remove AWS secrets.
 
 **`.github/workflows/deploy.yml`**: Replace SSH-based deploy with:
+
 ```yaml
 steps:
   - uses: actions/checkout@v4
   - uses: pnpm/action-setup@v4
   - run: pnpm install --frozen-lockfile
-  - run: pnpm --filter @lrda/api run build  # if needed
+  - run: pnpm --filter @lrda/api run build # if needed
   - run: wrangler deploy --config packages/api/wrangler.toml
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -568,6 +581,7 @@ These have no external dependencies and can be done together:
 ## Testing Checklist
 
 ### After Wave 1 (API on Workers)
+
 - [ ] `wrangler dev` starts locally
 - [ ] `curl http://localhost:8787/api/health` returns 200
 - [ ] Create/read/update/delete notes via API
@@ -577,12 +591,14 @@ These have no external dependencies and can be done together:
 - [ ] Search (notes by title, tags, geo bounds) works
 
 ### After Wave 2 (R2 storage)
+
 - [ ] Upload image via web app, stored in R2
 - [ ] Upload audio via web app, stored in R2
 - [ ] Media URLs resolve and display correctly
 - [ ] Old media URLs (S3/RERUM) still work
 
 ### After Wave 3 (Frontend on Workers)
+
 - [ ] `pnpm --filter web preview` runs locally
 - [ ] Auth flow works (login, signup, session cookies)
 - [ ] Google Maps loads and renders markers
@@ -593,11 +609,13 @@ These have no external dependencies and can be done together:
 - [ ] All pages render without errors
 
 ### After Wave 4 (Sync scripts)
+
 - [ ] RERUM sync-from runs and imports notes
 - [ ] RERUM sync-to runs and exports notes
 - [ ] Sync state tracked correctly (no duplicates)
 
 ### After Wave 6 (DNS cutover)
+
 - [ ] `https://wheresreligion.org` serves frontend
 - [ ] `https://api.wheresreligion.org/api/health` returns 200
 - [ ] Mobile app "Visit Website" link works
@@ -607,15 +625,15 @@ These have no external dependencies and can be done together:
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| D1 SQLite limits (10 GB paid) | Low -- estimated ~350 MB for 500 users/10K notes | Monitor via Cloudflare dashboard |
-| Workers 30s CPU limit | Low -- all routes are simple CRUD | Use Workflows for sync scripts if they're slow |
-| Firebase Admin SDK on Workers | High -- Node.js native modules | Run firebase sync once locally, don't deploy to Workers |
-| `next/headers` cookies() on Workers | Medium -- may break server auth | Test early in Wave 3; fallback to header-based auth |
-| RERUM API reliability | Low -- external dependency for sync | Retry logic already in sync scripts |
-| D1 eventual consistency | Low -- D1 is strongly consistent within a region | No action needed |
-| `ilike()` behavior change | Low -- SQLite LIKE is case-insensitive for ASCII | Replace with `like()`, test search |
+| Risk                                | Impact                                           | Mitigation                                              |
+| ----------------------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| D1 SQLite limits (10 GB paid)       | Low -- estimated ~350 MB for 500 users/10K notes | Monitor via Cloudflare dashboard                        |
+| Workers 30s CPU limit               | Low -- all routes are simple CRUD                | Use Workflows for sync scripts if they're slow          |
+| Firebase Admin SDK on Workers       | High -- Node.js native modules                   | Run firebase sync once locally, don't deploy to Workers |
+| `next/headers` cookies() on Workers | Medium -- may break server auth                  | Test early in Wave 3; fallback to header-based auth     |
+| RERUM API reliability               | Low -- external dependency for sync              | Retry logic already in sync scripts                     |
+| D1 eventual consistency             | Low -- D1 is strongly consistent within a region | No action needed                                        |
+| `ilike()` behavior change           | Low -- SQLite LIKE is case-insensitive for ASCII | Replace with `like()`, test search                      |
 
 ---
 

@@ -41,9 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // Gate on isInitialized so the API call doesn't fire before the session
   // cookie is re-validated on page refresh. Without this, the API treats
   // the user as anonymous and returns only published notes.
-  const { data: personalNotes = [] } = usePersonalNotes(
-    isInitialized ? (user?.id ?? null) : null,
-  );
+  const { data: personalNotes = [] } = usePersonalNotes(isInitialized ? (user?.id ?? null) : null);
 
   const handleAddNote = async () => {
     const userId = user?.id;
@@ -142,11 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           <SearchBarNote onSearch={handleSearch} />
 
           <div className='mt-2 flex flex-row items-center justify-between pt-1 text-center'>
-            <Tabs
-              defaultValue='unpublished'
-              className='w-full'
-              onValueChange={togglePublished}
-            >
+            <Tabs defaultValue='unpublished' className='w-full' onValueChange={togglePublished}>
               <TabsList className='grid w-full grid-cols-2'>
                 <TabsTrigger value='unpublished' className='text-sm font-semibold'>
                   Unpublished
@@ -169,7 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         </div>
       </div>
 
-      <div className='absolute bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-gray-50 p-4'>
+      <div className='absolute right-0 bottom-0 left-0 z-10 border-t border-gray-200 bg-gray-50 p-4'>
         <Button
           id='add-note-button'
           data-testid='add-note-button'

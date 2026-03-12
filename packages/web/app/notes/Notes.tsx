@@ -67,9 +67,7 @@ export default function Notes() {
 
         : <div className='flex h-full w-full items-center justify-center bg-gray-100'>
             <div className='flex max-w-md flex-col items-center rounded-sm bg-white px-12 py-16 text-center shadow-sm'>
-              <h2 className='mb-3 text-2xl font-semibold text-gray-800'>
-                Sign in to get started
-              </h2>
+              <h2 className='mb-3 text-2xl font-semibold text-gray-800'>Sign in to get started</h2>
               <p className='mb-6 text-sm text-gray-500'>
                 You must be logged in to create and edit notes.
               </p>
