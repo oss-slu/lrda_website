@@ -68,7 +68,7 @@ This creates `packages/web/.env.local` and `packages/api/.env` with sensible def
 pnpm api:db:migrate
 ```
 
-This creates the local D1 (SQLite) database and applies all schema migrations.
+This applies all Drizzle schema migrations to your local PostgreSQL database.
 
 ### 4. Start Everything
 
@@ -78,8 +78,8 @@ pnpm dev
 
 This single command starts:
 
-- **API server** (Cloudflare Workers via wrangler) on port 8787
-- **Next.js frontend** on port 3000
+- **API server** (Node.js / Hono) on port 3002
+- **Web frontend** (TanStack Start / Vite) on port 3000
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
@@ -108,9 +108,9 @@ pnpm dev:web
 | Command                | Description                             |
 | ---------------------- | --------------------------------------- |
 | `pnpm dev`             | Start API + frontend together           |
-| `pnpm dev:api`         | Start API server only (port 8787)       |
+| `pnpm dev:api`         | Start API server only (port 3002)       |
 | `pnpm dev:web`         | Start frontend only (port 3000)         |
-| `pnpm api:db:migrate`  | Apply D1 database migrations            |
+| `pnpm api:db:migrate`  | Apply database migrations               |
 | `pnpm api:db:generate` | Generate migrations from schema changes |
 | `pnpm api:db:seed`     | Seed database with sample data          |
 | `pnpm setup`           | Create .env files from examples         |
@@ -129,10 +129,11 @@ Create `packages/web/.env.local` with the following:
 
 ```env
 # API Server URL
-NEXT_PUBLIC_API_URL=http://localhost:3002
+VITE_API_URL=http://localhost:3002
 
 # Google Maps (for map features)
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+VITE_MAP_KEY=your-google-maps-api-key
+VITE_MAP_ID=your-google-maps-map-id
 ```
 
 Create `packages/api/.env` with:
@@ -156,10 +157,10 @@ For full access to the development environment, contact the team lead at yashkam
 
 ## Architecture
 
-- **Frontend**: Next.js (App Router) deployed to Cloudflare Workers via OpenNext
-- **API**: Hono + Drizzle ORM deployed to Cloudflare Workers
-- **Database**: Cloudflare D1 (SQLite)
-- **Authentication**: better-auth (session-based, self-hosted)
+- **Frontend**: TanStack Start (Vite) deployed to Cloudflare Workers
+- **API**: Hono + Drizzle ORM on Node.js, deployed to AWS Lightsail via Docker
+- **Database**: PostgreSQL 17
+- **Authentication**: Better Auth (session-based, self-hosted)
 
 ---
 
@@ -169,10 +170,7 @@ For full access to the development environment, contact the team lead at yashkam
 
 ```bash
 # Kill processes on conflicting ports
-lsof -ti:3000 -ti:8787 | xargs kill -9
-
-# Or use pnpm's built-in port clearing
-pnpm clear-ports
+lsof -ti:3000 -ti:3002 | xargs kill -9
 ```
 
 ### Authentication Issues
@@ -180,7 +178,7 @@ pnpm clear-ports
 If you're having trouble logging in:
 
 1. Ensure the API server is running (`pnpm dev:api`)
-2. Check that `NEXT_PUBLIC_API_URL` in `.env.local` is `http://localhost:3002`
+2. Check that `VITE_API_URL` in `.env.local` is `http://localhost:3002`
 3. Clear browser cookies and try again
 
 ---
@@ -191,7 +189,7 @@ If you're having trouble logging in:
 
 ```bash
 pnpm test          # All tests (unit + e2e)
-pnpm test:unit     # Unit tests only (Jest)
+pnpm test:unit     # Unit tests only (Vitest)
 pnpm test:e2e      # End-to-end tests (Playwright)
 ```
 

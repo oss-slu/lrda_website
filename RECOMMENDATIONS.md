@@ -40,6 +40,7 @@ The following recommendations from the original audit have been addressed:
 - [x] **CLAUDE.md architecture tree** -- Fixed remaining stale refs: "D1 db factory" -> "Drizzle schema and pg pool", "Cloudflare Workers config" removed from API section, "Key Patterns (Workers)" -> Node.js patterns
 - [x] **Google Maps Provider lazy loading** -- `GoogleMapsProvider` now lazily loads the ~200KB Maps JS only when a component calls `useGoogleMaps()`. Pages without maps never load the script. Provider stays in root for context availability.
 - [x] **HTTP Cache Headers** -- Added global request middleware in `src/start.ts` via `createStart`. Public pages (`/`, `/stories`, `/resources`, `/wheres-religion`, auth forms) get CDN-level `s-maxage` caching. Authenticated pages (`/notes`, `/map`, `/admin`, `/instructor-dashboard`) get `private, no-store`.
+- [x] **Env prefix renamed** -- All `NEXT_PUBLIC_*` env vars renamed to `VITE_*`. Updated `envPrefix` in `vite.config.ts`, all `import.meta.env.*` references, CI workflows, `.env.example`, and documentation.
 
 ---
 
@@ -247,18 +248,9 @@ navigate({ to: '/' });
 
 ## 4. Code Quality
 
-### 4.1 Env Prefix: `NEXT_PUBLIC_` is Misleading
+### ~~4.1 Env Prefix: `NEXT_PUBLIC_` is Misleading~~ (DONE)
 
-`vite.config.ts` uses `envPrefix: ['NEXT_PUBLIC_']`. This is a holdover from Next.js. Since you're on TanStack Start with Vite, the standard prefix is `VITE_`.
-
-**Why**: Confusing for new contributors; makes it look like a Next.js project; `NEXT_PUBLIC_` has no special meaning in Vite (it works because of the explicit `envPrefix` config, but it's non-standard).
-
-**Recommendation**: Rename all `NEXT_PUBLIC_*` env vars to `VITE_*` (or `PUBLIC_*`). Update `envPrefix` in vite config. Update all `import.meta.env.NEXT_PUBLIC_*` references.
-
-**Pros**: Idiomatic; less confusion; cleaner
-**Cons**: Need to update env vars everywhere (CI, .env files, wrangler config); breaking change
-
-**Confidence**: Medium -- cosmetic but important for maintainability
+Moved to Completed Items above.
 
 ---
 

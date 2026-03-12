@@ -94,7 +94,7 @@ Note: `@hono/zod-openapi` doesn't handle multipart request schemas well. Define 
 
 **No changes needed in consumers** -- `editor_menu_controls.tsx` and `AudioPicker.tsx` import `uploadMedia`/`uploadAudio` which keep the same signatures and return type (URL string).
 
-**Modify `packages/web/.env.example`** -- remove `NEXT_PUBLIC_S3_PROXY_PREFIX` (no longer needed; uploads go through `NEXT_PUBLIC_API_URL`)
+**Modify `packages/web/.env.example`** -- remove `VITE_S3_PROXY_PREFIX` (no longer needed; uploads go through `VITE_API_URL`)
 
 ## Files Changed
 
