@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 
 export const Route = createFileRoute('/notes/$id')({
+  head: () => ({
+    meta: [{ title: "Note | Where's Religion?" }],
+  }),
   component: NoteDetailPage,
 })
 

@@ -4,12 +4,6 @@ import SearchBarUI from './search_bar_ui';
 import { Note, CombinedResult } from '../../types';
 import { Card } from '@/components/ui/card';
 
-declare global {
-  interface Window {
-    google: typeof google;
-  }
-}
-
 interface SearchBarMapProps {
   onSearch: (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => void;
   onNotesSearch: (searchText: string) => void;

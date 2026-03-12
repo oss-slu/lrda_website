@@ -27,6 +27,9 @@ const fetchAdminData = createServerFn().handler(async (): Promise<AdminData | nu
 })
 
 export const Route = createFileRoute('/admin')({
+  head: () => ({
+    meta: [{ title: "Admin | Where's Religion?" }],
+  }),
   loader: async () => {
     const data = await fetchAdminData()
     if (!data?.user || !isAdminUser(data.user)) {

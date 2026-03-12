@@ -16,6 +16,7 @@ import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext'
 import QueryProvider from '@/app/lib/components/QueryProvider'
 import { AuthProvider } from '@/app/lib/components/AuthProvider'
 import NotFound from '@/app/lib/components/NotFound'
+import RootError from '@/app/lib/components/RootError'
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -30,6 +31,8 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: "Where's Religion?" },
+      { name: 'description', content: 'Document and map lived religion research with rich text, media, and geolocation.' },
     ],
     links: [
       { rel: 'stylesheet', href: globalsCss },
@@ -40,6 +43,7 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
+  errorComponent: RootError,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

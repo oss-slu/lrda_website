@@ -14,6 +14,9 @@ import { useInfinitePublishedNotes } from '@/app/lib/hooks/queries/useNotes';
 import { useCreatorName } from '@/app/lib/hooks/queries/useUsers';
 
 export const Route = createFileRoute('/stories')({
+  head: () => ({
+    meta: [{ title: "Stories | Where's Religion?" }],
+  }),
   component: StoriesPage,
 })
 

@@ -7,7 +7,7 @@ description: 'Core coding standards, architecture patterns, and conventions for 
 
 ## Project Overview
 
-This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
+This is the **Where's Religion?** desktop web application -- a TanStack Start project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
 
 ### Migration Context
 
@@ -36,17 +36,17 @@ This is a **monorepo** containing:
 ```
 lrda_website/
 ├── packages/
-│   ├── api/                # PRIMARY API server (Hono + Drizzle + D1)
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
 │   │   ├── src/
 │   │   │   ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
-│   │   │   ├── db/         # Drizzle schema and D1 db factory
-│   │   │   └── middleware/  # Auth + DB middleware
-│   │   ├── drizzle/        # Generated SQL migrations (not in src/)
-│   │   └── wrangler.jsonc  # Cloudflare Workers config
-│   └── web/                # Next.js App Router application
-│       ├── app/            # Pages, components, hooks, stores
+│   │   │   ├── db/         # Drizzle schema and pg pool
+│   │   │   └── middleware/  # Auth middleware
+│   │   └── drizzle/        # Generated SQL migrations (not in src/)
+│   └── web/                # TanStack Start application
+│       ├── app/            # Components, hooks, stores, services
+│       ├── src/            # TanStack Router routes
 │       ├── components/     # shadcn/ui components
-│       └── wrangler.jsonc  # Cloudflare Workers config (OpenNext)
+│       └── wrangler.jsonc  # Cloudflare Workers config
 └── public/                 # Static assets
 ```
 
@@ -66,7 +66,7 @@ lrda_website/
 
 ### Frontend (Web Package)
 
-- **Framework**: Next.js 16+ (App Router)
+- **Framework**: TanStack Start (Vite + TanStack Router)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **UI Components**:
@@ -77,23 +77,23 @@ lrda_website/
 - **Data Fetching**: TanStack React Query (@tanstack/react-query)
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
-- **Deployment**: Cloudflare Workers via `@opennextjs/cloudflare`
+- **Deployment**: Cloudflare Workers via TanStack Start
 
 ### Backend (`packages/api/`)
 
-- **Runtime**: Cloudflare Workers
+- **Runtime**: Node.js (@hono/node-server)
 - **Server Framework**: Hono (with `@hono/zod-openapi`)
-- **ORM**: Drizzle ORM (SQLite dialect)
-- **Database**: Cloudflare D1 (SQLite)
+- **ORM**: Drizzle ORM (PostgreSQL dialect)
+- **Database**: PostgreSQL 17
 - **Authentication**: Better Auth (session-based with cookies)
 - **API Documentation**: OpenAPI/Scalar
+- **Deployment**: AWS Lightsail via Docker (blue/green with Nginx)
 
-### Key Patterns (Workers)
+### Key Patterns
 
-- **Per-request DB**: `createDb(c.env.DB)` in `dbMiddleware` -- no module-level singleton
-- **Per-request Auth**: `createAuth(c.env, db)` in middleware and auth handlers
+- **Module-level singletons**: `db` (pg pool) and `auth` are created once at startup, not per-request
+- **Env**: Zod-validated `process.env` via `src/env.ts`
 - **OpenAPIHono type erasure**: `openapi()` handlers erase `Env` generics; use `getDb(c)` and `getEnv(c)` helpers from `routes/helpers.ts`
-- **Env bindings**: Typed via `worker-configuration.d.ts` global `Env` interface
 
 ### Testing
 
@@ -143,10 +143,11 @@ lrda_website/
 
 - Prefer functional components with hooks
 - Use TypeScript interfaces for component props
-- Follow Next.js App Router conventions:
-  - Server Components by default
-  - Use `'use client'` directive only when needed (hooks, event handlers, browser APIs)
-  - Route handlers in `app/api/`
+- Follow TanStack Start conventions:
+  - File-based routing in `src/routes/`
+  - Use `createFileRoute` for route definitions
+  - Use `createServerFn` for server-side data loading
+  - Use `head()` on routes for SEO meta tags
 
 ### UI Components
 
@@ -165,8 +166,6 @@ lrda_website/
 ### Example Component Structure
 
 ```typescript
-"use client"; // Only if needed
-
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/app/lib/stores/exampleStore";
 import { LucideIcon } from "lucide-react";
@@ -214,10 +213,10 @@ pnpm install
 # Development
 pnpm dev                              # Start API + web together
 pnpm dev:api                          # API server only (port 3002)
-pnpm dev:web                          # Web app only (Next.js, port 3000)
+pnpm dev:web                          # Web app only (port 3000)
 
 # Database
-pnpm api:db:migrate                   # Apply D1 migrations locally
+pnpm api:db:migrate                   # Apply Drizzle migrations locally
 pnpm api:db:generate                  # Generate migrations from schema changes
 
 # Testing
@@ -226,7 +225,7 @@ pnpm test:unit                        # Jest unit tests
 pnpm test:e2e                         # Playwright e2e tests
 
 # Building
-pnpm build                            # Build Next.js app
+pnpm build                            # Build web app
 
 # Linting
 pnpm lint                             # ESLint

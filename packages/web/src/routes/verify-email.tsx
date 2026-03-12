@@ -19,6 +19,9 @@ import {
 } from 'lucide-react'
 
 export const Route = createFileRoute('/verify-email')({
+  head: () => ({
+    meta: [{ title: "Verify Email | Where's Religion?" }],
+  }),
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === 'string' ? search.token : '',
   }),
@@ -164,7 +167,7 @@ function VerifyEmailPage() {
                   </Button>
                 )}
 
-                <Link to="/confirm" search={{ email: '' }}>
+                <Link to="/confirm" search={{ email: '', sent: false }}>
                   <Button variant="outline" className="w-full">
                     <Mail className="mr-2 h-4 w-4" />
                     Request a new verification email
@@ -206,7 +209,7 @@ function VerifyEmailPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Link to="/confirm" search={{ email: '' }}>
+                <Link to="/confirm" search={{ email: '', sent: false }}>
                   <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white">
                     <Mail className="mr-2 h-4 w-4" />
                     Request a new verification email

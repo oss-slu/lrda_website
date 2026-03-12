@@ -22,6 +22,9 @@ import {
 import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
 
 export const Route = createFileRoute('/map')({
+  head: () => ({
+    meta: [{ title: "Map | Where's Religion?" }],
+  }),
   component: MapPage,
 })
 

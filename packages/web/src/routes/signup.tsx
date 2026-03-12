@@ -38,6 +38,9 @@ interface SignupFormData {
 }
 
 export const Route = createFileRoute('/signup')({
+  head: () => ({
+    meta: [{ title: "Sign Up | Where's Religion?" }],
+  }),
   component: SignupPage,
 })
 

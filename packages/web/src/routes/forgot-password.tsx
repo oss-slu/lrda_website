@@ -21,6 +21,9 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react'
 
 export const Route = createFileRoute('/forgot-password')({
+  head: () => ({
+    meta: [{ title: "Forgot Password | Where's Religion?" }],
+  }),
   component: ForgotPasswordPage,
   validateSearch: (search: Record<string, unknown>): { email?: string } => ({
     email: typeof search.email === 'string' ? search.email : undefined,

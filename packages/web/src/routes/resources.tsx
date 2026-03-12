@@ -2,6 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { formatCitation } from '@/app/lib/utils/citation_formatter';
 
 export const Route = createFileRoute('/resources')({
+  head: () => ({
+    meta: [{ title: "Resources | Where's Religion?" }],
+  }),
   component: ResourcesPage,
 })
 

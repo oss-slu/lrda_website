@@ -5,6 +5,9 @@ import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { CollapsibleSection } from '@/app/lib/components/CollapsibleSection';
 
 export const Route = createFileRoute('/wheres-religion')({
+  head: () => ({
+    meta: [{ title: "About | Where's Religion?" }],
+  }),
   component: WheresReligionPage,
 })
 

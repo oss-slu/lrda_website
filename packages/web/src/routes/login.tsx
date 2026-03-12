@@ -22,6 +22,9 @@ import {
 import { Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/login')({
+  head: () => ({
+    meta: [{ title: "Log In | Where's Religion?" }],
+  }),
   component: LoginPage,
 })
 
