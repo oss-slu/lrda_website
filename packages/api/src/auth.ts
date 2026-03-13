@@ -65,8 +65,11 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 5 * 60, // 5 minutes
     },
+  },
+  advanced: {
     ...(env.COOKIE_DOMAIN && {
-      cookie: {
+      crossSubDomainCookies: {
+        enabled: true,
         domain: env.COOKIE_DOMAIN,
       },
     }),
