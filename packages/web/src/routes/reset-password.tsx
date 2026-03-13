@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { authClient } from '@/app/lib/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { PasswordInput } from '@/components/ui/password-input';
 import StrengthIndicator from '@/components/ui/strength-indicator';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
@@ -122,25 +122,21 @@ function ResetPasswordPage() {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor='password'>New password</FieldLabel>
-                <Input
+                <PasswordInput
                   id='password'
-                  type='password'
                   placeholder='Enter new password'
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   disabled={loading}
                 />
-                {password && (
-                  <StrengthIndicator password={password} onUnmet={setUnmetRequirements} />
-                )}
+                <StrengthIndicator password={password} onUnmet={setUnmetRequirements} />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor='confirmPassword'>Confirm password</FieldLabel>
-                <Input
+                <PasswordInput
                   id='confirmPassword'
-                  type='password'
                   placeholder='Confirm new password'
                   required
                   value={confirmPassword}

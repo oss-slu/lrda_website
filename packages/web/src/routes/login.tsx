@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { PasswordInput } from '@/components/ui/password-input';
+import { LogIn } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   head: () => ({
@@ -67,8 +69,15 @@ function LoginPage() {
     <div className='flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 p-6'>
       <Card className='w-full max-w-md'>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <div className='mb-2 flex justify-center'>
+            <div className='rounded-full bg-blue-100 p-3'>
+              <LogIn className='h-6 w-6 text-blue-600' />
+            </div>
+          </div>
+          <CardTitle className='text-center'>Login to your account</CardTitle>
+          <CardDescription className='mt-2 text-center'>
+            Enter your email below to login to your account
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -84,7 +93,9 @@ function LoginPage() {
                 <Input
                   id='email'
                   type='email'
-                  placeholder='m@example.com'
+                  placeholder='me@example.com'
+                  autoComplete='email'
+                  autoFocus
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
@@ -96,14 +107,16 @@ function LoginPage() {
                   <FieldLabel htmlFor='password'>Password</FieldLabel>
                   <Link
                     to='/forgot-password'
+                    tabIndex={-1}
                     className='ml-auto text-sm text-blue-600 underline-offset-4 hover:underline'
                   >
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id='password'
-                  type='password'
+                  placeholder='Enter your password'
+                  autoComplete='current-password'
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
@@ -116,7 +129,7 @@ function LoginPage() {
                   disabled={isLoading}
                   className='w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white'
                 >
-                  {isLoading ? 'Loading...' : 'Login'}
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
 
                 <FieldDescription className='text-center'>
@@ -130,7 +143,7 @@ function LoginPage() {
           </form>
 
           {isMigratedUser && (
-            <div className='mt-4 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900'>
+            <div role='alert' className='mt-4 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900'>
               <p className='font-medium'>Welcome back!</p>
               <p className='mt-1 text-blue-800'>
                 We've upgraded our system since your last visit. To keep your account secure, we'll

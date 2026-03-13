@@ -7,7 +7,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { fetchInstructors } from '@/app/lib/services';
 import StrengthIndicator from '@/components/ui/strength-indicator';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserPlus } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -17,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -65,6 +67,7 @@ function SignupPage() {
   });
 
   const selectedRole = form.watch('role');
+  const passwordValue = form.watch('password');
 
   // Fetch instructors when role changes to student
   useEffect(() => {
@@ -145,9 +148,19 @@ function SignupPage() {
     <div className='flex min-h-full flex-col items-center justify-center overflow-y-auto bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-8'>
       {/* Signup Card */}
       <Card className='w-full max-w-md bg-white shadow-lg'>
-        <div className='p-8'>
-          <h1 className='mb-6 text-center text-2xl font-bold text-gray-800'>Sign Up</h1>
+        <CardHeader>
+          <div className='mb-2 flex justify-center'>
+            <div className='rounded-full bg-blue-100 p-3'>
+              <UserPlus className='h-6 w-6 text-blue-600' />
+            </div>
+          </div>
+          <CardTitle className='text-center'>Create an account</CardTitle>
+          <CardDescription className='mt-2 text-center'>
+            Sign up to start documenting and mapping lived religion
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
               {/* Name Fields */}
@@ -161,6 +174,9 @@ function SignupPage() {
                       <FormControl>
                         <Input
                           placeholder='John'
+                          autoComplete='given-name'
+                          autoFocus
+                          required
                           {...field}
                           className='border-gray-300'
                           disabled={isLoading}
@@ -179,6 +195,8 @@ function SignupPage() {
                       <FormControl>
                         <Input
                           placeholder='Doe'
+                          autoComplete='family-name'
+                          required
                           {...field}
                           className='border-gray-300'
                           disabled={isLoading}
@@ -201,6 +219,8 @@ function SignupPage() {
                       <Input
                         type='email'
                         placeholder='john@example.com'
+                        autoComplete='email'
+                        required
                         {...field}
                         className='border-gray-300'
                         disabled={isLoading}
@@ -219,24 +239,19 @@ function SignupPage() {
                   <FormItem>
                     <FormLabel className='text-gray-700'>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type='password'
+                      <PasswordInput
                         placeholder='Enter password'
+                        autoComplete='new-password'
                         {...field}
                         className='border-gray-300'
                         disabled={isLoading}
-                        onChange={e => {
-                          field.onChange(e);
-                        }}
                       />
                     </FormControl>
                     <FormMessage />
-                    {field.value && (
-                      <StrengthIndicator
-                        password={field.value}
-                        onUnmet={unmetRequirements => setPasswordRequirements(unmetRequirements)}
-                      />
-                    )}
+                    <StrengthIndicator
+                      password={field.value}
+                      onUnmet={unmetRequirements => setPasswordRequirements(unmetRequirements)}
+                    />
                   </FormItem>
                 )}
               />
@@ -245,21 +260,32 @@ function SignupPage() {
               <FormField
                 control={form.control}
                 name='confirmPassword'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className='text-gray-700'>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='password'
-                        placeholder='Confirm password'
-                        {...field}
-                        className='border-gray-300'
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const match = field.value.length > 0 && field.value === passwordValue;
+                  const mismatch = field.value.length > 0 && field.value !== passwordValue;
+                  return (
+                    <FormItem>
+                      <FormLabel className='text-gray-700'>Confirm Password</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          placeholder='Confirm password'
+                          autoComplete='new-password'
+                          {...field}
+                          className={
+                            mismatch ? 'border-red-300 focus-visible:ring-red-500'
+                            : match ? 'border-green-300 focus-visible:ring-green-500'
+                            : 'border-gray-300'
+                          }
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <p aria-live='polite' className={`text-xs ${mismatch ? 'text-red-600' : match ? 'text-green-600' : 'hidden'}`}>
+                        {mismatch ? 'Passwords do not match' : match ? 'Passwords match' : ''}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Role Selection */}
@@ -363,7 +389,7 @@ function SignupPage() {
               Log In
             </Link>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );
