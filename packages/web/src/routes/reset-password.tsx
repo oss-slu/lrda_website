@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
 import StrengthIndicator from '@/components/ui/strength-indicator';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, KeyRound } from 'lucide-react';
 
 export const Route = createFileRoute('/reset-password')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -33,8 +33,13 @@ function ResetPasswordPage() {
       <div className='flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 p-6'>
         <Card className='w-full max-w-md'>
           <CardHeader>
-            <CardTitle>Invalid reset link</CardTitle>
-            <CardDescription className='mt-2'>
+            <div className='mb-2 flex justify-center'>
+              <div className='rounded-full bg-amber-100 p-3'>
+                <AlertTriangle className='h-6 w-6 text-amber-600' />
+              </div>
+            </div>
+            <CardTitle className='text-center'>Invalid reset link</CardTitle>
+            <CardDescription className='mt-2 text-center'>
               This password reset link is invalid or has expired.
             </CardDescription>
           </CardHeader>
@@ -111,8 +116,13 @@ function ResetPasswordPage() {
     <div className='flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 p-6'>
       <Card className='w-full max-w-md'>
         <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
-          <CardDescription className='mt-2'>
+          <div className='mb-2 flex justify-center'>
+            <div className='rounded-full bg-blue-100 p-3'>
+              <KeyRound className='h-6 w-6 text-blue-600' />
+            </div>
+          </div>
+          <CardTitle className='text-center'>Reset your password</CardTitle>
+          <CardDescription className='mt-2 text-center'>
             Choose a new password for your account.
           </CardDescription>
         </CardHeader>
@@ -125,6 +135,8 @@ function ResetPasswordPage() {
                 <PasswordInput
                   id='password'
                   placeholder='Enter new password'
+                  autoComplete='new-password'
+                  autoFocus
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -138,6 +150,7 @@ function ResetPasswordPage() {
                 <PasswordInput
                   id='confirmPassword'
                   placeholder='Confirm new password'
+                  autoComplete='new-password'
                   required
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
@@ -149,10 +162,9 @@ function ResetPasswordPage() {
                     : ''
                   }
                 />
-                {passwordsMismatch && (
-                  <p className='text-xs text-red-600'>Passwords do not match</p>
-                )}
-                {passwordsMatch && <p className='text-xs text-green-600'>Passwords match</p>}
+                <p aria-live='polite' className={`text-xs ${passwordsMismatch ? 'text-red-600' : passwordsMatch ? 'text-green-600' : 'hidden'}`}>
+                  {passwordsMismatch ? 'Passwords do not match' : passwordsMatch ? 'Passwords match' : ''}
+                </p>
               </Field>
 
               {error && <p className='text-sm text-red-600'>{error}</p>}
