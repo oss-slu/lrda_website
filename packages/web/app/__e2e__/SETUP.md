@@ -55,20 +55,15 @@ browser launching and page interaction.
 
 ## Test Structure
 
-### Current Test Files
+### Browser Specs (in `app/__e2e__/`)
 
-- `admin-dashboard.spec.ts` -- Admin redirect and nav visibility for unauthenticated users
-- `auth-flow.spec.ts` -- Login, signup, forgot/reset password flows
 - `authenticated.spec.ts` -- Authenticated flows: notes page, admin dashboard, nav state
-- `map.spec.ts` -- Map page controls
-- `navigation.spec.ts` -- Navigation, resources page citations
-- `notes-review.spec.ts` -- Notes page auth redirect
-- `stories.spec.ts` -- Stories page search/filter controls
 
 ### API E2E Tests (in `tests/e2e/`)
 
 - `admin/admin.test.ts` -- Admin API endpoints
-- `auth/security.test.ts` -- Auth security (rate limiting, headers)
+- `auth/auth-flows.test.ts` -- Full auth lifecycle: signup, email verification, password reset, Firebase migration
+- `auth/security.test.ts` -- Auth guards, CSRF, admin access control
 - `notes/notes-crud.test.ts` -- Note CRUD operations
 - `notes/notes-access.test.ts` -- Note access control
 

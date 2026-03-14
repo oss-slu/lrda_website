@@ -38,11 +38,13 @@ const PASSWORD_ERROR = {
     'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
 };
 
-function forwardToAuth(c: { req: { raw: { url: string } } }, json: unknown) {
+function forwardToAuth(c: { req: { raw: Request } }, json: unknown) {
+  const headers = new Headers(c.req.raw.headers);
+  headers.set('content-type', 'application/json');
   return auth.handler(
     new Request(c.req.raw.url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify(json),
     }),
   );
@@ -114,16 +116,28 @@ app.post('/api/auth/migration-status', async c => {
   }
 });
 
-// Mount better-auth handler - use all() to catch all methods
+// Mount better-auth handler - use all() to catch all methods.
+// We read the body and build a clean Request because passing c.req.raw.body
+// (a ReadableStream) can fail in @hono/node-server, and forwarding hop-by-hop
+// headers like Transfer-Encoding corrupts the body parser.
 app.all('/api/auth/*', async c => {
-  const response = await auth.handler(
-    new Request(c.req.raw.url, {
+  const hasBody = c.req.method !== 'GET' && c.req.method !== 'HEAD';
+  const body = hasBody ? await c.req.text() : undefined;
+  const headers = new Headers();
+  // Forward only the headers Better Auth needs
+  const ct = c.req.raw.headers.get('content-type');
+  if (ct) headers.set('content-type', ct);
+  const origin = c.req.raw.headers.get('origin');
+  if (origin) headers.set('origin', origin);
+  const cookie = c.req.raw.headers.get('cookie');
+  if (cookie) headers.set('cookie', cookie);
+  return auth.handler(
+    new Request(c.req.url, {
       method: c.req.method,
-      headers: c.req.raw.headers,
-      body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? c.req.raw.body : undefined,
+      headers,
+      body,
     }),
   );
-  return response;
 });
 
 // Dev-only test endpoint for e2e tests (raw SQL access)

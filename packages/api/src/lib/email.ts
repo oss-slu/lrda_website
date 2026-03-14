@@ -5,6 +5,12 @@ const isDev = env.ENVIRONMENT === 'development';
 
 const resend = !isDev && env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
+/**
+ * In dev mode, store the last email URL so e2e tests can retrieve
+ * verification/reset tokens without parsing server logs.
+ */
+export let lastDevEmailUrl: string | null = null;
+
 interface SendEmailParams {
   to: string;
   subject: string;
@@ -16,6 +22,7 @@ interface SendEmailParams {
 async function sendEmail({ to, subject, text, url }: SendEmailParams): Promise<void> {
   if (isDev) {
     console.log('[email] (dev mode -- not sent)', JSON.stringify({ to, subject, url }));
+    if (url) lastDevEmailUrl = url;
     return;
   }
 

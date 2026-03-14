@@ -80,7 +80,7 @@ export const auth = betterAuth({
     customRules: {
       '/sign-in/email': { window: 60, max: 10 },
       '/sign-up/email': { window: 60, max: 5 },
-      '/forgot-password': { window: 60, max: 5 },
+      '/request-password-reset': { window: 60, max: 5 },
       '/reset-password': { window: 60, max: 5 },
       '/send-verification-email': { window: 60, max: 5 },
     },

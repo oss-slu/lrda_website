@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { env } from '../env';
 import { sql } from 'drizzle-orm';
+import { lastDevEmailUrl } from '../lib/email';
 
 /**
  * Dev-only test endpoint for e2e tests.
@@ -54,6 +55,15 @@ testRoutes.post('/', async c => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return c.json({ error: message }, 500);
   }
+});
+
+/**
+ * GET /api/test/last-email-url
+ * Returns the URL from the most recent dev-mode email (verification or reset).
+ * Used by e2e tests to retrieve JWT tokens without parsing server logs.
+ */
+testRoutes.get('/last-email-url', c => {
+  return c.json({ url: lastDevEmailUrl }, 200);
 });
 
 /**
