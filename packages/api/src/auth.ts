@@ -40,7 +40,7 @@ export const auth = betterAuth({
       instructorId: {
         type: 'string',
         required: false,
-        input: true,
+        input: false,
       },
     },
   },

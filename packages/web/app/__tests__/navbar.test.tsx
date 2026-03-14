@@ -54,6 +54,7 @@ vi.mock('../lib/stores/notesStore', () => ({
 // Mock authHelpers
 vi.mock('../lib/stores/authHelpers', () => ({
   hasInstructorAccess: vi.fn(() => false),
+  isAdminUser: vi.fn(() => false),
 }));
 
 // Mock services - inline to avoid hoisting issues

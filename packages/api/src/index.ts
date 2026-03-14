@@ -29,9 +29,43 @@ app.use(
   }),
 );
 
+// Shared password strength check. Returns an error response if invalid, or null if OK.
+const PASSWORD_REGEX = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/;
+const PASSWORD_ERROR = {
+  error: 'Password too weak',
+  message:
+    'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
+};
+
+function forwardToAuth(c: { req: { raw: { url: string } } }, json: unknown) {
+  return auth.handler(
+    new Request(c.req.raw.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(json),
+    }),
+  );
+}
+
+// Server-side password strength validation for signup requests.
+// IMPORTANT: This MUST be registered before the catch-all auth handler so it
+// is matched first for POST /api/auth/sign-up/email.
+app.post('/api/auth/sign-up/email', async c => {
+  try {
+    const json = await c.req.json();
+    const password = json?.password;
+
+    if (!password || !PASSWORD_REGEX.test(password)) {
+      return c.json(PASSWORD_ERROR, 400);
+    }
+
+    return forwardToAuth(c, json);
+  } catch {
+    return c.json({ error: 'Invalid request' }, 400);
+  }
+});
+
 // Server-side password strength validation for reset-password requests.
-// This checks the `newPassword` field and forwards the request to better-auth
-// if it passes validation. Returning a 400 for weak/missing passwords.
 // IMPORTANT: This MUST be registered before the catch-all auth handler so it
 // is matched first for POST /api/auth/reset-password.
 app.post('/api/auth/reset-password', async c => {
@@ -39,32 +73,12 @@ app.post('/api/auth/reset-password', async c => {
     const json = await c.req.json();
     const newPassword = json?.newPassword ?? json?.new_password ?? json?.password;
 
-    if (!newPassword) {
-      return c.json({ error: 'Missing newPassword' }, 400);
+    if (!newPassword || !PASSWORD_REGEX.test(newPassword)) {
+      return c.json(PASSWORD_ERROR, 400);
     }
 
-    const strong = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/;
-    if (!strong.test(newPassword)) {
-      return c.json(
-        {
-          error: 'Password too weak',
-          message:
-            'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
-        },
-        400,
-      );
-    }
-
-    // Forward validated request to better-auth. Recreate Request because body
-    // has been consumed by c.req.json().
-    const forwarded = new Request(c.req.raw.url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(json),
-    });
-
-    return auth.handler(forwarded);
-  } catch (err) {
+    return forwardToAuth(c, json);
+  } catch {
     return c.json({ error: 'Invalid request' }, 400);
   }
 });

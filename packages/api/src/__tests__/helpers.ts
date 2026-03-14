@@ -46,36 +46,51 @@ export function createProductionApp() {
     }),
   );
 
+  const PASSWORD_REGEX = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/;
+  const PASSWORD_ERROR = {
+    error: 'Password too weak',
+    message:
+      'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
+  };
+
+  function forwardToAuth(c: { req: { raw: { url: string } } }, json: unknown) {
+    return auth.handler(
+      new Request(c.req.raw.url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(json),
+      }),
+    );
+  }
+
+  // Password validation for signup (MUST come before catch-all)
+  app.post('/api/auth/sign-up/email', async c => {
+    try {
+      const json = await c.req.json();
+      const password = json?.password;
+
+      if (!password || !PASSWORD_REGEX.test(password)) {
+        return c.json(PASSWORD_ERROR, 400);
+      }
+
+      return forwardToAuth(c, json);
+    } catch {
+      return c.json({ error: 'Invalid request' }, 400);
+    }
+  });
+
   // Password validation for reset-password (MUST come before catch-all)
   app.post('/api/auth/reset-password', async c => {
     try {
       const json = await c.req.json();
       const newPassword = json?.newPassword ?? json?.new_password ?? json?.password;
 
-      if (!newPassword) {
-        return c.json({ error: 'Missing newPassword' }, 400);
+      if (!newPassword || !PASSWORD_REGEX.test(newPassword)) {
+        return c.json(PASSWORD_ERROR, 400);
       }
 
-      const strong = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/;
-      if (!strong.test(newPassword)) {
-        return c.json(
-          {
-            error: 'Password too weak',
-            message:
-              'Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.',
-          },
-          400,
-        );
-      }
-
-      const forwarded = new Request(c.req.raw.url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(json),
-      });
-
-      return auth.handler(forwarded);
-    } catch (err) {
+      return forwardToAuth(c, json);
+    } catch {
       return c.json({ error: 'Invalid request' }, 400);
     }
   });
@@ -153,7 +168,7 @@ export async function createAuthenticatedUser(
   const email =
     options?.email ?? `test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.com`;
   const name = options?.name ?? 'Test User';
-  const password = options?.password ?? 'password123';
+  const password = options?.password ?? 'TestPass1!';
 
   // Step 1: Sign up
   const signUpRes = await request(app, 'POST', '/api/auth/sign-up/email', {

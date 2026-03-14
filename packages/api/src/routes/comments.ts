@@ -195,6 +195,7 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
   // GET /comments/note/:noteId - list comments for note
   .openapi(listCommentsForNoteRoute, async c => {
     const db = getDb(c);
+    const authUser = c.get('user');
     const { noteId } = c.req.valid('param');
 
     // Verify note exists
@@ -203,6 +204,11 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
     });
 
     if (!existingNote) {
+      return c.json({ error: 'Note not found' }, 404);
+    }
+
+    // Unpublished notes: only the creator can view comments
+    if (!existingNote.isPublished && (!authUser || authUser.id !== existingNote.creatorId)) {
       return c.json({ error: 'Note not found' }, 404);
     }
 
@@ -217,6 +223,7 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
   // GET /comments/:id - get single comment
   .openapi(getCommentRoute, async c => {
     const db = getDb(c);
+    const authUser = c.get('user');
     const { id } = c.req.valid('param');
 
     const result = await db.query.comment.findFirst({
@@ -224,6 +231,15 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
     });
 
     if (!result) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    // Check parent note visibility
+    const parentNote = await db.query.note.findFirst({
+      where: eq(note.id, result.noteId),
+    });
+
+    if (parentNote && !parentNote.isPublished && (!authUser || authUser.id !== parentNote.creatorId)) {
       return c.json({ error: 'Comment not found' }, 404);
     }
 

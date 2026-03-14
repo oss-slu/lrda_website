@@ -29,7 +29,7 @@ describe('Auth endpoints', () => {
       const res = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: 'password123',
+          password: 'TestPass1!',
           name: 'Test Auth User',
         },
       });
@@ -47,7 +47,7 @@ describe('Auth endpoints', () => {
       await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: 'password123',
+          password: 'TestPass1!',
           name: 'Test Auth User',
         },
       });
@@ -56,7 +56,7 @@ describe('Auth endpoints', () => {
       const res = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: 'password456',
+          password: 'TestPass2!',
           name: 'Another User',
         },
       });
@@ -71,7 +71,7 @@ describe('Auth endpoints', () => {
       const signUpRes = await request(app, 'POST', '/api/auth/sign-up/email', {
         body: {
           email: testEmail,
-          password: 'password123',
+          password: 'TestPass1!',
           name: 'Test Auth User',
         },
       });
@@ -84,7 +84,7 @@ describe('Auth endpoints', () => {
       const res = await request(app, 'POST', '/api/auth/sign-in/email', {
         body: {
           email: testEmail,
-          password: 'password123',
+          password: 'TestPass1!',
         },
       });
 
