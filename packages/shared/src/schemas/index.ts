@@ -21,4 +21,10 @@ export {
 
 export { UserSchema, PublicUserSchema, UserDetailSchema } from './user';
 
-export { AdminUserSchema, PendingApplicationSchema, StatsSchema } from './admin';
+export {
+  AdminUserSchema,
+  PendingApplicationSchema,
+  StatsSchema,
+  ContentStatsSchema,
+  RecentActivityItemSchema,
+} from './admin';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Menu, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '../stores/authStore';
-import { hasInstructorAccess } from '../stores/authHelpers';
+import { hasInstructorAccess, isAdminUser } from '../stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 export default function Navbar() {
@@ -124,6 +124,17 @@ export default function Navbar() {
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {isAdminUser(user) && (
+                <>
+                  <DropdownMenuItem asChild className='cursor-pointer'>
+                    <Link to='/admin'>
+                      <LayoutDashboard className='mr-2 h-4 w-4' />
+                      Admin
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
                 <LogOut className='mr-2 h-4 w-4' />
                 Log out
@@ -155,6 +166,18 @@ export default function Navbar() {
               <div className='space-y-2'>
                 <p className='truncate px-3 text-sm font-medium text-gray-900'>{name}</p>
                 {user?.email && <p className='truncate px-3 text-xs text-gray-500'>{user.email}</p>}
+                {isAdminUser(user) && (
+                  <Button
+                    variant='ghost'
+                    asChild
+                    className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                  >
+                    <Link to='/admin' onClick={() => setMobileOpen(false)}>
+                      <LayoutDashboard className='mr-2 h-4 w-4' />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant='ghost'
                   className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'

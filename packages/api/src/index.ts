@@ -1,6 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { env } from './env';
@@ -11,6 +12,9 @@ import { auth } from './auth';
 import type { AppEnv } from './types';
 
 const app = new OpenAPIHono<AppEnv>();
+
+// Security headers
+app.use('*', secureHeaders());
 
 // CORS middleware
 app.use(

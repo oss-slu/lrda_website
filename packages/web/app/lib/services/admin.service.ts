@@ -9,11 +9,17 @@
 
 import { fetchWithAuth } from './api';
 import { authClient } from '@/app/lib/auth/client';
-import type { AdminUser, PendingApplication, Stats } from '@lrda/shared';
+import type {
+  AdminUser,
+  PendingApplication,
+  Stats,
+  ContentStats,
+  RecentActivityItem,
+} from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility
 export type AdminUserData = AdminUser;
-export type { PendingApplication };
+export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
 
 /**
@@ -79,6 +85,30 @@ export async function rejectApplication(userId: string, reason?: string): Promis
     return true;
   } catch (error) {
     console.error('Error rejecting application:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get content statistics (note counts).
+ */
+export async function getContentStats(): Promise<ContentStats> {
+  try {
+    return await fetchWithAuth<ContentStats>('/api/admin/content-stats');
+  } catch (error) {
+    console.error('Error fetching content stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get recent note activity.
+ */
+export async function getRecentActivity(): Promise<RecentActivityItem[]> {
+  try {
+    return await fetchWithAuth<RecentActivityItem[]>('/api/admin/recent-activity');
+  } catch (error) {
+    console.error('Error fetching recent activity:', error);
     throw error;
   }
 }

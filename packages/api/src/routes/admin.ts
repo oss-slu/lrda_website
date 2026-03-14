@@ -5,9 +5,11 @@ import {
   AdminUserSchema,
   PendingApplicationSchema,
   StatsSchema,
+  ContentStatsSchema,
+  RecentActivityItemSchema,
 } from '@lrda/shared';
-import { eq, isNotNull, and, ne } from 'drizzle-orm';
-import { user } from '../db/schema';
+import { eq, isNotNull, and, ne, desc, gte, sql, count } from 'drizzle-orm';
+import { user, note } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import type { AppEnv } from '../types';
 import { getDb } from './helpers';
@@ -143,6 +145,50 @@ const rejectInstructorRoute = createRoute({
     404: {
       content: { 'application/json': { schema: ErrorSchema } },
       description: 'User not found or no pending application',
+    },
+  },
+});
+
+const getContentStatsRoute = createRoute({
+  method: 'get',
+  path: '/content-stats',
+  tags: ['Admin'],
+  middleware: [requireAuth, requireAdmin],
+  responses: {
+    200: {
+      content: { 'application/json': { schema: ContentStatsSchema } },
+      description: 'Content statistics',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
+    },
+    403: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
+    },
+  },
+});
+
+const getRecentActivityRoute = createRoute({
+  method: 'get',
+  path: '/recent-activity',
+  tags: ['Admin'],
+  middleware: [requireAuth, requireAdmin],
+  responses: {
+    200: {
+      content: {
+        'application/json': { schema: z.array(RecentActivityItemSchema) },
+      },
+      description: 'Recent note activity',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
+    },
+    403: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
     },
   },
 });
@@ -287,4 +333,63 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
       .where(eq(user.id, id));
 
     return c.json({ success: true, message: 'Instructor application rejected' }, 200);
+  })
+
+  // GET /admin/content-stats - content statistics
+  .openapi(getContentStatsRoute, async c => {
+    const db = getDb(c);
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [result] = await db
+      .select({
+        totalNotes: count(),
+        publishedNotes: count(sql`CASE WHEN ${note.isPublished} = true THEN 1 END`),
+        notesThisWeek: count(sql`CASE WHEN ${note.createdAt} >= ${weekAgo} THEN 1 END`),
+        notesThisMonth: count(sql`CASE WHEN ${note.createdAt} >= ${monthAgo} THEN 1 END`),
+      })
+      .from(note);
+
+    return c.json(
+      {
+        totalNotes: Number(result.totalNotes),
+        publishedNotes: Number(result.publishedNotes),
+        notesThisWeek: Number(result.notesThisWeek),
+        notesThisMonth: Number(result.notesThisMonth),
+      },
+      200,
+    );
+  })
+
+  // GET /admin/recent-activity - recent note activity
+  .openapi(getRecentActivityRoute, async c => {
+    const db = getDb(c);
+    const notes = await db.query.note.findMany({
+      columns: {
+        id: true,
+        title: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      with: {
+        creator: {
+          columns: { name: true },
+        },
+      },
+      orderBy: (note, { desc }) => [desc(note.updatedAt)],
+      limit: 20,
+    });
+
+    const activity = notes.map(n => ({
+      noteId: n.id,
+      title: n.title,
+      creatorName: n.creator.name,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt,
+      isPublished: n.isPublished,
+    }));
+
+    return c.json(activity, 200);
   });

@@ -27,6 +27,8 @@ import type {
   AdminUserSchema,
   PendingApplicationSchema,
   StatsSchema,
+  ContentStatsSchema,
+  RecentActivityItemSchema,
 } from './schemas';
 
 // Note types
@@ -55,3 +57,5 @@ export type UserDetail = z.infer<typeof UserDetailSchema>;
 export type AdminUser = z.infer<typeof AdminUserSchema>;
 export type PendingApplication = z.infer<typeof PendingApplicationSchema>;
 export type Stats = z.infer<typeof StatsSchema>;
+export type ContentStats = z.infer<typeof ContentStatsSchema>;
+export type RecentActivityItem = z.infer<typeof RecentActivityItemSchema>;

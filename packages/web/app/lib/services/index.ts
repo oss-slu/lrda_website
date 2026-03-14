@@ -52,6 +52,8 @@ export {
   fetchAllUsers,
   fetchPendingApplications,
   getStats as getAdminStats,
+  getContentStats,
+  getRecentActivity,
   approveApplication,
   rejectApplication,
   setUserRole,
@@ -59,4 +61,10 @@ export {
   unbanUser,
   removeUser,
 } from './admin.service';
-export type { AdminUserData, PendingApplication, AdminStats } from './admin.service';
+export type {
+  AdminUserData,
+  PendingApplication,
+  AdminStats,
+  ContentStats,
+  RecentActivityItem,
+} from './admin.service';

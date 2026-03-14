@@ -3,6 +3,8 @@ import {
   fetchAllUsers,
   fetchPendingApplications,
   getAdminStats,
+  getContentStats,
+  getRecentActivity,
   approveApplication,
   rejectApplication,
   setUserRole,
@@ -10,7 +12,13 @@ import {
   unbanUser,
   removeUser,
 } from '@/app/lib/services';
-import type { AdminUserData, PendingApplication, AdminStats } from '@/app/lib/services';
+import type {
+  AdminUserData,
+  PendingApplication,
+  AdminStats,
+  ContentStats,
+  RecentActivityItem,
+} from '@/app/lib/services';
 import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
 import { toast } from 'sonner';
 import { formatDateShort } from '@/app/lib/utils/data_conversion';
@@ -21,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from './StatsCard';
+import { RecentActivityTab } from './RecentActivityTab';
 import {
   Table,
   TableBody,
@@ -63,22 +72,34 @@ import {
   Ban,
   UserX,
   ShieldCheck,
+  FileText,
+  Globe,
+  TrendingUp,
+  Calendar,
+  Activity,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
   initialStats: AdminStats | null;
   initialUsers: AdminUserData[];
   initialApplications: PendingApplication[];
+  initialContentStats: ContentStats | null;
+  initialRecentActivity: RecentActivityItem[];
 }
 
 export default function AdminDashboard({
   initialStats,
   initialUsers,
   initialApplications,
+  initialContentStats,
+  initialRecentActivity,
 }: AdminDashboardProps) {
   const [stats, setStats] = useState<AdminStats | null>(initialStats);
   const [users, setUsers] = useState<AdminUserData[]>(initialUsers);
   const [applications, setApplications] = useState<PendingApplication[]>(initialApplications);
+  const [contentStats, setContentStats] = useState<ContentStats | null>(initialContentStats);
+  const [recentActivity, setRecentActivity] =
+    useState<RecentActivityItem[]>(initialRecentActivity);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -86,14 +107,19 @@ export default function AdminDashboard({
   const fetchData = useCallback(async () => {
     setIsLoadingData(true);
     try {
-      const [statsData, usersData, applicationsData] = await Promise.all([
-        getAdminStats(),
-        fetchAllUsers(),
-        fetchPendingApplications(),
-      ]);
+      const [statsData, usersData, applicationsData, contentStatsData, recentActivityData] =
+        await Promise.all([
+          getAdminStats(),
+          fetchAllUsers(),
+          fetchPendingApplications(),
+          getContentStats(),
+          getRecentActivity(),
+        ]);
       setStats(statsData);
       setUsers(usersData);
       setApplications(applicationsData);
+      setContentStats(contentStatsData);
+      setRecentActivity(recentActivityData);
     } catch (error) {
       console.error('Error fetching admin data:', error);
       toast.error('Failed to load admin data');
@@ -248,9 +274,37 @@ export default function AdminDashboard({
           />
         </div>
 
+        {/* Content Stats Cards */}
+        <div className='mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <StatsCard
+            title='Total Notes'
+            value={contentStats?.totalNotes ?? 0}
+            icon={FileText}
+            loading={isLoadingData}
+          />
+          <StatsCard
+            title='Published Notes'
+            value={contentStats?.publishedNotes ?? 0}
+            icon={Globe}
+            loading={isLoadingData}
+          />
+          <StatsCard
+            title='Notes This Week'
+            value={contentStats?.notesThisWeek ?? 0}
+            icon={TrendingUp}
+            loading={isLoadingData}
+          />
+          <StatsCard
+            title='Notes This Month'
+            value={contentStats?.notesThisMonth ?? 0}
+            icon={Calendar}
+            loading={isLoadingData}
+          />
+        </div>
+
         {/* Main Content Tabs */}
         <Tabs defaultValue='applications' className='space-y-4'>
-          <TabsList className='grid w-full max-w-md grid-cols-2'>
+          <TabsList className='grid w-full max-w-lg grid-cols-3'>
             <TabsTrigger value='applications' className='gap-2'>
               <ClipboardList className='h-4 w-4' />
               Applications
@@ -263,6 +317,10 @@ export default function AdminDashboard({
             <TabsTrigger value='users' className='gap-2'>
               <Users className='h-4 w-4' />
               Users
+            </TabsTrigger>
+            <TabsTrigger value='activity' className='gap-2'>
+              <Activity className='h-4 w-4' />
+              Activity
             </TabsTrigger>
           </TabsList>
 
@@ -382,6 +440,11 @@ export default function AdminDashboard({
                 }
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value='activity'>
+            <RecentActivityTab activity={recentActivity} loading={isLoadingData} />
           </TabsContent>
 
           {/* Users Tab */}

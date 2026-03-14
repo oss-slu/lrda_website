@@ -28,3 +28,19 @@ export const StatsSchema = z.object({
   totalInstructors: z.number(),
   pendingApplications: z.number(),
 });
+
+export const ContentStatsSchema = z.object({
+  totalNotes: z.number(),
+  publishedNotes: z.number(),
+  notesThisWeek: z.number(),
+  notesThisMonth: z.number(),
+});
+
+export const RecentActivityItemSchema = z.object({
+  noteId: z.string(),
+  title: z.string().nullable(),
+  creatorName: z.string(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+  isPublished: z.boolean(),
+});
