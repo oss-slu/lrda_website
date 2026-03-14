@@ -7,7 +7,7 @@
  * 2. Permissions work even on refresh before session is re-validated.
  */
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useNotePermissions } from '../lib/components/NoteEditor/hooks/useNotePermissions';
 import type { Note } from '@/app/types';
 
@@ -49,9 +49,11 @@ describe('useNotePermissions - store-based permissions', () => {
   beforeEach(() => {
     mockAuthState.user = null;
     mockAuthState.isLoggedIn = false;
+    mockAuthState.isLoading = false;
+    mockAuthState.isInitialized = true;
   });
 
-  test('student with instructorId can comment on own note (no API call needed)', async () => {
+  test('student with instructorId can comment on own note (no API call needed)', () => {
     // Student has instructorId in their auth store data
     mockAuthState.user = {
       id: 'student-1',
@@ -67,18 +69,15 @@ describe('useNotePermissions - store-based permissions', () => {
 
     const { result } = renderHook(() => useNotePermissions(note));
 
-    await waitFor(() => {
-      expect(result.current.userId).toBe('student-1');
-    });
-
-    // These should be true based on auth store data alone
+    // Hook is synchronous (useMemo) -- assert directly without waitFor
+    expect(result.current.userId).toBe('student-1');
     expect(result.current.isStudent).toBe(true);
     expect(result.current.canComment).toBe(true);
     expect(result.current.isStudentViewingOwnNote).toBe(true);
     expect(result.current.isInstructorUser).toBe(false);
   });
 
-  test('instructor can comment on student note', async () => {
+  test('instructor can comment on student note', () => {
     mockAuthState.user = {
       id: 'instructor-1',
       name: 'Instructor User',
@@ -92,17 +91,14 @@ describe('useNotePermissions - store-based permissions', () => {
 
     const { result } = renderHook(() => useNotePermissions(note));
 
-    await waitFor(() => {
-      expect(result.current.userId).toBe('instructor-1');
-    });
-
+    expect(result.current.userId).toBe('instructor-1');
     expect(result.current.isInstructorUser).toBe(true);
     expect(result.current.canComment).toBe(true);
     expect(result.current.isViewingStudentNote).toBe(true);
     expect(result.current.isStudentViewingOwnNote).toBe(false);
   });
 
-  test('admin can comment', async () => {
+  test('admin can comment', () => {
     mockAuthState.user = {
       id: 'admin-1',
       name: 'Admin User',
@@ -116,15 +112,12 @@ describe('useNotePermissions - store-based permissions', () => {
 
     const { result } = renderHook(() => useNotePermissions(note));
 
-    await waitFor(() => {
-      expect(result.current.userId).toBe('admin-1');
-    });
-
+    expect(result.current.userId).toBe('admin-1');
     expect(result.current.isInstructorUser).toBe(true);
     expect(result.current.canComment).toBe(true);
   });
 
-  test('student without instructorId cannot comment', async () => {
+  test('student without instructorId cannot comment', () => {
     mockAuthState.user = {
       id: 'student-2',
       name: 'Standalone Student',
@@ -139,10 +132,7 @@ describe('useNotePermissions - store-based permissions', () => {
 
     const { result } = renderHook(() => useNotePermissions(note));
 
-    await waitFor(() => {
-      expect(result.current.userId).toBe('student-2');
-    });
-
+    expect(result.current.userId).toBe('student-2');
     expect(result.current.isStudent).toBe(false);
     expect(result.current.canComment).toBe(false);
     expect(result.current.isStudentViewingOwnNote).toBe(false);

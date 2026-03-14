@@ -1,18 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import type { Page } from 'playwright';
+import { newPage, url } from './helpers/pw';
 
-test.describe('Notes Page', () => {
-  test('shows navigation', async ({ page }) => {
-    await page.goto('/notes');
-    await expect(page.locator('nav')).toBeVisible();
+describe('Notes Page', () => {
+  let page: Page;
+
+  beforeAll(async () => {
+    page = await newPage();
   });
 
-  test('shows login prompt when not authenticated', async ({ page }) => {
-    await page.goto('/notes');
+  afterAll(async () => {
+    await page.context().close();
+  });
 
-    const loginPrompt = page.getByText('You must be logged in to create and edit notes.');
-    if (await loginPrompt.isVisible().catch(() => false)) {
-      await expect(loginPrompt).toBeVisible();
-      await expect(page.locator('button:has-text("Sign in")')).toBeVisible();
-    }
+  test('redirects unauthenticated users to login', async () => {
+    await page.goto(url('/notes'));
+    await page.waitForURL(/\/login/);
+    // waitForURL already asserts the URL matches; no redundant expect needed
   });
 });

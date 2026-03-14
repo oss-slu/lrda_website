@@ -20,11 +20,12 @@ describe('User routes', () => {
     });
 
     it('should return list of instructors', async () => {
-      // Create a test instructor
+      // Use unique IDs to avoid conflicts with stale data from prior runs
+      const uniqueId = `test-instructor-${Date.now()}`;
       const testInstructor = {
-        id: 'test-instructor-1',
+        id: uniqueId,
         name: 'Test Instructor',
-        email: 'instructor@test.com',
+        email: `instructor-${Date.now()}@test.com`,
         emailVerified: true,
         isInstructor: true,
         createdAt: new Date(),
@@ -61,11 +62,12 @@ describe('User routes', () => {
 
   describe('GET /api/users/:id', () => {
     it('should return user by id', async () => {
-      // Create a test user
+      // Use unique IDs to avoid conflicts with stale data from prior runs
+      const uniqueId = `test-user-${Date.now()}`;
       const testUser = {
-        id: 'test-user-1',
+        id: uniqueId,
         name: 'Test User',
-        email: 'testuser@test.com',
+        email: `testuser-${Date.now()}@test.com`,
         emailVerified: false,
         isInstructor: false,
         createdAt: new Date(),
@@ -74,11 +76,11 @@ describe('User routes', () => {
 
       await db.insert(user).values(testUser).onConflictDoNothing();
 
-      const res = await request(app, 'GET', '/api/users/test-user-1');
+      const res = await request(app, 'GET', `/api/users/${uniqueId}`);
 
       expect(res.status).toBe(200);
       expect(res.json).toMatchObject({
-        id: 'test-user-1',
+        id: uniqueId,
         name: 'Test User',
       });
 

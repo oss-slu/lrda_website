@@ -1,126 +1,93 @@
-# Playwright E2E Test Setup Guide
+# E2E Test Setup Guide
 
 ## Prerequisites
 
-- Node.js 16+ and pnpm
+- Node.js 24+ and pnpm
 - Your LRDA website application running locally
 
 ## Step-by-Step Setup
 
-### 1. Install Playwright Dependencies
+### 1. Configure Environment Variables
+
+Ensure your `.env` files are set up for both the API and web packages:
+
+- **API** (`packages/api/.env`): `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- **Web** (`packages/web/.env`): `VITE_GOOGLE_MAPS_API_KEY`, `VITE_API_URL` (defaults to `http://localhost:3002`)
+
+The API must be running and connected to a PostgreSQL database for E2E tests to pass.
+
+### 2. Install Playwright Browsers
 
 ```bash
-# Install Playwright browsers and dependencies
-pnpm exec playwright install
+pnpm --filter web test:e2e:install
 ```
-
-### 2. Verify Configuration
-
-The following files should now exist:
-
-- `playwright.config.ts` - Main configuration
-- `app/__e2e__/` - Test directory
-- `package.json` - Updated with test scripts
 
 ### 3. Start Your Application
 
 ```bash
-# Start your development server
 pnpm dev
 ```
 
-### 4. Run Your First Test
+### 4. Run Tests
 
 ```bash
-# Run all E2E tests
-pnpm test:e2e
+# Run all E2E tests (API + browser)
+pnpm --filter web test:e2e
 
-# Run specific test file
-pnpm exec playwright test home.spec.ts
+# Run only browser specs
+pnpm --filter web test:e2e:browser
 
-# Run tests with UI (interactive)
-pnpm test:e2e:ui
+# Run only API tests
+pnpm --filter web test:e2e:api
+
+# Run browser specs with visible browser
+pnpm --filter web test:e2e:headed
 ```
+
+## Architecture
+
+Tests use **Vitest as the runner** with the **Playwright** package for browser automation.
+This is NOT `@playwright/test` -- Vitest manages the test lifecycle, Playwright handles
+browser launching and page interaction.
+
+- `helpers/pw.ts` -- shared browser launcher (lazy singleton, auto-closed on process exit)
+- Each spec file creates isolated browser contexts via `newPage()` to prevent session leakage
 
 ## Test Structure
 
 ### Current Test Files
 
-- `home.spec.ts` - Home page functionality
-- `navigation.spec.ts` - Navigation menu
-- `login.spec.ts` - Login page
-- `map.spec.ts` - Map page
-- `notes.spec.ts` - Notes page
-- `stories.spec.ts` - Stories page
+- `admin-dashboard.spec.ts` -- Admin redirect and nav visibility for unauthenticated users
+- `auth-flow.spec.ts` -- Login, signup, forgot/reset password flows
+- `authenticated.spec.ts` -- Authenticated flows: notes page, admin dashboard, nav state
+- `map.spec.ts` -- Map page controls
+- `navigation.spec.ts` -- Navigation, resources page citations
+- `notes-review.spec.ts` -- Notes page auth redirect
+- `stories.spec.ts` -- Stories page search/filter controls
 
-### Test Philosophy
+### API E2E Tests (in `tests/e2e/`)
 
-- **1 test per file** for easy maintenance
-- **Minimal complexity** to ensure reliability
-- **Focused testing** on core functionality
-- **No authentication dependencies** for basic tests
+- `admin/admin.test.ts` -- Admin API endpoints
+- `auth/security.test.ts` -- Auth security (rate limiting, headers)
+- `notes/notes-crud.test.ts` -- Note CRUD operations
+- `notes/notes-access.test.ts` -- Note access control
 
-## Customization
+## Adding New Tests
 
-### Adding New Tests
-
-1. Create new `.spec.ts` file in `app/__e2e__/`
-2. Follow the existing pattern: 1 test per file
-3. Use descriptive test names
-4. Add comprehensive comments
-
-### Modifying Selectors
-
-If tests fail due to selector issues:
-
-1. Inspect your actual HTML structure
-2. Update selectors in the test files
-3. Use more reliable selectors (data-testid, text content)
-4. Test locally before committing
+1. Create a `.spec.ts` file in `app/__e2e__/`
+2. Import `newPage` and `url` from `./helpers/pw`
+3. Use `beforeAll`/`afterAll` to manage page lifecycle
+4. Use Playwright's locator API for element interaction
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"Cannot find module '@playwright/test'"**
-   - Run: `pnpm exec playwright install`
-
-2. **Tests fail with element not found**
+1. **Tests fail with element not found**
    - Check your HTML structure
    - Update selectors in test files
    - Use browser dev tools to verify elements
 
-3. **Application not running**
+2. **Application not running**
    - Ensure `pnpm dev` is running
    - Check if app is accessible at `http://localhost:3000`
-
-### Debug Mode
-
-```bash
-# Run tests with debug logging
-pnpm test:e2e:debug
-
-# Run with headed mode to see browser
-pnpm test:e2e:headed
-```
-
-## Next Steps
-
-### For Basic Testing
-
-- Run existing tests to verify they work
-- Customize selectors based on your HTML
-- Add more specific test cases as needed
-
-### For Advanced Testing
-
-- Add authentication tests
-- Test complex user workflows
-- Add performance testing
-- Integrate with CI/CD pipeline
-
-## Support
-
-- [Playwright Documentation](https://playwright.dev/)
-- [Playwright Test API](https://playwright.dev/docs/api/class-test)
-- [Best Practices](https://playwright.dev/docs/best-practices)

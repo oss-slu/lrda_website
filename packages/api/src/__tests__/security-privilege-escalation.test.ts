@@ -25,7 +25,8 @@ describe('Security: Privilege Escalation (C1)', () => {
       body: { isInstructor: true },
     });
 
-    // The request may succeed (200) but isInstructor should remain false
+    // The API silently ignores disallowed fields and returns 200.
+    // The security property is verified by the DB check below, not the status code.
     expect(res.status).toBe(200);
 
     const dbUser = await db.query.user.findFirst({

@@ -9,6 +9,7 @@ import { db, closePool } from './db';
 import { user, account } from './db/schema';
 import { routes } from './routes';
 import { auth } from './auth';
+import { testRoutes } from './routes/test';
 import type { AppEnv } from './types';
 
 const app = new OpenAPIHono<AppEnv>();
@@ -124,6 +125,11 @@ app.all('/api/auth/*', async c => {
   );
   return response;
 });
+
+// Dev-only test endpoint for e2e tests (raw SQL access)
+if (env.ENVIRONMENT !== 'production') {
+  app.route('/api/test', testRoutes);
+}
 
 // Mount API routes
 app.route('/api', routes);

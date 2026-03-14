@@ -1,32 +1,42 @@
-import { test, expect } from '@playwright/test';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import type { Page } from 'playwright';
+import { newPage, url } from './helpers/pw';
 
-test.describe('Navigation', () => {
-  test('home page displays heading, navigation, and login link', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+describe('Navigation', () => {
+  let page: Page;
 
-    await expect(page.locator('h1')).toContainText("Where's Religion?");
-    await expect(page.locator('nav')).toBeVisible();
-    await expect(page.locator('nav a:has-text("Home")').first()).toBeVisible();
-    await expect(page.locator('nav a:has-text("Map")').first()).toBeVisible();
-    await expect(page.locator('nav a:has-text("Stories")').first()).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+  beforeAll(async () => {
+    page = await newPage();
   });
 
-  test('resources page displays citations with proper formatting', async ({ page }) => {
-    await page.goto('/resources');
+  afterAll(async () => {
+    await page.context().close();
+  });
+
+  test('home page displays heading, navigation, and login link', async () => {
+    await page.goto(url('/'));
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('h1:has-text("Resources")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Online Resources")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Further Reading")')).toBeVisible();
+    expect(await page.locator('h1').textContent()).toContain("Where's Religion?");
+    await page.locator('nav').waitFor({ state: 'visible' });
+    await page.locator('nav a:has-text("Home")').first().waitFor({ state: 'visible' });
+    await page.locator('nav a:has-text("Map")').first().waitFor({ state: 'visible' });
+    await page.locator('nav a:has-text("Stories")').first().waitFor({ state: 'visible' });
+    await page.getByRole('link', { name: 'Login' }).waitFor({ state: 'visible' });
+  });
 
-    // Verify citation with italicized title
-    const citation = page.locator('text=/Engaging Communities: Writing Ethnographic Research/');
-    await expect(citation).toBeVisible();
-    const italicSpan = citation
-      .locator('..')
-      .locator('span.italic, [style*="font-style: italic"]');
+  test('resources page displays citations with proper formatting', async () => {
+    await page.goto(url('/resources'));
+    await page.waitForLoadState('networkidle');
+
+    await page.locator('h1:has-text("Resources")').waitFor({ state: 'visible' });
+    await page.locator('h2:has-text("Online Resources")').waitFor({ state: 'visible' });
+    await page.locator('h2:has-text("Further Reading")').waitFor({ state: 'visible' });
+
+    // Verify citation with italicized title using a stable selector
+    const italicSpan = page.locator('span.italic, [style*="font-style: italic"]', {
+      hasText: 'Engaging Communities: Writing Ethnographic Research',
+    });
     expect(await italicSpan.count()).toBeGreaterThan(0);
 
     // Verify at least some citations are displayed
@@ -34,11 +44,13 @@ test.describe('Navigation', () => {
     expect(await citations.count()).toBeGreaterThan(0);
   });
 
-  test('resources page links have correct URLs and security attributes', async ({ page }) => {
-    await page.goto('/resources');
+  test('resources page links have correct URLs and security attributes', async () => {
+    await page.goto(url('/resources'));
     await page.waitForLoadState('networkidle');
 
-    const onlineResourcesSection = page.locator('h2:has-text("Online Resources")').locator('..');
+    const onlineResourcesSection = page.locator('section').filter({
+      has: page.locator('h2:has-text("Online Resources")'),
+    });
     const links = onlineResourcesSection.locator('a[href]');
     const linkCount = await links.count();
     expect(linkCount).toBeGreaterThan(0);

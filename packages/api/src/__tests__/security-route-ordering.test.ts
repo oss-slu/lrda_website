@@ -20,14 +20,15 @@ describe('Security: Route Ordering - Password Validation (C2)', () => {
     expect(json.error).toBe('Password too weak');
   });
 
-  it('POST /api/auth/reset-password without password should return 400', async () => {
+  it('POST /api/auth/reset-password without password should return 400 with password error', async () => {
     const res = await request(app, 'POST', '/api/auth/reset-password', {
       body: {},
     });
 
     expect(res.status).toBe(400);
     const json = res.json as { error: string };
-    expect(json.error).toBe('Missing newPassword');
+    // Missing password fails the same validation gate as a weak password
+    expect(json.error).toBe('Password too weak');
   });
 
   it('POST /api/auth/reset-password with strong password should pass validation', async () => {
@@ -38,13 +39,12 @@ describe('Security: Route Ordering - Password Validation (C2)', () => {
       },
     });
 
-    // The password passed validation, so the error (if any) should NOT be about password strength.
-    // better-auth may reject the invalid token, but that is a different error.
-    if (res.json && typeof res.json === 'object') {
-      const json = res.json as Record<string, unknown>;
-      if (json.error) {
-        expect(json.error).not.toBe('Password too weak');
-      }
+    // The password passed validation, so the error (if any) should NOT be about
+    // password strength. better-auth will reject the invalid token, but that is
+    // a different error entirely.
+    const json = res.json as Record<string, unknown> | null;
+    if (json?.error) {
+      expect(json.error).not.toBe('Password too weak');
     }
   });
 });

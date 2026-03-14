@@ -7,8 +7,9 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     env: {
       NODE_ENV: 'test',
+      ENVIRONMENT: 'test',
       PORT: '3003',
-      DATABASE_URL: 'postgresql://lrda:lrda_dev@localhost:5432/lrda_api',
+      DATABASE_URL: 'postgresql://lrda:lrda_dev@localhost:5433/lrda_api',
       LOG_LEVEL: 'silent',
       BETTER_AUTH_SECRET: 'test-secret-key-for-testing-only',
       BETTER_AUTH_URL: 'http://localhost:3003',

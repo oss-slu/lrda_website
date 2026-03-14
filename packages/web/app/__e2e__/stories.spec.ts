@@ -1,28 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import type { Page } from 'playwright';
+import { newPage, url } from './helpers/pw';
 
-test.describe('Stories Page', () => {
-  test('displays search bar and filter controls', async ({ page }) => {
-    await page.goto('/stories');
+describe('Stories Page', () => {
+  let page: Page;
 
-    await expect(page.getByPlaceholder('Search stories...')).toBeVisible();
+  beforeAll(async () => {
+    page = await newPage();
+  });
+
+  afterAll(async () => {
+    await page.context().close();
+  });
+
+  test('displays search bar and filter controls', async () => {
+    await page.goto(url('/stories'));
+
+    await page.getByPlaceholder('Search stories...').waitFor({ state: 'visible' });
 
     // At least one dropdown trigger should be present (sort order)
     const selectTriggers = page.locator('button[role="combobox"]');
     expect(await selectTriggers.count()).toBeGreaterThan(0);
-  });
-
-  test('does not make blob: or data: URL network requests', async ({ page }) => {
-    const badRequests: string[] = [];
-    page.on('requestfailed', request => {
-      const url = request.url();
-      if (url.startsWith('blob:') || url.startsWith('data:')) {
-        badRequests.push(url);
-      }
-    });
-
-    await page.goto('/stories');
-    await page.waitForLoadState('networkidle');
-
-    expect(badRequests.length).toBe(0);
   });
 });

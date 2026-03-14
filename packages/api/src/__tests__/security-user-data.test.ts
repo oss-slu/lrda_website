@@ -50,6 +50,8 @@ describe('Security: User Data Exposure (H3) and Limit Validation (M3)', () => {
       expect(res.status).toBe(200);
 
       const instructors = res.json as Array<Record<string, unknown>>;
+      // Guard: ensure we actually have instructors to check
+      expect(instructors.length).toBeGreaterThan(0);
       for (const instructor of instructors) {
         expect(instructor).not.toHaveProperty('email');
       }

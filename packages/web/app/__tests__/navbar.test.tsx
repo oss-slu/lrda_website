@@ -1,5 +1,4 @@
-import React from 'react';
-import { describe, it, expect, vi, beforeEach, beforeAll, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import Navbar from '../lib/components/navbar';
 import { formatCitation } from '../lib/utils/citation_formatter';
@@ -43,19 +42,8 @@ vi.mock('../lib/stores/authStore', () => ({
   ),
 }));
 
-// Mock useNotesStore
-vi.mock('../lib/stores/notesStore', () => ({
-  useNotesStore: vi.fn((selector?: (state: any) => any) => {
-    const mockStore = {};
-    return selector ? selector(mockStore) : mockStore;
-  }),
-}));
-
-// Mock authHelpers
-vi.mock('../lib/stores/authHelpers', () => ({
-  hasInstructorAccess: vi.fn(() => false),
-  isAdminUser: vi.fn(() => false),
-}));
+// Use the real authHelpers (pure functions with no side effects)
+// so that role-conditional UI reflects the actual mockAuthState.user
 
 // Mock services - inline to avoid hoisting issues
 vi.mock('../lib/services', () => ({

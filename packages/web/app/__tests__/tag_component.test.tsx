@@ -82,10 +82,7 @@ describe('TagManager', () => {
     fireEvent.change(input, { target: { value: 'ExampleTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(mockOnTagsChange).not.toHaveBeenCalledWith([
-      { label: 'ExampleTag', origin: 'user' },
-      { label: 'ExampleTag', origin: 'user' },
-    ]);
+    expect(mockOnTagsChange).not.toHaveBeenCalled();
   });
 
   it('does not add a tag with more than 28 characters', () => {
@@ -104,12 +101,13 @@ describe('TagManager', () => {
     const mockOnTagsChange = vi.fn();
     render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
+    const tag28 = 'a'.repeat(28); // exactly 28 characters
     const input = openAddTag();
-    fireEvent.change(input, { target: { value: 'ValidTagWith28Characters' } });
+    fireEvent.change(input, { target: { value: tag28 } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(mockOnTagsChange).toHaveBeenCalledWith([
-      { label: 'ValidTagWith28Characters', origin: 'user' },
+      { label: tag28, origin: 'user' },
     ]);
   });
 

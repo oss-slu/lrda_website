@@ -1,55 +1,29 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { convertToJpeg } from '../lib/utils/image';
 
 describe('convertToJpeg', () => {
-  const convertToJpeg = async (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+  let originalFileReader: typeof FileReader;
+  let originalCreateElement: typeof document.createElement;
+  let originalImage: typeof Image;
 
-      reader.onload = event => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
+  beforeEach(() => {
+    originalFileReader = global.FileReader;
+    originalCreateElement = document.createElement.bind(document);
+    originalImage = global.Image;
+  });
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            return reject(new Error('Failed to get canvas context'));
-          }
-
-          ctx.drawImage(img, 0, 0);
-          canvas.toBlob(blob => {
-            if (!blob) {
-              return reject(new Error('Failed to convert image to JPEG'));
-            }
-
-            const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
-              type: 'image/jpeg',
-            });
-
-            resolve(jpegFile);
-          }, 'image/jpeg');
-        };
-        img.src = event?.target?.result as string;
-      };
-
-      reader.onerror = err => {
-        reject(err);
-      };
-
-      reader.readAsDataURL(file);
-    });
-  };
+  afterEach(() => {
+    // Restore globals even if the test fails
+    global.FileReader = originalFileReader;
+    document.createElement = originalCreateElement;
+    global.Image = originalImage;
+  });
 
   it('converts PNG image to JPEG File', async () => {
     const fakeBlob = new Blob(['fake-image-data'], { type: 'image/png' });
     const fakeFile = new File([fakeBlob], 'test-image.png', { type: 'image/png' });
 
     const mockToBlob = vi.fn(cb => cb(new Blob(['jpeg-data'], { type: 'image/jpeg' })));
-
-    const originalFileReader = global.FileReader;
-    const originalCreateElement = document.createElement.bind(document);
-    const originalImage = global.Image;
 
     // Mock FileReader
     class MockFileReader {
@@ -95,10 +69,5 @@ describe('convertToJpeg', () => {
     const jpegFile = await convertToJpeg(fakeFile);
     expect(jpegFile.type).toBe('image/jpeg');
     expect(jpegFile.name).toBe('test-image.jpg');
-
-    // Restore original objects
-    global.FileReader = originalFileReader;
-    document.createElement = originalCreateElement;
-    global.Image = originalImage;
   });
 });

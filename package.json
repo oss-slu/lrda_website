@@ -25,9 +25,9 @@
     "test": "pnpm --filter web test",
     "test:unit": "pnpm --filter web test:unit",
     "test:e2e": "pnpm --filter web test:e2e",
-    "test:e2e:ui": "pnpm --filter web test:e2e:ui",
+    "test:e2e:api": "pnpm --filter web test:e2e:api",
+    "test:e2e:browser": "pnpm --filter web test:e2e:browser",
     "test:e2e:headed": "pnpm --filter web test:e2e:headed",
-    "test:e2e:debug": "pnpm --filter web test:e2e:debug",
     "test:e2e:install": "pnpm --filter web test:e2e:install",
     "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/api/.env.example packages/api/.env && echo 'Created .env files - ready for pnpm dev'"
   },
