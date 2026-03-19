@@ -164,6 +164,14 @@ function MapPage() {
     noteRefs,
   });
 
+  // Reset map-bound state on unmount so markers rebuild cleanly on re-visit
+  useEffect(() => {
+    return () => {
+      setMapBounds(null);
+      setIsLoading(true);
+    };
+  }, [setMapBounds, setIsLoading]);
+
   // Resize map when panel opens/closes
   useEffect(() => {
     if (mapRef.current) {
