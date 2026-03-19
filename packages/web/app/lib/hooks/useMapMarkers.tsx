@@ -217,7 +217,7 @@ export function useMapMarkers({
 
   // Diff-based marker sync: only add/remove markers that changed
   useEffect(() => {
-    if (!isMapsApiLoaded || !mapRef.current) return;
+    if (!isMapsApiLoaded || !isMapReady || !mapRef.current) return;
 
     const map = mapRef.current;
     const currentMarkers = markersRef.current;
