@@ -10,7 +10,7 @@ function WelcomeHero() {
       ref={ref}
       className={`relative flex h-full items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat ${motionVariants.fadeIn}`}
       data-reveal={isVisible}
-      style={{ backgroundImage: 'url("/splash.png")' }}
+      style={{ backgroundImage: 'url("/splash.webp")' }}
     >
       {/* Gradient overlay with modern feel */}
       <div className='absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70 backdrop-blur-[2px]' />
@@ -207,7 +207,7 @@ export default function WelcomePage() {
               {/* Phone container with glass effect */}
               <div className='flex h-full w-full items-center justify-center overflow-hidden rounded-[3rem] border border-white/50 p-2 shadow-2xl backdrop-blur-sm'>
                 <img
-                  src='/mobile_image_WR.png'
+                  src='/mobile_image_WR.webp'
                   alt="Where's Religion App"
                   style={{
                     objectFit: 'contain',
