@@ -21,6 +21,7 @@ export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) 
             {media.type === 'image' && (
               <img
                 src={media.uri}
+                loading='lazy'
                 className='max-h-full max-w-full self-center'
                 alt='Media content'
               />

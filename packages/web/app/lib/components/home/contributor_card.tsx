@@ -36,6 +36,7 @@ export default function ContributorCard({
           <img
             src={src}
             alt={name}
+            loading='lazy'
             className='h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]'
             style={{ objectPosition: `center ${offset}%` }}
           />

@@ -209,6 +209,7 @@ export default function WelcomePage() {
                 <img
                   src='/mobile_image_WR.webp'
                   alt="Where's Religion App"
+                  loading='lazy'
                   style={{
                     objectFit: 'contain',
                     objectPosition: 'center',
