@@ -74,7 +74,7 @@ function ConfirmPage() {
           {hasSent && (
             <div className='flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4'>
               <Inbox className='mt-0.5 h-5 w-5 shrink-0 text-blue-600' />
-              <div className='text-sm text-blue-800'>
+              <div className='text-sm text-blue-600'>
                 <p className='mb-2 font-medium'>Next steps:</p>
                 <ol className='list-inside list-decimal space-y-1'>
                   <li>Check your email inbox (and spam folder)</li>

@@ -145,14 +145,14 @@ function LoginPage() {
           {isMigratedUser && (
             <div role='alert' className='mt-4 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900'>
               <p className='font-medium'>Welcome back!</p>
-              <p className='mt-1 text-blue-800'>
+              <p className='mt-1 text-blue-600'>
                 We've upgraded our system since your last visit. To keep your account secure, we'll
                 just need you to set a new password. It only takes a moment!
               </p>
               <Button
                 type='button'
                 variant='outline'
-                className='mt-3 w-full border-blue-300 text-blue-700 hover:bg-blue-100'
+                className='mt-3 w-full border-blue-300 text-blue-600 hover:bg-blue-100'
                 onClick={() =>
                   navigate({
                     to: '/forgot-password',
