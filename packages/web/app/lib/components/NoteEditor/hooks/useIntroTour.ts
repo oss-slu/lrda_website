@@ -33,6 +33,8 @@ export const useIntroTour = (refs: IntroTourRefs) => {
 
       introStartedRef.current = true;
 
+      const { loadIntroStyles } = await import('@/app/lib/utils/loadIntroStyles');
+      await loadIntroStyles();
       const introJs = (await import('intro.js')).default;
       const intro = introJs.tour();
 

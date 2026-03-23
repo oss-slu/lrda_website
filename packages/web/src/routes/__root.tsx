@@ -3,8 +3,6 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import * as React from 'react';
 
 import globalsCss from '@/app/globals.css?url';
-import introjsCustomCss from '@/app/introjs-custom.css?url';
-import introjsCss from 'intro.js/introjs.css?url';
 
 import Navbar from '@/app/lib/components/navbar';
 import { Toaster } from '@/components/ui/sonner';
@@ -36,8 +34,6 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'stylesheet', href: globalsCss },
-      { rel: 'stylesheet', href: introjsCustomCss },
-      { rel: 'stylesheet', href: introjsCss },
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
@@ -57,7 +53,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <GoogleMapsProvider>
               <Navbar />
-              <div className='flex-grow overflow-y-auto scroll-smooth'>{children}</div>
+              <main className='flex-grow overflow-y-auto scroll-smooth'>{children}</main>
               <Toaster />
             </GoogleMapsProvider>
           </AuthProvider>
