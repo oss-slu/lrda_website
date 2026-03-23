@@ -50,12 +50,13 @@
       "baseline-browser-mapping": "^2.9.0"
     },
     "onlyBuiltDependencies": [
+      "@firebase/util",
       "core-js",
       "esbuild",
       "protobufjs",
-      "re2",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "workerd"
     ]
   },
   "devDependencies": {
