@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "5100661403ca1e484379f9064b8f6f6f",
+  "name": "lrda-docs",
+  "compatibility_date": "2025-04-01",
+  "assets": {
+    "directory": ".vitepress/dist"
+  },
+  "routes": [
+    { "pattern": "docs.wheresreligion.org", "custom_domain": true }
+  ]
+}

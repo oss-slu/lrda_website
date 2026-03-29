@@ -1,0 +1,17 @@
+{
+  "name": "@lrda/docs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev --port 3001",
+    "build": "vitepress build",
+    "preview": "vitepress preview --port 3001",
+    "deploy": "vitepress build && wrangler deploy"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.31",
+    "wrangler": "^4.22.0"
+  }
+}

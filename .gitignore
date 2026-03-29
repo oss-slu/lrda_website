@@ -26,6 +26,7 @@ playwright/.cache/
 
 # Plans and drafts and audits
 /plans/
+*.zip
 
 # Terraform
 infrastructure/.terraform/
@@ -47,3 +48,7 @@ firebase-users-dump.json
 d1-seed-dump.sql
 dist/
 media-download/
+
+# VitePress
+packages/docs/.vitepress/dist
+packages/docs/.vitepress/cache

@@ -25,6 +25,7 @@ export default [
       '**/__tests__/**',
       '**/__e2e__/**',
       '**/__mocks__/**',
+      'packages/docs/**',
     ],
   },
   ...tanstackConfig,
