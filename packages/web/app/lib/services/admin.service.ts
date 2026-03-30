@@ -16,11 +16,17 @@ import type {
   ContentStats,
   RecentActivityItem,
 } from '@lrda/shared';
+import { z } from 'zod';
+import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility
 export type AdminUserData = AdminUser;
 export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
+
+// Infer analytics types from Zod schemas
+export type AnalyticsSummary = z.infer<typeof AnalyticsSummarySchema>;
+export type TimeSeriesPoint = z.infer<typeof AnalyticsTimeSeriesSchema>[number];
 
 /**
  * Fetch all users from the API.
@@ -158,4 +164,28 @@ export async function removeUser(userId: string) {
     throw new Error(result.error.message || 'Failed to remove user');
   }
   return result.data;
+}
+
+/**
+ * Get analytics summary.
+ */
+export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> {
+  try {
+    return await fetchWithAuth<AnalyticsSummary>(`/api/admin/analytics/summary?days=${days}`);
+  } catch (error) {
+    console.error('Error fetching analytics summary:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get analytics timeseries data.
+ */
+export async function getAnalyticsTimeseries(days = 30): Promise<TimeSeriesPoint[]> {
+  try {
+    return await fetchWithAuth<TimeSeriesPoint[]>(`/api/admin/analytics/timeseries?days=${days}`);
+  } catch (error) {
+    console.error('Error fetching analytics timeseries:', error);
+    throw error;
+  }
 }

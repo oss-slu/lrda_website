@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatsCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: React.ComponentType<{ className?: string }>;
   loading: boolean;
   highlight?: boolean;

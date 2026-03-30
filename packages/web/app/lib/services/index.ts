@@ -60,6 +60,8 @@ export {
   banUser,
   unbanUser,
   removeUser,
+  getAnalyticsSummary,
+  getAnalyticsTimeseries,
 } from './admin.service';
 export type {
   AdminUserData,
@@ -67,4 +69,6 @@ export type {
   AdminStats,
   ContentStats,
   RecentActivityItem,
+  AnalyticsSummary,
+  TimeSeriesPoint,
 } from './admin.service';

@@ -4,3 +4,4 @@ export * from './useUsers';
 export * from './useNoteMutations';
 export * from './useComments';
 export * from './useViewportNotes';
+export * from './useAnalytics';

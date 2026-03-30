@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from './StatsCard';
 import { RecentActivityTab } from './RecentActivityTab';
+import { AnalyticsTab } from './AnalyticsTab';
 import {
   Table,
   TableBody,
@@ -77,6 +78,7 @@ import {
   TrendingUp,
   Calendar,
   Activity,
+  BarChart as BarChartIcon,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -98,8 +100,7 @@ export default function AdminDashboard({
   const [users, setUsers] = useState<AdminUserData[]>(initialUsers);
   const [applications, setApplications] = useState<PendingApplication[]>(initialApplications);
   const [contentStats, setContentStats] = useState<ContentStats | null>(initialContentStats);
-  const [recentActivity, setRecentActivity] =
-    useState<RecentActivityItem[]>(initialRecentActivity);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>(initialRecentActivity);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -304,7 +305,7 @@ export default function AdminDashboard({
 
         {/* Main Content Tabs */}
         <Tabs defaultValue='applications' className='space-y-4'>
-          <TabsList className='grid w-full max-w-lg grid-cols-3'>
+          <TabsList className='grid w-full max-w-2xl grid-cols-4'>
             <TabsTrigger value='applications' className='gap-2'>
               <ClipboardList className='h-4 w-4' />
               Applications
@@ -321,6 +322,10 @@ export default function AdminDashboard({
             <TabsTrigger value='activity' className='gap-2'>
               <Activity className='h-4 w-4' />
               Activity
+            </TabsTrigger>
+            <TabsTrigger value='analytics' className='gap-2'>
+              <BarChartIcon className='h-4 w-4' />
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -596,6 +601,11 @@ export default function AdminDashboard({
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value='analytics'>
+            <AnalyticsTab />
           </TabsContent>
         </Tabs>
 
