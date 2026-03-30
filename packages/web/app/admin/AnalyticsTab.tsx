@@ -126,7 +126,7 @@ export function AnalyticsTab() {
         </CardContent>
       </Card>
 
-      {/* Top Pages, Referrers, Campaigns Grid */}
+      {/* Top Pages and Referrers */}
       <div className='grid gap-6 lg:grid-cols-2'>
         {/* Top Pages */}
         <Card>
