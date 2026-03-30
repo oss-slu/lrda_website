@@ -4,6 +4,7 @@ import { userRoutes } from './users';
 import { adminRoutes } from './admin';
 import { noteRoutes } from './notes';
 import { commentRoutes } from './comments';
+import { analyticsRoutes } from './analytics';
 import type { AppEnv } from '../types';
 
 export const routes = new OpenAPIHono<AppEnv>()
@@ -11,4 +12,5 @@ export const routes = new OpenAPIHono<AppEnv>()
   .route('/users', userRoutes)
   .route('/admin', adminRoutes)
   .route('/notes', noteRoutes)
-  .route('/comments', commentRoutes);
+  .route('/comments', commentRoutes)
+  .route('/analytics', analyticsRoutes);

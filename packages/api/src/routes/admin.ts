@@ -7,9 +7,11 @@ import {
   StatsSchema,
   ContentStatsSchema,
   RecentActivityItemSchema,
+  AnalyticsSummarySchema,
+  AnalyticsTimeSeriesSchema,
 } from '@lrda/shared';
 import { eq, isNotNull, and, ne, desc, gte, sql, count } from 'drizzle-orm';
-import { user, note } from '../db/schema';
+import { user, note, pageView } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import type { AppEnv } from '../types';
 import { getDb } from './helpers';
@@ -181,6 +183,58 @@ const getRecentActivityRoute = createRoute({
         'application/json': { schema: z.array(RecentActivityItemSchema) },
       },
       description: 'Recent note activity',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
+    },
+    403: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
+    },
+  },
+});
+
+const getAnalyticsSummaryRoute = createRoute({
+  method: 'get',
+  path: '/analytics/summary',
+  tags: ['Admin'],
+  middleware: [requireAuth, requireAdmin],
+  request: {
+    query: z.object({
+      days: z.string().regex(/^\d+$/).optional().default('30'),
+    }),
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: AnalyticsSummarySchema } },
+      description: 'Analytics summary',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Unauthorized',
+    },
+    403: {
+      content: { 'application/json': { schema: ErrorSchema } },
+      description: 'Forbidden - Admin access required',
+    },
+  },
+});
+
+const getAnalyticsTimeSeriesRoute = createRoute({
+  method: 'get',
+  path: '/analytics/timeseries',
+  tags: ['Admin'],
+  middleware: [requireAuth, requireAdmin],
+  request: {
+    query: z.object({
+      days: z.string().regex(/^\d+$/).optional().default('30'),
+    }),
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: AnalyticsTimeSeriesSchema } },
+      description: 'Analytics time series data',
     },
     401: {
       content: { 'application/json': { schema: ErrorSchema } },
@@ -392,4 +446,191 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
     }));
 
     return c.json(activity, 200);
+  })
+
+  // GET /admin/analytics/summary - analytics summary
+  .openapi(getAnalyticsSummaryRoute, async c => {
+    const db = getDb(c);
+    const days = parseInt(c.req.valid('query').days || '30', 10);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Total views and unique visitors
+    const [totals] = await db
+      .select({
+        totalViews: count(),
+        uniqueVisitors: count(sql`DISTINCT ${pageView.sessionHash}`),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate));
+
+    // Top pages
+    const topPages = await db
+      .select({
+        path: pageView.path,
+        title: sql<string>`MAX(${pageView.pageTitle})`.as('title'),
+        views: count().as('views'),
+        visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.path)
+      .orderBy(t => desc(t.views))
+      .limit(20);
+
+    // Top referrers
+    const topReferrers = await db
+      .select({
+        referrer: sql<string>`${pageView.referrer}`.as('referrer'),
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(and(isNotNull(pageView.referrer), gte(pageView.createdAt, startDate)))
+      .groupBy(pageView.referrer)
+      .orderBy(t => desc(t.views))
+      .limit(20);
+
+    // UTM campaigns
+    const topCampaigns = await db
+      .select({
+        utmSource: pageView.utmSource,
+        utmMedium: pageView.utmMedium,
+        utmCampaign: pageView.utmCampaign,
+        views: count().as('views'),
+        visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
+      })
+      .from(pageView)
+      .where(and(isNotNull(pageView.utmSource), gte(pageView.createdAt, startDate)))
+      .groupBy(pageView.utmSource, pageView.utmMedium, pageView.utmCampaign)
+      .orderBy(t => desc(t.views))
+      .limit(20);
+
+    // Browsers
+    const browsers = await db
+      .select({
+        browser: pageView.browser,
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.browser)
+      .orderBy(t => desc(t.views));
+
+    // Devices
+    const devices = await db
+      .select({
+        device: pageView.device,
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.device)
+      .orderBy(t => desc(t.views));
+
+    // Screen widths
+    const screenWidths = await db
+      .select({
+        screenWidth: pageView.screenWidth,
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.screenWidth)
+      .orderBy(t => desc(t.views));
+
+    // Languages
+    const languages = await db
+      .select({
+        language: pageView.language,
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.language)
+      .orderBy(t => desc(t.views))
+      .limit(10);
+
+    // Operating systems
+    const operatingSystems = await db
+      .select({
+        os: pageView.os,
+        views: count().as('views'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(pageView.os)
+      .orderBy(t => desc(t.views));
+
+    return c.json(
+      {
+        totalViews: Number(totals.totalViews || 0),
+        uniqueVisitors: Number(totals.uniqueVisitors || 0),
+        topPages: topPages.map(p => ({
+          path: p.path,
+          title: p.title,
+          views: Number(p.views),
+          visitors: Number(p.visitors),
+        })),
+        topReferrers: topReferrers.map(r => ({
+          referrer: r.referrer,
+          views: Number(r.views),
+        })),
+        topCampaigns: topCampaigns.map(c => ({
+          utmSource: c.utmSource,
+          utmMedium: c.utmMedium,
+          utmCampaign: c.utmCampaign,
+          views: Number(c.views),
+          visitors: Number(c.visitors),
+        })),
+        browsers: browsers.map(b => ({
+          browser: b.browser,
+          views: Number(b.views),
+        })),
+        devices: devices.map(d => ({
+          device: d.device,
+          views: Number(d.views),
+        })),
+        screenWidths: screenWidths.map(s => ({
+          screenWidth: s.screenWidth,
+          views: Number(s.views),
+        })),
+        languages: languages.map(l => ({
+          language: l.language,
+          views: Number(l.views),
+        })),
+        operatingSystems: operatingSystems.map(o => ({
+          os: o.os,
+          views: Number(o.views),
+        })),
+      },
+      200,
+    );
+  })
+
+  // GET /admin/analytics/timeseries - analytics timeseries
+  .openapi(getAnalyticsTimeSeriesRoute, async c => {
+    const db = getDb(c);
+    const days = parseInt(c.req.valid('query').days || '30', 10);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const timeseries = await db
+      .select({
+        date: sql<string>`DATE(${pageView.createdAt})`.as('date'),
+        views: count().as('views'),
+        visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
+      })
+      .from(pageView)
+      .where(gte(pageView.createdAt, startDate))
+      .groupBy(sql`DATE(${pageView.createdAt})`)
+      .orderBy(sql`DATE(${pageView.createdAt})`);
+
+    return c.json(
+      timeseries.map(t => ({
+        date: t.date,
+        views: Number(t.views),
+        visitors: Number(t.visitors),
+      })),
+      200,
+    );
   });

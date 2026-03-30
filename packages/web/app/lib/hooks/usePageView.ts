@@ -1,9 +1,6 @@
-'use client';
-
-import { usePathname } from 'next/navigation';
+import { useLocation } from '@tanstack/react-router';
 import { useEffect } from 'react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+import { API_URL } from '@/app/lib/services/api';
 
 function getScreenWidthBucket(): string {
   const w = window.innerWidth;
@@ -23,11 +20,11 @@ function getUtmParams(): Record<string, string | null> {
 }
 
 export function usePageView() {
-  const pathname = usePathname();
+  const location = useLocation();
 
   useEffect(() => {
     // Don't track in development
-    if (process.env.NODE_ENV !== 'production') return;
+    if (import.meta.env.DEV) return;
 
     const utm = getUtmParams();
 
@@ -35,7 +32,7 @@ export function usePageView() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        path: pathname,
+        path: location.pathname,
         pageTitle: document.title,
         referrer: document.referrer || null,
         screenWidth: getScreenWidthBucket(),
@@ -43,6 +40,8 @@ export function usePageView() {
         ...utm,
       }),
       keepalive: true,
-    }).catch(() => {});
-  }, [pathname]);
+    }).catch(() => {
+      // Silently ignore errors - tracking failures shouldn't affect app
+    });
+  }, [location.pathname]);
 }

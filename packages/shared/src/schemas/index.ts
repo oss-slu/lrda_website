@@ -28,3 +28,18 @@ export {
   ContentStatsSchema,
   RecentActivityItemSchema,
 } from './admin';
+
+export {
+  PageViewTrackingSchema,
+  TimeSeriesDataSchema,
+  TopPageSchema,
+  ReferrerSchema,
+  UtmCampaignSchema,
+  ScreenWidthBreakdownSchema,
+  LanguageBreakdownSchema,
+  BrowserBreakdownSchema,
+  OsBreakdownSchema,
+  DeviceBreakdownSchema,
+  AnalyticsSummarySchema,
+  AnalyticsTimeSeriesSchema,
+} from './analytics';
