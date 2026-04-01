@@ -24,7 +24,7 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   basePath: '/api/auth',
-  trustedOrigins: getTrustedOrigins(),
+  trustedOrigins: env.ENVIRONMENT === 'development' ? ['*'] : getTrustedOrigins(),
   user: {
     additionalFields: {
       isInstructor: {

@@ -23,7 +23,7 @@ app.use(
   cors({
     origin:
       env.ENVIRONMENT === 'development' ?
-        ['http://localhost:3000', 'http://localhost:3002']
+        (origin) => true
       : (env.CORS_ORIGINS?.split(',') ?? []),
     credentials: true,
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -203,7 +203,7 @@ app.notFound(c => {
 // Start server
 import { serve } from '@hono/node-server';
 
-const server = serve({ fetch: app.fetch, port: env.PORT }, info => {
+const server = serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, info => {
   console.log(`API server running at http://localhost:${info.port}`);
   console.log(`API docs available at http://localhost:${info.port}/docs`);
 });
