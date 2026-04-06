@@ -323,7 +323,7 @@ async function ensureFallbackUser() {
   }
 }
 
-// Sync notes from RERUM to D1
+// Sync notes from RERUM to PostgreSQL
 async function syncNotes(fullSync = false) {
   log('info', 'Starting notes sync...');
 
@@ -423,43 +423,50 @@ async function syncNotes(fullSync = false) {
           created++;
         }
       } else {
-        if (existing) {
-          await db.update(schema.note).set(noteData).where(eq(schema.note.id, noteId));
-          updated++;
-        } else {
-          await db.insert(schema.note).values(noteData);
-          created++;
-        }
+        await db.transaction(async (tx) => {
+          if (existing) {
+            await tx.update(schema.note).set(noteData).where(eq(schema.note.id, noteId));
+          } else {
+            await tx.insert(schema.note).values(noteData);
+          }
 
-        // Sync media (delete and re-insert for simplicity)
-        await db.delete(schema.media).where(eq(schema.media.noteId, noteId));
-        if (rerumNote.media?.length) {
-          await db.insert(schema.media).values(
-            rerumNote.media.map(m => ({
-              noteId,
-              type: m.type || 'image',
-              uri: m.uri,
-              thumbnailUri: m.thumbnail || null,
-              uuid: m.uuid || null,
-            })),
-          );
-        }
-
-        // Sync audio (delete and re-insert for simplicity)
-        await db.delete(schema.audio).where(eq(schema.audio.noteId, noteId));
-        if (rerumNote.audio?.length) {
-          const validAudio = rerumNote.audio.filter(a => typeof a.uri === 'string' && a.uri);
-          if (validAudio.length) {
-            await db.insert(schema.audio).values(
-              validAudio.map(a => ({
+          // Sync media (delete and re-insert for simplicity)
+          await tx.delete(schema.media).where(eq(schema.media.noteId, noteId));
+          if (rerumNote.media?.length) {
+            await tx.insert(schema.media).values(
+              rerumNote.media.map(m => ({
                 noteId,
-                uri: a.uri as string,
-                name: a.name || null,
-                duration: a.duration || null,
-                uuid: a.uuid || null,
+                type: m.type || 'image',
+                uri: m.uri,
+                thumbnailUri: m.thumbnail || null,
+                uuid: m.uuid || null,
               })),
             );
           }
+
+          // Sync audio (delete and re-insert for simplicity)
+          await tx.delete(schema.audio).where(eq(schema.audio.noteId, noteId));
+          if (rerumNote.audio?.length) {
+            const validAudio = rerumNote.audio.filter(a => typeof a.uri === 'string' && a.uri);
+            if (validAudio.length) {
+              await tx.insert(schema.audio).values(
+                validAudio.map(a => ({
+                  noteId,
+                  uri: a.uri as string,
+                  name: a.name || null,
+                  duration: a.duration || null,
+                  uuid: a.uuid || null,
+                })),
+              );
+            }
+          }
+        });
+
+        // Increment after transaction commits successfully
+        if (existing) {
+          updated++;
+        } else {
+          created++;
         }
       }
     } catch (error) {
@@ -473,8 +480,13 @@ async function syncNotes(fullSync = false) {
   return { created, updated, skipped };
 }
 
-// Sync comments from RERUM to D1
+// Sync comments from RERUM to PostgreSQL
 async function syncComments(fullSync = false) {
+  if (!USE_REMOTE) {
+    log('info', 'Skipping comments sync (only available in --remote mode)');
+    return { created: 0, updated: 0, skipped: 0 };
+  }
+
   log('info', 'Starting comments sync...');
 
   const lastSync = fullSync ? null : await getLastSyncTime('comments');
@@ -627,19 +639,57 @@ async function runSync(fullSync = false) {
   }
 }
 
-// Watch mode - continuous sync
+// Watch mode - continuous sync with graceful shutdown
 async function runWatchMode() {
   log('info', `Starting watch mode (sync every ${SYNC_INTERVAL_MS / 1000}s)...`);
 
+  let syncInProgress = false;
+  let shutdownRequested = false;
+  let intervalId: ReturnType<typeof setInterval> | undefined;
+
+  async function shutdown(signal: string) {
+    log('info', `Received ${signal}, shutting down...`);
+    shutdownRequested = true;
+    if (intervalId) clearInterval(intervalId);
+
+    if (syncInProgress) {
+      log('info', 'Waiting for in-flight sync to finish...');
+      while (syncInProgress) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    log('info', 'Closing database connection...');
+    await pool.end();
+    log('info', 'Shutdown complete.');
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', () => {
+    shutdown('SIGTERM').catch(err => { log('error', 'Shutdown failed', err); process.exit(1); });
+  });
+  process.on('SIGINT', () => {
+    shutdown('SIGINT').catch(err => { log('error', 'Shutdown failed', err); process.exit(1); });
+  });
+
   // Initial full sync
-  await runSync(true);
+  syncInProgress = true;
+  try {
+    await runSync(true);
+  } finally {
+    syncInProgress = false;
+  }
 
   // Then incremental syncs
-  setInterval(async () => {
+  intervalId = setInterval(async () => {
+    if (syncInProgress || shutdownRequested) return;
+    syncInProgress = true;
     try {
       await runSync(false);
     } catch (error) {
       log('error', 'Watch mode sync failed', error);
+    } finally {
+      syncInProgress = false;
     }
   }, SYNC_INTERVAL_MS);
 }
