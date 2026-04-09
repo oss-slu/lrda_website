@@ -12,6 +12,9 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().default('noreply@wheresreligion.org'),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   COOKIE_DOMAIN: z.string().optional(),
+  RERUM_API_URL: z.string().optional(),
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

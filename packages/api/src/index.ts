@@ -23,7 +23,7 @@ app.use(
   cors({
     origin:
       env.ENVIRONMENT === 'development' ?
-        (origin) => true
+        (origin) => origin
       : (env.CORS_ORIGINS?.split(',') ?? []),
     credentials: true,
     allowHeaders: ['Content-Type', 'Authorization'],
