@@ -297,8 +297,9 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Note not found' }, 404);
     }
 
-    // Unpublished notes are only visible to their creator
-    if (!result.isPublished && (!authUser || authUser.id !== result.creatorId)) {
+    // Unpublished notes are only visible to their creator or admins
+    const isAdmin = authUser?.role === 'admin';
+    if (!result.isPublished && !isAdmin && (!authUser || authUser.id !== result.creatorId)) {
       return c.json({ error: 'Note not found' }, 404);
     }
 
