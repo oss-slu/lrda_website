@@ -526,9 +526,14 @@ export async function syncUsersFromFirebase(): Promise<{
 }> {
   const startTime = Date.now();
 
-  // Dynamic import to avoid loading firebase-admin at startup
+  // Dynamic import: firebase-admin is an optional dependency (skipped in Docker builds to save ~100MB).
+  // At runtime it's only loaded when this function is called.
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore -- optional dependency, may not have types in Docker build
   const { initializeApp, cert, getApps } = await import('firebase-admin/app');
+  // @ts-ignore -- optional dependency
   const { getAuth } = await import('firebase-admin/auth');
+  // @ts-ignore -- optional dependency
   const { getFirestore } = await import('firebase-admin/firestore');
 
   if (getApps().length === 0) {
