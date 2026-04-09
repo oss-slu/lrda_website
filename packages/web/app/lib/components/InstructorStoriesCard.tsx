@@ -107,7 +107,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
     }
   };
 
-  const handleReply = async (threadId: string) => {
+  const handleReply = async (threadId: string, rootCommentId: string) => {
     const trimmed = (replyDrafts[threadId] || '').trim();
     if (!trimmed) return;
 
@@ -122,7 +122,7 @@ const InstructorEnhancedNoteCard: React.FC<{ note: Note }> = ({ note }) => {
         updatedAt: new Date().toISOString(),
         position: null,
         threadId,
-        parentId: threadId,
+        parentId: rootCommentId,
         resolved: false,
       });
       setReplyDrafts(d => ({ ...d, [threadId]: '' }));
