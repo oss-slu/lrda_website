@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   doublePrecision,
+  integer,
   jsonb,
   type AnyPgColumn,
   index,
@@ -268,5 +269,66 @@ export const commentRelations = relations(comment, ({ one, many }) => ({
   }),
   replies: many(comment, {
     relationName: 'replies',
+  }),
+}));
+
+// ============================================
+// Sync Audit Log Tables
+// ============================================
+
+/**
+ * Sync run summary - one row per sync cycle
+ */
+export const syncRun = pgTable(
+  'sync_run',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    startedAt: timestamp('started_at').notNull().defaultNow(),
+    finishedAt: timestamp('finished_at'),
+    durationMs: integer('duration_ms'),
+    status: text('status').notNull().default('running'), // 'running' | 'success' | 'failed'
+    notesCreated: integer('notes_created').notNull().default(0),
+    notesUpdated: integer('notes_updated').notNull().default(0),
+    notesSkipped: integer('notes_skipped').notNull().default(0),
+    notesErrored: integer('notes_errored').notNull().default(0),
+    error: text('error'),
+    triggeredBy: text('triggered_by'), // 'watch' | 'manual' | 'full'
+  },
+  table => [index('sync_run_started_at_idx').on(table.startedAt)],
+);
+
+export const syncRunRelations = relations(syncRun, ({ many }) => ({
+  details: many(syncRunDetail),
+}));
+
+/**
+ * Sync run detail - one row per note touched in a sync run
+ */
+export const syncRunDetail = pgTable(
+  'sync_run_detail',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    runId: text('run_id')
+      .notNull()
+      .references(() => syncRun.id, { onDelete: 'cascade' }),
+    noteId: text('note_id').notNull(),
+    action: text('action').notNull(), // 'created' | 'updated' | 'skipped' | 'errored'
+    error: text('error'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  table => [
+    index('sync_run_detail_run_id_idx').on(table.runId),
+    index('sync_run_detail_note_id_idx').on(table.noteId),
+  ],
+);
+
+export const syncRunDetailRelations = relations(syncRunDetail, ({ one }) => ({
+  run: one(syncRun, {
+    fields: [syncRunDetail.runId],
+    references: [syncRun.id],
   }),
 }));

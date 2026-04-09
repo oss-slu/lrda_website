@@ -28,3 +28,12 @@ export {
   ContentStatsSchema,
   RecentActivityItemSchema,
 } from './admin';
+
+export {
+  SyncStatusSchema,
+  SyncRunSchema,
+  SyncRunDetailSchema,
+  SyncRunWithDetailsSchema,
+  SyncLogResponseSchema,
+  SyncUserResultSchema,
+} from './sync';

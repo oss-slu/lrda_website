@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { z } from 'zod';
 import { createServerFn } from '@tanstack/react-start';
 import { fetchFromAPI } from '@/app/lib/auth/server';
 import { isAdminUser } from '@/app/lib/stores/authHelpers';
@@ -36,7 +37,15 @@ const fetchAdminData = createServerFn().handler(async (): Promise<AdminData | nu
   return { user, stats, users, applications, contentStats, recentActivity };
 });
 
+const adminSearchSchema = z.object({
+  tab: z.string().optional(),
+  syncRunId: z.string().optional(),
+});
+
+export type AdminSearchParams = z.infer<typeof adminSearchSchema>;
+
 export const Route = createFileRoute('/admin')({
+  validateSearch: adminSearchSchema,
   loader: async () => {
     const data = await fetchAdminData();
     if (!data?.user || !isAdminUser(data.user)) {

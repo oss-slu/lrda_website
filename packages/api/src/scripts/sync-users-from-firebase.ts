@@ -218,6 +218,14 @@ async function syncUsers() {
         fbUser.displayName ||
         fbUser.email.split('@')[0];
 
+      const existing = await db.query.user.findFirst({
+        where: eq(schema.user.id, fbUser.uid),
+        columns: { id: true, role: true },
+      });
+
+      // Never overwrite admin role -- only PostgreSQL controls who is admin
+      const role = existing?.role === 'admin' ? 'admin' : 'user';
+
       // First pass: insert/update without instructorId to avoid FK ordering issues
       const userData = {
         id: fbUser.uid,
@@ -227,15 +235,11 @@ async function syncUsers() {
         image: fbUser.photoURL || null,
         createdAt: fbUser.createdAt,
         updatedAt: new Date(),
-        role: isAdmin ? 'admin' : 'user',
+        role,
         isInstructor,
         instructorId: null as string | null,
         pendingInstructorDescription,
       };
-
-      const existing = await db.query.user.findFirst({
-        where: eq(schema.user.id, fbUser.uid),
-      });
 
       if (DRY_RUN) {
         if (existing) {
@@ -283,7 +287,20 @@ async function syncUsers() {
         log('info', `[DRY RUN] Would set instructorId=${instructorId} for user ${uid}`);
       } else {
         try {
-          await db.update(schema.user).set({ instructorId }).where(eq(schema.user.id, uid));
+          // instructorId from Firestore can be a user ID or an email -- resolve to a user ID
+          let resolvedId = instructorId;
+          if (instructorId.includes('@')) {
+            const instructor = await db.query.user.findFirst({
+              where: eq(schema.user.email, instructorId),
+              columns: { id: true },
+            });
+            if (!instructor) {
+              log('warn', `Instructor not found by email ${instructorId} for user ${uid}, skipping`);
+              continue;
+            }
+            resolvedId = instructor.id;
+          }
+          await db.update(schema.user).set({ instructorId: resolvedId }).where(eq(schema.user.id, uid));
         } catch (error) {
           log(
             'warn',

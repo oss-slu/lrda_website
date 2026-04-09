@@ -60,6 +60,13 @@ export {
   banUser,
   unbanUser,
   removeUser,
+  getSyncStatus,
+  startSync,
+  stopSync,
+  triggerSync,
+  getSyncLog,
+  getSyncRunDetail,
+  syncUsers,
 } from './admin.service';
 export type {
   AdminUserData,
@@ -67,4 +74,9 @@ export type {
   AdminStats,
   ContentStats,
   RecentActivityItem,
+  SyncStatus,
+  SyncRun,
+  SyncRunWithDetails,
+  SyncLogResponse,
+  SyncUserResult,
 } from './admin.service';

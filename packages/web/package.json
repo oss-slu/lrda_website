@@ -48,6 +48,8 @@
     "@tanstack/react-router": "^1.166.6",
     "@tanstack/react-router-devtools": "^1.166.6",
     "@tanstack/react-start": "^1.166.8",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.23",
     "@tiptap/core": "^3.20.1",
     "@tiptap/extension-blockquote": "^3.20.1",
     "@tiptap/extension-bold": "^3.20.1",
