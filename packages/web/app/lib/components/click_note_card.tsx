@@ -65,6 +65,9 @@ const ClickableNote: React.FC<{
   if (isPending || !note) {
     return (
       <DialogContent className='flex h-[100vh] flex-col items-center justify-center p-0 sm:max-w-[80%]'>
+        <DialogHeader className='sr-only'>
+          <DialogTitle>Loading note...</DialogTitle>
+        </DialogHeader>
         <Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
       </DialogContent>
     );

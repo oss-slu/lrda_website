@@ -524,6 +524,8 @@ export async function syncUsersFromFirebase(): Promise<{
   updated: number;
   skipped: number;
 }> {
+  const startTime = Date.now();
+
   // Dynamic import to avoid loading firebase-admin at startup
   const { initializeApp, cert, getApps } = await import('firebase-admin/app');
   const { getAuth } = await import('firebase-admin/auth');
@@ -581,6 +583,13 @@ export async function syncUsersFromFirebase(): Promise<{
     nextPageToken = listResult.pageToken;
   } while (nextPageToken);
 
+  // Create audit log run entry upfront so per-user details can reference it
+  const [run] = await db
+    .insert(schema.syncRun)
+    .values({ status: 'running', triggeredBy: 'users' })
+    .returning({ id: schema.syncRun.id });
+  const runId = run.id;
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
@@ -623,30 +632,70 @@ export async function syncUsersFromFirebase(): Promise<{
         fbUser.displayName ||
         fbUser.email.split('@')[0];
 
+      const existing = await db.query.user.findFirst({
+        where: eq(schema.user.id, fbUser.uid),
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          image: true,
+          role: true,
+          isInstructor: true,
+          pendingInstructorDescription: true,
+        },
+      });
+
+      // Never overwrite admin role -- only PostgreSQL controls who is admin
+      const role = existing?.role === 'admin' ? 'admin' : 'user';
+
       const userData = {
-        id: fbUser.uid,
         name,
         email: fbUser.email,
         emailVerified: fbUser.emailVerified,
         image: fbUser.photoURL || null,
         createdAt: fbUser.createdAt,
         updatedAt: new Date(),
-        role: isAdmin ? 'admin' : 'user',
+        role,
         isInstructor,
         instructorId: null as string | null,
         pendingInstructorDescription,
       };
 
-      const existing = await db.query.user.findFirst({
-        where: eq(schema.user.id, fbUser.uid),
-      });
-
       if (existing) {
+        // Check if anything actually changed
+        const changes: string[] = [];
+        if (existing.name !== name) changes.push(`name: "${existing.name}" -> "${name}"`);
+        if (existing.email !== fbUser.email) changes.push(`email: "${existing.email}" -> "${fbUser.email}"`);
+        if (existing.emailVerified !== fbUser.emailVerified) changes.push(`emailVerified: ${existing.emailVerified} -> ${fbUser.emailVerified}`);
+        if ((existing.image || null) !== (fbUser.photoURL || null)) changes.push('image changed');
+        if (existing.isInstructor !== isInstructor) changes.push(`isInstructor: ${existing.isInstructor} -> ${isInstructor}`);
+        if ((existing.pendingInstructorDescription || null) !== (pendingInstructorDescription || null)) changes.push('pendingInstructorDescription changed');
+
+        if (changes.length === 0) {
+          skipped++;
+          continue;
+        }
+
         await db.update(schema.user).set(userData).where(eq(schema.user.id, fbUser.uid));
         updated++;
+
+        // Log per-user detail
+        await db.insert(schema.syncRunDetail).values({
+          runId: runId!,
+          noteId: fbUser.uid, // reusing noteId column for userId
+          action: 'updated',
+          error: changes.join('; '),  // reusing error column to store what changed
+        });
       } else {
-        await db.insert(schema.user).values(userData);
+        await db.insert(schema.user).values({ id: fbUser.uid, ...userData });
         created++;
+
+        await db.insert(schema.syncRunDetail).values({
+          runId: runId!,
+          noteId: fbUser.uid,
+          action: 'created',
+        });
       }
 
       if (instructorId) {
@@ -659,13 +708,57 @@ export async function syncUsersFromFirebase(): Promise<{
   }
 
   // Second pass: set instructorId now that all users exist
+  let instructorLinked = 0;
+  let instructorSkipped = 0;
   for (const { uid, instructorId } of deferredInstructorIds) {
     try {
-      await db.update(schema.user).set({ instructorId }).where(eq(schema.user.id, uid));
+      // instructorId from Firestore can be a user ID, an email, or garbage -- resolve to a valid user ID
+      let resolvedId: string | null = null;
+
+      if (instructorId.includes('@')) {
+        // Looks like an email -- look up the user
+        const instructor = await db.query.user.findFirst({
+          where: eq(schema.user.email, instructorId),
+          columns: { id: true },
+        });
+        resolvedId = instructor?.id ?? null;
+      } else {
+        // Looks like a user ID -- verify it exists
+        const instructor = await db.query.user.findFirst({
+          where: eq(schema.user.id, instructorId),
+          columns: { id: true },
+        });
+        resolvedId = instructor?.id ?? null;
+      }
+
+      if (!resolvedId) {
+        console.warn(`[sync-service] Instructor "${instructorId}" not found for user ${uid}, skipping`);
+        instructorSkipped++;
+        continue;
+      }
+
+      await db.update(schema.user).set({ instructorId: resolvedId }).where(eq(schema.user.id, uid));
+      instructorLinked++;
     } catch (error) {
       console.error(`[sync-service] Failed to set instructorId for ${uid}:`, error);
+      instructorSkipped++;
     }
   }
+
+  // Update audit log run
+  await db
+    .update(schema.syncRun)
+    .set({
+      status: 'success',
+      finishedAt: new Date(),
+      durationMs: Date.now() - startTime,
+      notesCreated: created,
+      notesUpdated: updated,
+      notesSkipped: skipped,
+      notesErrored: instructorSkipped,
+      error: instructorSkipped > 0 ? `${instructorSkipped} instructor link(s) skipped` : null,
+    })
+    .where(eq(schema.syncRun.id, runId));
 
   return { created, updated, skipped };
 }

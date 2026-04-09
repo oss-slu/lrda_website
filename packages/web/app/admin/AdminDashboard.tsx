@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   fetchAllUsers,
   fetchPendingApplications,
@@ -30,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from './StatsCard';
 import { RecentActivityTab } from './RecentActivityTab';
+import { SyncTab } from './SyncTab';
 import {
   Table,
   TableBody,
@@ -94,6 +96,17 @@ export default function AdminDashboard({
   initialContentStats,
   initialRecentActivity,
 }: AdminDashboardProps) {
+  const { tab: urlTab } = useSearch({ from: '/admin' });
+  const navigate = useNavigate();
+  const activeTab = urlTab || 'applications';
+
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      navigate({ to: '/admin', search: (prev: Record<string, unknown>) => ({ ...prev, tab, syncRunId: undefined }), replace: true });
+    },
+    [navigate],
+  );
+
   const [stats, setStats] = useState<AdminStats | null>(initialStats);
   const [users, setUsers] = useState<AdminUserData[]>(initialUsers);
   const [applications, setApplications] = useState<PendingApplication[]>(initialApplications);
@@ -303,8 +316,8 @@ export default function AdminDashboard({
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue='applications' className='space-y-4'>
-          <TabsList className='grid w-full max-w-lg grid-cols-3'>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
+          <TabsList className='grid w-full max-w-2xl grid-cols-4'>
             <TabsTrigger value='applications' className='gap-2'>
               <ClipboardList className='h-4 w-4' />
               Applications
@@ -321,6 +334,10 @@ export default function AdminDashboard({
             <TabsTrigger value='activity' className='gap-2'>
               <Activity className='h-4 w-4' />
               Activity
+            </TabsTrigger>
+            <TabsTrigger value='sync' className='gap-2'>
+              <RefreshCw className='h-4 w-4' />
+              Sync
             </TabsTrigger>
           </TabsList>
 
@@ -596,6 +613,11 @@ export default function AdminDashboard({
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Sync Tab */}
+          <TabsContent value='sync'>
+            <SyncTab />
           </TabsContent>
         </Tabs>
 

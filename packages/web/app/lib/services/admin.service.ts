@@ -15,12 +15,18 @@ import type {
   Stats,
   ContentStats,
   RecentActivityItem,
+  SyncStatus,
+  SyncRun,
+  SyncRunWithDetails,
+  SyncLogResponse,
+  SyncUserResult,
 } from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility
 export type AdminUserData = AdminUser;
 export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
+export type { SyncStatus, SyncRun, SyncRunWithDetails, SyncLogResponse, SyncUserResult };
 
 /**
  * Fetch all users from the API.
@@ -158,4 +164,37 @@ export async function removeUser(userId: string) {
     throw new Error(result.error.message || 'Failed to remove user');
   }
   return result.data;
+}
+
+// Sync endpoints
+
+export async function getSyncStatus(): Promise<SyncStatus> {
+  return fetchWithAuth<SyncStatus>('/api/admin/sync/status');
+}
+
+export async function startSync(): Promise<{ success: boolean; message: string }> {
+  return fetchWithAuth('/api/admin/sync/start', { method: 'POST' });
+}
+
+export async function stopSync(): Promise<{ success: boolean; message: string }> {
+  return fetchWithAuth('/api/admin/sync/stop', { method: 'POST' });
+}
+
+export async function triggerSync(full = false): Promise<SyncRun> {
+  return fetchWithAuth<SyncRun>('/api/admin/sync/trigger', {
+    method: 'POST',
+    body: JSON.stringify({ full }),
+  });
+}
+
+export async function getSyncLog(limit = 20, offset = 0): Promise<SyncLogResponse> {
+  return fetchWithAuth<SyncLogResponse>(`/api/admin/sync/log?limit=${limit}&offset=${offset}`);
+}
+
+export async function getSyncRunDetail(runId: string): Promise<SyncRunWithDetails> {
+  return fetchWithAuth<SyncRunWithDetails>(`/api/admin/sync/log/${runId}`);
+}
+
+export async function syncUsers(): Promise<SyncUserResult> {
+  return fetchWithAuth<SyncUserResult>('/api/admin/sync/users', { method: 'POST' });
 }
