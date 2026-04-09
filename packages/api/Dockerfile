@@ -11,8 +11,7 @@ COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
 # Install all deps (devDependencies needed for tsc build + drizzle-kit migrations)
-# --no-optional skips firebase-admin (~100MB, only needed for sync scripts)
-RUN pnpm install --frozen-lockfile --no-optional
+RUN pnpm install --frozen-lockfile
 
 # ---- Stage 2: Build ----
 FROM node:24-slim AS build
