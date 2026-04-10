@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vites
 import { eq } from 'drizzle-orm';
 import { createTestApp, createAuthenticatedUser, cleanupUser, request } from './helpers';
 import { db } from '../db';
-import { user, syncRun, syncRunDetail } from '../db/schema';
+import { user, syncRun, syncRunDetail, syncState } from '../db/schema';
 
 // Mock global fetch to intercept RERUM API calls
 const originalFetch = globalThis.fetch;
@@ -105,16 +105,7 @@ describe('Admin Sync Endpoints', () => {
     });
     await db.update(user).set({ role: 'admin' }).where(eq(user.id, adminAuth.userId));
 
-    // Ensure the sync_state table exists and RERUM_API_URL is set
-    await db.execute(
-      `CREATE TABLE IF NOT EXISTS sync_state (
-        id TEXT PRIMARY KEY,
-        last_sync_at TIMESTAMP NOT NULL,
-        last_notes_sync_at TIMESTAMP,
-        last_comments_sync_at TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-      )`,
-    );
+    // RERUM_API_URL is set via process.env in the test
   });
 
   afterAll(async () => {
@@ -128,7 +119,7 @@ describe('Admin Sync Endpoints', () => {
     await db.execute(`DELETE FROM audio WHERE note_id LIKE 'test-note-%'`).catch(() => {});
     await db.execute(`DELETE FROM media WHERE note_id LIKE 'test-note-%'`).catch(() => {});
     await db.execute(`DELETE FROM note WHERE id LIKE 'test-note-%'`).catch(() => {});
-    await db.execute(`DELETE FROM sync_state WHERE id = 'main'`).catch(() => {});
+    await db.delete(syncState).where(eq(syncState.id, 'main')).catch(() => {});
 
     delete process.env.RERUM_API_URL;
     await cleanupUser(adminAuth.userId);

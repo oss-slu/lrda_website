@@ -273,6 +273,21 @@ export const commentRelations = relations(comment, ({ one, many }) => ({
 }));
 
 // ============================================
+// Sync State Table
+// ============================================
+
+/**
+ * Tracks the last successful sync time for incremental RERUM fetches
+ */
+export const syncState = pgTable('sync_state', {
+  id: text('id').primaryKey(),
+  lastSyncAt: timestamp('last_sync_at').notNull(),
+  lastNotesSyncAt: timestamp('last_notes_sync_at'),
+  lastCommentsSyncAt: timestamp('last_comments_sync_at'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================
 // Sync Audit Log Tables
 // ============================================
 

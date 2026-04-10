@@ -173,39 +173,39 @@ async function ensureFallbackUser() {
 }
 
 // ============================================
-// Sync state tracking (uses existing sync_state table)
+// Sync state tracking
 // ============================================
 
-async function ensureSyncStateTable() {
-  // Use raw SQL since this table isn't in the Drizzle schema (shared with standalone script)
-  await db.execute(
-    `CREATE TABLE IF NOT EXISTS sync_state (
-      id TEXT PRIMARY KEY,
-      last_sync_at TIMESTAMP NOT NULL,
-      last_notes_sync_at TIMESTAMP,
-      last_comments_sync_at TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-    )`,
-  );
-}
-
 async function getLastNoteSyncTime(): Promise<Date | null> {
-  const result = await db.execute(`SELECT last_notes_sync_at, last_sync_at FROM sync_state WHERE id = 'main'`);
-  const row = result.rows[0] as Record<string, unknown> | undefined;
+  const rows = await db
+    .select({
+      lastNotesSyncAt: schema.syncState.lastNotesSyncAt,
+      lastSyncAt: schema.syncState.lastSyncAt,
+    })
+    .from(schema.syncState)
+    .where(eq(schema.syncState.id, 'main'));
+  const row = rows[0];
   if (!row) return null;
-  if (row.last_notes_sync_at != null) return new Date(row.last_notes_sync_at as string);
-  return new Date(row.last_sync_at as string);
+  return row.lastNotesSyncAt ?? row.lastSyncAt;
 }
 
 async function updateLastNoteSyncTime(time: Date) {
-  await db.execute(
-    `INSERT INTO sync_state (id, last_sync_at, last_notes_sync_at, updated_at)
-     VALUES ('main', '${time.toISOString()}', '${time.toISOString()}', NOW())
-     ON CONFLICT (id) DO UPDATE SET
-       last_sync_at = EXCLUDED.last_sync_at,
-       last_notes_sync_at = EXCLUDED.last_notes_sync_at,
-       updated_at = NOW()`,
-  );
+  await db
+    .insert(schema.syncState)
+    .values({
+      id: 'main',
+      lastSyncAt: time,
+      lastNotesSyncAt: time,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: schema.syncState.id,
+      set: {
+        lastSyncAt: time,
+        lastNotesSyncAt: time,
+        updatedAt: new Date(),
+      },
+    });
 }
 
 // ============================================
@@ -245,7 +245,6 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
   let errored = 0;
 
   try {
-    await ensureSyncStateTable();
     await ensureFallbackUser();
 
     const lastSync = fullSync ? null : await getLastNoteSyncTime();
