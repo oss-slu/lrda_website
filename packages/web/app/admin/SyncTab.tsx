@@ -156,7 +156,7 @@ function SyncLogTable({
         accessorKey: 'triggeredBy',
         header: ({ column }) => <SortHeader column={column}>Trigger</SortHeader>,
         cell: ({ getValue }) => (
-          <span className='text-xs text-gray-500'>{getValue<string>() ?? '--'}</span>
+          <span className='text-xs text-gray-500'>{getValue<string | null>() ?? '--'}</span>
         ),
       },
       {
@@ -498,7 +498,7 @@ export function SyncTab() {
     if (syncRunId && syncRunId !== selectedRun?.id) {
       getSyncRunDetail(syncRunId)
         .then(setSelectedRun)
-        .catch(() => toast.error('Failed to load run details'));
+        .catch((error) => { console.error('Failed to load run details:', error); toast.error('Failed to load run details'); });
     } else if (!syncRunId) {
       setSelectedRun(null);
     }
@@ -511,6 +511,7 @@ export function SyncTab() {
       toast.success(result.message);
       await fetchStatus();
     } catch (error) {
+      console.error('Failed to start sync:', error);
       toast.error('Failed to start sync');
     } finally {
       setActionLoading(null);
@@ -524,6 +525,7 @@ export function SyncTab() {
       toast.success(result.message);
       await fetchStatus();
     } catch (error) {
+      console.error('Failed to stop sync:', error);
       toast.error('Failed to stop sync');
     } finally {
       setActionLoading(null);
@@ -539,6 +541,7 @@ export function SyncTab() {
       );
       await fetchStatus();
     } catch (error) {
+      console.error('Sync failed:', error);
       toast.error('Sync failed');
     } finally {
       setActionLoading(null);
@@ -554,6 +557,7 @@ export function SyncTab() {
       );
       await fetchStatus();
     } catch (error) {
+      console.error('User sync failed:', error);
       toast.error('User sync failed');
     } finally {
       setActionLoading(null);
