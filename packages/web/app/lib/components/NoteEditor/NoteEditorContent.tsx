@@ -28,7 +28,7 @@ export default function NoteEditorContent({
     setLoadingTags(true);
     try {
       if (editor) {
-        const noteContent = editor.getHTML();
+        const noteContent = editor.getText();
         const tags = await tagsService.generateTags(noteContent);
         setSuggestedTags(tags);
       } else {
