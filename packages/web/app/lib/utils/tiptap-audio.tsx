@@ -103,10 +103,10 @@ export const AudioNode = Node.create({
       setAudio:
         (options) =>
         ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
+          return commands.insertContent([
+            { type: this.name, attrs: options },
+            { type: 'paragraph' },
+          ]);
         },
     };
   },

@@ -175,10 +175,10 @@ export const VideoNode = Node.create({
       setVideo:
         (options) =>
         ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: { width: 100, ...options },
-          });
+          return commands.insertContent([
+            { type: this.name, attrs: { width: 100, ...options } },
+            { type: 'paragraph' },
+          ]);
         },
     };
   },

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import { RichTextEditorProvider } from 'mui-tiptap';
 import createCache from '@emotion/cache';
@@ -92,11 +92,18 @@ export default function NoteEditor({
     canComment,
   } = useNotePermissions(noteState.note);
 
+  // Bumped on selection changes so the toolbar re-renders and updates
+  // which buttons are active (e.g. grayed out when an atom node is selected).
+  const [, setSelectionEpoch] = useState(0);
+
   const editor = useEditor({
     extensions,
     content: noteState.editorContent,
     immediatelyRender: false,
     editable: !isViewingStudentNote,
+    onSelectionUpdate: () => {
+      setSelectionEpoch(n => n + 1);
+    },
     onUpdate: ({ editor: ed }) => {
       if (!isViewingStudentNote) {
         lastEditTimeRef.current = Date.now();
@@ -104,6 +111,28 @@ export default function NoteEditor({
       }
     },
   });
+
+  // Focus the editor after mount so the toolbar initializes as active.
+  // Finds the first text-editable position, skipping atom nodes (video/audio).
+  useEffect(() => {
+    if (editor && !isViewingStudentNote) {
+      requestAnimationFrame(() => {
+        const { doc } = editor.state;
+        const found = { pos: -1 };
+        doc.descendants((node, pos) => {
+          if (found.pos >= 0) return false;
+          if (node.isTextblock) {
+            found.pos = pos + 1;
+            return false;
+          }
+          return true;
+        });
+        if (found.pos >= 0) {
+          editor.commands.focus(found.pos);
+        }
+      });
+    }
+  }, [editor, isViewingStudentNote]);
 
   useNoteSync({
     noteState,
