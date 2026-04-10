@@ -5,11 +5,19 @@
  */
 import { fetchWithAuth } from './api';
 
-async function generateTags(noteContent: string): Promise<string[]> {
+export interface GenerateTagsInput {
+  content: string;
+  title?: string;
+  locationName?: string;
+  existingTags?: string[];
+  time?: string;
+}
+
+async function generateTags(input: GenerateTagsInput): Promise<string[]> {
   try {
     const data = await fetchWithAuth<{ tags: string[] }>('/api/tags/generate', {
       method: 'POST',
-      body: JSON.stringify({ content: noteContent }),
+      body: JSON.stringify(input),
     });
     return data.tags;
   } catch (error) {

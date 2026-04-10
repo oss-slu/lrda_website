@@ -5,6 +5,10 @@ import { getEnv } from './helpers';
 
 const GenerateTagsInputSchema = z.object({
   content: z.string().min(1),
+  title: z.string().optional(),
+  locationName: z.string().optional(),
+  existingTags: z.array(z.string()).optional(),
+  time: z.string().optional(),
 });
 
 const GenerateTagsResponseSchema = z.object({
@@ -36,21 +40,31 @@ const generateTagsRoute = createRoute({
 
 export const tagRoutes = new OpenAPIHono<AppEnv>().openapi(generateTagsRoute, async (c) => {
   const env = getEnv(c);
-  const { content } = c.req.valid('json');
+  const { content, title, locationName, existingTags, time } = c.req.valid('json');
 
   if (!env.OPENROUTER_API_KEY || !env.OPENROUTER_MODELS) {
     return c.json({ error: 'OPENROUTER_API_KEY and OPENROUTER_MODELS must be set' }, 500);
   }
 
+  // Build context from all available note metadata
+  const contextParts: string[] = [];
+  if (title) contextParts.push(`Title: ${title}`);
+  if (locationName) contextParts.push(`Location: ${locationName}`);
+  if (time) contextParts.push(`Date: ${time}`);
+  if (existingTags?.length) contextParts.push(`Existing tags: ${existingTags.join(', ')}`);
+  contextParts.push(`Content:\n${content}`);
+
+  const noteContext = contextParts.join('\n');
+
   const messages = [
     {
       role: 'system',
       content:
-        'You are a professional ethnographer suggesting the best, most specific and descriptive web ontology tags for notes.',
+        'You are a professional ethnographer suggesting the best, most specific and descriptive web ontology tags for field research entries.',
     },
     {
       role: 'user',
-      content: `Suggest 20 one-word tags for the following notes:\n${content}\nTags as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Each tag must be between 3 and 28 characters. Use specific web ontology such as Library of Congress Subject Headings, Classification, AFS Ethnographic Thesaurus, Subject Schemas, Classification Schemes, and include the city where this note exists in the tags.`,
+      content: `Suggest 20 one-word tags for the following research entry:\n\n${noteContext}\n\nTag as an ethnographer. Keep the responses to one-word tags as a comma-separated list. Each tag must be between 3 and 28 characters. Use specific web ontology such as Library of Congress Subject Headings, AFS Ethnographic Thesaurus, and standard classification schemes. Include the location if known. Do not repeat any existing tags.`,
     },
   ];
 
