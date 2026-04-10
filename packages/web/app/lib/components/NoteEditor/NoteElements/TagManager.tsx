@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Plus, Sparkles } from 'lucide-react';
+import { X, Plus, Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tag } from '@lrda/shared';
 
@@ -8,6 +8,8 @@ interface TagManagerProps {
   suggestedTags?: string[];
   onTagsChange: (tags: Tag[]) => void;
   fetchSuggestedTags: () => void;
+  onDismissSuggestions?: () => void;
+  loading?: boolean;
   disabled?: boolean;
 }
 
@@ -16,6 +18,8 @@ const TagManager: React.FC<TagManagerProps> = ({
   suggestedTags,
   onTagsChange,
   fetchSuggestedTags,
+  onDismissSuggestions,
+  loading = false,
   disabled = false,
 }) => {
   const convertOldTags = useMemo(() => {
@@ -31,7 +35,7 @@ const TagManager: React.FC<TagManagerProps> = ({
 
   useEffect(() => {
     const newTags = convertOldTags(inputTags);
-     
+
     setTags(prevTags => {
       if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
         return newTags;
@@ -70,21 +74,28 @@ const TagManager: React.FC<TagManagerProps> = ({
     }
 
     const newTag = { label: trimmed, origin };
-    setTags(prevTags => {
-      const updatedTags = [...prevTags, newTag];
-      onTagsChange(updatedTags);
-      return updatedTags;
-    });
+    const updatedTags = [...tags, newTag];
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
     setTagInput('');
+  };
+
+  const addAllSuggested = () => {
+    if (disabled || !suggestedTags) return;
+    const newTags = suggestedTags
+      .filter(tag => !tags.find(t => t.label === tag))
+      .map(label => ({ label, origin: 'ai' as const }));
+    if (newTags.length === 0) return;
+    const updatedTags = [...tags, ...newTags];
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
   };
 
   const removeTag = (tagToRemove: string) => {
     if (disabled) return;
-    setTags(prevTags => {
-      const updatedTags = prevTags.filter(tag => tag.label !== tagToRemove);
-      onTagsChange(updatedTags);
-      return updatedTags;
-    });
+    const updatedTags = tags.filter(tag => tag.label !== tagToRemove);
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -108,6 +119,8 @@ const TagManager: React.FC<TagManagerProps> = ({
     }
     setIsAdding(false);
   };
+
+  const filteredSuggestions = suggestedTags?.filter(tag => !tags.find(t => t.label === tag)) ?? [];
 
   return (
     <div>
@@ -159,30 +172,49 @@ const TagManager: React.FC<TagManagerProps> = ({
 
             <button
               onClick={fetchSuggestedTags}
-              className='inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-purple-500 transition-colors hover:bg-purple-50 hover:text-purple-700'
+              disabled={loading}
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-colors ${
+                loading
+                  ? 'cursor-wait text-purple-400'
+                  : 'text-purple-500 hover:bg-purple-50 hover:text-purple-700'
+              }`}
               title='Suggest tags with AI'
             >
-              <Sparkles className='h-3 w-3' />
+              <Sparkles className={`h-3 w-3 ${loading ? 'animate-pulse' : ''}`} />
+              {loading && <span className='animate-pulse'>Thinking...</span>}
             </button>
           </>
         )}
       </div>
 
-      {suggestedTags && suggestedTags.length > 0 && !disabled && (
-        <div className='mt-2 flex flex-wrap items-center gap-1.5'>
+      {filteredSuggestions.length > 0 && !disabled && (
+        <div className='mt-2 flex flex-wrap items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200'>
           <span className='text-xs text-gray-400'>Suggested:</span>
-          {suggestedTags
-            .filter(tag => !tags.find(t => t.label === tag))
-            .map((tag, index) => (
-              <button
-                key={index}
-                onClick={() => addTag(tag, 'ai')}
-                className='inline-flex items-center gap-1 rounded-full border border-dashed border-purple-300 px-2.5 py-0.5 text-xs text-purple-600 transition-colors hover:border-purple-400 hover:bg-purple-50'
-              >
-                <Plus className='h-3 w-3' />
-                {tag}
-              </button>
-            ))}
+          {filteredSuggestions.map((tag, index) => (
+            <button
+              key={index}
+              onClick={() => addTag(tag, 'ai')}
+              className='inline-flex items-center gap-1 rounded-full border border-dashed border-purple-300 px-2.5 py-0.5 text-xs text-purple-600 transition-colors hover:border-purple-400 hover:bg-purple-50'
+            >
+              <Plus className='h-3 w-3' />
+              {tag}
+            </button>
+          ))}
+          <button
+            onClick={addAllSuggested}
+            className='inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-200'
+            title='Add all suggestions'
+          >
+            <Check className='h-3 w-3' />
+            Add all
+          </button>
+          <button
+            onClick={onDismissSuggestions}
+            className='rounded-full p-0.5 text-gray-400 transition-colors hover:text-gray-600'
+            title='Dismiss suggestions'
+          >
+            <X className='h-3 w-3' />
+          </button>
         </div>
       )}
     </div>

@@ -28,8 +28,13 @@ export default function NoteEditorContent({
     setLoadingTags(true);
     try {
       if (editor) {
-        const noteContent = editor.getHTML();
-        const tags = await tagsService.generateTags(noteContent);
+        const tags = await tagsService.generateTags({
+          content: editor.getText(),
+          title: noteState.title,
+          locationName: noteState.locationName || undefined,
+          existingTags: noteState.tags.map(t => t.label),
+          time: noteState.time?.toISOString(),
+        });
         setSuggestedTags(tags);
       } else {
         console.error('Editor instance is not available');
@@ -46,17 +51,16 @@ export default function NoteEditorContent({
       <div className='mt-3'>
         <TagManager
           inputTags={noteState.tags}
-          suggestedTags={loadingTags ? undefined : suggestedTags}
+          suggestedTags={suggestedTags}
           onTagsChange={newTags => {
             onEdit();
             handleTagsChange(noteHandlers.setTags, newTags);
           }}
           fetchSuggestedTags={fetchSuggestedTags}
+          onDismissSuggestions={() => setSuggestedTags([])}
+          loading={loadingTags}
           disabled={isViewingStudentNote}
         />
-        {loadingTags && (
-          <p className='mt-1.5 text-xs text-gray-400'>Generating tag suggestions...</p>
-        )}
       </div>
 
       <div

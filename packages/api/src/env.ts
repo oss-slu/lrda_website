@@ -15,6 +15,9 @@ const EnvSchema = z.object({
   RERUM_API_URL: z.string().optional(),
   FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
+  // Comma-separated list of models. OpenRouter tries them in order as fallbacks.
+  OPENROUTER_MODELS: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
