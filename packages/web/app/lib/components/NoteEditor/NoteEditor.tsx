@@ -151,38 +151,24 @@ export default function NoteEditor({
       };
       noteHandlers.setVideos(prevVideos => [...prevVideos, newVideo]);
       if (editor) {
-        const videoLink = `Video ${noteState.videos.length + 1}`;
-        editor
-          .chain()
-          .focus()
-          .command(({ tr, dispatch }) => {
-            if (dispatch) {
-              const endPos = tr.doc.content.size;
-              const paragraphNodeForNewLine = editor.schema.node('paragraph');
-              const linkMark = editor.schema.marks.link;
-              const textNode = editor.schema.text(
-                videoLink,
-                linkMark ? [linkMark.create({ href: media.uri })] : [],
-              );
-              const paragraphNodeForLink = editor.schema.node('paragraph', null, [textNode]);
-              const transaction = tr
-                .insert(endPos, paragraphNodeForNewLine)
-                .insert(endPos + 1, paragraphNodeForLink);
-              dispatch(transaction);
-            }
-            return true;
-          })
-          .run();
+        editor.chain().focus().setVideo({ src: media.uri }).run();
       }
-    } else if (media.type === 'audio') {
+    } else {
       const newAudio: AudioMedia = {
         type: 'audio',
         uuid: uuidv4(),
         uri: media.uri,
         duration: '0:00',
-        name: `Audio Note ${noteState.audio.length + 1}`,
+        name: `Audio ${noteState.audio.length + 1}`,
       };
       noteHandlers.setAudio(prevAudio => [...prevAudio, newAudio]);
+      if (editor) {
+        editor
+          .chain()
+          .focus()
+          .setAudio({ src: media.uri, title: newAudio.name })
+          .run();
+      }
     }
   };
 

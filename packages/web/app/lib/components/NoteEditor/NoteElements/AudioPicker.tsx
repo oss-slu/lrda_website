@@ -16,7 +16,7 @@ import {
 import type { AudioMedia } from '@/app/types';
 import { Input } from '@/components/ui/input';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadAudio } from '@/app/lib/utils/s3_proxy';
+import { uploadMedia } from '@/app/lib/utils/s3_proxy';
 
 type AudioPickerProps = {
   audioArray: AudioMedia[];
@@ -92,7 +92,7 @@ const AudioPickerInner: React.FC<AudioPickerProps> = ({ audioArray, setAudio, ed
     });
 
     try {
-      const uri = await uploadAudio(file);
+      const uri = await uploadMedia(file, 'audio');
       const newAudio: AudioMedia = {
         type: 'audio',
         uuid: uuidv4(),

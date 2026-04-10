@@ -574,3 +574,16 @@ body {
   max-width: 100%;
   height: auto;
 }
+
+.note-content video {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  max-width: 100%;
+}
+
+.note-content audio {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}

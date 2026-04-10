@@ -39,6 +39,8 @@ import {
   ResizableImage,
   TableImproved,
 } from 'mui-tiptap';
+import { VideoNode } from './tiptap-video';
+import { AudioNode } from './tiptap-audio';
 
 export type UseExtensionsOptions = {
   /** Placeholder hint to show in the text input area before a user types a message. */
@@ -174,6 +176,10 @@ export default function useExtensions({
       Placeholder.configure({
         placeholder,
       }),
+
+      // Inline media nodes
+      VideoNode,
+      AudioNode,
 
       // We use the regular `History` (undo/redo) extension when not using
       // collaborative editing

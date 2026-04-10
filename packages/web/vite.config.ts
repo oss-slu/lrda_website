@@ -9,6 +9,9 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   envPrefix: ['VITE_'],
   plugins: [
     tsConfigPaths({
