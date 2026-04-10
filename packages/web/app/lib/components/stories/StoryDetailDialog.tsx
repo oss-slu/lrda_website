@@ -186,4 +186,3 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
   );
 };
 
-export default StoryDetailDialog;

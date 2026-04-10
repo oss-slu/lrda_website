@@ -48,10 +48,7 @@ vi.mock('../lib/stores/authStore', () => ({
 // Mock services - inline to avoid hoisting issues
 vi.mock('../lib/services', () => ({
   fetchMe: vi.fn().mockResolvedValue(null),
-  fetchProfileById: vi.fn().mockResolvedValue(null),
   fetchInstructors: vi.fn().mockResolvedValue([]),
-  updateProfile: vi.fn().mockResolvedValue({}),
-  assignInstructor: vi.fn().mockResolvedValue(undefined),
   fetchCreatorName: vi.fn().mockResolvedValue('Test User'),
 }));
 

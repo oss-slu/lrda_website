@@ -1,10 +1,8 @@
-import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CommentData } from '../../services/comments.types';
 import { commentsService, fetchCreatorName } from '../../services';
 
-// Query key factory for comments
-export const commentsKeys = {
+const commentsKeys = {
   all: ['comments'] as const,
   forNote: (noteId: string) => [...commentsKeys.all, noteId] as const,
 };
@@ -137,20 +135,3 @@ export function useCommentMutations(noteId: string) {
   };
 }
 
-/**
- * Returns the last 2 root-level (non-reply) comments for a note.
- * Used for inline comment previews on dashboard cards.
- * Shares the same query cache as useComments.
- */
-export function useCommentPreview(noteId: string | null) {
-  const query = useComments(noteId);
-  const preview = useMemo(
-    () =>
-      (query.data ?? [])
-        .filter(c => !c.parentId)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 2),
-    [query.data],
-  );
-  return { ...query, preview };
-}

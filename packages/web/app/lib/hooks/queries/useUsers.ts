@@ -1,26 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchProfileById, fetchCreatorName } from '../../services';
-import type { UserProfile } from '@/app/types';
-
-// Query key factory for users
-export const userKeys = {
-  all: ['users'] as const,
-  detail: (id: string) => [...userKeys.all, id] as const,
-};
-
-/**
- * Hook for fetching user data by ID
- */
-export function useUserData(userId: string | null) {
-  return useQuery({
-    queryKey: userKeys.detail(userId ?? ''),
-    queryFn: async (): Promise<UserProfile | null> => {
-      if (!userId) return null;
-      return await fetchProfileById(userId);
-    },
-    enabled: !!userId,
-  });
-}
+import { fetchCreatorName } from '../../services';
 
 /**
  * Hook for fetching creator name by ID.
@@ -29,7 +8,7 @@ export function useUserData(userId: string | null) {
  */
 export function useCreatorName(creatorId: string | null) {
   return useQuery({
-    queryKey: [...userKeys.detail(creatorId ?? ''), 'name'],
+    queryKey: ['users', creatorId ?? '', 'name'],
     queryFn: async (): Promise<string> => {
       if (!creatorId) return 'Unknown';
       return await fetchCreatorName(creatorId);

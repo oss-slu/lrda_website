@@ -256,4 +256,3 @@ export function extractTextFromHtml(html: string): string {
   return tempDiv.textContent || tempDiv.innerText || '';
 }
 
-export default sanitizeHtml;

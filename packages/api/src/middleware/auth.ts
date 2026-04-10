@@ -63,15 +63,3 @@ export const requireAdmin: MiddlewareHandler = async (c, next) => {
   await next();
 };
 
-/**
- * Helper to get auth info from context
- */
-export function getAuth(c: Context): {
-  user: AuthUser | null;
-  session: AuthSession | null;
-} {
-  return {
-    user: c.get('user') as AuthUser | null,
-    session: c.get('session') as AuthSession | null,
-  };
-}

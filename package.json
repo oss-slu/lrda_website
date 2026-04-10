@@ -33,6 +33,7 @@
     "test:e2e:browser": "pnpm --filter web test:e2e:browser",
     "test:e2e:headed": "pnpm --filter web test:e2e:headed",
     "test:e2e:install": "pnpm --filter web test:e2e:install",
+    "knip": "knip",
     "setup": "cp packages/web/.env.example packages/web/.env.local && cp packages/api/.env.example packages/api/.env && echo 'Created .env files - ready for pnpm dev'"
   },
   "packageManager": "pnpm@10.20.0",
@@ -68,6 +69,7 @@
     "concurrently": "^9.2.1",
     "eslint": "^10.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "knip": "^6.3.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2"
   }

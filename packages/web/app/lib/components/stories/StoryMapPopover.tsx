@@ -139,4 +139,3 @@ export const StoryMapPopover: React.FC<StoryMapPopoverProps> = ({
   );
 };
 
-export default StoryMapPopover;

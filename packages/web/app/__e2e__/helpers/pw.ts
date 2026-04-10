@@ -18,14 +18,6 @@ async function getBrowser(): Promise<Browser> {
   return browser;
 }
 
-/** Close the shared browser instance. Safe to call multiple times. */
-export async function closeBrowser(): Promise<void> {
-  if (browser) {
-    await browser.close();
-    browser = null;
-  }
-}
-
 // Close browser on process exit instead of using afterAll (which has
 // non-deterministic ordering when multiple spec files register it).
 process.on('beforeExit', () => {
@@ -34,13 +26,6 @@ process.on('beforeExit', () => {
     browser = null;
   }
 });
-
-/** Create a new page in a fresh, isolated browser context. */
-export async function newPage(): Promise<Page> {
-  const b = await getBrowser();
-  const context = await b.newContext();
-  return context.newPage();
-}
 
 const API_URL = process.env.__TEST_API_URL || 'http://localhost:3002';
 
@@ -93,4 +78,3 @@ export function url(path: string): string {
 /** Stable test user IDs (must match tests/e2e/helpers/db-seed.ts) */
 export const TEST_USER_ID = '00000000-e2e0-4000-a000-000000000001';
 export const TEST_ADMIN_ID = '00000000-e2e0-4000-a000-000000000003';
-export const TEST_INSTRUCTOR_ID = '00000000-e2e0-4000-a000-000000000004';

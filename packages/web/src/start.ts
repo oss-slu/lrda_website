@@ -47,5 +47,3 @@ const cacheHeadersMiddleware = createMiddleware().server(async ({ next, request 
 export const startInstance = createStart(() => ({
   requestMiddleware: [cacheHeadersMiddleware],
 }));
-
-export default startInstance;

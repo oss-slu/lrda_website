@@ -31,10 +31,7 @@ vi.mock('@tanstack/react-query', () => ({
 // Mock services
 vi.mock('../lib/services', () => ({
   fetchMe: vi.fn().mockResolvedValue(null),
-  fetchProfileById: vi.fn().mockResolvedValue(null),
   fetchInstructors: vi.fn().mockResolvedValue([]),
-  updateProfile: vi.fn().mockResolvedValue({}),
-  assignInstructor: vi.fn().mockResolvedValue(undefined),
   fetchCreatorName: vi.fn().mockResolvedValue('Test User'),
   notesService: {
     create: vi.fn().mockResolvedValue({ id: 'new-note-id' }),

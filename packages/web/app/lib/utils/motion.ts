@@ -5,7 +5,7 @@ type RevealOptions = {
   threshold?: number | number[];
 };
 
-export function usePrefersReducedMotion(): boolean {
+function usePrefersReducedMotion(): boolean {
   // Initialize with SSR-safe default, then sync via effect
   const [reduced, setReduced] = useState(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return false;

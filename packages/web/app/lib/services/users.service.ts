@@ -5,7 +5,7 @@
  * All data is stored in D1 via the Hono API backend.
  */
 
-import type { UserProfile, UpdateProfileOptions, InstructorInfo } from './users.types';
+import type { UserProfile, InstructorInfo } from './users.types';
 import { fetchWithAuth } from './api';
 
 /**
@@ -23,7 +23,7 @@ export async function fetchMe(): Promise<UserProfile | null> {
 /**
  * Fetch user profile by ID (new format).
  */
-export async function fetchProfileById(id: string): Promise<UserProfile | null> {
+async function fetchProfileById(id: string): Promise<UserProfile | null> {
   try {
     return await fetchWithAuth<UserProfile>(`/api/users/${id}`);
   } catch (error) {
@@ -42,26 +42,6 @@ export async function fetchInstructors(): Promise<InstructorInfo[]> {
     console.warn('Failed to fetch instructors:', error);
     return [];
   }
-}
-
-/**
- * Update the current user's profile.
- */
-export async function updateProfile(data: UpdateProfileOptions): Promise<UserProfile> {
-  return fetchWithAuth<UserProfile>('/api/users/me', {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-}
-
-/**
- * Assign an instructor to the current user.
- */
-export async function assignInstructor(instructorId: string): Promise<void> {
-  await fetchWithAuth('/api/users/me/instructor', {
-    method: 'POST',
-    body: JSON.stringify({ instructorId }),
-  });
 }
 
 /**

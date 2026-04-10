@@ -204,4 +204,3 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
   );
 };
 
-export default StoriesCardPreview;

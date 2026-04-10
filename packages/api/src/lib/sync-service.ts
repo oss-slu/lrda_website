@@ -439,10 +439,6 @@ export function getSyncStatus() {
   };
 }
 
-export function isSyncRunning(): boolean {
-  return intervalId !== undefined;
-}
-
 export async function startSync(): Promise<{ started: boolean; message: string }> {
   if (intervalId !== undefined) {
     return { started: false, message: 'Sync is already running' };
