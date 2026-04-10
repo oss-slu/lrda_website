@@ -304,7 +304,8 @@ function SyncLogTable({
 // Detail table (per-note, virtualized)
 // ============================================
 
-function SyncDetailTable({ details }: { details: SyncRunDetail[] }) {
+function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; triggeredBy?: string | null }) {
+  const isUserSync = triggeredBy === 'users';
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const parentRef = useRef<HTMLDivElement>(null);
@@ -313,14 +314,20 @@ function SyncDetailTable({ details }: { details: SyncRunDetail[] }) {
     () => [
       {
         accessorKey: 'noteId',
-        header: ({ column }) => <SortHeader column={column}>Note / User ID</SortHeader>,
+        header: ({ column }) => <SortHeader column={column}>{isUserSync ? 'User' : 'Note ID'}</SortHeader>,
         cell: ({ getValue }) => {
           const id = getValue<string>();
+          const display = id.length > 24 ? `${id.slice(0, 24)}...` : id;
+
+          if (isUserSync) {
+            return <span className='font-mono text-xs text-gray-600'>{display}</span>;
+          }
+
           return (
             <Dialog>
               <DialogTrigger asChild>
                 <button className='inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline'>
-                  {id.length > 24 ? `${id.slice(0, 24)}...` : id}
+                  {display}
                   <ExternalLink className='h-3 w-3' />
                 </button>
               </DialogTrigger>
@@ -350,11 +357,11 @@ function SyncDetailTable({ details }: { details: SyncRunDetail[] }) {
       },
       {
         accessorKey: 'error',
-        header: ({ column }) => <SortHeader column={column}>Details</SortHeader>,
+        header: ({ column }) => <SortHeader column={column}>{isUserSync ? 'Changes' : 'Error'}</SortHeader>,
         cell: ({ getValue }) => {
           const v = getValue<string | null>();
           return v ? (
-            <span className='text-xs text-gray-600'>{v}</span>
+            <span className={`text-xs ${isUserSync ? 'text-gray-600' : 'text-red-600'}`}>{v}</span>
           ) : (
             <span className='text-xs text-gray-300'>--</span>
           );
@@ -431,7 +438,7 @@ function SyncDetailTable({ details }: { details: SyncRunDetail[] }) {
               style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
             >
               {virtualizer.getVirtualItems().map(virtualRow => {
-                const row = rows[virtualRow.index];
+                const row = rows[virtualRow.index]!;
                 return (
                   <tr
                     key={row.id}
@@ -621,7 +628,7 @@ export function SyncTab() {
             </div>
           )}
 
-          <SyncDetailTable details={selectedRun.details} />
+          <SyncDetailTable details={selectedRun.details} triggeredBy={selectedRun.triggeredBy} />
         </CardContent>
       </Card>
     );

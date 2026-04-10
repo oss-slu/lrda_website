@@ -646,13 +646,15 @@ export async function syncUsersFromFirebase(): Promise<{
         },
       });
 
-      // Never overwrite admin role -- only PostgreSQL controls who is admin
+      // Never overwrite admin role or emailVerified -- PostgreSQL is the source of truth
+      // for these fields since users may have verified/been promoted on the web app
       const role = existing?.role === 'admin' ? 'admin' : 'user';
+      const emailVerified = existing?.emailVerified === true ? true : fbUser.emailVerified;
 
       const userData = {
         name,
         email: fbUser.email,
-        emailVerified: fbUser.emailVerified,
+        emailVerified,
         image: fbUser.photoURL || null,
         createdAt: fbUser.createdAt,
         updatedAt: new Date(),
@@ -667,7 +669,7 @@ export async function syncUsersFromFirebase(): Promise<{
         const changes: string[] = [];
         if (existing.name !== name) changes.push(`name: "${existing.name}" -> "${name}"`);
         if (existing.email !== fbUser.email) changes.push(`email: "${existing.email}" -> "${fbUser.email}"`);
-        if (existing.emailVerified !== fbUser.emailVerified) changes.push(`emailVerified: ${existing.emailVerified} -> ${fbUser.emailVerified}`);
+        if (existing.emailVerified !== emailVerified) changes.push(`emailVerified: ${existing.emailVerified} -> ${emailVerified}`);
         if ((existing.image || null) !== (fbUser.photoURL || null)) changes.push('image changed');
         if (existing.isInstructor !== isInstructor) changes.push(`isInstructor: ${existing.isInstructor} -> ${isInstructor}`);
         if ((existing.pendingInstructorDescription || null) !== (pendingInstructorDescription || null)) changes.push('pendingInstructorDescription changed');
