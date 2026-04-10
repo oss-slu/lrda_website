@@ -13,7 +13,7 @@ import { env } from '../env';
 import type { Tag } from '../db/types';
 
 // RERUM API configuration
-const SYNC_INTERVAL_MS = 30_000; // 30 seconds
+const SYNC_INTERVAL_MS = 600_000; // 10 minutes
 const BATCH_SIZE = 100;
 
 // Sync state
@@ -250,8 +250,22 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
 
     const lastSync = fullSync ? null : await getLastNoteSyncTime();
 
-    // Fetch all notes from RERUM
-    const rerumNotes = await rerumQueryAll<RerumNote>({ type: 'message' });
+    // Build RERUM query -- for incremental syncs, filter server-side by modification date
+    // RERUM passes queries directly to MongoDB, so $or/$gt operators work.
+    // Timestamps use ISO 8601 without timezone suffix (e.g., "2026-04-09T00:00:00.000")
+    let rerumQuery: Record<string, unknown> = { type: 'message' };
+    if (lastSync) {
+      const sinceTs = lastSync.toISOString().replace('Z', '');
+      rerumQuery = {
+        type: 'message',
+        $or: [
+          { '__rerum.isOverwritten': { $gt: sinceTs } },
+          { '__rerum.createdAt': { $gt: sinceTs } },
+        ],
+      };
+    }
+
+    const rerumNotes = await rerumQueryAll<RerumNote>(rerumQuery);
 
     for (const rerumNote of rerumNotes) {
       try {
@@ -279,12 +293,6 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
           rerumNote.__rerum?.modifiedAt ? new Date(rerumNote.__rerum.modifiedAt)
           : rerumNote.__rerum?.isOverwritten ? new Date(rerumNote.__rerum.isOverwritten)
           : new Date();
-
-        // Skip if not modified since last sync (incremental mode)
-        if (lastSync && modifiedAt <= lastSync) {
-          skipped++;
-          continue;
-        }
 
         const noteData = {
           id: noteId,

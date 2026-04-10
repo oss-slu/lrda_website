@@ -27,6 +27,7 @@ playwright/.cache/
 # Plans and drafts and audits
 /plans/
 *.zip
+reference/
 
 # Terraform
 infrastructure/.terraform/
