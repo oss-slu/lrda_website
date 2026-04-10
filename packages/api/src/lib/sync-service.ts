@@ -685,9 +685,9 @@ export async function syncUsersFromFirebase(): Promise<{
         // Log per-user detail
         await db.insert(schema.syncRunDetail).values({
           runId: runId!,
-          noteId: fbUser.uid, // reusing noteId column for userId
+          noteId: `${fbUser.email} (${fbUser.uid})`,
           action: 'updated',
-          error: changes.join('; '),  // reusing error column to store what changed
+          error: changes.join('; '),
         });
       } else {
         await db.insert(schema.user).values({ id: fbUser.uid, ...userData });
@@ -695,7 +695,7 @@ export async function syncUsersFromFirebase(): Promise<{
 
         await db.insert(schema.syncRunDetail).values({
           runId: runId!,
-          noteId: fbUser.uid,
+          noteId: `${fbUser.email} (${fbUser.uid})`,
           action: 'created',
         });
       }

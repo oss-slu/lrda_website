@@ -317,17 +317,15 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
         header: ({ column }) => <SortHeader column={column}>{isUserSync ? 'User' : 'Note ID'}</SortHeader>,
         cell: ({ getValue }) => {
           const id = getValue<string>();
-          const display = id.length > 24 ? `${id.slice(0, 24)}...` : id;
-
           if (isUserSync) {
-            return <span className='font-mono text-xs text-gray-600'>{display}</span>;
+            return <span className='text-xs text-gray-600 truncate block'>{id}</span>;
           }
 
           return (
             <Dialog>
               <DialogTrigger asChild>
                 <button className='inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline'>
-                  {display}
+                  {id.length > 24 ? `${id.slice(0, 24)}...` : id}
                   <ExternalLink className='h-3 w-3' />
                 </button>
               </DialogTrigger>
@@ -384,6 +382,8 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
 
   const { rows } = table.getRowModel();
 
+  const COL_WIDTHS = ['35%', '15%', '50%'] as const;
+
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
@@ -413,54 +413,49 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
       <p className='text-xs text-gray-500'>
         {rows.length} of {details.length} items
       </p>
-      <div className='rounded-md border'>
-        <table className='w-full caption-bottom text-sm'>
-          <thead className='[&_tr]:border-b'>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className='border-b'>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className='h-10 px-2 text-left align-middle font-medium text-gray-500'
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-        </table>
+      <div className='rounded-md border text-sm'>
+        {/* Header */}
+        <div className='flex border-b bg-gray-50/80'>
+          {table.getHeaderGroups().map(headerGroup =>
+            headerGroup.headers.map((header, i) => (
+              <div
+                key={header.id}
+                className='h-10 shrink-0 px-2 flex items-center font-medium text-gray-500'
+                style={{ width: COL_WIDTHS[i] }}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </div>
+            )),
+          )}
+        </div>
+        {/* Virtualized rows */}
         <div ref={parentRef} className='max-h-[500px] overflow-auto'>
-          <table className='w-full caption-bottom text-sm'>
-            <tbody
-              style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
-            >
-              {virtualizer.getVirtualItems().map(virtualRow => {
-                const row = rows[virtualRow.index]!;
-                return (
-                  <tr
-                    key={row.id}
-                    className='border-b transition-colors hover:bg-gray-50'
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      transform: `translateY(${virtualRow.start}px)`,
-                      width: '100%',
-                      display: 'table-row',
-                    }}
-                  >
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className='p-2 align-middle'>
+          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+            {virtualizer.getVirtualItems().map(virtualRow => {
+              const row = rows[virtualRow.index]!;
+              return (
+                <div
+                  key={row.id}
+                  className='absolute left-0 right-0 flex border-b transition-colors hover:bg-gray-50'
+                  style={{ top: 0, transform: `translateY(${virtualRow.start}px)`, height: virtualRow.size }}
+                >
+                  {row.getVisibleCells().map((cell, i) => (
+                    <div
+                      key={cell.id}
+                      className='shrink-0 px-2 flex items-center overflow-hidden'
+                      style={{ width: COL_WIDTHS[i] }}
+                    >
+                      <div className='truncate'>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
