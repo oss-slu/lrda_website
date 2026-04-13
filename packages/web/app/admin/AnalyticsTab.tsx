@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { useAnalyticsSummary, useAnalyticsTimeseries } from '@/app/lib/hooks/queries';
 import { StatsCard } from './StatsCard';

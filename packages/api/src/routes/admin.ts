@@ -455,111 +455,116 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Total views and unique visitors
-    const [totals] = await db
-      .select({
-        totalViews: count(),
-        uniqueVisitors: count(sql`DISTINCT ${pageView.sessionHash}`),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate));
-
-    // Top pages
-    const topPages = await db
-      .select({
-        path: pageView.path,
-        title: sql<string>`MAX(${pageView.pageTitle})`.as('title'),
-        views: count().as('views'),
-        visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.path)
-      .orderBy(t => desc(t.views))
-      .limit(20);
-
-    // Top referrers
-    const topReferrers = await db
-      .select({
-        referrer: sql<string>`${pageView.referrer}`.as('referrer'),
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(and(isNotNull(pageView.referrer), gte(pageView.createdAt, startDate)))
-      .groupBy(pageView.referrer)
-      .orderBy(t => desc(t.views))
-      .limit(20);
-
-    // UTM campaigns
-    const topCampaigns = await db
-      .select({
-        utmSource: pageView.utmSource,
-        utmMedium: pageView.utmMedium,
-        utmCampaign: pageView.utmCampaign,
-        views: count().as('views'),
-        visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
-      })
-      .from(pageView)
-      .where(and(isNotNull(pageView.utmSource), gte(pageView.createdAt, startDate)))
-      .groupBy(pageView.utmSource, pageView.utmMedium, pageView.utmCampaign)
-      .orderBy(t => desc(t.views))
-      .limit(20);
-
-    // Browsers
-    const browsers = await db
-      .select({
-        browser: pageView.browser,
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.browser)
-      .orderBy(t => desc(t.views));
-
-    // Devices
-    const devices = await db
-      .select({
-        device: pageView.device,
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.device)
-      .orderBy(t => desc(t.views));
-
-    // Screen widths
-    const screenWidths = await db
-      .select({
-        screenWidth: pageView.screenWidth,
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.screenWidth)
-      .orderBy(t => desc(t.views));
-
-    // Languages
-    const languages = await db
-      .select({
-        language: pageView.language,
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.language)
-      .orderBy(t => desc(t.views))
-      .limit(10);
-
-    // Operating systems
-    const operatingSystems = await db
-      .select({
-        os: pageView.os,
-        views: count().as('views'),
-      })
-      .from(pageView)
-      .where(gte(pageView.createdAt, startDate))
-      .groupBy(pageView.os)
-      .orderBy(t => desc(t.views));
+    // Execute all queries in parallel
+    const [
+      [totals],
+      topPages,
+      topReferrers,
+      topCampaigns,
+      browsers,
+      devices,
+      screenWidths,
+      languages,
+      operatingSystems,
+    ] = await Promise.all([
+      // Total views and unique visitors
+      db
+        .select({
+          totalViews: count(),
+          uniqueVisitors: count(sql`DISTINCT ${pageView.sessionHash}`),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate)),
+      // Top pages
+      db
+        .select({
+          path: pageView.path,
+          title: sql<string>`MAX(${pageView.pageTitle})`.as('title'),
+          views: count().as('views'),
+          visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.path)
+        .orderBy(t => desc(t.views))
+        .limit(20),
+      // Top referrers
+      db
+        .select({
+          referrer: sql<string>`${pageView.referrer}`.as('referrer'),
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(and(isNotNull(pageView.referrer), gte(pageView.createdAt, startDate)))
+        .groupBy(pageView.referrer)
+        .orderBy(t => desc(t.views))
+        .limit(20),
+      // UTM campaigns
+      db
+        .select({
+          utmSource: pageView.utmSource,
+          utmMedium: pageView.utmMedium,
+          utmCampaign: pageView.utmCampaign,
+          views: count().as('views'),
+          visitors: count(sql`DISTINCT ${pageView.sessionHash}`).as('visitors'),
+        })
+        .from(pageView)
+        .where(and(isNotNull(pageView.utmSource), gte(pageView.createdAt, startDate)))
+        .groupBy(pageView.utmSource, pageView.utmMedium, pageView.utmCampaign)
+        .orderBy(t => desc(t.views))
+        .limit(20),
+      // Browsers
+      db
+        .select({
+          browser: pageView.browser,
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.browser)
+        .orderBy(t => desc(t.views)),
+      // Devices
+      db
+        .select({
+          device: pageView.device,
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.device)
+        .orderBy(t => desc(t.views)),
+      // Screen widths
+      db
+        .select({
+          screenWidth: pageView.screenWidth,
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.screenWidth)
+        .orderBy(t => desc(t.views)),
+      // Languages
+      db
+        .select({
+          language: pageView.language,
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.language)
+        .orderBy(t => desc(t.views))
+        .limit(10),
+      // Operating systems
+      db
+        .select({
+          os: pageView.os,
+          views: count().as('views'),
+        })
+        .from(pageView)
+        .where(gte(pageView.createdAt, startDate))
+        .groupBy(pageView.os)
+        .orderBy(t => desc(t.views)),
+    ]);
 
     return c.json(
       {

@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { PageViewTrackingSchema } from '@lrda/shared';
 import { pageView } from '../db/schema';
 import { createHash } from 'node:crypto';
 import type { AppEnv } from '../types';
@@ -7,11 +8,11 @@ import { getDb } from './helpers';
 // User-Agent parsing utilities
 function parseBrowser(ua: string): string | null {
   if (!ua) return null;
+  if (/Edg\//.test(ua)) return 'Edge';
+  if (/Opera\/|OPR\//.test(ua)) return 'Opera';
   if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) return 'Chrome';
   if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'Safari';
   if (/Firefox\//.test(ua)) return 'Firefox';
-  if (/Edg\//.test(ua)) return 'Edge';
-  if (/Opera\/|OPR\//.test(ua)) return 'Opera';
   if (/MSIE|Trident/.test(ua)) return 'IE';
   return 'Other';
 }
@@ -28,9 +29,9 @@ function parseOS(ua: string): string | null {
 
 function parseDevice(ua: string): string | null {
   if (!ua) return null;
-  if (/Mobile|Android|iPhone|iPad|iPod|Opera Mini/.test(ua)) {
-    return /Tablet|iPad/.test(ua) ? 'tablet' : 'mobile';
-  }
+  if (/Tablet|iPad/.test(ua)) return 'tablet';
+  if (/Mobile|iPhone|iPod|Opera Mini/.test(ua)) return 'mobile';
+  if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'mobile' : 'tablet';
   return 'desktop';
 }
 
@@ -43,16 +44,7 @@ const trackPageViewRoute = createRoute({
     body: {
       content: {
         'application/json': {
-          schema: z.object({
-            path: z.string().max(500),
-            pageTitle: z.string().max(200).optional(),
-            referrer: z.string().max(500).optional(),
-            utmSource: z.string().max(100).optional(),
-            utmMedium: z.string().max(100).optional(),
-            utmCampaign: z.string().max(200).optional(),
-            screenWidth: z.enum(['sm', 'md', 'lg', 'xl']).optional(),
-            language: z.string().max(10).optional(),
-          }),
+          schema: PageViewTrackingSchema,
         },
       },
     },

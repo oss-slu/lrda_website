@@ -6,13 +6,14 @@
  * Or add as a cron job: 0 2 * * * npx ts-node packages/api/src/scripts/cleanup-pageviews.ts
  */
 
-import { db } from '../db';
 import { pageView } from '../db/schema';
 import { lt } from 'drizzle-orm';
+import { openLocalDb } from './local-db';
 
 const RETENTION_DAYS = 90;
 
 async function cleanup() {
+  const { db, pool } = openLocalDb();
   try {
     console.log(`Starting cleanup of page views older than ${RETENTION_DAYS} days...`);
 
@@ -22,9 +23,11 @@ async function cleanup() {
     const result = await db.delete(pageView).where(lt(pageView.createdAt, cutoffDate));
 
     console.log(`Cleanup completed. Deleted old analytics records.`);
+    await pool.end();
     process.exit(0);
   } catch (error) {
     console.error('Cleanup failed:', error);
+    await pool.end();
     process.exit(1);
   }
 }
