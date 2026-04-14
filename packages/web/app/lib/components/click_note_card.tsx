@@ -162,4 +162,4 @@ const ClickableNote: React.FC<{
   );
 };
 
-export default ClickableNote;
+export default React.memo(ClickableNote);

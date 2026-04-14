@@ -1,22 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { notesService } from '../../services';
 import { useMapStore } from '../../stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDebounce } from '../useDebounce';
-import { boundsToParams } from '../../utils/mapUtils';
+import { boundsToParams, snapBounds } from '../../utils/mapUtils';
 import { notesKeys } from './useNotes';
+import type { Note } from '@/app/types';
 
 const DEBOUNCE_MS = 400;
 const STALE_TIME = 60_000;
 
 /**
- * Hook for fetching notes within the current map viewport in summary mode.
- * - Fetches globally on initial load (before map bounds are available).
- * - Debounces bounds changes by 400ms to avoid spamming the API during pan/zoom.
- * - Uses keepPreviousData so markers/panel never flash empty.
- * - When searchQuery is set, fetches globally (no bounds) for full-dataset search.
- * - Caches per-viewport with 60s staleTime.
+ * Accumulates notes across viewport fetches so panning back to a
+ * previously visited area shows notes instantly from the local cache.
+ *
+ * - Each fetch adds new notes to an in-memory Map (deduped by ID).
+ * - The returned array is filtered to the current viewport bounds.
+ * - Snap-grid on bounds reduces how often we hit the server.
+ * - Search mode bypasses accumulation (separate result set).
  */
 export function useViewportNotes() {
   const { mapBounds, searchQuery } = useMapStore(
@@ -26,14 +28,25 @@ export function useViewportNotes() {
     })),
   );
 
-  // Memoize to avoid resetting the debounce timer on unrelated re-renders
-  const boundsParams = useMemo(() => boundsToParams(mapBounds), [mapBounds]);
-  const debouncedBounds = useDebounce(boundsParams, DEBOUNCE_MS);
+  const rawBounds = useMemo(() => boundsToParams(mapBounds), [mapBounds]);
+
+  // Snap bounds for the query key so small pans hit the cache
+  const snappedBounds = useMemo(() => (rawBounds ? snapBounds(rawBounds) : null), [rawBounds]);
+  const debouncedBounds = useDebounce(snappedBounds, DEBOUNCE_MS);
   const debouncedSearch = useDebounce(searchQuery, DEBOUNCE_MS);
 
   const isSearchMode = debouncedSearch.length > 0;
 
-  return useQuery({
+  // Accumulated notes across all viewport fetches
+  const accumulatedRef = useRef(new Map<string, Note>());
+
+  const mergeNotes = useCallback((notes: Note[]) => {
+    for (const note of notes) {
+      accumulatedRef.current.set(note.id, note);
+    }
+  }, []);
+
+  const query = useQuery({
     queryKey:
       isSearchMode ?
         [...notesKeys.all, 'viewport', 'search', debouncedSearch]
@@ -42,7 +55,6 @@ export function useViewportNotes() {
       if (isSearchMode) {
         return notesService.fetchViewport({ search: debouncedSearch });
       }
-      // Before map bounds are available, fetch without spatial filter
       if (!debouncedBounds) {
         return notesService.fetchViewport({});
       }
@@ -51,4 +63,47 @@ export function useViewportNotes() {
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME,
   });
+
+  // Merge fetched notes into the accumulated set
+  if (query.data && !isSearchMode) {
+    mergeNotes(query.data);
+  }
+
+  // Filter accumulated notes to current viewport
+  const data = useMemo(() => {
+    if (isSearchMode) return query.data ?? [];
+
+    const bounds = rawBounds;
+    if (!bounds) return Array.from(accumulatedRef.current.values());
+
+    const visible: Note[] = [];
+    for (const note of accumulatedRef.current.values()) {
+      if (
+        note.latitude != null &&
+        note.longitude != null &&
+        note.latitude >= bounds.minLat &&
+        note.latitude <= bounds.maxLat &&
+        note.longitude >= bounds.minLng &&
+        note.longitude <= bounds.maxLng
+      ) {
+        visible.push(note);
+      }
+    }
+    return visible;
+  }, [rawBounds, query.data, isSearchMode]);
+
+  // All accumulated notes (for markers -- keeps markers drawn beyond viewport)
+  const allNotes = useMemo(() => {
+    if (isSearchMode) return query.data ?? [];
+    return Array.from(accumulatedRef.current.values());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.data, isSearchMode]);
+
+  return {
+    ...query,
+    /** Notes filtered to current viewport (for the panel list) */
+    data,
+    /** All accumulated notes across all fetches (for markers) */
+    allNotes,
+  };
 }

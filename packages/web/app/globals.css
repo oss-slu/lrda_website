@@ -580,6 +580,8 @@ body {
   margin-bottom: 1.5rem;
   border-radius: 0.5rem;
   max-width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
 }
 
 .note-content audio {

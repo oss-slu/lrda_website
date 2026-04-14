@@ -90,6 +90,7 @@ function MapPage() {
   // Global view: viewport-based fetching with summary mode (debounced, server-side filtering)
   const {
     data: viewportNotes = [],
+    allNotes: allViewportNotes = [],
     isPending: isViewportPending,
     isError: isViewportError,
     error: viewportError,
@@ -108,8 +109,10 @@ function MapPage() {
   const notesError = isGlobalView ? isViewportError : isPersonalError;
   const notesErrorMessage = isGlobalView ? viewportError?.message : personalError?.message;
 
-  // Both views are now server-filtered (viewport bounds + search + summary mode)
+  // Viewport-filtered notes for the panel list
   const filteredNotes = isGlobalView ? viewportNotes : personalNotes;
+  // All accumulated notes for markers (keeps markers drawn beyond viewport)
+  const markerNotes = isGlobalView ? allViewportNotes : personalNotes;
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -144,12 +147,12 @@ function MapPage() {
     setLocationFound,
   });
 
-  // Markers hook
+  // Markers hook -- uses all accumulated notes so markers persist beyond viewport
   const { handleMapClick } = useMapMarkers({
     mapRef,
     isMapsApiLoaded,
     isMapReady: mapBounds !== null,
-    filteredNotes,
+    filteredNotes: markerNotes,
     isPanelOpen,
     setActiveNote,
     setHoveredNoteId,
