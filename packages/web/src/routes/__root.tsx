@@ -11,6 +11,7 @@ import QueryProvider from '@/app/lib/components/QueryProvider';
 import { AuthProvider } from '@/app/lib/components/AuthProvider';
 import NotFound from '@/app/lib/components/NotFound';
 import RootError from '@/app/lib/components/RootError';
+import { usePageView } from '@/app/lib/hooks/usePageView';
 
 const TanStackRouterDevtools =
   import.meta.env.PROD ?
@@ -53,7 +54,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <GoogleMapsProvider>
               <Navbar />
-              <main className='flex-grow overflow-y-auto scroll-smooth'>{children}</main>
+              <TrackingWrapper>
+                <main className='flex-grow overflow-y-auto scroll-smooth'>{children}</main>
+              </TrackingWrapper>
               <Toaster />
             </GoogleMapsProvider>
           </AuthProvider>
@@ -65,4 +68,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </body>
     </html>
   );
+}
+
+function TrackingWrapper({ children }: { children: React.ReactNode }) {
+  usePageView();
+  return <>{children}</>;
 }

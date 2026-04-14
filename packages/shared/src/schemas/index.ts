@@ -37,3 +37,18 @@ export {
   SyncLogResponseSchema,
   SyncUserResultSchema,
 } from './sync';
+
+export {
+  PageViewTrackingSchema,
+  TimeSeriesDataSchema,
+  TopPageSchema,
+  ReferrerSchema,
+  UtmCampaignSchema,
+  ScreenWidthBreakdownSchema,
+  LanguageBreakdownSchema,
+  BrowserBreakdownSchema,
+  OsBreakdownSchema,
+  DeviceBreakdownSchema,
+  AnalyticsSummarySchema,
+  AnalyticsTimeSeriesSchema,
+} from './analytics';

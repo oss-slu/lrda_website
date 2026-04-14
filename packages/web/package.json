@@ -99,6 +99,7 @@
     "react-h5-audio-player": "^3.10.2",
     "react-hook-form": "^7.71.2",
     "react-player": "^3.3.3",
+    "recharts": "^3.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tw-animate-css": "^1.2.5",

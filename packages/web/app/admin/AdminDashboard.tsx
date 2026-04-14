@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from './StatsCard';
 import { RecentActivityTab } from './RecentActivityTab';
 import { SyncTab } from './SyncTab';
+import { AnalyticsTab } from './AnalyticsTab';
 import {
   Table,
   TableBody,
@@ -79,6 +80,7 @@ import {
   TrendingUp,
   Calendar,
   Activity,
+  BarChart as BarChartIcon,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -111,8 +113,7 @@ export default function AdminDashboard({
   const [users, setUsers] = useState<AdminUserData[]>(initialUsers);
   const [applications, setApplications] = useState<PendingApplication[]>(initialApplications);
   const [contentStats, setContentStats] = useState<ContentStats | null>(initialContentStats);
-  const [recentActivity, setRecentActivity] =
-    useState<RecentActivityItem[]>(initialRecentActivity);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>(initialRecentActivity);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -317,7 +318,7 @@ export default function AdminDashboard({
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
-          <TabsList className='grid w-full max-w-2xl grid-cols-4'>
+          <TabsList className='grid w-full max-w-3xl grid-cols-5'>
             <TabsTrigger value='applications' className='gap-2'>
               <ClipboardList className='h-4 w-4' />
               Applications
@@ -338,6 +339,10 @@ export default function AdminDashboard({
             <TabsTrigger value='sync' className='gap-2'>
               <RefreshCw className='h-4 w-4' />
               Sync
+            </TabsTrigger>
+            <TabsTrigger value='analytics' className='gap-2'>
+              <BarChartIcon className='h-4 w-4' />
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -618,6 +623,11 @@ export default function AdminDashboard({
           {/* Sync Tab */}
           <TabsContent value='sync'>
             <SyncTab />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value='analytics'>
+            <AnalyticsTab />
           </TabsContent>
         </Tabs>
 

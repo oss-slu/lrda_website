@@ -347,3 +347,44 @@ export const syncRunDetailRelations = relations(syncRunDetail, ({ one }) => ({
     references: [syncRun.id],
   }),
 }));
+
+// ============================================
+// Analytics Tables
+// ============================================
+
+/**
+ * Page view analytics table - tracks anonymous page views
+ * Privacy-first: no personal data stored, IPs hashed, UAs parsed not stored
+ */
+export const pageView = pgTable(
+  'page_view',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    // What was visited
+    path: text('path').notNull(),
+    pageTitle: text('page_title'),
+    referrer: text('referrer'),
+    // UTM campaign tracking (parsed from URL query string)
+    utmSource: text('utm_source'),
+    utmMedium: text('utm_medium'),
+    utmCampaign: text('utm_campaign'),
+    // Visitor context (no personal data)
+    browser: text('browser'),
+    os: text('os'),
+    device: text('device'),
+    screenWidth: text('screen_width'),
+    language: text('language'),
+    // Deduplication
+    sessionHash: text('session_hash'),
+    // Timestamp
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [
+    index('page_view_path_idx').on(table.path),
+    index('page_view_created_at_idx').on(table.createdAt),
+    index('page_view_session_hash_idx').on(table.sessionHash),
+    index('page_view_utm_source_idx').on(table.utmSource),
+  ],
+);

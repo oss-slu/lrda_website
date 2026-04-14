@@ -49,6 +49,8 @@ export {
   getSyncLog,
   getSyncRunDetail,
   syncUsers,
+  getAnalyticsSummary,
+  getAnalyticsTimeseries,
 } from './admin.service';
 export type {
   AdminUserData,
@@ -59,4 +61,6 @@ export type {
   SyncStatus,
   SyncRun,
   SyncRunWithDetails,
+  AnalyticsSummary,
+  TimeSeriesPoint,
 } from './admin.service';

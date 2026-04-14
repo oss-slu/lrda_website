@@ -21,12 +21,18 @@ import type {
   SyncLogResponse,
   SyncUserResult,
 } from '@lrda/shared';
+import { z } from 'zod';
+import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared';
 
 // Re-export shared types with legacy aliases for backward compatibility
 export type AdminUserData = AdminUser;
 export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
 export type { SyncStatus, SyncRun, SyncRunWithDetails, SyncLogResponse, SyncUserResult };
+
+// Infer analytics types from Zod schemas
+export type AnalyticsSummary = z.infer<typeof AnalyticsSummarySchema>;
+export type TimeSeriesPoint = z.infer<typeof AnalyticsTimeSeriesSchema>[number];
 
 /**
  * Fetch all users from the API.
@@ -197,4 +203,28 @@ export async function getSyncRunDetail(runId: string): Promise<SyncRunWithDetail
 
 export async function syncUsers(): Promise<SyncUserResult> {
   return fetchWithAuth<SyncUserResult>('/api/admin/sync/users', { method: 'POST' });
+}
+
+/**
+ * Get analytics summary.
+ */
+export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> {
+  try {
+    return await fetchWithAuth<AnalyticsSummary>(`/api/admin/analytics/summary?days=${days}`);
+  } catch (error) {
+    console.error('Error fetching analytics summary:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get analytics timeseries data.
+ */
+export async function getAnalyticsTimeseries(days = 30): Promise<TimeSeriesPoint[]> {
+  try {
+    return await fetchWithAuth<TimeSeriesPoint[]>(`/api/admin/analytics/timeseries?days=${days}`);
+  } catch (error) {
+    console.error('Error fetching analytics timeseries:', error);
+    throw error;
+  }
 }

@@ -73,7 +73,7 @@ testRoutes.get('/last-email-url', c => {
  */
 testRoutes.post('/create-session', async c => {
   try {
-    const { userId } = (await c.req.json()) as { userId: string };
+    const { userId } = (await c.req.json());
     if (!userId) {
       return c.json({ error: 'Missing userId' }, 400);
     }
