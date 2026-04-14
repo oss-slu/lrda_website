@@ -15,7 +15,7 @@ CREATE TABLE "page_view" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "sync_state" (
+CREATE TABLE IF NOT EXISTS "sync_state" (
 	"id" text PRIMARY KEY NOT NULL,
 	"last_sync_at" timestamp NOT NULL,
 	"last_notes_sync_at" timestamp,
