@@ -6,6 +6,7 @@ yarn.lock
 .env*
 !.env.example
 pnpm-lock.yaml
+scheduled_tasks.lock
 
 all_notes.json
 *.tsbuildinfo

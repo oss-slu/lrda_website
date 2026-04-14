@@ -23,9 +23,6 @@ export function usePageView() {
   const location = useLocation();
 
   useEffect(() => {
-    // Don't track in development
-    if (import.meta.env.DEV) return;
-
     const utm = getUtmParams();
 
     fetch(`${API_URL}/api/analytics/pageview`, {

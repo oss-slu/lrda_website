@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 export const PageViewTrackingSchema = z.object({
   path: z.string().max(500),
-  pageTitle: z.string().max(200).optional(),
-  referrer: z.string().max(500).optional(),
-  utmSource: z.string().max(100).optional(),
-  utmMedium: z.string().max(100).optional(),
-  utmCampaign: z.string().max(200).optional(),
-  screenWidth: z.enum(['sm', 'md', 'lg', 'xl']).optional(),
-  language: z.string().max(10).optional(),
+  pageTitle: z.string().max(200).nullish(),
+  referrer: z.string().max(500).nullish(),
+  utmSource: z.string().max(100).nullish(),
+  utmMedium: z.string().max(100).nullish(),
+  utmCampaign: z.string().max(200).nullish(),
+  screenWidth: z.enum(['sm', 'md', 'lg', 'xl']).nullish(),
+  language: z.string().max(10).nullish(),
 });
 
 export const TimeSeriesDataSchema = z.object({

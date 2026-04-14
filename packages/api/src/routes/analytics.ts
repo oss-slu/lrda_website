@@ -4,12 +4,15 @@ import { pageView } from '../db/schema';
 import { createHash } from 'node:crypto';
 import type { AppEnv } from '../types';
 import { getDb } from './helpers';
+import { env } from '../env';
 
 // User-Agent parsing utilities
 function parseBrowser(ua: string): string | null {
   if (!ua) return null;
   if (/Edg\//.test(ua)) return 'Edge';
   if (/Opera\/|OPR\//.test(ua)) return 'Opera';
+  if (/CriOS\//.test(ua)) return 'Chrome';
+  if (/FxiOS\//.test(ua)) return 'Firefox';
   if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) return 'Chrome';
   if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'Safari';
   if (/Firefox\//.test(ua)) return 'Firefox';
@@ -19,11 +22,11 @@ function parseBrowser(ua: string): string | null {
 
 function parseOS(ua: string): string | null {
   if (!ua) return null;
+  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+  if (/Android/.test(ua)) return 'Android';
   if (/Windows/.test(ua)) return 'Windows';
   if (/Mac OS X/.test(ua)) return 'macOS';
   if (/Linux/.test(ua)) return 'Linux';
-  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
-  if (/Android/.test(ua)) return 'Android';
   return 'Other';
 }
 
@@ -65,13 +68,30 @@ export const analyticsRoutes = new OpenAPIHono<AppEnv>().openapi(trackPageViewRo
   const db = getDb(c);
   const body = c.req.valid('json');
 
+  // Origin allowlist: in development accept any; otherwise require Origin in CORS_ORIGINS or WEB_URL
+  const origin = c.req.header('origin');
+  if (env.ENVIRONMENT !== 'development') {
+    const allowed = env.CORS_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) ?? [
+      env.WEB_URL,
+    ];
+    if (!origin || !allowed.includes(origin)) {
+      return c.json({ error: 'Invalid origin' }, 400);
+    }
+  }
+
+  // Path validation: must be a same-origin path, no control characters
+  if (!body.path.startsWith('/') || /[\x00-\x1f\x7f]/.test(body.path)) {
+    return c.json({ error: 'Invalid path' }, 400);
+  }
+
   const ip = c.req.header('x-forwarded-for') || 'unknown';
   const ua = c.req.header('user-agent') || '';
   const today = new Date().toISOString().split('T')[0];
 
-  // One-way hash for daily unique visitor approximation
+  // One-way hash for daily unique visitor approximation. Salted with BETTER_AUTH_SECRET
+  // so raw IP+UA cannot be recovered via rainbow table even if the DB leaks.
   const sessionHash = createHash('sha256')
-    .update(`${ip}:${ua}:${today}`)
+    .update(`${env.BETTER_AUTH_SECRET}:${ip}:${ua}:${today}`)
     .digest('hex')
     .slice(0, 16);
 

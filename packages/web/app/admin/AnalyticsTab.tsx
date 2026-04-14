@@ -68,7 +68,7 @@ export function AnalyticsTab() {
           loading={isLoading}
         />
         <StatsCard
-          title='Unique Visitors'
+          title='Visitor-Days'
           value={summary.data?.uniqueVisitors || 0}
           icon={Users}
           loading={isLoading}
