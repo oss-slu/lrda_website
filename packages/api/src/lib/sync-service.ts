@@ -448,10 +448,10 @@ export async function startSync(): Promise<{ started: boolean; message: string }
     return { started: false, message: 'RERUM_API_URL environment variable is not configured' };
   }
 
-  // Run initial full sync
+  // Run initial incremental sync (falls back to full if sync_state is empty)
   syncInProgress = true;
   try {
-    await syncNotes('full');
+    await syncNotes('watch');
   } finally {
     syncInProgress = false;
   }
@@ -469,7 +469,7 @@ export async function startSync(): Promise<{ started: boolean; message: string }
     }
   }, SYNC_INTERVAL_MS);
 
-  return { started: true, message: 'Sync started with initial full sync' };
+  return { started: true, message: 'Sync started' };
 }
 
 export async function stopSync(): Promise<{ stopped: boolean; message: string }> {
