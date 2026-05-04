@@ -2,7 +2,7 @@ name: Deploy Docs
 
 on:
   push:
-    branches: [301-improve-admin]
+    branches: [main]
     paths:
       - 'packages/docs/**'
   workflow_dispatch:

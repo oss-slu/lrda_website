@@ -5,7 +5,7 @@ permissions:
 
 on:
   pull_request:
-    branches: [301-improve-admin]
+    branches: [main]
   workflow_call:
 
 concurrency:

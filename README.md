@@ -1,5 +1,7 @@
 # The Where's Religion? Web Application
 
+**Product Owner:** [Adam Park](https://github.com/park353) | Part of the [Where's Religion](https://wheresreligion.org) project, funded by the Henry Luce Foundation and developed through [Open Source with SLU](https://github.com/oss-slu).
+
 Where's Religion? is a collaborative platform designed for diverse users with interests in sharing media and notes about their respective encounters with "religion" in everyday places.
 
 Find the mobile app repository [here](https://github.com/oss-slu/lrda_mobile)

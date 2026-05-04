@@ -2,7 +2,7 @@ name: Deploy Web
 
 on:
   push:
-    branches: [301-improve-admin]
+    branches: [main]
     paths:
       - 'packages/web/**'
       - 'packages/shared/**'
