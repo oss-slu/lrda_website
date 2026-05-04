@@ -1,189 +1,70 @@
-import { Note, ImageNote } from '@/app/types';
-import { VideoType, AudioType, PhotoType } from '../models/media_class';
+type DateInput = string | number | Date;
+
+function toDate(date: DateInput): Date | null {
+  const parsed = date instanceof Date ? date : new Date(date);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
 
 /**
- * Utility class for converting media types in fetched data to the appropriate classes.
+ * Long date: "Wednesday, March 12, 2026"
  */
-export default class DataConversion {
-  /**
-   * Converts media types in the fetched data to the appropriate classes.
-   * @param {any[]} data - The fetched data containing media items.
-   * @returns {Note[]} The converted notes, sorted with appropriate media classes.
-   */
-  static convertMediaTypes(data: any[]): Note[] {
-    const fetchedNotes: Note[] = data.map((message: any) => {
-      let time = new Date(message.__rerum.createdAt);
-      if (message.time === undefined) {
-        time = new Date(message.__rerum.createdAt);
-        var date = new Date();
-        var offsetInHours = date.getTimezoneOffset() / 60;
-        time.setHours(time.getHours() - offsetInHours);
-      } else {
-        time = new Date(message.time);
-      }
-
-      const mediaItems = message.media.map((item: any) => {
-        if (item.type === 'video') {
-          return new VideoType({
-            uuid: item.uuid,
-            type: item.type,
-            uri: item.uri,
-            thumbnail: item.thumbnail,
-            duration: item.duration,
-          });
-        } else if (item.type === 'audio') {
-          return new AudioType({
-            uuid: item.uuid,
-            type: item.type,
-            uri: item.uri,
-            duration: item.duration,
-            name: item.name,
-            isPlaying: false,
-          });
-        } else {
-          return new PhotoType({
-            uuid: item.uuid,
-            type: item.type,
-            uri: item.uri,
-          });
-        }
-      });
-
-      const audioItems = message.audio?.map((item: any) => {
-        return new AudioType({
-          uuid: item.uuid,
-          type: item.type,
-          uri: item.uri,
-          duration: item.duration,
-          name: item.name,
-          isPlaying: false,
-        });
-      });
-
-      return {
-        ...message,
-        id: message['@id'],
-        time: time || '',
-        media: mediaItems || [],
-        audio: audioItems || [],
-        text: message.BodyText || '',
-      };
-    });
-
-    fetchedNotes.sort((b, a) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
-    return fetchedNotes;
-  }
-
-  /**
-   * Extracts images from the fetched notes and returns an array of ImageNote objects.
-   * @param {Note[]} fetchedNotes - The fetched notes containing media items.
-   * @returns {ImageNote[]} The extracted images with corresponding note information.
-   */
-  static extractImages(fetchedNotes: Note[]): ImageNote[] {
-    const extractedImages: ImageNote[] = fetchedNotes.flatMap(note => {
-      return note.media.map((item: any) => {
-        if (item.type === 'video') {
-          return {
-            image: item.thumbnail,
-            note: {
-              id: note.id,
-              title: note.title || '',
-              text: note.text || '',
-              media: note.media.map((mediaItem: any) => {
-                if (mediaItem.type === 'video') {
-                  return new VideoType({
-                    uuid: mediaItem.uuid,
-                    type: mediaItem.type,
-                    uri: mediaItem.uri,
-                    thumbnail: mediaItem.thumbnail,
-                    duration: mediaItem.duration,
-                  });
-                } else {
-                  return new PhotoType({
-                    uuid: mediaItem.uuid,
-                    type: mediaItem.type,
-                    uri: mediaItem.uri,
-                  });
-                }
-              }),
-              audio: note.audio || [],
-              time: note.time || '',
-              creator: note.creator || '',
-              latitude: note.latitude,
-              longitude: note.longitude,
-              published: note?.published || false,
-              tags: note?.tags || [],
-              uid: note.uid, // Add the uid property here
-            },
-          };
-        } else {
-          return {
-            image: item.uri,
-            note: {
-              id: note.id,
-              title: note.title || '',
-              text: note.text || '',
-              media: note.media.map((mediaItem: any) => {
-                if (mediaItem.type === 'video') {
-                  return new VideoType({
-                    uuid: mediaItem.uuid,
-                    type: mediaItem.type,
-                    uri: mediaItem.uri,
-                    thumbnail: mediaItem.thumbnail,
-                    duration: mediaItem.duration,
-                  });
-                } else {
-                  return new PhotoType({
-                    uuid: mediaItem.uuid,
-                    type: mediaItem.type,
-                    uri: mediaItem.uri,
-                  });
-                }
-              }),
-              audio: note.audio || [],
-              time: note.time || '',
-              creator: note.creator || '',
-              latitude: note.latitude,
-              longitude: note.longitude,
-              published: note?.published || false,
-              tags: note?.tags || [],
-              uid: note.uid, // Add the uid property here
-              //isArchived: note.isArchived
-            },
-          };
-        }
-      });
-    });
-
-    return extractedImages;
-  }
+export function formatDate(date: DateInput): string {
+  const d = toDate(date);
+  if (!d) return 'Invalid Date';
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
-export function formatDateTime(date: any) {
-  if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return 'Pick a date'; // Handle invalid dates
-  }
+/**
+ * Compact date: "Wed, Mar 12, 2026"
+ */
+export function formatDateCompact(date: DateInput): string {
+  const d = toDate(date);
+  if (!d) return 'Invalid Date';
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+/**
+ * Short date (no weekday): "Mar 12, 2026"
+ */
+export function formatDateShort(date: DateInput): string {
+  const d = toDate(date);
+  if (!d) return 'Invalid Date';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/**
+ * 12-hour time: "3:45 PM"
+ */
+export function format12hourTime(date: DateInput): string {
+  const d = toDate(date);
+  if (!d) return 'Pick a date';
+  const hours = d.getHours();
+  const minutes = d.getMinutes();
   const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
   const ampm = hours < 12 ? 'AM' : 'PM';
-
-  return `${date.toDateString()} ${formattedHours}:${formattedMinutes} ${ampm}`;
-}
-
-export function format12hourTime(date: any) {
-  if (!(date instanceof Date) || isNaN(date.getTime())) {
-    return 'Pick a date'; // Handle invalid dates
-  }
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
-
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
+}
+
+/**
+ * Date + time: "Wed Mar 12 2026 3:45 PM"
+ */
+export function formatDateTime(date: DateInput): string {
+  const d = toDate(date);
+  if (!d) return 'Pick a date';
+  return `${d.toDateString()} ${format12hourTime(d)}`;
 }

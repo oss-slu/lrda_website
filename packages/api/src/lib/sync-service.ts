@@ -1,0 +1,769 @@
+/**
+ * RERUM Sync Service
+ *
+ * Manages the RERUM -> PostgreSQL sync lifecycle within the API server.
+ * Provides start/stop/trigger/status operations for admin endpoints,
+ * and writes audit log entries for every sync run.
+ */
+
+import { eq } from 'drizzle-orm';
+import { db, type Database } from '../db';
+import * as schema from '../db/schema';
+import { env } from '../env';
+import type { Tag } from '../db/types';
+
+// RERUM API configuration
+const SYNC_INTERVAL_MS = 600_000; // 10 minutes
+const BATCH_SIZE = 100;
+
+// Sync state
+let intervalId: ReturnType<typeof setInterval> | undefined;
+let syncInProgress = false;
+let lastRunAt: Date | null = null;
+let lastRunStatus: string | null = null;
+
+// ============================================
+// RERUM API helpers
+// ============================================
+
+function getRerumApiUrl(): string {
+  // Check env singleton first, fall back to process.env (supports runtime override in tests)
+  const url = env.RERUM_API_URL || process.env.RERUM_API_URL;
+  if (!url) {
+    throw new Error('RERUM_API_URL environment variable is not configured');
+  }
+  return url;
+}
+
+async function rerumQuery<T>(queryObj: object, limit = 500, skip = 0): Promise<T[]> {
+  const url = `${getRerumApiUrl()}query?limit=${limit}&skip=${skip}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(queryObj),
+  });
+
+  if (!response.ok) {
+    throw new Error(`RERUM query failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json() as Promise<T[]>;
+}
+
+async function rerumQueryAll<T>(queryObj: object): Promise<T[]> {
+  const allResults: T[] = [];
+  let skip = 0;
+
+  while (true) {
+    const results = await rerumQuery<T>(queryObj, BATCH_SIZE, skip);
+    if (results.length === 0) break;
+
+    allResults.push(...results);
+    skip += results.length;
+
+    if (results.length < BATCH_SIZE) break;
+  }
+
+  return allResults;
+}
+
+// ============================================
+// RERUM data types
+// ============================================
+
+interface RerumNote {
+  '@id': string;
+  type: string;
+  title?: string;
+  BodyText?: string;
+  text?: string;
+  creator: string | Record<string, unknown>;
+  latitude?: string;
+  longitude?: string;
+  published?: boolean;
+  approvalRequested?: boolean;
+  tags?: Array<string | { label?: string; origin?: string }>;
+  media?: Array<{
+    type: string;
+    uri: string;
+    thumbnail?: string;
+    uuid?: string;
+  }>;
+  audio?: Array<{
+    uri: unknown;
+    name?: string;
+    duration?: string;
+    uuid?: string;
+  }>;
+  time?: string;
+  isArchived?: boolean;
+  __rerum?: {
+    createdAt?: string;
+    modifiedAt?: string;
+    isOverwritten?: string;
+  };
+}
+
+// ============================================
+// Data normalization helpers
+// ============================================
+
+function extractId(rerumId: string): string {
+  if (!rerumId) return '';
+  const match = rerumId.match(/\/id\/([^\/\?]+)/);
+  return match ? match[1] : rerumId;
+}
+
+function normalizeCreatorId(creator: unknown): string {
+  if (!creator) return '';
+  if (typeof creator === 'object' && creator !== null) {
+    const creatorObj = creator as Record<string, unknown>;
+    if (typeof creatorObj['@id'] === 'string') {
+      return extractId(creatorObj['@id']);
+    }
+    if (typeof creatorObj.id === 'string') {
+      return creatorObj.id;
+    }
+    return '';
+  }
+  if (typeof creator !== 'string') return '';
+  if (creator.includes('/')) {
+    return extractId(creator);
+  }
+  return creator;
+}
+
+function normalizeTags(tags?: RerumNote['tags']): Tag[] {
+  if (!tags || tags.length === 0) return [];
+  return tags
+    .map((t): Tag | null => {
+      if (typeof t === 'string') {
+        return t.trim() ? { label: t.trim(), origin: 'user' } : null;
+      }
+      if (typeof t === 'object' && t.label) {
+        return { label: t.label, origin: t.origin === 'ai' ? 'ai' : 'user' };
+      }
+      return null;
+    })
+    .filter((t): t is Tag => t !== null);
+}
+
+// ============================================
+// Fallback user
+// ============================================
+
+const FALLBACK_USER_ID = 'rerum-orphan-user';
+const FALLBACK_USER = {
+  id: FALLBACK_USER_ID,
+  name: 'Billy Joel',
+  email: 'billy.joel@rerum.orphan',
+  emailVerified: false,
+  role: 'user',
+  isInstructor: false,
+};
+
+async function ensureFallbackUser() {
+  const exists = await db.query.user.findFirst({
+    where: eq(schema.user.id, FALLBACK_USER_ID),
+  });
+  if (!exists) {
+    await db.insert(schema.user).values(FALLBACK_USER);
+  }
+}
+
+// ============================================
+// Sync state tracking
+// ============================================
+
+async function getLastNoteSyncTime(): Promise<Date | null> {
+  const rows = await db
+    .select({
+      lastNotesSyncAt: schema.syncState.lastNotesSyncAt,
+      lastSyncAt: schema.syncState.lastSyncAt,
+    })
+    .from(schema.syncState)
+    .where(eq(schema.syncState.id, 'main'));
+  const row = rows[0];
+  if (!row) return null;
+  return row.lastNotesSyncAt ?? row.lastSyncAt;
+}
+
+async function updateLastNoteSyncTime(time: Date) {
+  await db
+    .insert(schema.syncState)
+    .values({
+      id: 'main',
+      lastSyncAt: time,
+      lastNotesSyncAt: time,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: schema.syncState.id,
+      set: {
+        lastSyncAt: time,
+        lastNotesSyncAt: time,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+// ============================================
+// Core sync logic
+// ============================================
+
+interface SyncResult {
+  runId: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  errored: number;
+  durationMs: number;
+  status: 'success' | 'failed';
+  error?: string;
+}
+
+async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<SyncResult> {
+  const fullSync = triggeredBy === 'full';
+  const startTime = Date.now();
+  const syncStartTime = new Date();
+
+  // Create audit log run entry
+  const [run] = await db
+    .insert(schema.syncRun)
+    .values({
+      status: 'running',
+      triggeredBy,
+    })
+    .returning({ id: schema.syncRun.id });
+
+  const runId = run.id;
+
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  let errored = 0;
+
+  try {
+    await ensureFallbackUser();
+
+    const lastSync = fullSync ? null : await getLastNoteSyncTime();
+
+    // Build RERUM query -- for incremental syncs, filter server-side by modification date
+    // RERUM passes queries directly to MongoDB, so $or/$gt operators work.
+    // Timestamps use ISO 8601 without timezone suffix (e.g., "2026-04-09T00:00:00.000")
+    let rerumQuery: Record<string, unknown> = { type: 'message' };
+    if (lastSync) {
+      const sinceTs = lastSync.toISOString().replace('Z', '');
+      rerumQuery = {
+        type: 'message',
+        $or: [
+          { '__rerum.isOverwritten': { $gt: sinceTs } },
+          { '__rerum.createdAt': { $gt: sinceTs } },
+        ],
+      };
+    }
+
+    const rerumNotes = await rerumQueryAll<RerumNote>(rerumQuery);
+
+    for (const rerumNote of rerumNotes) {
+      try {
+        // Skip archived/deleted notes
+        if (rerumNote.isArchived) {
+          skipped++;
+          continue;
+        }
+
+        const noteId = extractId(rerumNote['@id']);
+        if (!noteId) {
+          skipped++;
+          continue;
+        }
+
+        const creatorId = normalizeCreatorId(rerumNote.creator) || FALLBACK_USER_ID;
+
+        // Check if user exists -- assign to fallback user if not
+        const userExists = await db.query.user.findFirst({
+          where: eq(schema.user.id, creatorId),
+        });
+        const effectiveCreatorId = userExists ? creatorId : FALLBACK_USER_ID;
+
+        const modifiedAt =
+          rerumNote.__rerum?.modifiedAt ? new Date(rerumNote.__rerum.modifiedAt)
+          : rerumNote.__rerum?.isOverwritten ? new Date(rerumNote.__rerum.isOverwritten)
+          : new Date();
+
+        const noteData = {
+          id: noteId,
+          title: rerumNote.title || null,
+          text: rerumNote.BodyText || rerumNote.text || '',
+          creatorId: effectiveCreatorId,
+          latitude: rerumNote.latitude ? parseFloat(rerumNote.latitude) || null : null,
+          longitude: rerumNote.longitude ? parseFloat(rerumNote.longitude) || null : null,
+          isPublished: rerumNote.published === true,
+          approvalRequested: rerumNote.approvalRequested === true,
+          tags: normalizeTags(rerumNote.tags),
+          time: rerumNote.time ? new Date(rerumNote.time) : new Date(),
+          createdAt:
+            rerumNote.__rerum?.createdAt ? new Date(rerumNote.__rerum.createdAt) : new Date(),
+          updatedAt: modifiedAt,
+        };
+
+        const existing = await db.query.note.findFirst({
+          where: eq(schema.note.id, noteId),
+        });
+
+        await db.transaction(async (tx) => {
+          if (existing) {
+            await tx.update(schema.note).set(noteData).where(eq(schema.note.id, noteId));
+          } else {
+            await tx.insert(schema.note).values(noteData);
+          }
+
+          // Sync media
+          await tx.delete(schema.media).where(eq(schema.media.noteId, noteId));
+          if (rerumNote.media?.length) {
+            await tx.insert(schema.media).values(
+              rerumNote.media.map(m => ({
+                noteId,
+                type: m.type || 'image',
+                uri: m.uri,
+                thumbnailUri: m.thumbnail || null,
+                uuid: m.uuid || null,
+              })),
+            );
+          }
+
+          // Sync audio
+          await tx.delete(schema.audio).where(eq(schema.audio.noteId, noteId));
+          if (rerumNote.audio?.length) {
+            const validAudio = rerumNote.audio.filter(a => typeof a.uri === 'string' && a.uri);
+            if (validAudio.length) {
+              await tx.insert(schema.audio).values(
+                validAudio.map(a => ({
+                  noteId,
+                  uri: a.uri as string,
+                  name: a.name || null,
+                  duration: a.duration || null,
+                  uuid: a.uuid || null,
+                })),
+              );
+            }
+          }
+        });
+
+        const action = existing ? 'updated' : 'created';
+        if (existing) updated++;
+        else created++;
+
+        // Write per-note audit detail
+        await db.insert(schema.syncRunDetail).values({
+          runId,
+          noteId,
+          action,
+        });
+      } catch (error) {
+        errored++;
+        const noteId = extractId(rerumNote['@id']);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+
+        await db.insert(schema.syncRunDetail).values({
+          runId,
+          noteId: noteId || 'unknown',
+          action: 'errored',
+          error: errorMsg,
+        });
+      }
+    }
+
+    await updateLastNoteSyncTime(syncStartTime);
+
+    const durationMs = Date.now() - startTime;
+
+    // Update run summary
+    await db
+      .update(schema.syncRun)
+      .set({
+        finishedAt: new Date(),
+        durationMs,
+        status: 'success',
+        notesCreated: created,
+        notesUpdated: updated,
+        notesSkipped: skipped,
+        notesErrored: errored,
+      })
+      .where(eq(schema.syncRun.id, runId));
+
+    lastRunAt = new Date();
+    lastRunStatus = 'success';
+
+    return { runId, created, updated, skipped, errored, durationMs, status: 'success' };
+  } catch (error) {
+    const durationMs = Date.now() - startTime;
+    const errorMsg = error instanceof Error ? error.message : String(error);
+
+    // Update run as failed
+    await db
+      .update(schema.syncRun)
+      .set({
+        finishedAt: new Date(),
+        durationMs,
+        status: 'failed',
+        notesCreated: created,
+        notesUpdated: updated,
+        notesSkipped: skipped,
+        notesErrored: errored,
+        error: errorMsg,
+      })
+      .where(eq(schema.syncRun.id, runId));
+
+    lastRunAt = new Date();
+    lastRunStatus = 'failed';
+
+    return { runId, created, updated, skipped, errored, durationMs, status: 'failed', error: errorMsg };
+  }
+}
+
+// ============================================
+// Public API
+// ============================================
+
+export function getSyncStatus() {
+  const running = intervalId !== undefined;
+  return {
+    running,
+    lastRunAt,
+    lastRunStatus,
+    nextRunAt: running && lastRunAt ? new Date(lastRunAt.getTime() + SYNC_INTERVAL_MS) : null,
+    intervalMs: SYNC_INTERVAL_MS,
+  };
+}
+
+export async function startSync(): Promise<{ started: boolean; message: string }> {
+  if (intervalId !== undefined) {
+    return { started: false, message: 'Sync is already running' };
+  }
+
+  if (!env.RERUM_API_URL && !process.env.RERUM_API_URL) {
+    return { started: false, message: 'RERUM_API_URL environment variable is not configured' };
+  }
+
+  // Run initial incremental sync (falls back to full if sync_state is empty)
+  syncInProgress = true;
+  try {
+    await syncNotes('watch');
+  } finally {
+    syncInProgress = false;
+  }
+
+  // Start polling
+  intervalId = setInterval(async () => {
+    if (syncInProgress) return;
+    syncInProgress = true;
+    try {
+      await syncNotes('watch');
+    } catch (error) {
+      console.error('[sync-service] Watch mode sync failed:', error);
+    } finally {
+      syncInProgress = false;
+    }
+  }, SYNC_INTERVAL_MS);
+
+  return { started: true, message: 'Sync started' };
+}
+
+export async function stopSync(): Promise<{ stopped: boolean; message: string }> {
+  if (intervalId === undefined) {
+    return { stopped: false, message: 'Sync is not running' };
+  }
+
+  clearInterval(intervalId);
+  intervalId = undefined;
+
+  // Wait for in-flight sync if any
+  if (syncInProgress) {
+    const maxWait = 60_000;
+    const start = Date.now();
+    while (syncInProgress && Date.now() - start < maxWait) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  return { stopped: true, message: 'Sync stopped' };
+}
+
+export async function triggerSync(): Promise<SyncResult> {
+  if (syncInProgress) {
+    throw new Error('A sync is already in progress');
+  }
+
+  syncInProgress = true;
+  try {
+    return await syncNotes('manual');
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+export async function triggerFullSync(): Promise<SyncResult> {
+  if (syncInProgress) {
+    throw new Error('A sync is already in progress');
+  }
+
+  syncInProgress = true;
+  try {
+    return await syncNotes('full');
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+// ============================================
+// Firebase user sync (re-runnable from admin)
+// ============================================
+
+export async function syncUsersFromFirebase(): Promise<{
+  created: number;
+  updated: number;
+  skipped: number;
+}> {
+  const startTime = Date.now();
+
+  // Dynamic import to avoid loading firebase-admin at server startup
+  const { initializeApp, cert, getApps } = await import('firebase-admin/app');
+  const { getAuth } = await import('firebase-admin/auth');
+  const { getFirestore } = await import('firebase-admin/firestore');
+
+  if (getApps().length === 0) {
+    const credPath = env.FIREBASE_SERVICE_ACCOUNT_PATH;
+    const credJson = env.FIREBASE_SERVICE_ACCOUNT;
+
+    if (!credPath && !credJson) {
+      throw new Error(
+        'Firebase credentials not configured. Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT.',
+      );
+    }
+
+    let serviceAccount;
+    if (credPath) {
+      const fs = await import('fs');
+      serviceAccount = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+    } else {
+      serviceAccount = JSON.parse(credJson!);
+    }
+
+    initializeApp({ credential: cert(serviceAccount) });
+  }
+
+  const auth = getAuth();
+  const firestore = getFirestore();
+
+  // Fetch all Firebase Auth users
+  const allUsers: Array<{
+    uid: string;
+    email: string | undefined;
+    displayName: string | undefined;
+    emailVerified: boolean;
+    photoURL: string | undefined;
+    createdAt: Date;
+    customClaims: Record<string, unknown> | undefined;
+  }> = [];
+
+  let nextPageToken: string | undefined;
+  do {
+    const listResult = await auth.listUsers(1000, nextPageToken);
+    for (const u of listResult.users) {
+      allUsers.push({
+        uid: u.uid,
+        email: u.email,
+        displayName: u.displayName,
+        emailVerified: u.emailVerified,
+        photoURL: u.photoURL,
+        createdAt: new Date(u.metadata.creationTime),
+        customClaims: u.customClaims,
+      });
+    }
+    nextPageToken = listResult.pageToken;
+  } while (nextPageToken);
+
+  // Create audit log run entry upfront so per-user details can reference it
+  const [run] = await db
+    .insert(schema.syncRun)
+    .values({ status: 'running', triggeredBy: 'users' })
+    .returning({ id: schema.syncRun.id });
+  const runId = run.id;
+
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  const deferredInstructorIds: Array<{ uid: string; instructorId: string }> = [];
+
+  for (const fbUser of allUsers) {
+    try {
+      if (!fbUser.email) {
+        skipped++;
+        continue;
+      }
+
+      // Fetch Firestore doc for extra metadata
+      let firestoreData: Record<string, unknown> | null = null;
+      try {
+        const doc = await firestore.collection('users').doc(fbUser.uid).get();
+        firestoreData = doc.exists ? (doc.data() as Record<string, unknown>) : null;
+      } catch {
+        // Firestore doc may not exist
+      }
+
+      const isInstructor =
+        firestoreData?.isInstructor === true || fbUser.customClaims?.instructor === true;
+
+      const firestoreRoles = firestoreData?.roles as Record<string, boolean> | undefined;
+      const isAdmin = fbUser.customClaims?.admin === true || firestoreRoles?.administrator === true;
+
+      const instructorId =
+        typeof firestoreData?.parentInstructorId === 'string'
+          ? firestoreData.parentInstructorId
+          : null;
+
+      const pendingInstructorDescription =
+        typeof firestoreData?.pendingInstructorDescription === 'string'
+          ? firestoreData.pendingInstructorDescription
+          : null;
+
+      const name =
+        (typeof firestoreData?.name === 'string' && firestoreData.name) ||
+        fbUser.displayName ||
+        fbUser.email.split('@')[0];
+
+      const existing = await db.query.user.findFirst({
+        where: eq(schema.user.id, fbUser.uid),
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          image: true,
+          role: true,
+          isInstructor: true,
+          pendingInstructorDescription: true,
+        },
+      });
+
+      // Never overwrite admin role or emailVerified -- PostgreSQL is the source of truth
+      // for these fields since users may have verified/been promoted on the web app
+      const role = existing?.role === 'admin' ? 'admin' : 'user';
+      const emailVerified = existing?.emailVerified === true ? true : fbUser.emailVerified;
+
+      const userData = {
+        name,
+        email: fbUser.email,
+        emailVerified,
+        image: fbUser.photoURL || null,
+        createdAt: fbUser.createdAt,
+        updatedAt: new Date(),
+        role,
+        isInstructor,
+        instructorId: null as string | null,
+        pendingInstructorDescription,
+      };
+
+      if (existing) {
+        // Check if anything actually changed
+        const changes: string[] = [];
+        if (existing.name !== name) changes.push(`name: "${existing.name}" -> "${name}"`);
+        if (existing.email !== fbUser.email) changes.push(`email: "${existing.email}" -> "${fbUser.email}"`);
+        if (existing.emailVerified !== emailVerified) changes.push(`emailVerified: ${existing.emailVerified} -> ${emailVerified}`);
+        if ((existing.image || null) !== (fbUser.photoURL || null)) changes.push('image changed');
+        if (existing.isInstructor !== isInstructor) changes.push(`isInstructor: ${existing.isInstructor} -> ${isInstructor}`);
+        if ((existing.pendingInstructorDescription || null) !== (pendingInstructorDescription || null)) changes.push('pendingInstructorDescription changed');
+
+        if (changes.length === 0) {
+          skipped++;
+          continue;
+        }
+
+        await db.update(schema.user).set(userData).where(eq(schema.user.id, fbUser.uid));
+        updated++;
+
+        // Log per-user detail
+        await db.insert(schema.syncRunDetail).values({
+          runId: runId!,
+          noteId: `${fbUser.email} (${fbUser.uid})`,
+          action: 'updated',
+          error: changes.join('; '),
+        });
+      } else {
+        await db.insert(schema.user).values({ id: fbUser.uid, ...userData });
+        created++;
+
+        await db.insert(schema.syncRunDetail).values({
+          runId: runId!,
+          noteId: `${fbUser.email} (${fbUser.uid})`,
+          action: 'created',
+        });
+      }
+
+      if (instructorId) {
+        deferredInstructorIds.push({ uid: fbUser.uid, instructorId });
+      }
+    } catch (error) {
+      console.error(`[sync-service] Failed to sync user ${fbUser.uid}:`, error);
+      skipped++;
+    }
+  }
+
+  // Second pass: set instructorId now that all users exist
+  let instructorLinked = 0;
+  let instructorSkipped = 0;
+  for (const { uid, instructorId } of deferredInstructorIds) {
+    try {
+      // instructorId from Firestore can be a user ID, an email, or garbage -- resolve to a valid user ID
+      let resolvedId: string | null = null;
+
+      if (instructorId.includes('@')) {
+        // Looks like an email -- look up the user
+        const instructor = await db.query.user.findFirst({
+          where: eq(schema.user.email, instructorId),
+          columns: { id: true },
+        });
+        resolvedId = instructor?.id ?? null;
+      } else {
+        // Looks like a user ID -- verify it exists
+        const instructor = await db.query.user.findFirst({
+          where: eq(schema.user.id, instructorId),
+          columns: { id: true },
+        });
+        resolvedId = instructor?.id ?? null;
+      }
+
+      if (!resolvedId) {
+        console.warn(`[sync-service] Instructor "${instructorId}" not found for user ${uid}, skipping`);
+        instructorSkipped++;
+        continue;
+      }
+
+      await db.update(schema.user).set({ instructorId: resolvedId }).where(eq(schema.user.id, uid));
+      instructorLinked++;
+    } catch (error) {
+      console.error(`[sync-service] Failed to set instructorId for ${uid}:`, error);
+      instructorSkipped++;
+    }
+  }
+
+  // Update audit log run
+  await db
+    .update(schema.syncRun)
+    .set({
+      status: 'success',
+      finishedAt: new Date(),
+      durationMs: Date.now() - startTime,
+      notesCreated: created,
+      notesUpdated: updated,
+      notesSkipped: skipped,
+      notesErrored: instructorSkipped,
+      error: instructorSkipped > 0 ? `${instructorSkipped} instructor link(s) skipped` : null,
+    })
+    .where(eq(schema.syncRun.id, runId));
+
+  return { created, updated, skipped };
+}

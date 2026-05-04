@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense  } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -7,13 +7,11 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { type CarouselApi } from '@/components/ui/carousel';
-import { Card, CardContent } from '@/components/ui/card';
+import type { NoteMedia } from '@/app/types';
 
-import { VideoType, PhotoType, Media } from '../models/media_class';
-import Image from 'next/image';
-import ReactPlayer from 'react-player';
+const ReactPlayer = lazy(() => import('react-player'));
 
-export default function CompactCarousel({ mediaArray }: { mediaArray: Media[] }) {
+export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[] }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
@@ -24,7 +22,7 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: Media[] })
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize from carousel API
+     
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 
@@ -51,26 +49,26 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: Media[] })
         {mediaArray.map((media, index) => (
           <CarouselItem key={index} className='flex h-full items-center justify-center self-center'>
             {media.type === 'image' && (
-              <Image
+              <img
                 src={media.uri}
-                width={256}
-                height={180}
-                objectFit='cover'
-                className='h-[180px] w-[256px] rounded-t-sm'
+                loading='eager'
+                decoding='async'
+                className='h-[180px] w-[256px] rounded-t-sm object-cover'
                 alt='Media content'
-                quality={5}
               />
             )}
             {media.type === 'video' && (
-              <ReactPlayer
-                {...({
-                  url: media.uri,
-                  controls: true,
-                  width: '256px',
-                  height: '180px',
-                  className: 'self-center object-cover bg-black',
-                } as any)}
-              />
+              <Suspense fallback={null}>
+                <ReactPlayer
+                  {...({
+                    url: media.uri,
+                    controls: true,
+                    width: '256px',
+                    height: '180px',
+                    className: 'self-center object-cover bg-black',
+                  } as any)}
+                />
+              </Suspense>
             )}
           </CarouselItem>
         ))}

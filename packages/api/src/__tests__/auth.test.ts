@@ -1,0 +1,116 @@
+import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { createTestApp, request } from './helpers';
+import { db } from '../db';
+import { user, account, session } from '../db/schema';
+import { eq } from 'drizzle-orm';
+
+describe('Auth endpoints', () => {
+  let app: ReturnType<typeof createTestApp>;
+  const testEmail = `auth-test-${Date.now()}@test.com`;
+
+  beforeAll(() => {
+    app = createTestApp();
+  });
+
+  afterEach(async () => {
+    // Cleanup test users
+    const testUser = await db.query.user.findFirst({
+      where: eq(user.email, testEmail),
+    });
+    if (testUser) {
+      await db.delete(session).where(eq(session.userId, testUser.id));
+      await db.delete(account).where(eq(account.userId, testUser.id));
+      await db.delete(user).where(eq(user.id, testUser.id));
+    }
+  });
+
+  describe('POST /api/auth/sign-up/email', () => {
+    it('should create a new user', async () => {
+      const res = await request(app, 'POST', '/api/auth/sign-up/email', {
+        body: {
+          email: testEmail,
+          password: 'TestPass1!',
+          name: 'Test Auth User',
+        },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.json).toHaveProperty('token');
+      expect(res.json).toHaveProperty('user');
+
+      const responseUser = (res.json as { user: { email: string } }).user;
+      expect(responseUser.email).toBe(testEmail);
+    });
+
+    it('should not create a second account for duplicate email', async () => {
+      // First signup
+      await request(app, 'POST', '/api/auth/sign-up/email', {
+        body: {
+          email: testEmail,
+          password: 'TestPass1!',
+          name: 'Test Auth User',
+        },
+      });
+
+      // Second signup with same email
+      const res = await request(app, 'POST', '/api/auth/sign-up/email', {
+        body: {
+          email: testEmail,
+          password: 'TestPass2!',
+          name: 'Another User',
+        },
+      });
+
+      // Better Auth returns 200 to prevent email enumeration attacks.
+      // Verify the second signup did NOT create a new user by checking
+      // that the original user's name is unchanged in the DB.
+      expect(res.status).toBe(200);
+      const dbUser = await db.query.user.findFirst({
+        where: eq(user.email, testEmail),
+      });
+      expect(dbUser?.name).toBe('Test Auth User');
+    });
+  });
+
+  describe('POST /api/auth/sign-in/email', () => {
+    it('should sign in existing user', async () => {
+      // First create user
+      const signUpRes = await request(app, 'POST', '/api/auth/sign-up/email', {
+        body: {
+          email: testEmail,
+          password: 'TestPass1!',
+          name: 'Test Auth User',
+        },
+      });
+
+      // Verify email in DB (requireEmailVerification is enabled)
+      const signUpJson = signUpRes.json as { user: { id: string } };
+      await db.update(user).set({ emailVerified: true }).where(eq(user.id, signUpJson.user.id));
+
+      // Then sign in
+      const res = await request(app, 'POST', '/api/auth/sign-in/email', {
+        body: {
+          email: testEmail,
+          password: 'TestPass1!',
+        },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.json).toHaveProperty('token');
+      expect(res.json).toHaveProperty('user');
+    });
+
+    it('should reject invalid credentials', async () => {
+      const res = await request(app, 'POST', '/api/auth/sign-in/email', {
+        body: {
+          email: 'nonexistent@test.com',
+          password: 'wrongpassword',
+        },
+      });
+
+      // Should be a client error (4xx), not a server crash (5xx)
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.status).toBeLessThan(500);
+    });
+  });
+});

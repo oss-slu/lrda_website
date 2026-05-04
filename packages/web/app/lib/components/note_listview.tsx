@@ -2,18 +2,17 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note } from '../../types';
 import { format12hourTime } from '../utils/data_conversion';
 import { extractTextFromHtml } from '../utils/sanitize';
+import { getNoteStatus, statusConfig } from '../utils/noteStatus';
 import { FileText, Search, Loader2 } from 'lucide-react';
 import { useNotesStore } from '../stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
-import { usersService } from '../services';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 type NoteListViewProps = {
   notes: Note[];
   onNoteSelect: (note: Note, isNewNote: boolean) => void;
   isSearching?: boolean;
-  viewMode?: 'my' | 'review';
-  isInstructor?: boolean;
 };
 
 const BATCH_SIZE = 15;
@@ -22,8 +21,6 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   notes,
   onNoteSelect,
   isSearching = false,
-  viewMode = 'my',
-  isInstructor = false,
 }) => {
   const { selectedNoteId, setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
@@ -34,46 +31,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   const [fresh, setFresh] = useState(true);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (notes.length > 0 && fresh) {
+    if (notes.length > 0 && fresh && notes[0]) {
       onNoteSelect(notes[0], false);
       setSelectedNoteId(notes[0].id);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- mark as initialized after first note selection
+       
       setFresh(false);
     }
   }, [notes, onNoteSelect, fresh, setSelectedNoteId]);
-
-  // Fetch creator names for instructors in review mode
-  useEffect(() => {
-    const fetchCreatorNames = async () => {
-      if (viewMode === 'review' && isInstructor) {
-        const names: Record<string, string> = {};
-        const uniqueCreators = Array.from(
-          new Set(notes.map(note => note.creator).filter(Boolean) as string[]),
-        );
-
-        await Promise.all(
-          uniqueCreators.map(async creatorId => {
-            try {
-              const name = await usersService.fetchCreatorName(creatorId);
-              names[creatorId] = name || 'Unknown User';
-            } catch {
-              names[creatorId] = 'Unknown User';
-            }
-          }),
-        );
-
-        setCreatorNames(names);
-      } else {
-        setCreatorNames({});
-      }
-    };
-
-    fetchCreatorNames();
-  }, [notes, viewMode, isInstructor]);
 
   // Infinite scroll with IntersectionObserver
   const loadMore = useCallback(() => {
@@ -93,7 +60,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
 
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           loadMore();
         }
       },
@@ -165,14 +132,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
           noteTextContent = 'Empty note';
         }
         const isSelected = note.id === selectedNoteId;
+        const status = getNoteStatus(note);
+        const badge = statusConfig[status];
 
         return (
           <div
             key={note.id}
             className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-              isSelected
-                ? 'border-blue-400 bg-blue-50 shadow-md'
-                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+              isSelected ?
+                'border-blue-400 bg-blue-50 shadow-md'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
             }`}
             onClick={() => handleLoadText(note)}
           >
@@ -181,16 +150,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
                 <h3 className='flex-1 truncate text-sm font-semibold text-gray-900'>
                   {note.title || 'Untitled'}
                 </h3>
-                <span className='flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
+                <span className='shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500'>
                   {handleGetTime(note.time)}
                 </span>
               </div>
-              {viewMode === 'review' && isInstructor && note.creator && (
-                <p className='text-xs font-medium text-blue-600'>
-                  {creatorNames[note.creator] || 'Loading...'}
-                </p>
-              )}
-              <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>{noteTextContent}</p>
+              <div className='flex items-center gap-2'>
+                <Badge className={badge.className}>{badge.label}</Badge>
+              </div>
+              <p className='line-clamp-2 text-xs leading-relaxed text-gray-600'>
+                {noteTextContent}
+              </p>
             </div>
           </div>
         );
@@ -199,17 +168,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
       {/* Infinite scroll sentinel & loading indicator */}
       {visibleCount < notes.length && (
         <div ref={sentinelRef} className='flex justify-center py-4'>
-          {isLoadingMore ? (
+          {isLoadingMore ?
             <div className='flex items-center gap-2 text-sm text-gray-500'>
               <Loader2 className='h-4 w-4 animate-spin' />
               <span>Loading more...</span>
             </div>
-          ) : (
-            <div className='flex flex-col gap-2'>
+          : <div className='flex flex-col gap-2'>
               <Skeleton className='h-16 w-full rounded-xl' />
               <Skeleton className='h-16 w-full rounded-xl' />
             </div>
-          )}
+          }
         </div>
       )}
 

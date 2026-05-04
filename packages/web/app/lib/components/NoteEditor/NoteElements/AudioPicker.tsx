@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import AudioPlayer from 'react-h5-audio-player';
+import React, { useEffect, useMemo, useRef, useState, lazy, Suspense  } from 'react';
+
+const AudioPlayer = lazy(() => import('react-h5-audio-player'));
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { toast } from 'sonner';
 import { FileUp } from 'lucide-react';
@@ -12,37 +13,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AudioType } from '@/app/lib/models/media_class';
+import type { AudioMedia } from '@/app/types';
 import { Input } from '@/components/ui/input';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadAudio } from '@/app/lib/utils/s3_proxy';
+import { uploadMedia } from '@/app/lib/utils/s3_proxy';
 
 type AudioPickerProps = {
-  audioArray: AudioType[];
-  setAudio?: React.Dispatch<React.SetStateAction<AudioType[]>>;
+  audioArray: AudioMedia[];
+  setAudio?: React.Dispatch<React.SetStateAction<AudioMedia[]>>;
   editable?: boolean;
 };
 
 const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
-  const [currentIdx, setCurrentIdx] = useState(0); // Current index of the selected audio
-  const [curRec, setCurRec] = useState<string | undefined>(); // Current audio URI
-  const [placeVal, setPlaceVal] = useState<string>('No Recordings'); // Placeholder text for the select dropdown
-  const audioPlayerRef = useRef<any>(null); // Reference to the audio player
+  // Stable key that changes when the array changes, used to reset selection state
+  const arrayKey = useMemo(() => audioArray.map(a => a.uuid).join(','), [audioArray]);
 
+  return (
+    <AudioPickerInner
+      key={arrayKey}
+      audioArray={audioArray}
+      setAudio={setAudio}
+      editable={editable}
+    />
+  );
+};
+
+const AudioPickerInner: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editable }) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [curRec, setCurRec] = useState<string | undefined>();
+  const audioPlayerRef = useRef<any>(null);
+
+  const placeVal = audioArray.length >= 1 ? 'Select Recording' : 'No Recordings';
+
+  // Pause player on unmount (triggered by key change from outer component)
   useEffect(() => {
-    // Reset state when audioArray changes
-    if (audioArray.length >= 1) {
-      setPlaceVal('Select Recording');
-    } else {
-      setPlaceVal('No Recordings');
-    }
-    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
-      audioPlayerRef.current.audio.current.pause();
-      audioPlayerRef.current.audio.current.currentTime = 0;
-    }
-    setCurRec(undefined);
-    setCurrentIdx(0);
-  }, [audioArray]);
+    const player = audioPlayerRef.current;
+    return () => {
+      if (player?.audio?.current) {
+        player.audio.current.pause();
+        player.audio.current.currentTime = 0;
+      }
+    };
+  }, []);
 
   // Handle the selection of an audio recording
   const handleSelectChange = (selectedURI: string) => {
@@ -57,14 +69,14 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
   const handleIncrementRecs = () => {
     const nextIdx = (currentIdx + 1) % audioArray.length;
     setCurrentIdx(nextIdx);
-    setCurRec(audioArray[nextIdx].uri);
+    setCurRec(audioArray[nextIdx]?.uri);
   };
 
   // Navigate to the previous recording in the array
   const handleDecrementRecs = () => {
     const prevIdx = (currentIdx - 1 + audioArray.length) % audioArray.length;
     setCurrentIdx(prevIdx);
-    setCurRec(audioArray[prevIdx].uri);
+    setCurRec(audioArray[prevIdx]?.uri);
   };
 
   // Unified upload handler for audio files
@@ -80,27 +92,22 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
     });
 
     try {
-      const location = await uploadAudio(file);
-      if (location !== 'error') {
-        const newAudio = new AudioType({
-          type: 'audio',
-          uuid: uuidv4(),
-          uri: location,
-          name: file.name,
-          isPlaying: false,
-          duration: '0:00', // Placeholder duration, as duration extraction isn't implemented
-        });
+      const uri = await uploadMedia(file, 'audio');
+      const newAudio: AudioMedia = {
+        type: 'audio',
+        uuid: uuidv4(),
+        uri,
+        name: file.name,
+        duration: '0:00',
+      };
 
-        toast('Status Update', {
-          description: 'Audio upload success!',
-          duration: 4000,
-        });
+      toast('Status Update', {
+        description: 'Audio upload success!',
+        duration: 4000,
+      });
 
-        if (setAudio) {
-          setAudio(prev => [...prev, newAudio]);
-        }
-      } else {
-        throw new Error('Upload failed');
+      if (setAudio) {
+        setAudio(prev => [...prev, newAudio]);
       }
     } catch (error) {
       console.error('Audio upload failed:', error);
@@ -115,7 +122,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
   const currentUUID = currentAudio ? currentAudio.uuid : null;
 
   return (
-    <div className='flex h-min min-w-[90px] max-w-[280px] flex-col items-center rounded-md border border-border bg-white p-4 shadow-sm'>
+    <div className='border-border flex h-min max-w-[280px] min-w-[90px] flex-col items-center rounded-md border bg-white p-4 shadow-sm'>
       <div className='align-center flex h-10 w-[100%] max-w-[280px] cursor-pointer flex-row items-center justify-evenly'>
         {editable ?
           <Popover>
@@ -123,7 +130,7 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
               <FileUp className='primary' />
             </PopoverTrigger>
             <PopoverContent className='z-30'>
-              <div className='flex h-min w-96 min-w-[90px] max-w-[280px] flex-col items-center justify-center rounded-md bg-white p-6 shadow-lg'>
+              <div className='flex h-min w-96 max-w-[280px] min-w-[90px] flex-col items-center justify-center rounded-md bg-white p-6 shadow-lg'>
                 <div className='mb-2 font-medium text-gray-900'>Upload Audio Here</div>
                 <div className='mb-4 text-sm text-gray-600'>It must be of type '.mp3'</div>
 
@@ -166,15 +173,17 @@ const AudioPicker: React.FC<AudioPickerProps> = ({ audioArray, setAudio, editabl
       </div>
 
       {/* Audio player for playback */}
-      <AudioPlayer
-        ref={audioPlayerRef}
-        data-testid='audio-player'
-        src={curRec}
-        className='flex w-[90] flex-row rounded-md p-3'
-        onClickNext={handleIncrementRecs}
-        onClickPrevious={handleDecrementRecs}
-        key={currentUUID}
-      />
+      <Suspense fallback={null}>
+        <AudioPlayer
+          ref={audioPlayerRef}
+          data-testid='audio-player'
+          src={curRec}
+          className='flex w-[90] flex-row rounded-md p-3'
+          onClickNext={handleIncrementRecs}
+          onClickPrevious={handleDecrementRecs}
+          key={currentUUID}
+        />
+      </Suspense>
     </div>
   );
 };

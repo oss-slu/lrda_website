@@ -19,3 +19,7 @@ test-results
 *.tsbuildinfo
 .DS_Store
 public
+Dockerfile*
+docker-compose*
+packages/api/drizzle
+wrangler.jsonc

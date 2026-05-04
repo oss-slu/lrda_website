@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "5100661403ca1e484379f9064b8f6f6f",
+  "name": "lrda-web",
+  "main": "@tanstack/react-start/server-entry",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "staging.wheresreligion.org", "custom_domain": true }
+  ],
+  "vars": {
+    "VITE_API_URL": "https://api-staging.wheresreligion.org"
+  }
+}

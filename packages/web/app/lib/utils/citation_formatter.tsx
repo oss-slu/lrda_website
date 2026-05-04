@@ -25,7 +25,7 @@ export const formatCitation = (citation: string): React.ReactNode => {
     if (
       spaceAfterEtAl !== -1 &&
       spaceAfterEtAl + 1 < citation.length &&
-      /[A-Z]/.test(citation[spaceAfterEtAl + 1])
+      /[A-Z]/.test(citation[spaceAfterEtAl + 1] ?? '')
     ) {
       const title = citation.substring(spaceAfterEtAl + 1).trim();
       const author = citation.substring(0, spaceAfterEtAl);
@@ -52,7 +52,7 @@ export const formatCitation = (citation: string): React.ReactNode => {
       citation[i] === '.' &&
       i + 1 < citation.length &&
       citation[i + 1] === ' ' &&
-      /[A-Z]/.test(citation[i + 2])
+      /[A-Z]/.test(citation[i + 2] ?? '')
     ) {
       authorEndIndex = i;
       break;
@@ -66,7 +66,7 @@ export const formatCitation = (citation: string): React.ReactNode => {
         citation[i] === ',' &&
         i + 1 < citation.length &&
         citation[i + 1] === ' ' &&
-        /[A-Z]/.test(citation[i + 2])
+        /[A-Z]/.test(citation[i + 2] ?? '')
       ) {
         const remainingText = citation.substring(i + 2);
         if (remainingText.length > 10) {

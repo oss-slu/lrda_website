@@ -1,5 +1,3 @@
-'use client';
-import React from 'react';
 import TeamCard from './team_card';
 import ContributorCard from './contributor_card';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
@@ -8,12 +6,12 @@ const initiativeTeam = [
   {
     name: 'Rachel Lindsey',
     role: 'Director of Center on Lived Religion',
-    src: '/aboutPageImages/Rachel.jpg',
+    src: '/aboutPageImages/Rachel.webp',
   },
   {
     name: 'Adam Park',
     role: 'Associate Director of Research (COLR)',
-    src: '/aboutPageImages/Adam.jpg',
+    src: '/aboutPageImages/Adam.webp',
   },
 ];
 
@@ -22,7 +20,7 @@ const devTeam = [
   {
     name: 'Yash Bhatia',
     role: 'Software Engineer and Tech Lead',
-    src: '/aboutPageImages/Yash.jpg',
+    src: '/aboutPageImages/Yash.webp',
     socials: {
       github: 'https://github.com/yashb196',
       linkedin: 'https://www.linkedin.com/in/yashbhatia238/',
@@ -32,7 +30,7 @@ const devTeam = [
     name: 'Zanxiang Wang',
     role: 'Tech Lead',
     offset: 10,
-    src: '/aboutPageImages/Zanxiang.jpg',
+    src: '/aboutPageImages/Zanxiang.webp',
     socials: {
       github: 'https://github.com/BaloneyBoy97',
       linkedin: 'https://www.linkedin.com/in/zanxiang-wang-352b112a0/',
@@ -49,15 +47,15 @@ const devTeam = [
     },
   },
   // Senior Developers
-  { name: 'Patrick Cuba', role: 'IT Architect', src: '/aboutPageImages/Patrick.png', offset: 10 },
-  { name: 'Bryan Haberberger', role: 'Full Stack Developer', src: '/aboutPageImages/Bryan.png' },
+  { name: 'Patrick Cuba', role: 'IT Architect', src: '/aboutPageImages/Patrick.webp', offset: 10 },
+  { name: 'Bryan Haberberger', role: 'Full Stack Developer', src: '/aboutPageImages/Bryan.webp' },
   // Developers
-  { name: 'Izak Robles', role: 'Developer', src: '/aboutPageImages/Izak.jpg', offset: 60 },
-  { name: 'Stuart Ray', role: 'Developer', src: '/aboutPageImages/Stuart.jpg' },
+  { name: 'Izak Robles', role: 'Developer', src: '/aboutPageImages/Izak.webp', offset: 60 },
+  { name: 'Stuart Ray', role: 'Developer', src: '/aboutPageImages/Stuart.webp' },
   {
     name: 'Amy Chen',
     role: 'Developer',
-    src: '/aboutPageImages/Amy.jpg',
+    src: '/aboutPageImages/Amy.webp',
     socials: {
       github: 'https://github.com/amychen108',
       linkedin: 'https://www.linkedin.com/in/amy-chen-0a1232258/',
@@ -66,19 +64,19 @@ const devTeam = [
   {
     name: 'Justin Wang',
     role: 'Developer',
-    src: '/aboutPageImages/Justin.jpg',
+    src: '/aboutPageImages/Justin.webp',
     offset: 70,
     socials: {
       github: 'https://github.com/jwang-101',
       linkedin: 'https://www.linkedin.com/in/justin-wang-2a67b1295/',
     },
   },
-  { name: 'Sam Sheppard', role: 'Developer', src: '/aboutPageImages/Sam.jpg', offset: 40 },
+  { name: 'Sam Sheppard', role: 'Developer', src: '/aboutPageImages/Sam.webp', offset: 40 },
   {
     name: 'Puneet Sontha',
     role: 'Developer',
     offset: 30,
-    src: '/aboutPageImages/Puneet.jpg',
+    src: '/aboutPageImages/Puneet.webp',
     socials: {
       github: 'https://github.com/PunSon',
       linkedin: 'https://www.linkedin.com/in/puneet-sontha/',
@@ -87,7 +85,7 @@ const devTeam = [
   {
     name: 'Muhammad Hashir',
     role: 'Developer',
-    src: '/aboutPageImages/hashir.jpg',
+    src: '/aboutPageImages/hashir.webp',
     socials: {
       github: 'https://github.com/mhashir03',
       linkedin: 'https://www.linkedin.com/in/muhammad-hashir03',
@@ -96,7 +94,7 @@ const devTeam = [
   {
     name: 'Andres Castellanos',
     role: 'Developer',
-    src: '/aboutPageImages/Andres.jpg',
+    src: '/aboutPageImages/Andres.webp',
     socials: {
       github: 'https://github.com/andycaste2004',
       linkedin: 'https://www.linkedin.com/in/andres-castellanos-carrillo-536a10331/',
@@ -119,8 +117,8 @@ export default function TeamGrid() {
     <section className='relative w-full overflow-hidden'>
       {/* Animated background elements */}
       <div className='absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-100/30'></div>
-      <div className='absolute left-10 top-20 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
-      <div className='absolute bottom-20 right-10 h-96 w-96 rounded-full bg-gradient-to-br from-blue-600/15 to-blue-400/15 blur-3xl'></div>
+      <div className='absolute top-20 left-10 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/20 blur-3xl'></div>
+      <div className='absolute right-10 bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-600/15 to-blue-400/15 blur-3xl'></div>
 
       <div className='relative z-10 py-20 sm:py-32'>
         <div className='mx-auto max-w-7xl px-4'>

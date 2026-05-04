@@ -1,44 +1,60 @@
-import { Key, ReactNode } from 'react';
-import { Media, PhotoType, VideoType, AudioType } from './lib/models/media_class';
+import type { CommentData } from './lib/services/comments.types';
+import type { Tag, CommentPosition } from '@lrda/shared';
 
-export interface Tag {
-  label: string;
-  origin: 'user' | 'ai';
+// Re-export shared types so existing imports from '@/app/types' keep working
+export type { Tag, CommentPosition };
+
+export type Comment = CommentData;
+
+// Media types -- discriminated union on the `type` field.
+// Use `m.type === 'video'` to narrow the type automatically.
+
+export interface PhotoMedia {
+  type: 'image';
+  uuid: string;
+  uri: string;
 }
 
-export type MediaData = {
+export interface VideoMedia {
+  type: 'video';
   uuid: string;
-  type: string;
   uri: string;
-};
+  thumbnail: string;
+  duration: string;
+}
 
-export type Comment = {
-  authorName: ReactNode;
-  id: Key | null | undefined;
-  noteId: string;
-  uid: string;
-  text: string;
-  author: string; // Display name
-  authorId: string; // UID of the commenter
-  role: 'instructor' | 'student'; // For styling or permissions
-  createdAt: string; // ISO date
-  position?: { from: number; to: number } | null; // Anchor to selected range
-  threadId?: string | null; // Thread grouping id
-  parentId?: string | null; // Parent comment id when this is a reply
-  resolved?: boolean; // Whether the thread is resolved
-  archived?: boolean; // Soft-delete flag
-};
-
-export type UserData = {
-  uid: string;
+export interface AudioMedia {
+  type: 'audio';
+  uuid: string;
+  uri: string;
+  duration: string;
   name: string;
-  students?: string[]; // <-- 🔥 ADD THIS
-  roles: {
-    administrator: boolean;
-    contributor: boolean;
-  };
-  isInstructor?: boolean; // New field for instructors
-  parentInstructorId?: string; // New field for students
+}
+
+/** A visual media item (photo or video) attached to a note. */
+export type NoteMedia = PhotoMedia | VideoMedia;
+
+/** Any media item including audio. */
+export type AnyMedia = PhotoMedia | VideoMedia | AudioMedia;
+
+// Re-export UserProfile derived from shared UserDetailSchema
+// Kept as a named export for backward compatibility with existing imports
+export type UserProfile = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  role: 'user' | 'admin';
+  isInstructor: boolean;
+  instructorId?: string | null;
+  pendingInstructorDescription?: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  instructor?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 };
 
 export type Note = {
@@ -46,16 +62,17 @@ export type Note = {
   title: string;
   text: string;
   time: Date;
-  media: (VideoType | PhotoType)[];
-  audio: AudioType[];
+  media: NoteMedia[];
+  audio: AudioMedia[];
   creator: string;
-  latitude: string;
-  longitude: string;
+  latitude: number | null;
+  longitude: number | null;
+  locationName?: string | null;
   published: boolean | undefined;
-  approvalRequested?: boolean | undefined; // New field for approval request
+  approvalRequested?: boolean | undefined;
+  isReturned?: boolean | undefined;
   tags: Tag[];
   uid: string;
-  isArchived?: boolean; //add property of archived, then filter for it
   comments?: Comment[];
 };
 
@@ -67,68 +84,13 @@ export type newNote = {
   title: string;
   text: string;
   time: Date;
-  media: (VideoType | PhotoType)[];
-  audio: AudioType[];
+  media: NoteMedia[];
+  audio: AudioMedia[];
   creator: string;
-  latitude: string;
-  longitude: string;
+  latitude: number | null;
+  longitude: number | null;
+  locationName?: string | null;
   published: boolean | undefined;
-  approvalRequested?: boolean | undefined; // New field for approval request
+  approvalRequested?: boolean | undefined;
   tags: Tag[];
-  isArchived?: boolean;
-};
-
-export type RootStackParamList = {
-  Home: undefined;
-  Login: undefined;
-  Onboarding: undefined;
-  Register: undefined;
-  AccountPage: undefined;
-  AddNote: { onSave: (note: Note) => void };
-  EditNote: { note: Note; onSave: (note: Note) => void };
-};
-
-export type EditNoteScreenProps = {
-  route: {
-    params: {
-      note: Note;
-      onSave: (note: Note) => void;
-    };
-  };
-  navigation: {
-    goBack: () => void;
-  };
-};
-
-export type RootTabParamList = {
-  HomeTab: undefined;
-  Tab1: undefined;
-  Tab2: undefined;
-};
-
-export type HomeScreenProps = {
-  navigation: any;
-  route: { params?: { note: Note; onSave: (note: Note) => void } };
-};
-
-export type ProfilePageProps = {
-  navigation: any;
-};
-
-export type EditNoteProps = {
-  route: { params: { note: Note; onSave: (note: Note) => void } };
-  navigation: {
-    setOptions: (options: { headerTitle: string }) => void;
-    goBack: () => void;
-  };
-};
-
-export type AddNoteScreenProps = {
-  navigation: any;
-  route: any;
-};
-
-export type ImageNote = {
-  image: string;
-  note: Note;
 };

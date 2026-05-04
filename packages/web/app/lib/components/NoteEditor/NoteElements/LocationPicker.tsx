@@ -1,4 +1,3 @@
-'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { GoogleMap, MarkerF, Autocomplete } from '@react-google-maps/api';
@@ -6,23 +5,27 @@ import { useGoogleMaps } from '@/app/lib/utils/GoogleMapsContext';
 import { getCachedLocation } from '@/app/lib/utils/location_cache';
 
 interface LocationPickerProps {
-  long?: string;
-  lat?: string;
+  long?: number | null;
+  lat?: number | null;
+  locationName?: string;
   onLocationChange: (newLongitude: number, newLatitude: number) => void;
-  disabled?: boolean; // Whether the location picker is disabled (read-only)
+  onLocationNameChange?: (name: string) => void;
+  disabled?: boolean;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   long,
   lat,
+  locationName: initialLocationName,
   onLocationChange,
+  onLocationNameChange,
   disabled = false,
 }) => {
-  // Use lazy initializer to parse props on first render
-  const [longitude, setLongitude] = useState<number>(() => (long ? parseFloat(long) : 0) || 0);
-  const [latitude, setLatitude] = useState<number>(() => (lat ? parseFloat(lat) : 0) || 0);
+  // Use lazy initializer from props on first render
+  const [longitude, setLongitude] = useState<number>(() => long ?? 0);
+  const [latitude, setLatitude] = useState<number>(() => lat ?? 0);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [locationName, setLocationName] = useState<string>(''); // City name from reverse geocoding
+  const [locationName, setLocationName] = useState<string>(initialLocationName || '');
   const mapRef = useRef<google.maps.Map | null>(null);
   const isLoaded = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +42,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         setLatitude(lat);
         setLongitude(lng);
         onLocationChange(lng, lat);
+        setLocationName('');
+        onLocationNameChange?.('');
         mapRef.current?.panTo({ lat, lng });
         mapRef.current?.setZoom(12);
       }
@@ -47,32 +52,34 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Sync when lat/long props change from parent (e.g., loading different note)
   useEffect(() => {
-    if (lat && long) {
-      const parsedLat = parseFloat(lat);
-      const parsedLong = parseFloat(long);
-
-      if (!isNaN(parsedLat) && !isNaN(parsedLong)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from props
-        setLatitude(prev => (prev !== parsedLat ? parsedLat : prev));
-        setLongitude(prev => (prev !== parsedLong ? parsedLong : prev));
-      }
+    if (lat != null && long != null) {
+       
+      setLatitude(prev => (prev !== lat ? lat : prev));
+      setLongitude(prev => (prev !== long ? long : prev));
     }
   }, [lat, long]);
 
   // Fetch city name from coordinates using reverse geocoding
   useEffect(() => {
     const fetchLocationName = async () => {
+      if (initialLocationName) {
+        setLocationName(initialLocationName);
+        onLocationNameChange?.(initialLocationName);
+        return;
+      }
       if (latitude && longitude && latitude !== 0 && longitude !== 0) {
-        const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAP_KEY;
+        const MAPS_API_KEY = import.meta.env.VITE_MAP_KEY;
         if (MAPS_API_KEY) {
           try {
             const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);
-            // Extract city name from formatted address (usually first part before comma)
-            const cityName = location.split(',')[0].trim();
-            setLocationName(cityName || location || '');
+            const cityName = (location.split(',')[0] ?? '').trim();
+            const name = cityName || location || '';
+            setLocationName(name);
+            onLocationNameChange?.(name);
           } catch (error) {
             console.error('Error fetching location name:', error);
             setLocationName('');
+            onLocationNameChange?.('');
           }
         }
       } else {
@@ -81,48 +88,33 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     };
 
     fetchLocationName();
-  }, [latitude, longitude]);
+  }, [latitude, longitude, initialLocationName, onLocationNameChange]);
 
   // Handle getting the current geolocation
   const handleGetCurrentLocation = useCallback(() => {
     // this method should be used somewhere
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const newLongitude = position.coords.longitude;
-          const newLatitude = position.coords.latitude;
-          setLongitude(newLongitude);
-          setLatitude(newLatitude);
-          onLocationChange(newLongitude, newLatitude);
-        },
-        error => {
-          console.error('Error fetching location', error);
-          setGeoError('Unable to fetch your location. please check your browser settings.');
-        },
-      );
-    } else {
-      console.log('Geolocation is not supported by this browser.');
-    }
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const newLongitude = position.coords.longitude;
+        const newLatitude = position.coords.latitude;
+        setLongitude(newLongitude);
+        setLatitude(newLatitude);
+        onLocationChange(newLongitude, newLatitude);
+      },
+      error => {
+        console.error('Error fetching location', error);
+        setGeoError('Unable to fetch your location. please check your browser settings.');
+      },
+    );
   }, [onLocationChange]);
 
   {
     geoError && (
-      <div className='tranform absolute left-1/2 top-16 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 text-red-600 shadow'>
+      <div className='tranform absolute top-16 left-1/2 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 text-red-600 shadow'>
         {geoError}
       </div>
     );
   }
-
-  // Handle search result click
-  const handleSearch = (address: string, lat?: number, lng?: number) => {
-    if (lat != null && lng != null) {
-      setLatitude(lat);
-      setLongitude(lng);
-      onLocationChange(lng, lat);
-      mapRef.current?.panTo({ lat, lng });
-      mapRef.current?.setZoom(10);
-    }
-  };
 
   // Handle marker drag event
   const onMarkerDragEnd = (event: google.maps.MapMouseEvent) => {
@@ -132,7 +124,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     if (lat != null && lng != null) {
       setLatitude(lat);
       setLongitude(lng);
-      onLocationChange(lng, lat); // Notify parent component of location change
+      onLocationChange(lng, lat);
+      setLocationName('');
+      onLocationNameChange?.('');
       mapRef.current?.setZoom(12);
     }
   };
@@ -169,7 +163,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       <button
         onClick={handleToggleMap}
         // Allow viewing map even when disabled (read-only mode for instructors)
-        className={`group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`group inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
           disabled ? 'opacity-75' : ''
         }`}
         aria-label={disabled ? 'View location (read-only)' : 'Toggle map visibility'}
@@ -202,7 +196,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             aria-hidden='true'
           />
 
-          <div className='absolute left-2 top-2 z-50'>
+          <div className='absolute top-2 left-2 z-50'>
             <button
               onClick={handleToggleMap}
               className='rounded-full bg-white p-3 text-xl text-black shadow-md hover:bg-gray-200'
@@ -212,7 +206,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             </button>
           </div>
 
-          <div className='absolute left-1/2 top-2 z-50 w-4/5 -translate-x-1/2 transform md:w-2/5'>
+          <div className='absolute top-2 left-1/2 z-50 w-4/5 -translate-x-1/2 transform md:w-2/5'>
             <Autocomplete onLoad={auto => setAutocomplete(auto)} onPlaceChanged={onPlaceChanged}>
               <input
                 ref={searchBarRef}

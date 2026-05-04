@@ -1,6 +1,3 @@
-'use client';
-
-import React from 'react';
 import { cn } from '@/lib/utils';
 import { Icons } from './icons';
 
@@ -34,7 +31,7 @@ export function IconLink({ icon, href, label, className, size = 'w-5 h-5' }: Ico
       className={cn(
         'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-sm transition-all duration-200',
         hoverStyles[icon],
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
         className,
       )}
     >

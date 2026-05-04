@@ -1,16 +1,8 @@
-'use client';
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';
 import { Note, CombinedResult } from '../../types';
 import { Card } from '@/components/ui/card';
-
-declare global {
-  interface Window {
-    google: typeof google;
-  }
-}
 
 interface SearchBarMapProps {
   onSearch: (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => void;
@@ -31,7 +23,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
   const [loading, setLoading] = useState(false);
 
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const dropdownRef = useRef<HTMLUListElement>(null);
   const prevSearchTextRef = useRef('');
 
   // Initialize autocomplete service when Google Maps API is loaded
@@ -131,10 +122,8 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
   const handleNoteSelection = useCallback(
     (note: CombinedResult) => {
       if (note.type === 'note') {
-        const lat = parseFloat(note.latitude);
-        const lng = parseFloat(note.longitude);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          onSearch(note.title, lat, lng, true);
+        if (note.latitude != null && note.longitude != null) {
+          onSearch(note.title, note.latitude, note.longitude, true);
           setSearchText(note.title);
           setIsDropdownVisible(false);
         }
@@ -232,14 +221,14 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className='rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+        className='rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none'
       />
       {isDropdownVisible && (
         <div className='absolute top-full z-50 mt-2 w-full'>
           <Card className='max-h-60 overflow-auto border-2 shadow-xl'>
             {loading && (
-              <div className='flex items-center gap-2 px-4 py-3 text-muted-foreground'>
-                <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+              <div className='text-muted-foreground flex items-center gap-2 px-4 py-3'>
+                <div className='border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent' />
                 <span className='text-sm'>Searching...</span>
               </div>
             )}
@@ -253,13 +242,13 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
                   return (
                     <button
                       key={key}
-                      className='flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-accent'
+                      className='hover:bg-accent flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors'
                       onClick={() => handleResultClick(result)}
                       type='button'
                     >
                       {isSuggestion ?
-                        <MapPin className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
-                      : <StickyNote className='h-4 w-4 flex-shrink-0 text-primary' />}
+                        <MapPin className='text-muted-foreground h-4 w-4 shrink-0' />
+                      : <StickyNote className='text-primary h-4 w-4 shrink-0' />}
                       <span className='truncate'>{displayText}</span>
                     </button>
                   );
@@ -267,7 +256,7 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
               </div>
             )}
             {!loading && combinedResults.length === 0 && searchText.length > 2 && (
-              <div className='px-4 py-3 text-center text-sm text-muted-foreground'>
+              <div className='text-muted-foreground px-4 py-3 text-center text-sm'>
                 No results found
               </div>
             )}

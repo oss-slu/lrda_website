@@ -1,6 +1,12 @@
 name: Deploy API
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/api/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       environment:
@@ -10,20 +16,46 @@ on:
         type: choice
         options:
           - staging
-          - production
+
+permissions:
+  contents: read
 
 concurrency:
-  group: deploy-${{ github.event.inputs.environment }}
+  group: deploy-api
   cancel-in-progress: false
 
 jobs:
-  # TODO: Re-enable tests once CI test suite is fixed
-  # tests:
-  #   name: Run Tests
-  #   uses: ./.github/workflows/ci-cd.yml
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:unit --silent --no-coverage
+        env:
+          VITE_API_URL: 'http://localhost:3002'
+          VITE_OPENAI_API_KEY: 'mock-openai-key'
+          VITE_OPENAI_API_URL: 'https://api.openai.com/v1'
+          CI: 'true'
+          SUPPRESS_CONSOLE: 'true'
 
   build-and-push:
     name: Build & Push Docker Image
+    needs: unit-tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,10 +98,13 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to ${{ github.event.inputs.environment }}
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Deploy via SSH
@@ -78,14 +113,13 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ubuntu
           key: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
             set -e
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             export GITHUB_REPOSITORY="${{ github.repository }}"
-            export IMAGE_TAG="sha-${{ github.sha }}"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image_tag }}"
             sudo -E /home/ubuntu/lrda/deploy.sh "${IMAGE_TAG}"
-          script_stop: true
-        timeout-minutes: 10
 
       - name: Verify deployment externally
         run: |

@@ -1,64 +1,254 @@
-# GitHub Copilot Instructions
+# LRDA Website - Core Rules
 
 ## Project Overview
 
-This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Firebase for authentication and data, Google Maps for mapping, and supports rich text editing with media uploads.
+This is the **Where's Religion?** desktop web application -- a TanStack Start project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
+
+### Migration Context
+
+This codebase has migrated off the legacy RERUM backend and Firebase Auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that still uses RERUM and Firebase.
+
+**Migration status:**
+
+1. The web app has migrated (RERUM + Firebase -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
+2. During the transition:
+   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
+   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
+3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
+
+**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period.
+
+### Packages
+
+This is a **monorepo** containing:
+
+- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL, deployed to AWS Lightsail via Docker (blue/green deploys). Port 3002 locally.
+- **Web package** (`packages/web/`): TanStack Start application, deployed to Cloudflare Workers.
+
+## Architecture
+
+### Monorepo Structure
+
+```
+lrda_website/
+├── packages/
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
+│   │   ├── src/
+│   │   │   ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│   │   │   ├── db/         # Drizzle schema and pg pool
+│   │   │   └── middleware/  # Auth middleware
+│   │   └── drizzle/        # Generated SQL migrations (not in src/)
+│   └── web/                # TanStack Start application
+│       ├── app/            # Components, hooks, stores, services
+│       ├── src/            # TanStack Router routes
+│       ├── components/     # shadcn/ui components
+│       └── wrangler.jsonc  # Cloudflare Workers config
+└── public/                 # Static assets
+```
+
+### Package Management
+
+- **Package Manager**: pnpm (v10.20.0)
+- **Node Version**: >=24.0.0
+- **Workspace**: pnpm workspaces with packages in `packages/`
+
+**Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
+
+- `pnpm --filter @lrda/api dev` - Run API server in dev mode
+- `pnpm --filter web dev` - Run web app in dev mode
+- `pnpm --filter . <command>` - Run command in root package
 
 ## Tech Stack
 
-- **Framework**: Next.js (App Router)
-- **Language**: TypeScript
+### Frontend (Web Package)
+
+- **Framework**: TanStack Start (Vite + TanStack Router)
+- **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui (Radix primitives), MUI (Material UI)
+- **UI Components**:
+  - shadcn/ui (Radix primitives) - **Primary UI library**
+  - MUI (Material UI) - **Use sparingly, only for rich text editor**
 - **Rich Text Editor**: Tiptap with mui-tiptap
 - **State Management**: Zustand
-- **Backend**: Firebase (Auth, Firestore), S3 for media storage
-- **Testing**: Jest (unit), Playwright (e2e)
-- **Package Manager**: pnpm
+- **Data Fetching**: TanStack React Query (@tanstack/react-query)
+- **Maps**: Google Maps API (@react-google-maps/api)
+- **Icons**: Lucide React (primary), MUI icons (secondary)
+- **Deployment**: Cloudflare Workers via TanStack Start
+
+### Backend (`packages/api/`)
+
+- **Runtime**: Node.js (@hono/node-server)
+- **Server Framework**: Hono (with `@hono/zod-openapi`)
+- **ORM**: Drizzle ORM (PostgreSQL dialect)
+- **Database**: PostgreSQL 17
+- **Authentication**: Better Auth (session-based with cookies)
+- **API Documentation**: OpenAPI/Scalar
+- **Deployment**: AWS Lightsail via Docker (blue/green with Nginx)
+
+### Key Patterns
+
+- **Module-level singletons**: `db` (pg pool) and `auth` are created once at startup, not per-request
+- **Env**: Zod-validated `process.env` via `src/env.ts`
+- **OpenAPIHono type erasure**: `openapi()` handlers erase `Env` generics; use `getDb(c)` and `getEnv(c)` helpers from `routes/helpers.ts`
+
+### Testing
+
+- **Unit Tests**: Vitest
+- **E2E Tests**: Playwright
+- **Test Location**: `app/__tests__/` (unit), `app/__e2e__/` (e2e)
 
 ## Coding Standards
 
-- Do not use emojis in code, comments, documentation, or commit messages.
-- For UI icons, use Lucide icons (`lucide-react`), MUI icons, or SVGs. Never use emojis as icons.
-- Follow Next.js App Router conventions and best practices.
-- Use TypeScript with proper type annotations; avoid `any` when possible.
-- Prefer modern ES6+ syntax and features.
+### Critical Rules
 
-## File Organization
+1. **NO EMOJIS**: Do not use emojis in code, comments, documentation, or commit messages. This is a strict rule.
+2. **Icons**: Use Lucide icons (`lucide-react`), MUI icons, or SVGs. Never use emojis as icons.
+3. **TypeScript**: Use proper type annotations; avoid `any` when possible.
+4. **Modern Syntax**: Prefer modern ES6+ syntax and features.
+5. **Tests**: Only write tests when explicitly asked. Do not automatically generate tests.
 
-- Keep files small, focused, and modular. Avoid large monolithic files.
-- Split functionality into logically grouped modules.
-- Each file should handle one coherent responsibility.
-- Use the `@/` alias for imports from the project root.
-- Component files go in `app/lib/components/` or `components/ui/` (shadcn).
-- Utility functions go in `app/lib/utils/`.
-- Data models go in `app/lib/models/`.
-- Zustand stores go in `app/lib/stores/`.
-- Page components go in `app/lib/pages/`.
+### File Organization
+
+- **Components**: `app/lib/components/` (custom), `components/ui/` (shadcn/ui)
+- **Utilities and Constants**: `app/lib/utils/`
+- **Types**: `app/types.ts` (central type definitions including media types)
+- **Zustand Stores**: `app/lib/stores/`
+- **Hooks**: `app/lib/hooks/` (query hooks in `hooks/queries/`)
+- **Services**: `app/lib/services/` (flat structure -- `notes.service.ts`, `comments.types.ts`, etc.)
+- **Auth**: `app/lib/auth/` (Better Auth client/server)
+- **API Routes**: `packages/api/src/routes/`
+- **API DB Schema**: `packages/api/src/db/schema.ts`
+
+### Import Guidelines
+
+- Use the `@/` alias for imports from project root: `import { something } from '@/app/lib/utils'`
+- Avoid deep relative paths like `../../../`
+- Prefer absolute imports using `@/` alias
+- Server-side imports can use relative paths within the server/package
+
+### Code Organization Principles
+
+- Keep files small, focused, and modular
+- Avoid large monolithic files
+- Split functionality into logically grouped modules
+- Each file should handle one coherent responsibility
+
+## Component Patterns
+
+### React Components
+
+- Prefer functional components with hooks
+- Use TypeScript interfaces for component props
+- Follow TanStack Start conventions:
+  - File-based routing in `src/routes/`
+  - Use `createFileRoute` for route definitions
+  - Use `createServerFn` for server-side data loading
+  - Use `head()` on routes for SEO meta tags
+
+### UI Components
+
+- **Primary**: Use shadcn/ui components from `@/components/ui/`
+- **Secondary**: Use MUI components only for rich text editor integration
+- Customize shadcn/ui components with Tailwind classes
+- Component composition over prop drilling
+
+### State Management
+
+- **Global State**: Zustand stores in `app/lib/stores/`
+- **Server State**: TanStack React Query for server data
+- **Local State**: React `useState` for component-specific state
+- Keep Zustand stores focused and modular
 
 ## Styling Guidelines
 
-- Use Tailwind CSS for styling; avoid inline styles.
-- Follow the project color palette: blues and whites.
-- Use shadcn/ui components when available; customize with Tailwind classes.
-- Maintain consistent spacing and responsive design patterns.
+### Tailwind CSS
 
-## Component Guidelines
+- Use Tailwind CSS for all styling
+- Avoid inline styles
+- Follow the project color palette: **blues and whites**
+- Maintain consistent spacing and responsive design patterns
+- Use Tailwind utility classes; customize in `tailwind.config.ts` if needed
 
-- Prefer functional components with hooks.
-- Use shadcn/ui components (`@/components/ui/`) for common UI patterns.
-- Use MUI components sparingly, primarily for the rich text editor integration.
-- Keep component props well-typed with TypeScript interfaces.
+### Responsive Design
 
-## Testing
+- Mobile-first approach
+- Use Tailwind breakpoints: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+- Test responsive layouts
 
-- Only write tests when asked. Do not automatically generate tests without being asked.
-- Write Jest unit tests in `app/__tests__/` for utilities and components.
-- Write Playwright e2e tests in `app/__e2e__/` for user flows.
-- Run tests with `pnpm test` (unit) or `pnpm test:e2e` (e2e).
+## Development Workflow
 
-## Environment & Configuration
+### Common Commands
 
-- Use `.env.local` for local environment variables.
-- Never commit secrets or API keys.
-- Prefer config files over hardcoded values.
+```bash
+# Install dependencies
+pnpm install
+
+# Development
+pnpm dev                              # Start API + web together
+pnpm dev:api                          # API server only (port 3002)
+pnpm dev:web                          # Web app only (port 3000)
+
+# Database
+pnpm api:db:migrate                   # Apply Drizzle migrations locally
+pnpm api:db:generate                  # Generate migrations from schema changes
+
+# Testing
+pnpm test                             # Run all tests
+pnpm test:unit                        # Vitest unit tests
+pnpm test:e2e                         # Playwright e2e tests
+
+# Building
+pnpm build                            # Build web app
+
+# Linting
+pnpm lint                             # ESLint
+pnpm lint:fix                         # ESLint with auto-fix
+```
+
+### Running Full Stack
+
+1. Apply migrations: `pnpm api:db:migrate`
+2. Start everything: `pnpm dev`
+
+## Testing Guidelines
+
+### Policy
+
+- **Only write tests when explicitly requested**
+- Do not automatically generate tests without being asked
+- When writing tests:
+  - Unit tests: `app/__tests__/` using Vitest
+  - E2E tests: `app/__e2e__/` using Playwright
+  - Use React Testing Library for component tests
+
+### Test Structure
+
+- Unit tests: `.test.tsx` or `.test.ts` files
+- E2E tests: `.spec.ts` files in `app/__e2e__/`
+- Mock files: `app/__mocks__/` and `__mocks__/`
+
+## Code Quality
+
+### TypeScript
+
+- Strict mode enabled
+- Avoid `any` type
+- Use proper type annotations
+- Define interfaces for props and data structures
+- Use type inference where appropriate
+
+### Code Style
+
+- Follow existing code formatting
+- Use consistent naming conventions:
+  - Components: PascalCase (`MyComponent.tsx`)
+  - Utilities: camelCase (`myUtility.ts`)
+  - Stores: camelCase (`myStore.ts`)
+  - Constants: camelCase or UPPER_SNAKE_CASE
+
+### Guardrails
+
+- Do not commit build artifacts (`.next`, `dist`, `coverage`)
+- Match existing formatting and TypeScript settings
+- Avoid changing Node/TS configs unless necessary
+- Use pnpm workspaces; prefer `--filter` for package-scoped commands

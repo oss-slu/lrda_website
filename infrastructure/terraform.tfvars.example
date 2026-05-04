@@ -1,0 +1,36 @@
+# LRDA Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to version control
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Environment: "staging" or "production"
+# staging uses: api-staging.wheresreligion.org
+# production uses: api.wheresreligion.org
+environment = "staging"
+
+# Your domain name
+domain_name = "wheresreligion.org"
+
+# Lightsail bundle: nano_3_0=$5/mo (1GB), small_3_0=$10/mo (2GB), medium_3_0=$20/mo (4GB)
+bundle_id = "small_3_0"
+
+# Your public IP address for SSH access (use CIDR notation)
+# Find your IP: curl -4 ifconfig.me
+ssh_allowed_ips = ["YOUR_IP/32"]
+
+# PostgreSQL database password (use a strong, unique password)
+# Generate one: openssl rand -base64 24
+db_password = "your_secure_password_here"
+
+# Name of your Lightsail key pair
+key_pair_name = "lrda-ec2"
+
+# Cloudflare Configuration
+# API Token: My Profile > API Tokens > Create Token
+# Needs: Zone:DNS:Edit, Zone:SSL:Edit, Zone:Settings:Read for your domain
+cloudflare_api_token = "your_cloudflare_api_token"
+
+# Set to true AFTER instance is up to create api-staging.wheresreligion.org DNS record
+create_api_dns = false

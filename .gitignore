@@ -3,21 +3,17 @@ node_modules
 **/.next/
 .DS_Store
 yarn.lock
-.env.local
-.env
+.env*
+!.env.example
 pnpm-lock.yaml
+scheduled_tasks.lock
 
-firebase-*.json
 all_notes.json
 *.tsbuildinfo
 
-# Firebase Emulators
-firebase-emulator-data/
-firebase-debug.log
-firestore-debug.log
-database-debug.log
-ui-debug.log
-storage-debug.log
+# Firebase service account (sensitive)
+firebase-service-account.json
+*-service-account.json
 
 # LocalStack (local S3)
 .localstack/
@@ -31,3 +27,30 @@ playwright/.cache/
 
 # Plans and drafts and audits
 /plans/
+*.zip
+reference/
+
+# Terraform
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/*.tfstate
+infrastructure/*.tfstate.*
+infrastructure/tfplan
+infrastructure/terraform.tfvars
+infrastructure/*.backup
+docs/audits/*
+docs/issues/*
+
+# Cloudflare
+**/.wrangler
+**/.wrangler**
+.open-next
+rerum-notes-dump.json
+firebase-users-dump.json
+d1-seed-dump.sql
+dist/
+media-download/
+
+# VitePress
+packages/docs/.vitepress/dist
+packages/docs/.vitepress/cache

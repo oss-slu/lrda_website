@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react'; // comment test
-import { usersService } from '../services';
+import React, { useState, useEffect } from 'react';
+import { fetchCreatorName } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
-import { Note, Tag } from '@/app/types';
-import { CalendarDays, UserCircle, Tags, Clock3, FileAudio, ImageIcon, X } from 'lucide-react';
+import { Tag } from '@/app/types';
+import {
+  CalendarDays,
+  UserCircle,
+  Tags,
+  Clock3,
+  FileAudio,
+  ImageIcon,
+  X,
+  Loader2,
+} from 'lucide-react';
 import {
   DialogContent,
   DialogDescription,
@@ -15,35 +24,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import AudioPicker from './NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from './media_viewer';
 import { PopoverClose } from '@radix-ui/react-popover';
+import { useNoteDetail } from '../hooks/queries/useNotes';
+import { formatDate, format12hourTime } from '../utils/data_conversion';
 
-// Utility function to format the date into a readable string
-function formatDate(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-
-  const dateString = parsedDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  return `${dateString}`;
-}
-
-// Utility function to format the time into a readable string
-function formatTime(date: string | number | Date) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return 'Invalid Date';
-
-  const hours = parsedDate.getHours();
-  const minutes = parsedDate.getMinutes();
-  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const ampm = hours < 12 ? 'AM' : 'PM';
-
-  return `${formattedHours}:${formattedMinutes} ${ampm}`;
-}
+const formatTime = format12hourTime;
 
 // Convert old tags (strings) to new format
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
@@ -51,31 +35,43 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   return tags.map(tag => (typeof tag === 'string' ? { label: tag, origin: 'user' } : tag));
 };
 
-// ClickableNote component
+// ClickableNote component - fetches full note detail by ID
 const ClickableNote: React.FC<{
-  note: Note;
-}> = ({ note }) => {
+  noteId: string;
+}> = ({ noteId }) => {
+  const { data: note, isPending } = useNoteDetail(noteId);
   const [creator, setCreator] = useState<string>('Loading...');
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
-  const tags: Tag[] = convertOldTags(note.tags); // Convert tags if necessary
+  const tags: Tag[] = convertOldTags(note?.tags);
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
-    usersService
-      .fetchCreatorName(note.creator)
-      .then(name => setCreator(name))
-      .catch(error => {
+    if (!note?.creator) return;
+    fetchCreatorName(note.creator)
+      .then((name: string) => setCreator(name))
+      .catch((error: Error) => {
         console.error('Error fetching creator name:', error, note.creator);
         setCreator('Error loading name');
       });
-  }, [note.creator]);
+  }, [note?.creator]);
 
   // Sanitize note content
   useEffect(() => {
-    if (note.text) {
-      setSanitizedContent(sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }));
+    if (note?.text) {
+      sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
     }
-  }, [note.text]);
+  }, [note?.text]);
+
+  if (isPending || !note) {
+    return (
+      <DialogContent className='flex h-[100vh] flex-col items-center justify-center p-0 sm:max-w-[80%]'>
+        <DialogHeader className='sr-only'>
+          <DialogTitle>Loading note...</DialogTitle>
+        </DialogHeader>
+        <Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
+      </DialogContent>
+    );
+  }
 
   return (
     <DialogContent className='flex h-[100vh] flex-col p-0 sm:max-w-[80%]'>
@@ -112,7 +108,7 @@ const ClickableNote: React.FC<{
           </DialogDescription>
         )}
 
-        <div className='h-1 w-full rounded-full bg-black bg-opacity-70' />
+        <div className='h-1 w-full rounded-full bg-black/70' />
       </DialogHeader>
 
       {/* This is the scrollable main area */}
@@ -135,7 +131,7 @@ const ClickableNote: React.FC<{
           {note.audio.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <div className='flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border border-border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
+                <div className='border-border flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
                   <FileAudio className='h-6 w-6 stroke-[1.75]' />
                 </div>
               </PopoverTrigger>
@@ -148,7 +144,7 @@ const ClickableNote: React.FC<{
           {note.media.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <div className='flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border border-border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
+                <div className='border-border flex h-9 w-9 cursor-pointer flex-row items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-150 hover:scale-105 hover:bg-gray-100 active:scale-95'>
                   <ImageIcon className='h-6 w-6 stroke-[1.75]' />
                 </div>
               </PopoverTrigger>
@@ -166,4 +162,4 @@ const ClickableNote: React.FC<{
   );
 };
 
-export default ClickableNote;
+export default React.memo(ClickableNote);

@@ -1,20 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { XIcon, Sparkles } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, Plus, Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Tag } from '@lrda/shared';
 
-interface Tag {
-  label: string;
-  origin: 'user' | 'ai';
-}
-
-// Define the props for the TagManager component
 interface TagManagerProps {
-  inputTags?: (Tag | string)[]; // Tags passed to the component, can be either strings or Tag objects
-  suggestedTags?: string[]; // Suggested tags provided by AI
-  onTagsChange: (tags: Tag[]) => void; // Callback to notify parent components of tag changes
-  fetchSuggestedTags: () => void; // Function to fetch suggested tags
-  disabled?: boolean; // Whether the tag manager is disabled (read-only)
+  inputTags?: (Tag | string)[];
+  suggestedTags?: string[];
+  onTagsChange: (tags: Tag[]) => void;
+  fetchSuggestedTags: () => void;
+  onDismissSuggestions?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 const TagManager: React.FC<TagManagerProps> = ({
@@ -22,6 +18,8 @@ const TagManager: React.FC<TagManagerProps> = ({
   suggestedTags,
   onTagsChange,
   fetchSuggestedTags,
+  onDismissSuggestions,
+  loading = false,
   disabled = false,
 }) => {
   const convertOldTags = useMemo(() => {
@@ -32,207 +30,191 @@ const TagManager: React.FC<TagManagerProps> = ({
 
   const [tags, setTags] = useState<Tag[]>(convertOldTags(inputTags));
   const [tagInput, setTagInput] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const newTags = convertOldTags(inputTags);
-    // Only update if the tags are different to prevent infinite loop
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync pattern
+
     setTags(prevTags => {
       if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
         return newTags;
       }
-      return prevTags; // Return the previous tags if they are the same
+      return prevTags;
     });
-  }, [inputTags, convertOldTags]); // Removed tags from the dependencies
+  }, [inputTags, convertOldTags]);
+
+  useEffect(() => {
+    if (isAdding && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAdding]);
 
   const addTag = (tag: string, origin: 'user' | 'ai') => {
-    // Don't add tags if disabled
-    if (disabled) {
-      return;
-    }
-    if (tag.includes(' ')) {
-      toast('Failed to add tag', {
-        description: 'Your tag must not contain spaces.',
-        duration: 2000,
-      });
+    if (disabled) return;
+    const trimmed = tag.trim();
+    if (trimmed.includes(' ')) {
+      toast('Tags cannot contain spaces', { duration: 2000 });
       setTagInput('');
       return;
     }
-    if (tag.length < 1) {
-      toast('Failed to add tag', {
-        description: 'Tags must be at least 1 character.',
-        duration: 2000,
-      });
+    if (trimmed.length < 1) {
       setTagInput('');
       return;
     }
-    if (tag.length > 28) {
-      toast('Failed to add tag', {
-        description: 'Tags must be 28 characters or less.',
-        duration: 2000,
-      });
+    if (trimmed.length > 28) {
+      toast('Tag is too long (max 28 characters)', { duration: 2000 });
       setTagInput('');
       return;
     }
-    if (tags.find(t => t.label === tag)) {
-      toast('Failed to add tag', {
-        description: 'Duplicate tags are not allowed.',
-        duration: 2000,
-      });
+    if (tags.find(t => t.label === trimmed)) {
+      toast('Tag already exists', { duration: 2000 });
       setTagInput('');
       return;
     }
 
-    const newTag = { label: tag, origin };
-    setTags(prevTags => {
-      const updatedTags = [...prevTags, newTag];
-      onTagsChange(updatedTags); // Notify parent component of tag changes
-      return updatedTags;
-    });
-    setTagInput(''); // Clear input field
+    const newTag = { label: trimmed, origin };
+    const updatedTags = [...tags, newTag];
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
+    setTagInput('');
+  };
+
+  const addAllSuggested = () => {
+    if (disabled || !suggestedTags) return;
+    const newTags = suggestedTags
+      .filter(tag => !tags.find(t => t.label === tag))
+      .map(label => ({ label, origin: 'ai' as const }));
+    if (newTags.length === 0) return;
+    const updatedTags = [...tags, ...newTags];
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
   };
 
   const removeTag = (tagToRemove: string) => {
-    // Don't remove tags if disabled
-    if (disabled) {
-      return;
-    }
-    setTags(prevTags => {
-      const updatedTags = prevTags.filter(tag => tag.label !== tagToRemove);
-      onTagsChange(updatedTags); // Notify parent component of tag changes
-      return updatedTags;
-    });
+    if (disabled) return;
+    const updatedTags = tags.filter(tag => tag.label !== tagToRemove);
+    setTags(updatedTags);
+    onTagsChange(updatedTags);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !disabled) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       addTag(tagInput, 'user');
     }
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!disabled) {
-      setTagInput(event.target.value);
+    if (event.key === 'Escape') {
+      setIsAdding(false);
+      setTagInput('');
+    }
+    if (event.key === 'Backspace' && tagInput === '' && tags.length > 0) {
+      const lastTag = tags[tags.length - 1];
+      if (lastTag) removeTag(lastTag.label);
     }
   };
 
-  const handleSuggestedTagClick = (tag: string) => {
-    if (!disabled) {
-      addTag(tag, 'ai');
+  const handleBlur = () => {
+    if (tagInput.trim()) {
+      addTag(tagInput, 'user');
     }
+    setIsAdding(false);
   };
 
-  // Helper function to get validation status
-  const getValidationStatus = () => {
-    if (tagInput.length === 0) return { valid: true, message: '' };
-    if (tagInput.includes(' ')) return { valid: false, message: 'No spaces allowed' };
-    if (tagInput.length < 1) return { valid: false, message: 'Too short (min 1)' };
-    if (tagInput.length > 28) return { valid: false, message: 'Too long (max 28)' };
-    if (tags.find(t => t.label === tagInput)) return { valid: false, message: 'Already exists' };
-    return { valid: true, message: 'Press Enter to add' };
-  };
-
-  const validation = getValidationStatus();
+  const filteredSuggestions = suggestedTags?.filter(tag => !tags.find(t => t.label === tag)) ?? [];
 
   return (
     <div>
-      <div className='mb-3 flex flex-wrap items-center gap-1.5'>
-        <div className='relative min-w-[90px] max-w-[280px] flex-1'>
-          <Input
-            value={tagInput}
-            placeholder='Add tags...'
-            onKeyDown={handleKeyDown}
-            onChange={handleInputChange}
-            maxLength={28}
-            disabled={disabled}
-            readOnly={disabled}
-            className={`bg-white pr-16 ${disabled ? 'cursor-default opacity-60' : ''} ${
-              tagInput.length > 0 && !validation.valid ? 'border-red-300 focus-visible:ring-red-500'
-              : tagInput.length >= 1 && tagInput.length <= 28 && validation.valid ?
-                'border-green-300 focus-visible:ring-green-500'
-              : ''
+      <div className='flex flex-wrap items-center gap-1.5'>
+        {tags.map((tag, index) => (
+          <span
+            key={index}
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              tag.origin === 'ai' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'
             }`}
-          />
-          {tagInput.length > 0 && (
-            <div className='absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1'>
-              <span
-                className={`text-xs font-medium ${validation.valid ? 'text-green-600' : 'text-red-600'}`}
-              >
-                {tagInput.length}
-                {validation.valid ? ' ✓' : ' ✗'}
-              </span>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={fetchSuggestedTags}
-          disabled={disabled}
-          className={`ml-1 rounded-md bg-purple-500 p-2 text-white shadow-sm transition-all hover:bg-purple-600 ${
-            disabled ? 'cursor-not-allowed opacity-50' : ''
-          }`}
-          title='Generate AI tags'
-        >
-          <Sparkles className='h-4 w-4' />
-        </button>
-        {tagInput.length > 0 && validation.message && (
-          <span className={`text-xs ${validation.valid ? 'text-green-600' : 'text-red-600'}`}>
-            {validation.message}
-          </span>
-        )}
-        {tags
-          .filter(tag => tag.origin === 'user')
-          .map((tag, index) => (
-            <div
-              key={index}
-              className='flex items-center gap-2 rounded bg-gray-200 px-2 py-1 text-xs'
-            >
+          >
+            {tag.label}
+            {!disabled && (
               <button
                 onClick={() => removeTag(tag.label)}
-                disabled={disabled}
-                className={`text-gray-600 hover:text-gray-900 ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-              >
-                <XIcon className='h-3 w-3' />
-              </button>
-              {tag.label}
-            </div>
-          ))}
-      </div>
-      <div className='flex flex-wrap items-center gap-2'>
-        {tags
-          .filter(tag => tag.origin === 'ai')
-          .map((tag, index) => (
-            <div
-              key={index}
-              className='flex items-center gap-2 rounded bg-purple-200 px-2 py-1 text-xs text-purple-800'
-            >
-              <button
-                onClick={() => removeTag(tag.label)}
-                disabled={disabled}
-                className={`text-purple-600 hover:text-purple-900 ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-              >
-                <XIcon className='h-3 w-3' />
-              </button>
-              {tag.label}
-            </div>
-          ))}
-      </div>
-      {suggestedTags && suggestedTags.length > 0 && (
-        <div className='mt-4'>
-          <h4>Suggested Tags:</h4>
-          <div className='mt-2 flex flex-wrap gap-2'>
-            {suggestedTags.map((tag, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestedTagClick(tag)}
-                disabled={disabled}
-                className={`rounded bg-purple-200 px-2 py-1 text-xs text-purple-800 hover:bg-purple-300 ${
-                  disabled ? 'cursor-not-allowed opacity-50' : ''
+                className={`-mr-0.5 ml-0.5 rounded-full p-0.5 transition-colors ${
+                  tag.origin === 'ai' ?
+                    'hover:bg-purple-200 hover:text-purple-900'
+                  : 'hover:bg-gray-300 hover:text-gray-900'
                 }`}
               >
-                {tag}
+                <X className='h-3 w-3' />
               </button>
-            ))}
-          </div>
+            )}
+          </span>
+        ))}
+
+        {!disabled && (
+          <>
+            {isAdding ?
+              <input
+                ref={inputRef}
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                placeholder='Type tag...'
+                maxLength={28}
+                className='h-6 w-24 rounded-full border border-gray-300 bg-white px-2.5 text-xs outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400'
+              />
+            : <button
+                onClick={() => setIsAdding(true)}
+                className='inline-flex items-center gap-0.5 rounded-full border border-dashed border-gray-300 px-2 py-0.5 text-xs text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700'
+              >
+                <Plus className='h-3 w-3' />
+                <span>Add tag</span>
+              </button>
+            }
+
+            <button
+              onClick={fetchSuggestedTags}
+              disabled={loading}
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-colors ${
+                loading
+                  ? 'cursor-wait text-purple-400'
+                  : 'text-purple-500 hover:bg-purple-50 hover:text-purple-700'
+              }`}
+              title='Suggest tags with AI'
+            >
+              <Sparkles className={`h-3 w-3 ${loading ? 'animate-pulse' : ''}`} />
+              {loading && <span className='animate-pulse'>Thinking...</span>}
+            </button>
+          </>
+        )}
+      </div>
+
+      {filteredSuggestions.length > 0 && !disabled && (
+        <div className='mt-2 flex flex-wrap items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200'>
+          <span className='text-xs text-gray-400'>Suggested:</span>
+          {filteredSuggestions.map((tag, index) => (
+            <button
+              key={index}
+              onClick={() => addTag(tag, 'ai')}
+              className='inline-flex items-center gap-1 rounded-full border border-dashed border-purple-300 px-2.5 py-0.5 text-xs text-purple-600 transition-colors hover:border-purple-400 hover:bg-purple-50'
+            >
+              <Plus className='h-3 w-3' />
+              {tag}
+            </button>
+          ))}
+          <button
+            onClick={addAllSuggested}
+            className='inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-200'
+            title='Add all suggestions'
+          >
+            <Check className='h-3 w-3' />
+            Add all
+          </button>
+          <button
+            onClick={onDismissSuggestions}
+            className='rounded-full p-0.5 text-gray-400 transition-colors hover:text-gray-600'
+            title='Dismiss suggestions'
+          >
+            <X className='h-3 w-3' />
+          </button>
         </div>
       )}
     </div>

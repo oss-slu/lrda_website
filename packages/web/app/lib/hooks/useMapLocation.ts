@@ -1,13 +1,7 @@
-'use client';
-
 import { useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { getItem, setItem } from '../utils/local_storage';
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+import type { Location } from '../utils/mapUtils';
 
 const DEFAULT_LOCATION: Location = { lat: 38.637334, lng: -90.286021 };
 const DEFAULT_ZOOM = 10;
@@ -83,9 +77,15 @@ export function useMapLocation({
     }
   }, [getLocation, setMapCenter, mapRef, triggerMapResize]);
 
-  // Fetch last saved location on mount
+  // Fetch last saved location on mount (skip if map was already positioned)
   useEffect(() => {
     isSubscribedRef.current = true;
+
+    if (locationFound) {
+      return () => {
+        isSubscribedRef.current = false;
+      };
+    }
 
     const fetchLastLocation = async () => {
       try {
@@ -124,10 +124,12 @@ export function useMapLocation({
     return () => {
       isSubscribedRef.current = false;
     };
-  }, [setMapCenter, setMapZoom, setLocationFound, triggerMapResize]);
+  }, [setMapCenter, setMapZoom, setLocationFound, triggerMapResize, locationFound]);
 
   // Fetch current location and update if no location found yet
   useEffect(() => {
+    if (locationFound) return;
+
     let isComponentMounted = true;
 
     const fetchCurrentLocationAndUpdate = async () => {

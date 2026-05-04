@@ -1,9 +1,7 @@
-'use client';
-import React from 'react';
-import Image from 'next/image';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 import { IconLink } from './lib/components/IconLink';
-const ANIMATE_CLASS = 'animate-fadeIn opacity-0';
+
+const ANIMATE_CLASS = 'animate-fade-in opacity-0';
 
 function WelcomeHero() {
   const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: '120px 0px', threshold: 0.1 });
@@ -12,25 +10,25 @@ function WelcomeHero() {
       ref={ref}
       className={`relative flex h-full items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat ${motionVariants.fadeIn}`}
       data-reveal={isVisible}
-      style={{ backgroundImage: 'url("/splash.png")' }}
+      style={{ backgroundImage: 'url("/splash.webp")' }}
     >
       {/* Gradient overlay with modern feel */}
-      <div className='absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70' />
+      <div className='absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/75 to-black/70 backdrop-blur-[2px]' />
 
       {/* Animated background elements */}
       <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-        <div className='absolute left-10 top-20 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
+        <div className='absolute top-20 left-10 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl' />
         <div
-          className='absolute bottom-20 right-10 h-96 w-96 animate-pulse rounded-full bg-purple-500/20 blur-3xl'
+          className='absolute right-10 bottom-20 h-96 w-96 animate-pulse rounded-full bg-purple-500/20 blur-3xl'
           style={{ animationDelay: '1s' }}
         />
       </div>
 
       <div className='relative z-10 w-full p-8 text-center text-white sm:p-12'>
-        <h1 className='mb-4 whitespace-nowrap bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text pb-2 text-5xl font-black leading-none tracking-tight text-transparent sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl'>
+        <h1 className='mb-4 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text pb-2 text-5xl leading-none font-black tracking-tight whitespace-nowrap text-transparent sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl'>
           Where&apos;s Religion?
         </h1>
-        <p className='mx-auto mt-6 max-w-2xl text-xl font-light leading-relaxed text-white/95 sm:text-2xl md:text-3xl'>
+        <p className='mx-auto mt-6 max-w-2xl text-xl leading-relaxed font-light text-white/95 sm:text-2xl md:text-3xl'>
           advancing the study of <span className='font-semibold text-blue-300'>religion</span> and{' '}
           <span className='font-semibold text-blue-300'>public life</span>
         </p>
@@ -64,15 +62,15 @@ export default function WelcomePage() {
         <div className='flex h-screen flex-1 flex-col justify-center px-6 py-16 sm:px-12 lg:px-20 lg:py-24'>
           <div className='max-w-2xl'>
             {/* Main heading */}
-            <h1
-              className={`mb-6 text-5xl font-black leading-tight text-gray-900 sm:text-6xl lg:text-7xl ${ANIMATE_CLASS}`}
+            <h2
+              className={`mb-6 text-5xl leading-tight font-black text-gray-900 sm:text-6xl lg:text-7xl ${ANIMATE_CLASS}`}
               style={{ animationDelay: '0.2s' }}
             >
               Map the world's{' '}
               <span className='bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700 bg-clip-text text-transparent'>
                 religious landscape
               </span>
-            </h1>
+            </h2>
 
             {/* Subheading */}
             <p
@@ -102,7 +100,7 @@ export default function WelcomePage() {
             <div className='flex flex-col items-center gap-4 sm:flex-row'>
               {/* Primary CTA */}
               <a
-                className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/50'
+                className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:ring-4 focus-visible:ring-blue-400/50 focus-visible:outline-none'
                 href='https://religioninplace.org'
                 target='_blank'
                 rel='noopener noreferrer'
@@ -165,13 +163,10 @@ export default function WelcomePage() {
                 style={{ height: 40 }}
                 aria-label='Get the app on the Apple App Store'
               >
-                <Image
+                <img
                   src='/app_store_img.svg'
                   alt='Apple App Store'
-                  width={120}
-                  height={40}
                   style={{ height: 40, width: 'auto' }}
-                  priority
                 />
               </a>
               <a
@@ -182,13 +177,10 @@ export default function WelcomePage() {
                 style={{ height: 40 }}
                 aria-label='Get the app on Google Play'
               >
-                <Image
+                <img
                   src='/01googleplay.svg'
                   alt='Google Play Store'
-                  width={135}
-                  height={40}
                   style={{ transform: 'scale(1.15)' }}
-                  priority
                 />
               </a>
             </div>
@@ -202,8 +194,8 @@ export default function WelcomePage() {
 
           {/* Floating elements */}
           <div className='pointer-events-none absolute inset-0'>
-            <div className='animate-float absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20 blur-3xl' />
-            <div className='animate-float-delayed absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-400/20 blur-3xl' />
+            <div className='animate-float absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20 blur-3xl' />
+            <div className='animate-float-delayed absolute right-1/4 bottom-1/4 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-400/20 blur-3xl' />
           </div>
 
           {/* Phone mockup */}
@@ -214,28 +206,26 @@ export default function WelcomePage() {
 
               {/* Phone container with glass effect */}
               <div className='flex h-full w-full items-center justify-center overflow-hidden rounded-[3rem] border border-white/50 p-2 shadow-2xl backdrop-blur-sm'>
-                <Image
-                  src='/mobile_image_WR.png'
+                <img
+                  src='/mobile_image_WR.webp'
                   alt="Where's Religion App"
-                  width={600}
-                  height={1000}
+                  loading='lazy'
                   style={{
                     objectFit: 'contain',
                     objectPosition: 'center',
                     width: '100%',
                     height: '100%',
                   }}
-                  priority
                 />
               </div>
 
               {/* Floating accent elements */}
-              <div className='animate-float absolute -right-8 top-20 h-16 w-16 rotate-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 opacity-80 shadow-xl' />
-              <div className='animate-float-delayed absolute -left-8 bottom-32 h-20 w-20 -rotate-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 opacity-80 shadow-xl' />
+              <div className='animate-float absolute top-20 -right-8 h-16 w-16 rotate-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 opacity-80 shadow-xl' />
+              <div className='animate-float-delayed absolute bottom-32 -left-8 h-20 w-20 -rotate-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 opacity-80 shadow-xl' />
             </div>
           </div>
           {/* Wavy divider at the bottom */}
-          <div className='pointer-events-none absolute bottom-0 left-0 right-0 z-20 w-full overflow-hidden'>
+          <div className='pointer-events-none absolute right-0 bottom-0 left-0 z-20 w-full overflow-hidden'>
             <svg
               viewBox='0 0 600 40'
               fill='none'

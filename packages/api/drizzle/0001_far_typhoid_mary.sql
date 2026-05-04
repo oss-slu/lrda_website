@@ -1,0 +1,1 @@
+CREATE INDEX "note_published_coords_idx" ON "note" USING btree ("is_published","latitude","longitude");

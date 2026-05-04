@@ -1,59 +1,40 @@
-'use client';
-
-import React, { useState, RefObject } from 'react';
-import { LinkBubbleMenu, RichTextEditor, type RichTextEditorRef } from 'mui-tiptap';
+import { useState } from 'react';
+import { LinkBubbleMenu, RichTextContent } from 'mui-tiptap';
 import type { Editor } from '@tiptap/core';
-import { v4 as uuidv4 } from 'uuid';
 import TagManager from './NoteElements/TagManager';
-import EditorMenuControls from '../editor_menu_controls';
-import useExtensions from '@/app/lib/utils/use_extensions';
 import { tagsService } from '@/app/lib/services';
-import { PhotoType, VideoType, AudioType } from '@/app/lib/models/media_class';
-import CommentBubble from '../CommentBubble';
-import { handleTagsChange, handleEditorChange } from './handlers/noteHandlers';
+import { handleTagsChange } from './handlers/noteHandlers';
 import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';
 
 interface NoteEditorContentProps {
   noteState: NoteStateType;
   noteHandlers: NoteHandlersType;
-  rteRef: RefObject<RichTextEditorRef | null>;
-  editorSessionKey: string;
+  editor: Editor | null;
   isViewingStudentNote: boolean;
-  canComment: boolean;
-  isStudentViewingOwnNote: boolean;
-  showCommentBubble: boolean;
-  commentBubblePosition: { top: number; left: number } | null;
-  onCommentBubbleClick: () => void;
   onEdit: () => void;
 }
 
 export default function NoteEditorContent({
   noteState,
   noteHandlers,
-  rteRef,
-  editorSessionKey,
+  editor,
   isViewingStudentNote,
-  canComment,
-  isStudentViewingOwnNote,
-  showCommentBubble,
-  commentBubblePosition,
-  onCommentBubbleClick,
   onEdit,
 }: NoteEditorContentProps) {
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState<boolean>(false);
 
-  const extensions = useExtensions({
-    placeholder: 'Add your own content here...',
-  });
-
   const fetchSuggestedTags = async () => {
     setLoadingTags(true);
     try {
-      const editor = rteRef.current?.editor;
       if (editor) {
-        const noteContent = editor.getHTML();
-        const tags = await tagsService.generateTags(noteContent);
+        const tags = await tagsService.generateTags({
+          content: editor.getText(),
+          title: noteState.title,
+          locationName: noteState.locationName || undefined,
+          existingTags: noteState.tags.map(t => t.label),
+          time: noteState.time?.toISOString(),
+        });
         setSuggestedTags(tags);
       } else {
         console.error('Editor instance is not available');
@@ -65,87 +46,9 @@ export default function NoteEditorContent({
     }
   };
 
-  const handleMediaUpload = (media: { type: string; uri: string }) => {
-    const editor = rteRef.current?.editor;
-
-    if (media.type === 'image') {
-      const defaultWidth = 100;
-      const defaultHeight: number | undefined = undefined;
-
-      const newImage = {
-        type: 'image',
-        attrs: {
-          src: media.uri,
-          alt: 'Image description',
-          loading: 'lazy',
-          width: defaultWidth,
-          height: defaultHeight,
-        },
-      };
-
-      if (editor) {
-        editor.chain().focus().setImage(newImage.attrs).run();
-      }
-
-      noteHandlers.setImages(prevImages => [
-        ...prevImages,
-        new PhotoType({
-          uuid: uuidv4(),
-          uri: media.uri,
-          type: 'image',
-        }),
-      ]);
-    } else if (media.type === 'video') {
-      const newVideo = new VideoType({
-        uuid: uuidv4(),
-        uri: media.uri,
-        type: 'video',
-        thumbnail: '',
-        duration: '0:00',
-      });
-
-      noteHandlers.setVideos(prevVideos => [...prevVideos, newVideo]);
-
-      if (editor) {
-        const videoLink = `Video ${noteState.videos.length + 1}`;
-        editor
-          .chain()
-          .focus()
-          .command(({ tr, dispatch }) => {
-            if (dispatch) {
-              const endPos = tr.doc.content.size;
-              const paragraphNodeForNewLine = editor.schema.node('paragraph');
-              const textNode = editor.schema.text(videoLink, [
-                editor.schema.marks.link.create({ href: media.uri }),
-              ]);
-              const paragraphNodeForLink = editor.schema.node('paragraph', null, [textNode]);
-
-              const transaction = tr
-                .insert(endPos, paragraphNodeForNewLine)
-                .insert(endPos + 1, paragraphNodeForLink);
-              dispatch(transaction);
-            }
-            return true;
-          })
-          .run();
-      }
-    } else if (media.type === 'audio') {
-      const newAudio = new AudioType({
-        uuid: uuidv4(),
-        uri: media.uri,
-        type: 'audio',
-        duration: '0:00',
-        name: `Audio Note ${noteState.audio.length + 1}`,
-        isPlaying: false,
-      });
-
-      noteHandlers.setAudio(prevAudio => [...prevAudio, newAudio]);
-    }
-  };
-
   return (
     <>
-      <div className='mt-2'>
+      <div className='mt-3'>
         <TagManager
           inputTags={noteState.tags}
           suggestedTags={suggestedTags}
@@ -154,16 +57,15 @@ export default function NoteEditorContent({
             handleTagsChange(noteHandlers.setTags, newTags);
           }}
           fetchSuggestedTags={fetchSuggestedTags}
+          onDismissSuggestions={() => setSuggestedTags([])}
+          loading={loadingTags}
           disabled={isViewingStudentNote}
         />
       </div>
 
-      {loadingTags && <p>Loading suggested tags...</p>}
-
       <div
-        className='w-full pb-8 transition-opacity duration-200 ease-in-out'
+        className='mt-4 w-full pb-8 transition-opacity duration-200 ease-in-out'
         onMouseDown={e => {
-          const editor = rteRef.current?.editor;
           if (!editor) return;
           const target = e.target as HTMLElement;
           if (!target.closest('.ProseMirror')) {
@@ -172,7 +74,6 @@ export default function NoteEditorContent({
           }
         }}
         onKeyDown={e => {
-          const editor = rteRef.current?.editor;
           if (!editor) return;
           if (e.key === 'ArrowDown' && editor.isEmpty) {
             e.preventDefault();
@@ -180,39 +81,9 @@ export default function NoteEditorContent({
           }
         }}
       >
-        <div className='relative w-full bg-white'>
-          {showCommentBubble &&
-            commentBubblePosition &&
-            canComment &&
-            (isViewingStudentNote || isStudentViewingOwnNote) && (
-              <CommentBubble
-                onClick={onCommentBubbleClick}
-                top={commentBubblePosition.top}
-                left={commentBubblePosition.left}
-              />
-            )}
-          <RichTextEditor
-            key={editorSessionKey}
-            ref={rteRef}
-            className='prose prose-lg min-h-[400px] max-w-none'
-            extensions={extensions}
-            content={noteState.editorContent}
-            immediatelyRender={false}
-            editable={!isViewingStudentNote}
-            onUpdate={({ editor }: { editor: Editor }) => {
-              if (!isViewingStudentNote) {
-                onEdit();
-                handleEditorChange(noteHandlers.setEditorContent, editor.getHTML());
-              }
-            }}
-            renderControls={() =>
-              isViewingStudentNote ? null : <EditorMenuControls onMediaUpload={handleMediaUpload} />
-            }
-            children={(editor: Editor | null) => {
-              if (!editor) return null;
-              return <LinkBubbleMenu />;
-            }}
-          />
+        <div className='relative w-full'>
+          <RichTextContent className='prose prose-lg min-h-[400px] max-w-none' />
+          <LinkBubbleMenu />
         </div>
       </div>
     </>

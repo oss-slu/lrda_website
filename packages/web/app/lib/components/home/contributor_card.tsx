@@ -1,6 +1,3 @@
-'use client';
-import React from 'react';
-import Image from 'next/image';
 import { Icons } from '@/app/lib/components/icons';
 import { useReveal, motionVariants } from '@/app/lib/utils/motion';
 
@@ -36,11 +33,11 @@ export default function ContributorCard({
       <div className='relative h-64 overflow-hidden rounded-3xl bg-slate-900'>
         {/* Background image */}
         <div className='absolute inset-0'>
-          <Image
+          <img
             src={src}
             alt={name}
-            fill
-            className='object-cover transition-transform duration-700 group-hover:scale-[1.02]'
+            loading='lazy'
+            className='h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]'
             style={{ objectPosition: `center ${offset}%` }}
           />
 
@@ -55,7 +52,7 @@ export default function ContributorCard({
 
           {/* Role tag */}
           <div className='mb-2 inline-block self-start'>
-            <span className='rounded border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/90 backdrop-blur-sm'>
+            <span className='rounded border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white/90 uppercase backdrop-blur-sm'>
               {role}
             </span>
           </div>
@@ -65,7 +62,7 @@ export default function ContributorCard({
 
           {/* Social links bottom right */}
           {socials && (
-            <div className='absolute bottom-5 right-5 flex gap-2'>
+            <div className='absolute right-5 bottom-5 flex gap-2'>
               {socials.github && (
                 <a
                   href={socials.github}

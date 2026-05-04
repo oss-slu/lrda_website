@@ -1,10 +1,8 @@
-'use client';
-
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { UserIcon, Plus, Minus, Users, Crosshair } from 'lucide-react';
 import SearchBarMap from '../search_bar_map';
 import { Note } from '@/app/types';
-import { PANEL_WIDTH } from '../../constants/mapConstants';
+import { PANEL_WIDTH } from '../../utils/mapConstants';
 
 interface MapControlsProps {
   // Search
@@ -63,7 +61,7 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
             <button
               onClick={onToggleView}
               title={isGlobalView ? 'Show my notes' : 'Show all notes'}
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-full bg-secondary shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl ${
+              className={`bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl ${
                 isGlobalView ? 'text-blue-600' : 'text-green-600'
               }`}
             >
@@ -86,15 +84,15 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
             <button
               onClick={onZoomOut}
               title='Zoom out'
-              className='inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+              className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
             >
               <Minus className='h-4 w-4' />
             </button>
-            <div className='h-4 w-px bg-border' />
+            <div className='bg-border h-4 w-px' />
             <button
               onClick={onZoomIn}
               title='Zoom in'
-              className='inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+              className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
             >
               <Plus className='h-4 w-4' />
             </button>
@@ -104,9 +102,9 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           <button
             onClick={onLocate}
             title='Find my location'
-            className='inline-flex h-10 w-10 items-center justify-center rounded-full bg-secondary shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl'
+            className='bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl'
           >
-            <Crosshair className='h-5 w-5 text-muted-foreground' />
+            <Crosshair className='text-muted-foreground h-5 w-5' />
           </button>
         </div>
       </div>

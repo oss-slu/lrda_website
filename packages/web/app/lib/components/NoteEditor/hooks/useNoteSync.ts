@@ -1,16 +1,16 @@
-import { useEffect, useRef, useMemo, RefObject, MutableRefObject } from 'react';
-import { useNotesStore } from '@/app/lib/stores/notesStore';
+import { useEffect, useRef, useMemo, MutableRefObject } from 'react';
+import { useAuthStore } from '@/app/lib/stores/authStore';
+import { usePersonalNotes } from '@/app/lib/hooks/queries/useNotes';
 import { Note, newNote } from '@/app/types';
-import { PhotoType, VideoType } from '@/app/lib/models/media_class';
-import { normalizeNoteId, noteIdsMatch } from '../utils/noteHelpers';
+import type { PhotoMedia, VideoMedia } from '@/app/types';
 import type { NoteStateType, NoteHandlersType } from './useNoteState';
-import type { RichTextEditorRef } from 'mui-tiptap';
+import type { Editor } from '@tiptap/core';
 
 interface UseNoteSyncOptions {
   noteState: NoteStateType;
   noteHandlers: NoteHandlersType;
   initialNote: Note | newNote | undefined;
-  rteRef: RefObject<RichTextEditorRef | null>;
+  editor: Editor | null;
   lastEditTimeRef: MutableRefObject<number>;
 }
 
@@ -18,17 +18,21 @@ export const useNoteSync = ({
   noteState,
   noteHandlers,
   initialNote,
-  rteRef,
+  editor,
   lastEditTimeRef,
 }: UseNoteSyncOptions) => {
-  const notes = useNotesStore(state => state.notes);
+  // Get personal notes from TanStack Query instead of Zustand store.
+  // Only subscribe when viewing own notes (not when instructor views student notes).
+  const user = useAuthStore(state => state.user);
+  const noteCreator = noteState.note?.creator;
+  const isOwnNote = !noteCreator || noteCreator === user?.id;
+  const { data: notes = [] } = usePersonalNotes(isOwnNote ? (user?.id ?? null) : null);
+
   const lastSyncedNoteRef = useRef<string>('');
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isPollingPausedRef = useRef<boolean>(false);
 
   // Store noteHandlers in ref to avoid dependency issues
   const noteHandlersRef = useRef(noteHandlers);
-  // eslint-disable-next-line react-hooks/refs -- intentional pattern to keep ref in sync
+   
   noteHandlersRef.current = noteHandlers;
 
   // Destructure noteState for stable dependencies
@@ -48,36 +52,27 @@ export const useNoteSync = ({
 
   // Get current note ID
   const currentNoteId =
-    stateNoteId ||
-    (note as any)?.['@id'] ||
-    (initialNote && 'id' in initialNote ? initialNote.id : undefined) ||
-    (initialNote as any)?.['@id'];
+    stateNoteId || (initialNote && 'id' in initialNote ? initialNote.id : undefined);
 
-  // Find current note in store
-  const currentNoteFromStore = useMemo(() => {
+  // Find current note in query data
+  const currentNoteFromQuery = useMemo(() => {
     if (!currentNoteId) return undefined;
-
-    return notes.find(n => {
-      const noteId1 = n.id;
-      const noteId2 = (n as any)['@id'];
-      if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
-      return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
-    });
+    return notes.find(n => n.id === currentNoteId);
   }, [notes, currentNoteId]);
 
   // Content hash for change detection
   const currentNoteContentHash = useMemo(() => {
-    if (!currentNoteFromStore) return null;
+    if (!currentNoteFromQuery) return null;
     return JSON.stringify({
-      id: currentNoteFromStore.id || (currentNoteFromStore as any)?.['@id'],
-      text: currentNoteFromStore.text || (currentNoteFromStore as any)?.BodyText,
-      title: currentNoteFromStore.title,
-      published: currentNoteFromStore.published,
-      approvalRequested: currentNoteFromStore.approvalRequested,
-      tags: currentNoteFromStore.tags,
-      comments: currentNoteFromStore.comments?.length || 0,
+      id: currentNoteFromQuery.id,
+      text: currentNoteFromQuery.text,
+      title: currentNoteFromQuery.title,
+      published: currentNoteFromQuery.published,
+      approvalRequested: currentNoteFromQuery.approvalRequested,
+      tags: currentNoteFromQuery.tags,
+      comments: currentNoteFromQuery.comments?.length || 0,
     });
-  }, [currentNoteFromStore]);
+  }, [currentNoteFromQuery]);
 
   // Initialize note from initialNote prop
   useEffect(() => {
@@ -87,11 +82,11 @@ export const useNoteSync = ({
       handlers.setEditorContent(initialNote.text || '');
       handlers.setTitle(initialNote.title || '');
       handlers.setImages(
-        (initialNote.media.filter(item => item.getType() === 'image') as PhotoType[]) || [],
+        initialNote.media.filter((item): item is PhotoMedia => item.type === 'image'),
       );
       handlers.setTime(initialNote.time || new Date());
-      handlers.setLongitude(initialNote.longitude || '');
-      handlers.setLatitude(initialNote.latitude || '');
+      handlers.setLongitude(initialNote.longitude ?? null);
+      handlers.setLatitude(initialNote.latitude ?? null);
       handlers.setTags(
         (initialNote.tags || []).map(tag =>
           typeof tag === 'string' ? { label: tag, origin: 'user' } : tag,
@@ -102,7 +97,7 @@ export const useNoteSync = ({
       handlers.setApprovalRequested(initialNote.approvalRequested || false);
       handlers.setCounter(prevCounter => prevCounter + 1);
       handlers.setVideos(
-        (initialNote.media.filter(item => item.getType() === 'video') as VideoType[]) || [],
+        initialNote.media.filter((item): item is VideoMedia => item.type === 'video'),
       );
 
       lastSyncedNoteRef.current = '';
@@ -110,31 +105,24 @@ export const useNoteSync = ({
     }
   }, [initialNote, lastEditTimeRef]);
 
-  // Sync from store/initialNote to local state
+  // Sync from query data to local state when external changes are detected
   useEffect(() => {
     if (!currentNoteId) {
       lastSyncedNoteRef.current = '';
       return;
     }
 
+    // First try to use initialNote if it matches
     let sourceNote: Note | undefined = undefined;
     if (initialNote && 'id' in initialNote) {
-      const initialNoteId = initialNote.id || (initialNote as any)?.['@id'];
-      if (
-        initialNoteId &&
-        (initialNoteId === currentNoteId || noteIdsMatch(initialNoteId, currentNoteId))
-      ) {
-        sourceNote = initialNote as Note;
+      if (initialNote.id === currentNoteId) {
+        sourceNote = initialNote;
       }
     }
 
+    // Fall back to query data
     if (!sourceNote) {
-      sourceNote = notes.find(n => {
-        const noteId1 = n.id;
-        const noteId2 = (n as any)['@id'];
-        if (noteId1 === currentNoteId || noteId2 === currentNoteId) return true;
-        return noteIdsMatch(currentNoteId, noteId1) || noteIdsMatch(currentNoteId, noteId2);
-      });
+      sourceNote = notes.find(n => n.id === currentNoteId);
     }
 
     if (!sourceNote) {
@@ -142,11 +130,10 @@ export const useNoteSync = ({
     }
 
     const storeNote = sourceNote;
-    const storeNoteText = storeNote.text || (storeNote as any).BodyText || '';
-    const storeNoteId = normalizeNoteId(storeNote.id || (storeNote as any)['@id']) || '';
+    const storeNoteText = storeNote.text || '';
 
     const storeNoteKey = JSON.stringify({
-      id: storeNoteId,
+      id: storeNote.id,
       published: storeNote.published,
       approvalRequested: storeNote.approvalRequested,
       tags: storeNote.tags,
@@ -170,7 +157,6 @@ export const useNoteSync = ({
         }
         if (storeNoteText !== editorContent && timeSinceLastEdit > 5000) {
           handlers.setEditorContent(storeNoteText);
-          const editor = rteRef.current?.editor;
           if (editor) {
             const currentHtml = editor.getHTML();
             if (currentHtml !== storeNoteText) {
@@ -191,11 +177,11 @@ export const useNoteSync = ({
         }
 
         const storeImages = (storeNote.media || []).filter(
-          (item: any) => item.getType?.() === 'image',
-        ) as PhotoType[];
+          (item): item is PhotoMedia => item.type === 'image',
+        );
         const storeVideos = (storeNote.media || []).filter(
-          (item: any) => item.getType?.() === 'video',
-        ) as VideoType[];
+          (item): item is VideoMedia => item.type === 'video',
+        );
         if (JSON.stringify(storeImages) !== JSON.stringify(images)) {
           handlers.setImages(storeImages);
         }
@@ -226,13 +212,12 @@ export const useNoteSync = ({
     images,
     videos,
     audio,
-    rteRef,
+    editor,
     lastEditTimeRef,
   ]);
 
   // Watch for external content changes and update editor
   useEffect(() => {
-    const editor = rteRef.current?.editor;
     if (!editor) return;
 
     const currentEditorContent = editor.getHTML();
@@ -244,10 +229,9 @@ export const useNoteSync = ({
         editor.commands.setContent(stateContent);
       }
     }
-  }, [editorContent, rteRef, lastEditTimeRef]);
+  }, [editorContent, editor, lastEditTimeRef]);
 
-  // Focus at start only when switching to a different note (based on initialNote)
-  // Not when a draft note gets saved and receives an ID
+  // Focus at start only when switching to a different note
   const initialNoteIdRef = useRef<string | undefined>(
     initialNote && 'id' in initialNote ? initialNote.id : undefined,
   );
@@ -256,10 +240,7 @@ export const useNoteSync = ({
     const currentInitialId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
     const previousInitialId = initialNoteIdRef.current;
 
-    // Only focus if we're switching to a different note (initialNote changed)
-    // or if this is the first mount
     if (currentInitialId !== previousInitialId || previousInitialId === undefined) {
-      const editor = rteRef.current?.editor;
       if (editor) {
         const t = setTimeout(() => editor.chain().focus('start').run(), 0);
         initialNoteIdRef.current = currentInitialId;
@@ -267,99 +248,11 @@ export const useNoteSync = ({
       }
     }
     initialNoteIdRef.current = currentInitialId;
-  }, [initialNote, rteRef]);
-
-  // Polling for updates
-  useEffect(() => {
-    if (!stateNoteId) {
-      return;
-    }
-
-    const POLLING_INTERVAL = 15000;
-
-    const handleVisibilityChange = () => {
-      isPollingPausedRef.current = document.hidden;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const startPolling = () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-
-      pollingIntervalRef.current = setInterval(() => {
-        if (isPollingPausedRef.current) {
-          return;
-        }
-
-        const storeNote = notes.find(n => n.id === stateNoteId);
-        if (!storeNote) {
-          return;
-        }
-
-        const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
-        const shouldUpdate = timeSinceLastEdit > 2000;
-
-        if (shouldUpdate) {
-          const handlers = noteHandlersRef.current;
-          const currentTitle = title;
-          const currentEditorContent = editorContent;
-          const currentIsPublished = isPublished;
-          const currentApprovalRequested = approvalRequested;
-          const currentTags = tags;
-          const currentNoteComments = note?.comments?.length || 0;
-
-          const hasChanges =
-            storeNote.title !== currentTitle ||
-            storeNote.text !== currentEditorContent ||
-            storeNote.published !== currentIsPublished ||
-            storeNote.approvalRequested !== currentApprovalRequested ||
-            JSON.stringify(storeNote.tags) !== JSON.stringify(currentTags) ||
-            storeNote.comments?.length !== currentNoteComments;
-
-          if (hasChanges) {
-            handlers.setNote(storeNote);
-
-            if (storeNote.title !== currentTitle && timeSinceLastEdit > 5000) {
-              handlers.setTitle(storeNote.title);
-            }
-            if (storeNote.text !== currentEditorContent && timeSinceLastEdit > 5000) {
-              handlers.setEditorContent(storeNote.text || '');
-            }
-
-            handlers.setIsPublished(storeNote.published || false);
-            handlers.setApprovalRequested(storeNote.approvalRequested || false);
-            handlers.setTags(storeNote.tags || []);
-          }
-        }
-      }, POLLING_INTERVAL);
-    };
-
-    startPolling();
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    };
-  }, [
-    stateNoteId,
-    notes,
-    title,
-    editorContent,
-    isPublished,
-    approvalRequested,
-    tags,
-    note?.comments?.length,
-    lastEditTimeRef,
-  ]);
+  }, [initialNote, editor]);
 
   return {
     currentNoteId,
-    currentNoteFromStore,
+    currentNoteFromStore: currentNoteFromQuery,
     currentNoteContentHash,
   };
 };

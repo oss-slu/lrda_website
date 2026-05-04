@@ -1,17 +1,17 @@
-'use client';
-import { useState, useEffect } from 'react';
-import Sidebar from '../lib/components/Sidebar';
-import NoteEditor from '../lib/components/NoteEditor';
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import Sidebar from '@/app/lib/components/Sidebar';
+import NoteEditor from '@/app/lib/components/NoteEditor';
 import { Note, newNote } from '@/app/types';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { useNotesStore } from '../lib/stores/notesStore';
-import { useAuthStore } from '../lib/stores/authStore';
+import { useNotesStore } from '@/app/lib/stores/notesStore';
+import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
+import { useQueryClient } from '@tanstack/react-query';
+import { notesKeys } from '../lib/hooks/queries/useNotes';
 
 export default function Notes() {
-  const { fetchNotes, setSelectedNoteId } = useNotesStore(
+  const { setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
-      fetchNotes: state.fetchNotes,
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
@@ -23,74 +23,65 @@ export default function Notes() {
     })),
   );
 
+  const queryClient = useQueryClient();
+
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
   const [isNewNote, setIsNewNote] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-
-  // Fetch notes when user logs in
-  useEffect(() => {
-    const loadNotes = async () => {
-      const userId = user?.uid;
-      if (userId) {
-        await fetchNotes(userId);
-      }
-    };
-    loadNotes();
-  }, [user?.uid, fetchNotes]);
 
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
     setSelectedNote(note);
     setIsNewNote(isNew);
-    // Remove success banner/message per request
-    setDebugInfo('');
   };
 
   const handleNoteDeleted = () => {
-    const currentNotes = useNotesStore.getState().notes;
+    const userId = user?.id ?? '';
+    const currentNotes = queryClient.getQueryData<Note[]>(notesKeys.personal(userId)) ?? [];
     setSelectedNote(currentNotes[0] || undefined);
     setSelectedNoteId(currentNotes[0]?.id || null);
+
+    // Reconcile cache with server to recover if the optimistic removal failed
+    queryClient.invalidateQueries({ queryKey: notesKeys.personal(userId) });
   };
 
   return (
-    <ResizablePanelGroup direction='horizontal' autoSaveId='notes-layout'>
-      <ResizablePanel
-        minSize={22}
-        maxSize={30}
-        defaultSize={26}
-        collapsible={true}
-        collapsedSize={1}
-      >
+    <div className='flex h-full'>
+      <div className='w-[300px] shrink-0 border-r border-gray-200'>
         <Sidebar onNoteSelect={handleNoteSelect} />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={80}>
-        {/* Main content area */}
-        <div className='relative flex h-full min-h-0 flex-col'>
-          {isLoggedIn ?
-            selectedNote ?
-              <div className='flex h-full min-h-0 w-full flex-col'>
-                <NoteEditor
-                  note={selectedNote}
-                  isNewNote={isNewNote}
-                  onNoteDeleted={handleNoteDeleted}
-                />
+      </div>
+      <div className='relative flex min-w-0 flex-1 flex-col'>
+        {isLoggedIn ?
+          selectedNote ?
+            <NoteEditor
+              key={selectedNote && 'id' in selectedNote ? selectedNote.id : 'new'}
+              note={selectedNote}
+              isNewNote={isNewNote}
+              onNoteDeleted={handleNoteDeleted}
+            />
+          : <div className='flex h-full w-full items-center justify-center bg-gray-100'>
+              <div className='flex max-w-md flex-col items-center rounded-sm bg-white px-12 py-16 text-center shadow-sm'>
+                <h2 className='mb-2 text-2xl font-semibold text-gray-800'>No note selected</h2>
+                <p className='text-sm text-gray-500'>
+                  Select a note from the sidebar to start editing, or create a new one.
+                </p>
               </div>
-            : <div className='flex h-full w-full flex-col items-center justify-center text-3xl font-bold'>
-                <div className='mb-10'>Please select a note to start editing or add a new one!</div>
-              </div>
-
-          : <div className='flex h-full w-full flex-col items-center justify-center text-3xl font-bold'>
-              <div className='mb-10'>You must be logged in to create notes!</div>
-              <button
-                onClick={() => (window.location.href = '/login')}
-                className='rounded border border-blue-700 bg-blue-600 px-4 py-2 font-semibold text-white shadow hover:bg-blue-700'
-              >
-                Login Here
-              </button>
             </div>
-          }
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+
+        : <div className='flex h-full w-full items-center justify-center bg-gray-100'>
+            <div className='flex max-w-md flex-col items-center rounded-sm bg-white px-12 py-16 text-center shadow-sm'>
+              <h2 className='mb-3 text-2xl font-semibold text-gray-800'>Sign in to get started</h2>
+              <p className='mb-6 text-sm text-gray-500'>
+                You must be logged in to create and edit notes.
+              </p>
+              <Link
+                to='/login'
+                className='rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700'
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   );
 }

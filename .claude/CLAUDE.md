@@ -7,13 +7,28 @@ description: 'Core coding standards, architecture patterns, and conventions for 
 
 ## Project Overview
 
-This is the **Where's Religion?** desktop web application - a Next.js project for documenting and mapping lived religion research. The app uses Firebase for authentication and data, Google Maps for mapping, and supports rich text editing with media uploads.
+This is the **Where's Religion?** desktop web application -- a TanStack Start project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
+
+### Migration Context
+
+This codebase has migrated off the legacy RERUM backend and Firebase Auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that still uses RERUM and Firebase.
+
+**Migration status:**
+
+1. The web app has migrated (RERUM + Firebase -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
+2. During the transition:
+   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
+   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
+3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
+
+**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period.
+
+### Packages
 
 This is a **monorepo** containing:
 
-- **Web package** (root): Next.js App Router application
-- **Server package** (`server/`): Express.js REST API server
-- **lrda-server-core package** (`packages/lrda-server-core/`): RERUM framework-based reusable server core library
+- **API package** (`packages/api/`): **Primary REST API** -- Hono + Drizzle + PostgreSQL, deployed to AWS Lightsail via Docker (blue/green deploys). Port 3002 locally.
+- **Web package** (`packages/web/`): TanStack Start application, deployed to Cloudflare Workers.
 
 ## Architecture
 
@@ -21,31 +36,38 @@ This is a **monorepo** containing:
 
 ```
 lrda_website/
-├── app/                    # Next.js App Router pages and components
-├── components/             # Shared UI components (shadcn/ui)
-├── server/                 # Express.js server
 ├── packages/
-│   └── lrda-server-core/   # RERUM-based server core library
+│   ├── api/                # PRIMARY API server (Hono + Drizzle + PostgreSQL)
+│   │   ├── src/
+│   │   │   ├── routes/     # API route handlers (notes.ts, users.ts, etc.)
+│   │   │   ├── db/         # Drizzle schema and pg pool
+│   │   │   └── middleware/  # Auth middleware
+│   │   └── drizzle/        # Generated SQL migrations (not in src/)
+│   └── web/                # TanStack Start application
+│       ├── app/            # Components, hooks, stores, services
+│       ├── src/            # TanStack Router routes
+│       ├── components/     # shadcn/ui components
+│       └── wrangler.jsonc  # Cloudflare Workers config
 └── public/                 # Static assets
 ```
 
 ### Package Management
 
 - **Package Manager**: pnpm (v10.20.0)
-- **Node Version**: >=24.9.0
-- **Workspace**: pnpm workspaces with three packages (web, server, lrda-server-core)
+- **Node Version**: >=24.0.0
+- **Workspace**: pnpm workspaces with packages in `packages/`
 
 **Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
 
-- `pnpm --filter server dev` - Run server in dev mode
-- `pnpm --filter lrda-server-core test` - Test server core package
-- `pnpm --filter . <command>` - Run command in root/web package
+- `pnpm --filter @lrda/api dev` - Run API server in dev mode
+- `pnpm --filter web dev` - Run web app in dev mode
+- `pnpm --filter . <command>` - Run command in root package
 
 ## Tech Stack
 
 ### Frontend (Web Package)
 
-- **Framework**: Next.js 16+ (App Router)
+- **Framework**: TanStack Start (Vite + TanStack Router)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **UI Components**:
@@ -56,19 +78,27 @@ lrda_website/
 - **Data Fetching**: TanStack React Query (@tanstack/react-query)
 - **Maps**: Google Maps API (@react-google-maps/api)
 - **Icons**: Lucide React (primary), MUI icons (secondary)
+- **Deployment**: Cloudflare Workers via TanStack Start
 
-### Backend
+### Backend (`packages/api/`)
 
-- **Server Framework**: Express.js
-- **Core Library**: RERUM API framework (lrda-server-core)
-- **Database**: MongoDB
-- **Authentication**: Firebase Admin SDK
-- **Storage**: S3-compatible storage for media
+- **Runtime**: Node.js (@hono/node-server)
+- **Server Framework**: Hono (with `@hono/zod-openapi`)
+- **ORM**: Drizzle ORM (PostgreSQL dialect)
+- **Database**: PostgreSQL 17
+- **Authentication**: Better Auth (session-based with cookies)
 - **API Documentation**: OpenAPI/Scalar
+- **Deployment**: AWS Lightsail via Docker (blue/green with Nginx)
+
+### Key Patterns
+
+- **Module-level singletons**: `db` (pg pool) and `auth` are created once at startup, not per-request
+- **Env**: Zod-validated `process.env` via `src/env.ts`
+- **OpenAPIHono type erasure**: `openapi()` handlers erase `Env` generics; use `getDb(c)` and `getEnv(c)` helpers from `routes/helpers.ts`
 
 ### Testing
 
-- **Unit Tests**: Jest
+- **Unit Tests**: Vitest
 - **E2E Tests**: Playwright
 - **Test Location**: `app/__tests__/` (unit), `app/__e2e__/` (e2e)
 
@@ -84,18 +114,15 @@ lrda_website/
 
 ### File Organization
 
-- **Components**:
-  - Custom components: `app/lib/components/`
-  - shadcn/ui components: `components/ui/`
-- **Utilities**: `app/lib/utils/`
-- **Data Models**: `app/lib/models/`
+- **Components**: `app/lib/components/` (custom), `components/ui/` (shadcn/ui)
+- **Utilities and Constants**: `app/lib/utils/`
+- **Types**: `app/types.ts` (central type definitions including media types)
 - **Zustand Stores**: `app/lib/stores/`
-- **Pages/Route Handlers**: `app/lib/pages/`
-- **Hooks**: `app/lib/hooks/`
-- **Configuration**: `app/lib/config/`
-- **Constants**: `app/lib/constants/`
-- **Server Routes**: `server/routes/`
-- **Server Controllers**: `packages/lrda-server-core/controllers/`
+- **Hooks**: `app/lib/hooks/` (query hooks in `hooks/queries/`)
+- **Services**: `app/lib/services/` (flat structure -- `notes.service.ts`, `comments.types.ts`, etc.)
+- **Auth**: `app/lib/auth/` (Better Auth client/server)
+- **API Routes**: `packages/api/src/routes/`
+- **API DB Schema**: `packages/api/src/db/schema.ts`
 
 ### Import Guidelines
 
@@ -117,10 +144,11 @@ lrda_website/
 
 - Prefer functional components with hooks
 - Use TypeScript interfaces for component props
-- Follow Next.js App Router conventions:
-  - Server Components by default
-  - Use `'use client'` directive only when needed (hooks, event handlers, browser APIs)
-  - Route handlers in `app/api/`
+- Follow TanStack Start conventions:
+  - File-based routing in `src/routes/`
+  - Use `createFileRoute` for route definitions
+  - Use `createServerFn` for server-side data loading
+  - Use `head()` on routes for SEO meta tags
 
 ### UI Components
 
@@ -139,8 +167,6 @@ lrda_website/
 ### Example Component Structure
 
 ```typescript
-"use client"; // Only if needed
-
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/app/lib/stores/exampleStore";
 import { LucideIcon } from "lucide-react";
@@ -186,37 +212,31 @@ export function ExampleComponent({ title, onAction }: ExampleProps) {
 pnpm install
 
 # Development
-pnpm dev                              # Next.js dev server
-pnpm --filter server dev              # Express server dev
+pnpm dev                              # Start API + web together
+pnpm dev:api                          # API server only (port 3002)
+pnpm dev:web                          # Web app only (port 3000)
+
+# Database
+pnpm api:db:migrate                   # Apply Drizzle migrations locally
+pnpm api:db:generate                  # Generate migrations from schema changes
 
 # Testing
 pnpm test                             # Run all tests
-pnpm test:unit                        # Jest unit tests
+pnpm test:unit                        # Vitest unit tests
 pnpm test:e2e                         # Playwright e2e tests
 
 # Building
-pnpm build                            # Build Next.js app
-pnpm --filter server build            # Build server (if applicable)
+pnpm build                            # Build web app
 
 # Linting
 pnpm lint                             # ESLint
 pnpm lint:fix                         # ESLint with auto-fix
-
-# Firebase Emulators
-pnpm firebase:emulators               # Start Firebase emulators
-pnpm dev:emulators                    # Next.js with emulators
-
-# Docker (MongoDB)
-pnpm docker:up                        # Start MongoDB container
-pnpm docker:down                      # Stop MongoDB container
 ```
 
 ### Running Full Stack
 
-1. Start MongoDB: `pnpm docker:up` (or external MongoDB)
-2. Start server core: `pnpm --filter lrda-server-core start`
-3. Start Express server: `pnpm --filter server dev`
-4. Start Next.js app: `pnpm dev`
+1. Apply migrations: `pnpm api:db:migrate`
+2. Start everything: `pnpm dev`
 
 ## Testing Guidelines
 
@@ -225,7 +245,7 @@ pnpm docker:down                      # Stop MongoDB container
 - **Only write tests when explicitly requested**
 - Do not automatically generate tests without being asked
 - When writing tests:
-  - Unit tests: `app/__tests__/` using Jest
+  - Unit tests: `app/__tests__/` using Vitest
   - E2E tests: `app/__e2e__/` using Playwright
   - Use React Testing Library for component tests
 

@@ -68,17 +68,3 @@ export const getCachedLocation = async (
     return notFound;
   }
 };
-
-/**
- * Clears the location cache (useful for testing or manual cache invalidation)
- */
-export const clearLocationCache = (): void => {
-  locationCache.clear();
-};
-
-/**
- * Gets the current cache size (useful for debugging)
- */
-export const getCacheSize = (): number => {
-  return locationCache.size;
-};

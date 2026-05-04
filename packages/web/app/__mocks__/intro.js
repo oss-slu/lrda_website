@@ -1,17 +1,18 @@
 // Mock for intro.js package
-const introJs = jest.fn(() => ({
-  setOptions: jest.fn().mockReturnThis(),
-  start: jest.fn().mockReturnThis(),
-  exit: jest.fn().mockReturnThis(),
-  goToStep: jest.fn().mockReturnThis(),
-  nextStep: jest.fn().mockReturnThis(),
-  previousStep: jest.fn().mockReturnThis(),
-  refresh: jest.fn().mockReturnThis(),
-  setOption: jest.fn().mockReturnThis(),
-  addStep: jest.fn().mockReturnThis(),
-  removeStep: jest.fn().mockReturnThis(),
-  removeSteps: jest.fn().mockReturnThis(),
+import { vi } from 'vitest';
+
+const introJs = vi.fn(() => ({
+  setOptions: vi.fn().mockReturnThis(),
+  start: vi.fn().mockReturnThis(),
+  exit: vi.fn().mockReturnThis(),
+  goToStep: vi.fn().mockReturnThis(),
+  nextStep: vi.fn().mockReturnThis(),
+  previousStep: vi.fn().mockReturnThis(),
+  refresh: vi.fn().mockReturnThis(),
+  setOption: vi.fn().mockReturnThis(),
+  addStep: vi.fn().mockReturnThis(),
+  removeStep: vi.fn().mockReturnThis(),
+  removeSteps: vi.fn().mockReturnThis(),
 }));
 
-module.exports = introJs;
-module.exports.default = introJs;
+export default introJs;

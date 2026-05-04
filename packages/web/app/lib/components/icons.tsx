@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 
 type SvgProps = React.SVGProps<SVGSVGElement> & { className?: string };

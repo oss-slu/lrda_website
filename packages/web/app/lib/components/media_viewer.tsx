@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -7,10 +6,12 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-import { Media } from '../models/media_class';
-import ReactPlayer from 'react-player';
+import type { AnyMedia } from '@/app/types';
+import { lazy, Suspense } from 'react';
 
-export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
+const ReactPlayer = lazy(() => import('react-player'));
+
+export default function MediaViewer({ mediaArray }: { mediaArray: AnyMedia[] }) {
   return (
     <Carousel className='flex h-auto w-full items-center justify-center'>
       <CarouselContent>
@@ -20,6 +21,7 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
             {media.type === 'image' && (
               <img
                 src={media.uri}
+                loading='lazy'
                 className='max-h-full max-w-full self-center'
                 alt='Media content'
               />
@@ -27,15 +29,17 @@ export default function MediaViewer({ mediaArray }: { mediaArray: Media[] }) {
 
             {/* Render Video */}
             {media.type === 'video' && (
-              <ReactPlayer
-                {...({
-                  url: media.uri,
-                  controls: true,
-                  width: '100%',
-                  height: '100%',
-                  className: 'self-center',
-                } as any)}
-              />
+              <Suspense fallback={null}>
+                <ReactPlayer
+                  {...({
+                    url: media.uri,
+                    controls: true,
+                    width: '100%',
+                    height: '100%',
+                    className: 'self-center',
+                  } as any)}
+                />
+              </Suspense>
             )}
 
             {/* Render Audio */}

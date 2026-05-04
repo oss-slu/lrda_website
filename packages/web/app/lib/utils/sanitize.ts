@@ -1,4 +1,14 @@
-import DOMPurify from 'dompurify';
+import type DOMPurifyType from 'dompurify';
+
+let _DOMPurify: typeof DOMPurifyType | null = null;
+
+async function getDOMPurify(): Promise<typeof DOMPurifyType> {
+  if (!_DOMPurify) {
+    const mod = await import('dompurify');
+    _DOMPurify = mod.default;
+  }
+  return _DOMPurify;
+}
 
 /**
  * Configuration options for HTML sanitization
@@ -151,18 +161,13 @@ function stripBlobAndDataUrls(html: string): string {
  * const clean = sanitizeHtml(content, { allowVideo: true, stripBlobUrls: true });
  * ```
  */
-export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): string {
+export async function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): Promise<string> {
   // Return empty string for falsy input
   if (!dirty) {
     return '';
   }
 
-  // SSR safety check - return the input if window is undefined
-  // DOMPurify requires a DOM environment
-  if (typeof window === 'undefined') {
-    console.warn('sanitizeHtml called during SSR - returning unsanitized content');
-    return dirty;
-  }
+  const DOMPurify = await getDOMPurify();
 
   const {
     allowIframes = false,
@@ -173,7 +178,7 @@ export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): stri
   } = options;
 
   // Pre-process: strip blob/data URLs if requested
-  let processed = stripBlobUrls ? stripBlobAndDataUrls(dirty) : dirty;
+  const processed = stripBlobUrls ? stripBlobAndDataUrls(dirty) : dirty;
 
   // Build allowed tags list based on options
   const allowedTags = [...DEFAULT_ALLOWED_TAGS];
@@ -207,7 +212,7 @@ export function sanitizeHtml(dirty: string, options: SanitizeOptions = {}): stri
   };
 
   // Sanitize the HTML
-  let sanitized = DOMPurify.sanitize(processed, config) as string;
+  let sanitized = DOMPurify.sanitize(processed, config);
 
   // Post-process: validate iframe sources if iframes are allowed
   if (allowIframes && sanitized.includes('<iframe')) {
@@ -246,32 +251,8 @@ export function extractTextFromHtml(html: string): string {
     return '';
   }
 
-  // SSR safety check
-  if (typeof window === 'undefined') {
-    // Basic tag stripping for SSR - not perfect but functional
-    return html.replace(/<[^>]*>/g, '').trim();
-  }
-
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   return tempDiv.textContent || tempDiv.innerText || '';
 }
 
-/**
- * Sanitizes HTML and returns both sanitized HTML and plain text.
- * Convenient when you need both versions.
- *
- * @param dirty - The untrusted HTML string
- * @param options - Sanitization options
- * @returns Object with both sanitized HTML and extracted text
- */
-export function sanitizeAndExtract(
-  dirty: string,
-  options: SanitizeOptions = {},
-): { html: string; text: string } {
-  const html = sanitizeHtml(dirty, options);
-  const text = extractTextFromHtml(html);
-  return { html, text };
-}
-
-export default sanitizeHtml;

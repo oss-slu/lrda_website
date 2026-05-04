@@ -1,5 +1,5 @@
-'use client';
-import React from 'react';
+import { useMemo, useEffect, useRef } from 'react';
+import { Check, Circle } from 'lucide-react';
 
 type Props = {
   password: string;
@@ -15,39 +15,39 @@ const checks: Array<{ id: string; label: string; test: (s: string) => boolean }>
 ];
 
 export default function StrengthIndicator({ password, onUnmet }: Props) {
-  const unmet = React.useMemo(() => {
+  const isEmpty = password.length === 0;
+  const onUnmetRef = useRef(onUnmet);
+  onUnmetRef.current = onUnmet;
+
+  const unmet = useMemo(() => {
     return checks.filter(c => !c.test(password)).map(c => c.label);
   }, [password]);
 
-  React.useEffect(() => {
-    if (onUnmet) onUnmet(unmet);
-  }, [unmet, onUnmet]);
-
-  const strength = Math.max(0, checks.length - unmet.length);
+  useEffect(() => {
+    onUnmetRef.current?.(isEmpty ? checks.map(c => c.label) : unmet);
+  }, [unmet, isEmpty]);
 
   return (
-    <div className='mt-2'>
-      <div className='h-2 w-full overflow-hidden rounded bg-gray-200'>
-        <div
-          className={`h-full bg-gradient-to-r from-yellow-400 to-green-500 transition-all duration-200`}
-          style={{ width: `${(strength / checks.length) * 100}%` }}
-          aria-hidden
-        />
-      </div>
-      <ul className='mt-2 text-xs text-gray-600'>
-        {checks.map(c => {
-          const ok = c.test(password);
-          return (
-            <li
-              key={c.id}
-              className={`flex items-center gap-2 ${ok ? 'text-green-600' : 'text-gray-500'}`}
-            >
-              <span aria-hidden>{ok ? '✓' : '•'}</span>
-              <span>{c.label}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul
+      aria-live='polite'
+      className={`mt-2 space-y-0.5 text-xs transition-all duration-300 ease-out ${
+        isEmpty ? 'max-h-0 overflow-hidden opacity-0' : 'max-h-40 opacity-100'
+      }`}
+    >
+      {checks.map(c => {
+        const ok = c.test(password);
+        return (
+          <li
+            key={c.id}
+            className={`flex items-center gap-1.5 ${ok ? 'text-green-600' : 'text-muted-foreground'}`}
+          >
+            {ok ?
+              <Check className='h-3 w-3' />
+            : <Circle className='h-3 w-3' />}
+            <span>{c.label}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@mui/material';
+import { convertToJpeg } from '@/app/lib/utils/image';
 import {
   MenuButtonAddTable,
   MenuButtonBlockquote,
   MenuButtonBold,
   MenuButtonBulletedList,
-  MenuButtonCode,
-  MenuButtonCodeBlock,
   MenuButtonEditLink,
   MenuButtonHighlightColor,
   MenuButtonHorizontalRule,
@@ -35,7 +34,7 @@ import {
 import { uploadMedia } from '../utils/s3_proxy';
 
 type EditorMenuControlsProps = {
-  onMediaUpload: (media: { type: string; uri: string }) => void;
+  onMediaUpload: (media: { type: 'image' | 'video' | 'audio'; uri: string }) => void;
 };
 
 export default function EditorMenuControls({ onMediaUpload }: EditorMenuControlsProps) {
@@ -46,7 +45,7 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
   // Unified upload handler
   async function handleFileUpload(file: File) {
     const fileType = file.type;
-    let mediaType = 'image';
+    let mediaType: 'image' | 'video' | 'audio' = 'image';
 
     if (fileType.startsWith('video/')) {
       mediaType = 'video';
@@ -75,45 +74,6 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
     }
   }
 
-  async function convertToJpeg(file: File): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = event => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            return reject(new Error('Failed to get canvas context'));
-          }
-
-          ctx.drawImage(img, 0, 0);
-          canvas.toBlob(blob => {
-            if (!blob) {
-              return reject(new Error('Failed to convert image to JPEG'));
-            }
-
-            const jpegFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
-              type: 'image/jpeg',
-            });
-
-            resolve(jpegFile);
-          }, 'image/jpeg');
-        };
-        img.src = event.target?.result as string;
-      };
-
-      reader.onerror = err => {
-        reject(err);
-      };
-
-      reader.readAsDataURL(file);
-    });
-  }
 
   return (
     <>
@@ -234,10 +194,10 @@ export default function EditorMenuControls({ onMediaUpload }: EditorMenuControls
         createPortal(
           <>
             <div
-              className='fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm'
+              className='fixed inset-0 z-40 bg-black/50 backdrop-blur-sm'
               onClick={() => setIsPopupOpen(false)}
             />
-            <div className='fixed left-1/2 top-1/2 z-50 min-w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white p-8 shadow-2xl'>
+            <div className='fixed top-1/2 left-1/2 z-50 min-w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white p-8 shadow-2xl'>
               <div className='mb-6 flex items-center gap-3'>
                 <div className='rounded-lg bg-blue-100 p-2'>
                   <svg

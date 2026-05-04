@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 
 interface UseMapIntroProps {
@@ -15,8 +13,6 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Reset on mount to allow intro to run if conditions are met
     introStartedRef.current = false;
 
@@ -44,7 +40,9 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
         introStartedRef.current = true;
         observer.disconnect();
 
-        // Dynamically import intro.js only on client side
+        // Dynamically load intro.js and its styles only on client side
+        const { loadIntroStyles } = await import('@/app/lib/utils/loadIntroStyles');
+        await loadIntroStyles();
         const introJs = (await import('intro.js')).default;
         const intro = introJs.tour();
 

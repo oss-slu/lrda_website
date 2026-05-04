@@ -1,26 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { usersService } from '../../services';
-import { UserData } from '@/app/types';
-
-// Query key factory for users
-export const userKeys = {
-  all: ['users'] as const,
-  detail: (id: string) => [...userKeys.all, id] as const,
-};
-
-/**
- * Hook for fetching user data by ID
- */
-export function useUserData(userId: string | null) {
-  return useQuery({
-    queryKey: userKeys.detail(userId ?? ''),
-    queryFn: async (): Promise<UserData | null> => {
-      if (!userId) return null;
-      return await usersService.fetchById(userId);
-    },
-    enabled: !!userId,
-  });
-}
+import { fetchCreatorName } from '../../services';
 
 /**
  * Hook for fetching creator name by ID.
@@ -29,10 +8,10 @@ export function useUserData(userId: string | null) {
  */
 export function useCreatorName(creatorId: string | null) {
   return useQuery({
-    queryKey: [...userKeys.detail(creatorId ?? ''), 'name'],
+    queryKey: ['users', creatorId ?? '', 'name'],
     queryFn: async (): Promise<string> => {
       if (!creatorId) return 'Unknown';
-      return await usersService.fetchCreatorName(creatorId);
+      return await fetchCreatorName(creatorId);
     },
     enabled: !!creatorId,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes

@@ -12,8 +12,6 @@ export const useIntroTour = (refs: IntroTourRefs) => {
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Check if intro has already been shown
     const hasAddNoteIntroBeenShown = getCookie('addNoteIntroShown');
     if (hasAddNoteIntroBeenShown) return;
@@ -35,6 +33,8 @@ export const useIntroTour = (refs: IntroTourRefs) => {
 
       introStartedRef.current = true;
 
+      const { loadIntroStyles } = await import('@/app/lib/utils/loadIntroStyles');
+      await loadIntroStyles();
       const introJs = (await import('intro.js')).default;
       const intro = introJs.tour();
 

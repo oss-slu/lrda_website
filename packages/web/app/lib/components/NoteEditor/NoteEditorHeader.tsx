@@ -1,148 +1,38 @@
-'use client';
-
-import React, { forwardRef, RefObject } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
-import { FileX2 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import PublishToggle from './NoteElements/PublishToggle';
-import AutoSaveIndicator from './AutoSaveIndicator';
 import { handleTitleChange } from './handlers/noteHandlers';
-import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';
+import type { NoteHandlersType } from './hooks/useNoteState';
 
 interface NoteEditorHeaderProps {
-  noteState: NoteStateType;
-  noteHandlers: NoteHandlersType;
-  isSaving: boolean;
-  lastSavedAt: Date | null;
+  title: string;
+  setTitle: NoteHandlersType['setTitle'];
   isViewingStudentNote: boolean;
-  userId: string | null;
-  instructorId: string | null;
-  onPublishClick: () => void;
-  onRequestApprovalClick: () => void;
-  onDeleteNote: () => Promise<boolean>;
-  onNoteDeleted?: () => void;
   onTitleChange: () => void;
-  titleRef: RefObject<HTMLInputElement | null>;
-  deleteRef: RefObject<HTMLButtonElement | null>;
-  children?: React.ReactNode;
+  titleRef: React.RefObject<HTMLInputElement | null>;
 }
 
-const NoteEditorHeader = forwardRef<HTMLDivElement, NoteEditorHeaderProps>(
-  (
-    {
-      noteState,
-      noteHandlers,
-      isSaving,
-      lastSavedAt,
-      isViewingStudentNote,
-      userId,
-      instructorId,
-      onPublishClick,
-      onRequestApprovalClick,
-      onDeleteNote,
-      onNoteDeleted,
-      onTitleChange,
-      titleRef,
-      deleteRef,
-      children,
-    },
-    ref,
-  ) => {
-    return (
-      <div ref={ref} className='flex flex-col gap-3'>
-        {/* Title row with save indicator */}
-        <div className='flex items-center gap-4'>
-          <Input
-            id='note-title-input'
-            value={noteState.title}
-            onChange={e => {
-              onTitleChange();
-              handleTitleChange(noteHandlers.setTitle, e);
-            }}
-            placeholder='Untitled'
-            disabled={isViewingStudentNote}
-            readOnly={isViewingStudentNote}
-            className={`flex-1 border-0 bg-transparent p-0 text-2xl font-bold transition-all duration-200 ease-in-out placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              isViewingStudentNote ? 'cursor-default opacity-90' : ''
-            }`}
-            ref={titleRef}
-          />
-          <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
-        </div>
-
-        {/* Actions row - Time, Location, Download, Publish, Delete */}
-        <div className='flex flex-row flex-wrap items-center gap-2 border-b border-gray-200 pb-3'>
-          {children}
-
-          <div className='ml-auto flex items-center gap-2'>
-            <PublishToggle
-              id='publish-toggle-button'
-              isPublished={Boolean(noteState.isPublished)}
-              isApprovalRequested={noteState.approvalRequested || false}
-              noteId={noteState.note?.id || ''}
-              userId={userId}
-              instructorId={instructorId}
-              onPublishClick={onPublishClick}
-              onRequestApprovalClick={onRequestApprovalClick}
-              isInstructorReview={isViewingStudentNote}
-            />
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button
-                  disabled={!noteState.note?.id || isSaving || isViewingStudentNote}
-                  className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                  title={
-                    isViewingStudentNote ? 'Cannot delete student notes'
-                    : !noteState.note?.id ?
-                      'Please wait for note to save before deleting'
-                    : 'Delete this note'
-                  }
-                  ref={deleteRef}
-                >
-                  <FileX2 className='h-4 w-4' />
-                  <span>Delete</span>
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete this note.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async () => {
-                      const success = await onDeleteNote();
-                      if (success && onNoteDeleted) {
-                        onNoteDeleted();
-                      }
-                    }}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-      </div>
-    );
-  },
-);
-
-NoteEditorHeader.displayName = 'NoteEditorHeader';
-
-export default NoteEditorHeader;
+export default function NoteEditorHeader({
+  title,
+  setTitle,
+  isViewingStudentNote,
+  onTitleChange,
+  titleRef,
+}: NoteEditorHeaderProps) {
+  return (
+    <Input
+      id='note-title-input'
+      value={title}
+      onChange={e => {
+        onTitleChange();
+        handleTitleChange(setTitle, e);
+      }}
+      placeholder='Untitled'
+      disabled={isViewingStudentNote}
+      readOnly={isViewingStudentNote}
+      className={`border-0 bg-transparent p-0 text-3xl font-bold transition-all duration-200 ease-in-out placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+        isViewingStudentNote ? 'cursor-default opacity-90' : ''
+      }`}
+      ref={titleRef}
+    />
+  );
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@lrda/api",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env --import tsx --watch-path src src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "start": "node --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "node --import tsx src/scripts/seed.ts --yolo",
+    "docker:up": "docker compose up -d --wait",
+    "docker:down-v": "docker compose down -v",
+    "promote-admin": "node --import tsx src/scripts/promote-admin.ts"
+  },
+  "dependencies": {
+    "@better-auth/expo": "^1.6.9",
+    "@hono/node-server": "^1.19.11",
+    "@hono/zod-openapi": "^1.2.2",
+    "@lrda/shared": "workspace:*",
+    "@scalar/hono-api-reference": "^0.10.2",
+    "better-auth": "^1.6.9",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.7",
+    "pg": "^8.20.0",
+    "resend": "^6.9.3",
+    "tsx": "^4.21.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "24.9.2",
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.0"
+  },
+  "optionalDependencies": {
+    "firebase-admin": "^13.7.0"
+  }
+}

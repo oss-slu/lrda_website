@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 import { Note } from '@/app/types';
 import { useCreatorName } from '../hooks/queries/useUsers';
 import { Calendar, User, ImageIcon } from 'lucide-react';
@@ -33,7 +33,7 @@ function getTagLabels(tags: unknown): string[] {
     .filter((label): label is string => label !== null && label.length > 0);
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
+const NoteCard = memo<NoteCardProps>(function NoteCard({ note, isActive = false }) {
   const title = note.title;
   const tags = getTagLabels(note.tags);
   const { data: creator, isPending: isCreatorLoading } = useCreatorName(note.creator);
@@ -41,8 +41,8 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
 
   return (
     <Card
-      className={`overflow-hidden bg-card transition-all duration-200 hover:shadow-md ${
-        isActive ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-1 hover:ring-border'
+      className={`bg-card overflow-hidden transition-all duration-200 hover:shadow-md ${
+        isActive ? 'ring-primary ring-2 ring-offset-2' : 'hover:ring-border hover:ring-1'
       }`}
       data-testid='note-card'
     >
@@ -51,7 +51,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
         <div className='aspect-[4/3] overflow-hidden'>
           <CompactCarousel mediaArray={note.media} />
         </div>
-      : <div className='flex aspect-[4/3] w-full items-center justify-center bg-muted/50'>
+      : <div className='bg-muted/50 flex aspect-[4/3] w-full items-center justify-center'>
           <ImageIcon
             aria-label='No photo present'
             className='text-muted-foreground/50'
@@ -63,20 +63,18 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
 
       <CardContent className='p-3'>
         {/* Title */}
-        <h3 className='mb-2 line-clamp-2 text-sm font-medium leading-tight text-foreground'>
+        <h3 className='text-foreground mb-2 line-clamp-2 text-sm leading-tight font-medium'>
           {title}
         </h3>
 
         {/* Metadata - stacked */}
-        <div className='space-y-1 text-xs text-muted-foreground'>
+        <div className='text-muted-foreground space-y-1 text-xs'>
           <div className='flex items-center gap-1.5'>
-            <User className='h-3 w-3 flex-shrink-0' />
-            <span className='truncate'>
-              {isCreatorLoading ? '...' : (creator ?? 'Unknown')}
-            </span>
+            <User className='h-3 w-3 shrink-0' />
+            <span className='truncate'>{isCreatorLoading ? '...' : (creator ?? 'Unknown')}</span>
           </div>
           <div className='flex items-center gap-1.5'>
-            <Calendar className='h-3 w-3 flex-shrink-0' />
+            <Calendar className='h-3 w-3 shrink-0' />
             <span>{formatShortDate(noteDate)}</span>
           </div>
         </div>
@@ -85,11 +83,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
         {tags.length > 0 && (
           <div className='mt-2 flex flex-wrap gap-1'>
             {tags.slice(0, 3).map((tag, index) => (
-              <Badge
-                key={index}
-                variant='secondary'
-                className='h-5 px-1.5 text-[10px] font-normal'
-              >
+              <Badge key={index} variant='secondary' className='h-5 px-1.5 text-[10px] font-normal'>
                 {tag}
               </Badge>
             ))}
@@ -103,6 +97,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, isActive = false }) => {
       </CardContent>
     </Card>
   );
-};
+});
 
 export default NoteCard;

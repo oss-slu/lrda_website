@@ -1,5 +1,4 @@
-'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import SearchBarNote from './search_bar_note';
@@ -8,8 +7,9 @@ import { Note, newNote } from '@/app/types';
 import { useNotesStore } from '../stores/notesStore';
 import { useAuthStore } from '../stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService, usersService } from '../services';
-import { useStudentNotes } from '../hooks/queries/useNotes';
+import { notesService } from '../services';
+import { usePersonalNotes, notesKeys } from '../hooks/queries/useNotes';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -18,34 +18,33 @@ type SidebarProps = {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
-  const { notes, fetchNotes, viewMode, addNote, setSelectedNoteId } = useNotesStore(
+  const { setSelectedNoteId } = useNotesStore(
     useShallow(state => ({
-      notes: state.notes,
-      fetchNotes: state.fetchNotes,
-      viewMode: state.viewMode,
-      addNote: state.addNote,
       setSelectedNoteId: state.setSelectedNoteId,
     })),
   );
-  const { user } = useAuthStore(
+  const { user, isInitialized } = useAuthStore(
     useShallow(state => ({
       user: state.user,
+      isInitialized: state.isInitialized,
     })),
   );
+
+  const queryClient = useQueryClient();
+
   const [showPublished, setShowPublished] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
-  const [isInstructor, setIsInstructor] = useState<boolean>(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
 
-  // TanStack Query for student notes (instructor review mode) with automatic polling
-  const { data: studentNotes = [] } = useStudentNotes(
-    user?.uid ?? null,
-    isInstructor && viewMode === 'review',
-  );
+  // TanStack Query for personal notes.
+  // Gate on isInitialized so the API call doesn't fire before the session
+  // cookie is re-validated on page refresh. Without this, the API treats
+  // the user as anonymous and returns only published notes.
+  const { data: personalNotes = [] } = usePersonalNotes(isInitialized ? (user?.id ?? null) : null);
 
   const handleAddNote = async () => {
-    const userId = user?.uid;
+    const userId = user?.id;
     if (!userId) {
       console.error('User ID is null - cannot create a new note');
       return;
@@ -63,15 +62,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
         media: [],
         audio: [],
         creator: userId,
-        latitude: '',
-        longitude: '',
+        latitude: null,
+        longitude: null,
         published: false,
         tags: [],
-        isArchived: false,
       };
 
       const data = await notesService.create(newNoteData);
-      const newNoteId = data['@id'] || (data as any).id;
+      const newNoteId = data.id;
 
       if (!newNoteId) {
         throw new Error('No ID returned from server');
@@ -80,13 +78,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
       const savedNote: Note = {
         ...newNoteData,
         id: newNoteId,
-        uid: (data as any).uid || newNoteId,
+        uid: newNoteId,
       };
 
-      // Add to store and select it
-      addNote(savedNote);
+      // Add to query cache immediately for instant UI update
+      queryClient.setQueryData<Note[]>(notesKeys.personal(userId), old =>
+        old ? [savedNote, ...old] : [savedNote],
+      );
+
       setSelectedNoteId(newNoteId);
-      onNoteSelect(savedNote, false); // Not a "new note" anymore - it has an ID
+      onNoteSelect(savedNote, false);
     } catch (error) {
       console.error('Error creating new note:', error);
     } finally {
@@ -94,86 +95,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     }
   };
 
-  // Initialize instructor role
-  useEffect(() => {
-    const initRoleFlags = async () => {
-      if (!user?.uid) {
-        setIsInstructor(false);
-        return;
-      }
-
-      const roles = user.roles;
-      const userId = user.uid;
-
-      let userData = null;
-      try {
-        userData = await usersService.fetchById(userId);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-
-      const isInstr = !!roles?.administrator || !!userData?.isInstructor;
-      setIsInstructor(isInstr);
-    };
-    initRoleFlags();
-  }, [user]);
-
-  // Fetch personal notes for "my" mode
-  useEffect(() => {
-    if (viewMode === 'my' && user?.uid) {
-      fetchNotes(user.uid);
-    }
-  }, [viewMode, user?.uid, fetchNotes]);
-
-  // Reset to showing "Unreviewed" when switching to review mode
-  useEffect(() => {
-    if (viewMode === 'review') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when mode changes
-      setShowPublished(false);
-    }
-  }, [viewMode]);
-
   // Derive filteredNotes from source data
   const filteredNotes = useMemo(() => {
     if (isSearching && searchResults !== null) {
       return searchResults;
     }
 
-    const notesToFilter = viewMode === 'review' ? studentNotes : notes;
-
-    if (viewMode === 'review') {
-      if (showPublished) {
-        return notesToFilter.filter(n => !n.isArchived && !!n.published);
-      } else {
-        return notesToFilter.filter(n => !n.isArchived && !!n.approvalRequested && !n.published);
-      }
-    } else {
-      return notesToFilter.filter(
-        note => !note.isArchived && (showPublished ? note.published : !note.published),
-      );
-    }
-  }, [notes, studentNotes, showPublished, viewMode, isSearching, searchResults]);
-
-  // Update selected note when it changes in studentNotes (for instructor review mode)
-  useEffect(() => {
-    if (viewMode === 'review' && studentNotes.length > 0) {
-      const selectedNoteId = useNotesStore.getState().selectedNoteId;
-      if (selectedNoteId) {
-        const updatedNote = studentNotes.find(n => {
-          const noteId = n.id || (n as any)?.['@id'];
-          return (
-            noteId === selectedNoteId ||
-            (typeof selectedNoteId === 'string' && noteId && noteId.includes(selectedNoteId)) ||
-            (typeof noteId === 'string' && selectedNoteId && selectedNoteId.includes(noteId))
-          );
-        });
-
-        if (updatedNote) {
-          onNoteSelect(updatedNote, false);
-        }
-      }
-    }
-  }, [studentNotes, viewMode, onNoteSelect]);
+    return personalNotes.filter(note => (showPublished ? note.published : !note.published));
+  }, [personalNotes, showPublished, isSearching, searchResults]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -183,8 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     }
     setIsSearching(true);
     const query = searchQuery.toLowerCase();
-    const notesToSearch = viewMode === 'review' ? studentNotes : notes;
-    const filtered = notesToSearch.filter(note => {
+    const filtered = personalNotes.filter(note => {
       const matchesText =
         note.title.toLowerCase().includes(query) ||
         (note.tags &&
@@ -192,14 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           note.tags.some(tag => tag.label.toLowerCase().includes(query)));
 
       if (!matchesText) return false;
-
-      if (viewMode === 'review') {
-        if (showPublished) {
-          return !!note.published;
-        } else {
-          return !!note.approvalRequested && !note.published;
-        }
-      }
 
       return showPublished ? !!note.published : !note.published;
     });
@@ -220,17 +140,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           <SearchBarNote onSearch={handleSearch} />
 
           <div className='mt-2 flex flex-row items-center justify-between pt-1 text-center'>
-            <Tabs
-              defaultValue={viewMode === 'review' ? 'unpublished' : 'unpublished'}
-              className='w-full'
-              onValueChange={togglePublished}
-            >
+            <Tabs defaultValue='unpublished' className='w-full' onValueChange={togglePublished}>
               <TabsList className='grid w-full grid-cols-2'>
                 <TabsTrigger value='unpublished' className='text-sm font-semibold'>
-                  {viewMode === 'review' ? 'Unreviewed' : 'Unpublished'}
+                  Unpublished
                 </TabsTrigger>
                 <TabsTrigger value='published' className='text-sm font-semibold'>
-                  {viewMode === 'review' ? 'Reviewed' : 'Published'}
+                  Published
                 </TabsTrigger>
               </TabsList>
               <TabsContent value='unpublished'></TabsContent>
@@ -243,35 +159,30 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
             notes={filteredNotes}
             onNoteSelect={note => onNoteSelect(note, false)}
             isSearching={isSearching}
-            viewMode={viewMode}
-            isInstructor={isInstructor}
           />
         </div>
       </div>
 
-      {viewMode !== 'review' && (
-        <div className='absolute bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-gray-50 p-4'>
-          <Button
-            id='add-note-button'
-            data-testid='add-note-button'
-            onClick={handleAddNote}
-            disabled={isCreatingNote}
-            className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
-          >
-            {isCreatingNote ? (
-              <>
-                <Loader2 size={18} className='mr-2 animate-spin' />
-                Creating...
-              </>
-            ) : (
-              <>
-                <Plus size={18} className='mr-2' />
-                New Note
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      <div className='absolute right-0 bottom-0 left-0 z-10 border-t border-gray-200 bg-gray-50 p-4'>
+        <Button
+          id='add-note-button'
+          data-testid='add-note-button'
+          onClick={handleAddNote}
+          disabled={isCreatingNote}
+          className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
+        >
+          {isCreatingNote ?
+            <>
+              <Loader2 size={18} className='mr-2 animate-spin' />
+              Creating...
+            </>
+          : <>
+              <Plus size={18} className='mr-2' />
+              New Note
+            </>
+          }
+        </Button>
+      </div>
     </div>
   );
 };

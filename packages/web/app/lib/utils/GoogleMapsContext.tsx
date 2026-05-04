@@ -1,43 +1,84 @@
-'use client';
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
-// Define the context shape
 interface GoogleMapsContextType {
   isMapsApiLoaded: boolean;
+  requestLoad: () => void;
 }
 
-// Create context with a default value
 const GoogleMapsContext = createContext<GoogleMapsContextType>({
   isMapsApiLoaded: false,
+  requestLoad: () => {},
 });
 
-// Create a custom hook to use the GoogleMaps context
-export const useGoogleMaps = () => useContext(GoogleMapsContext);
+/**
+ * Returns { isMapsApiLoaded } and triggers Google Maps script loading on mount.
+ * The script only loads when a component calling this hook mounts, so pages
+ * without maps never pay the ~200KB cost.
+ */
+export function useGoogleMaps() {
+  const { isMapsApiLoaded, requestLoad } = useContext(GoogleMapsContext);
 
-interface GoogleMapsProviderProps {
-  children: ReactNode;
+  useEffect(() => {
+    requestLoad();
+  }, [requestLoad]);
+
+  return { isMapsApiLoaded };
 }
 
-// Move libraries array outside component to prevent reload warning
 const GOOGLE_MAPS_LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
 
-// Create the provider component
-export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
-  const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
-
+/**
+ * Internal component that loads the Google Maps JS API.
+ * Only rendered on the client to avoid SSR issues with useJsApiLoader.
+ */
+function GoogleMapsLoader({ setLoaded }: { setLoaded: (v: boolean) => void }) {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_KEY || '',
+    googleMapsApiKey: import.meta.env.VITE_MAP_KEY || '',
     libraries: GOOGLE_MAPS_LIBRARIES,
-    mapIds: [process.env.NEXT_PUBLIC_MAP_ID || ''],
+    mapIds: [import.meta.env.VITE_MAP_ID || ''],
     id: 'google-map-script',
   });
 
   useEffect(() => {
-    setIsMapsApiLoaded(isLoaded);
-  }, [isLoaded]);
+    setLoaded(isLoaded);
+  }, [isLoaded, setLoaded]);
+
+  return null;
+}
+
+/**
+ * Provides Google Maps loading state to the component tree.
+ * The Maps JS API is lazily loaded -- the ~200KB script is only fetched
+ * when a descendant component calls useGoogleMaps().
+ */
+export const GoogleMapsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isMapsApiLoaded, setIsMapsApiLoaded] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const requestLoad = useCallback(() => {
+    setShouldLoad(true);
+  }, []);
+
+  const value = useMemo(() => ({ isMapsApiLoaded, requestLoad }), [isMapsApiLoaded, requestLoad]);
 
   return (
-    <GoogleMapsContext.Provider value={{ isMapsApiLoaded }}>{children}</GoogleMapsContext.Provider>
+    <GoogleMapsContext.Provider value={value}>
+      {isClient && shouldLoad && <GoogleMapsLoader setLoaded={setIsMapsApiLoaded} />}
+      {children}
+    </GoogleMapsContext.Provider>
   );
 };
