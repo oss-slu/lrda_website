@@ -6,7 +6,7 @@ import { CacheProvider } from '@emotion/react';
 
 const emotionCache = createCache({ key: 'css' });
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileX2, MessageSquare, X } from 'lucide-react';
+import { FileX2, MessageSquare, X, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/lib/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -43,6 +43,7 @@ import EditorMenuControls from '../editor_menu_controls';
 import AutoSaveIndicator from './AutoSaveIndicator';
 import PublishToggle from './NoteElements/PublishToggle';
 import { CommentSidebarPanel } from './NoteEditorComments';
+import { WritingAssistantSidebarPanel } from './WritingAssistantSidebar';
 
 type NoteEditorProps = {
   note?: Note | newNote;
@@ -73,6 +74,7 @@ export default function NoteEditor({
   const lastEditTimeRef = useRef<number>(0);
 
   // State
+  const [isWritingAssistantOpen, setIsWritingAssistantOpen] = useState<boolean>(false);
   const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState<boolean>(false);
 
   // Editor setup
@@ -415,6 +417,30 @@ export default function NoteEditor({
                     </button>
                   </>
                 )}
+
+                {!isViewingStudentNote && (
+                  <>
+                    <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
+                    <button
+                      onClick={() => setIsWritingAssistantOpen(!isWritingAssistantOpen)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                        isWritingAssistantOpen ?
+                          'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                      aria-label={
+                        isWritingAssistantOpen ?
+                          'Close ethnographer professor'
+                        : 'Open ethnographer professor'
+                      }
+                    >
+                      {isWritingAssistantOpen ?
+                        <X className='h-4 w-4' />
+                      : <Sparkles className='h-4 w-4' />}
+                      <span>{isWritingAssistantOpen ? 'Close' : 'Professor'}</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -456,6 +482,14 @@ export default function NoteEditor({
                 isInstructor={isInstructorUser}
                 canComment={canComment}
                 isOpen={isCommentSidebarOpen}
+              />
+            )}
+
+            {!isViewingStudentNote && (
+              <WritingAssistantSidebarPanel
+                noteTitle={noteState.title}
+                noteContent={noteState.editorContent}
+                isOpen={isWritingAssistantOpen}
               />
             )}
           </div>
