@@ -131,6 +131,8 @@ app.all('/api/auth/*', async c => {
   if (origin) headers.set('origin', origin);
   const cookie = c.req.raw.headers.get('cookie');
   if (cookie) headers.set('cookie', cookie);
+  const authorization = c.req.raw.headers.get('authorization');
+  if (authorization) headers.set('authorization', authorization);
   return auth.handler(
     new Request(c.req.url, {
       method: c.req.method,

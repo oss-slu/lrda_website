@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, bearer } from 'better-auth/plugins';
+import { expo } from '@better-auth/expo';
 import { db } from './db';
 import { env } from './env';
 import { sendVerificationEmail, sendPasswordResetEmail } from './lib/email';
@@ -91,5 +92,6 @@ export const auth = betterAuth({
       adminRole: 'admin',
     }),
     bearer(),
+    expo(),
   ],
 });

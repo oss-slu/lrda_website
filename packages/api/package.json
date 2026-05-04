@@ -19,12 +19,13 @@
     "promote-admin": "node --import tsx src/scripts/promote-admin.ts"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.6.9",
     "@hono/node-server": "^1.19.11",
     "@hono/zod-openapi": "^1.2.2",
     "@lrda/shared": "workspace:*",
     "@scalar/hono-api-reference": "^0.10.2",
-    "better-auth": "^1.5.5",
-    "drizzle-orm": "^0.45.1",
+    "better-auth": "^1.6.9",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.7",
     "pg": "^8.20.0",
     "resend": "^6.9.3",
