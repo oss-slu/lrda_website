@@ -20,7 +20,6 @@ export function WritingAssistantSidebarPanel({
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -32,7 +31,7 @@ export function WritingAssistantSidebarPanel({
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage: WritingAssistantMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: 'user',
       content: inputValue,
       timestamp: new Date(),
@@ -57,7 +56,7 @@ export function WritingAssistantSidebarPanel({
       });
 
       const assistantMessage: WritingAssistantMessage = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: 'assistant',
         content: assistantResponse,
         timestamp: new Date(),
