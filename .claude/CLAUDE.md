@@ -96,11 +96,19 @@ lrda_website/
 └── public/                 # Static assets
 ```
 
-**Important**: Always use `pnpm --filter <package-name>` for package-scoped commands:
+**When to Comment:**
 
-- `pnpm --filter @lrda/api dev` - Run API server in dev mode
-- `pnpm --filter web dev` - Run web app in dev mode
-- `pnpm --filter . <command>` - Run command in root package
+- To explain why a particular approach or workaround was chosen
+- To clarify intent when the code could be misread or misunderstood
+- To provide context from external systems, specs, or requirements
+- To document assumptions, edge cases, or limitations
+
+**When Not to Comment:**
+
+- Don't narrate what the code is doing - the code already says that
+- Don't duplicate function or variable names in plain English
+- Don't leave stale comments that contradict the code
+- Don't reference removed or obsolete code paths (e.g. "No longer uses X format" or "Now uses x instead of y here")
 
 ## Tech Stack
 

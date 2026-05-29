@@ -10,10 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useInfinitePublishedNotes } from '@/app/lib/hooks/queries/useNotes';
+import {
+  useInfinitePublishedNotes,
+  publishedNotesInfiniteOptions,
+} from '@/app/lib/hooks/queries/useNotes';
 import { useCreatorName } from '@/app/lib/hooks/queries/useUsers';
 
 export const Route = createFileRoute('/stories')({
+  loader: ({ context: { queryClient } }) =>
+    queryClient.ensureInfiniteQueryData(publishedNotesInfiniteOptions(20)),
   head: () => ({
     meta: [{ title: "Stories | Where's Religion?" }],
   }),

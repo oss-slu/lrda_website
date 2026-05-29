@@ -5,6 +5,7 @@ import { fetchCreatorName } from '../../services';
 import { getCachedLocation } from '../../utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
 import { formatDateCompact, format12hourTime } from '../../utils/data_conversion';
+import { extractTextFromHtml } from '../../utils/sanitize';
 
 interface StoriesCardPreviewProps {
   note: Note;
@@ -15,27 +16,10 @@ interface StoriesCardPreviewProps {
  * Extracts the first few sentences from a string of HTML content.
  */
 const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
-  if (!bodyText || typeof bodyText !== 'string') return '';
-
-  try {
-    const tempDiv = document.createElement('div');
-    let cleanedBodyText = bodyText;
-
-    // Remove blob and data URLs
-    cleanedBodyText = cleanedBodyText.replace(
-      /<img[^>]*src=["'](blob:|data:)[^"']*["'][^>]*>/gi,
-      '',
-    );
-    cleanedBodyText = cleanedBodyText.replace(/href=["'](blob:|data:|javascript:)[^"']*["']/gi, '');
-
-    tempDiv.innerHTML = cleanedBodyText;
-    const plainText = tempDiv.textContent || tempDiv.innerText || '';
-    const sentences = plainText.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s/);
-    return sentences.slice(0, sentenceCount).join(' ');
-  } catch (error) {
-    console.warn('Error extracting body preview:', error);
-    return '';
-  }
+  const plainText = extractTextFromHtml(bodyText);
+  if (!plainText) return '';
+  const sentences = plainText.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s/);
+  return sentences.slice(0, sentenceCount).join(' ');
 };
 
 const formatDate = formatDateCompact;
@@ -67,7 +51,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
   const [location, setLocation] = useState<string>('');
 
   const bodyPreview = getBodyPreview(note.text || '');
-  const coverImage = note.media?.[0]?.uri;
+  const coverImage = note.media[0]?.uri;
   const isValidImageUrl =
     coverImage && !coverImage.startsWith('blob:') && !coverImage.startsWith('data:');
 
@@ -150,9 +134,13 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
         {/* Date - Compact */}
         <div className='mb-2 flex items-center gap-2 text-xs text-gray-500'>
           <CalendarDays size={12} className='shrink-0' />
-          <span className='truncate'>{formatDate(note.time)}</span>
+          <span className='truncate' suppressHydrationWarning>
+            {formatDate(note.time)}
+          </span>
           <Clock3 size={12} className='shrink-0' />
-          <span className='truncate'>{formatTime(note.time)}</span>
+          <span className='truncate' suppressHydrationWarning>
+            {formatTime(note.time)}
+          </span>
         </div>
 
         {/* Location - Clickable Popover */}
@@ -203,4 +191,3 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
     </div>
   );
 };
-

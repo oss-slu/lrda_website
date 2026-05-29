@@ -1,10 +1,10 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Tag } from '@/app/types';
-import { fetchCreatorName } from '@/app/lib/services';
-import { sanitizeHtml } from '@/app/lib/utils/sanitize';
+import { sanitizeHtml, extractTextFromHtml } from '@/app/lib/utils/sanitize';
 import { formatDate, format12hourTime } from '@/app/lib/utils/data_conversion';
-import { useNoteDetail } from '@/app/lib/hooks/queries/useNotes';
+import { useNoteDetail, noteDetailOptions } from '@/app/lib/hooks/queries/useNotes';
+import { useCreatorName } from '@/app/lib/hooks/queries/useUsers';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,9 +23,28 @@ import {
 } from 'lucide-react';
 
 export const Route = createFileRoute('/notes/$id')({
-  head: () => ({
-    meta: [{ title: "Note | Where's Religion?" }],
-  }),
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(noteDetailOptions(params.id)),
+  head: ({ loaderData }) => {
+    const title =
+      loaderData?.title ? `${loaderData.title} | Where's Religion?` : "Note | Where's Religion?";
+    const description =
+      loaderData?.text ? extractTextFromHtml(loaderData.text).slice(0, 160) : undefined;
+    return {
+      meta: [
+        { title },
+        { property: 'og:title', content: loaderData?.title ?? 'Note' },
+        { property: 'og:type', content: 'article' },
+        { name: 'twitter:card', content: 'summary' },
+        ...(description ?
+          [
+            { name: 'description', content: description },
+            { property: 'og:description', content: description },
+          ]
+        : []),
+      ],
+    };
+  },
   component: NoteDetailPage,
 });
 
@@ -41,18 +60,12 @@ function NoteDetailPage() {
   const router = useRouter();
 
   const { data: note, isLoading, error: queryError } = useNoteDetail(noteId);
-  const [creator, setCreator] = useState('Loading...');
-  const [sanitizedContent, setSanitizedContent] = useState('');
+  const { data: creatorName } = useCreatorName(note?.creator ?? null);
 
-  useEffect(() => {
-    if (!note) return;
-    fetchCreatorName(note.creator)
-      .then((name: string) => setCreator(name))
-      .catch(() => setCreator('Unknown'));
-    if (note.text) {
-      sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
-    }
-  }, [note]);
+  const sanitizedContent = useMemo(
+    () => (note?.text ? sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) : ''),
+    [note?.text],
+  );
 
   if (isLoading) {
     return (
@@ -95,17 +108,17 @@ function NoteDetailPage() {
         <h1 className='text-3xl font-bold'>{note.title}</h1>
 
         <div className='text-muted-foreground mt-2 flex flex-wrap gap-4 text-sm'>
-          <span className='flex items-center gap-1'>
+          <span className='flex items-center gap-1' suppressHydrationWarning>
             <CalendarDays className='h-4 w-4' />
             {formatDate(note.time)}
           </span>
-          <span className='flex items-center gap-1'>
+          <span className='flex items-center gap-1' suppressHydrationWarning>
             <Clock3 className='h-4 w-4' />
             {formatTime(note.time)}
           </span>
           <span className='flex items-center gap-1'>
             <UserCircle className='h-4 w-4' />
-            {creator}
+            {creatorName ?? 'Loading...'}
           </span>
         </div>
 

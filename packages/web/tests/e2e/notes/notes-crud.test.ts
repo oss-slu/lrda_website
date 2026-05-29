@@ -6,7 +6,7 @@ import {
   authenticatedPatch,
   authenticatedDelete,
 } from '../helpers/client';
-import { seedTestData, resetTestData, TEST_USER_ID, TEST_NOTE_PUBLISHED_ID } from '../helpers/db-seed';
+import { seedTestData, resetTestData, TEST_USER_ID } from '../helpers/db-seed';
 
 describe('Notes CRUD operations', () => {
   let userCookie: string;

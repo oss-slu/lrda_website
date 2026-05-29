@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Note, Tag } from '@/app/types';
 import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin, FileAudio, Tags } from 'lucide-react';
 import {
@@ -67,15 +67,10 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     }
   }, [note.latitude, note.longitude, note.locationName, hasValidCoordinates]);
 
-  const [sanitizedText, setSanitizedText] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (noteText) {
-      sanitizeHtml(noteText, { allowVideo: true, allowIframes: true }).then(setSanitizedText);
-    } else {
-      setSanitizedText(null);
-    }
-  }, [noteText]);
+  const sanitizedText = useMemo(
+    () => (noteText ? sanitizeHtml(noteText, { allowVideo: true, allowIframes: true }) : null),
+    [noteText],
+  );
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -95,7 +90,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
             </div>
             <div className='flex items-center gap-2'>
               <Clock3 size={16} />
-              <span>{note.time ? formatTime(note.time) : 'Unknown Time'}</span>
+              <span>{formatTime(note.time)}</span>
             </div>
             <div className='flex items-center gap-2'>
               <UserCircle size={16} />
@@ -185,4 +180,3 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
     </Dialog>
   );
 };
-

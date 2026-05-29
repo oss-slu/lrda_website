@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { fetchCreatorName } from '../services';
 import { sanitizeHtml } from '../utils/sanitize';
 import { Tag } from '@/app/types';
@@ -41,8 +41,12 @@ const ClickableNote: React.FC<{
 }> = ({ noteId }) => {
   const { data: note, isPending } = useNoteDetail(noteId);
   const [creator, setCreator] = useState<string>('Loading...');
-  const [sanitizedContent, setSanitizedContent] = useState<string>('');
   const tags: Tag[] = convertOldTags(note?.tags);
+
+  const sanitizedContent = useMemo(
+    () => (note?.text ? sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) : ''),
+    [note?.text],
+  );
 
   // Fetch the creator's name based on the note's creator ID
   useEffect(() => {
@@ -54,13 +58,6 @@ const ClickableNote: React.FC<{
         setCreator('Error loading name');
       });
   }, [note?.creator]);
-
-  // Sanitize note content
-  useEffect(() => {
-    if (note?.text) {
-      sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }).then(setSanitizedContent);
-    }
-  }, [note?.text]);
 
   if (isPending || !note) {
     return (

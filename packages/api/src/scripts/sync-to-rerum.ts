@@ -173,7 +173,7 @@ async function syncNotesToRerum() {
         longitude: note.longitude != null ? String(note.longitude) : '',
         published: note.isPublished,
         approvalRequested: note.approvalRequested,
-        tags: note.tags || [],
+        tags: (note.tags || []).map(t => typeof t === 'string' ? t : t.label),
         time: note.time?.toISOString(),
         media: note.media?.map(m => ({
           type: m.type,

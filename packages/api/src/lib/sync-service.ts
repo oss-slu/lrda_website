@@ -56,7 +56,7 @@ async function rerumQueryAll<T>(queryObj: object): Promise<T[]> {
   const allResults: T[] = [];
   let skip = 0;
 
-  while (true) {
+  for (;;) {
     const results = await rerumQuery<T>(queryObj, BATCH_SIZE, skip);
     if (results.length === 0) break;
 
@@ -112,13 +112,13 @@ interface RerumNote {
 
 function extractId(rerumId: string): string {
   if (!rerumId) return '';
-  const match = rerumId.match(/\/id\/([^\/\?]+)/);
+  const match = rerumId.match(/\/id\/([^/?]+)/);
   return match ? match[1] : rerumId;
 }
 
 function normalizeCreatorId(creator: unknown): string {
   if (!creator) return '';
-  if (typeof creator === 'object' && creator !== null) {
+  if (typeof creator === 'object') {
     const creatorObj = creator as Record<string, unknown>;
     if (typeof creatorObj['@id'] === 'string') {
       return extractId(creatorObj['@id']);
@@ -185,7 +185,7 @@ async function getLastNoteSyncTime(): Promise<Date | null> {
     })
     .from(schema.syncState)
     .where(eq(schema.syncState.id, 'main'));
-  const row = rows[0];
+  const row = rows.at(0);
   if (!row) return null;
   return row.lastNotesSyncAt ?? row.lastSyncAt;
 }
@@ -555,6 +555,7 @@ export async function stopSync(): Promise<{ stopped: boolean; message: string }>
   if (syncInProgress) {
     const maxWait = 60_000;
     const start = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- syncInProgress is flipped by the concurrent watch loop
     while (syncInProgress && Date.now() - start < maxWait) {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -604,7 +605,7 @@ export async function syncUsersFromFirebase(): Promise<{
 
     let serviceAccount;
     if (credPath) {
-      const fs = await import('fs');
+      const fs = await import('node:fs');
       serviceAccount = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
     } else {
       serviceAccount = JSON.parse(credJson!);
@@ -745,7 +746,7 @@ export async function syncUsersFromFirebase(): Promise<{
 
         // Log per-user detail
         await db.insert(schema.syncRunDetail).values({
-          runId: runId!,
+          runId,
           noteId: `${fbUser.email} (${fbUser.uid})`,
           action: 'updated',
           error: changes.join('; '),
@@ -755,7 +756,7 @@ export async function syncUsersFromFirebase(): Promise<{
         created++;
 
         await db.insert(schema.syncRunDetail).values({
-          runId: runId!,
+          runId,
           noteId: `${fbUser.email} (${fbUser.uid})`,
           action: 'created',
         });
