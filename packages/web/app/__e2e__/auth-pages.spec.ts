@@ -111,8 +111,10 @@ test.describe('Auth pages (UI)', () => {
       await expect(page).toHaveURL(/\/confirm/);
       await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible();
 
-      // 5. Resend + verify the email, then log in successfully -> /map
-      await page.getByRole('button', { name: /Resend verification email/i }).click();
+      // 5. Send + verify the email, then log in successfully -> /map
+      // (/confirm with sent=false shows "Send verification email"; the
+      // "Resend..." button only appears after the first send)
+      await page.getByRole('button', { name: 'Send verification email', exact: true }).click();
       const verifyUrl = await getAuthUrl(email, 'verification');
       const verifyToken = extractToken(verifyUrl);
       expect(verifyToken, 'verification token should be in the URL').toBeTruthy();
