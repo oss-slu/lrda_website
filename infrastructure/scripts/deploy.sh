@@ -73,7 +73,7 @@ HEALTHY=false
 for i in $(seq 1 ${HEALTH_RETRIES}); do
     sleep ${HEALTH_DELAY}
     HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-        "http://localhost:${INACTIVE_PORT}/api/health" 2>/dev/null || echo "000")
+        "http://localhost:${INACTIVE_PORT}/api/health" || echo "000")
     if [ "${HTTP_STATUS}" = "200" ]; then
         HEALTHY=true
         log "Health check passed (attempt ${i})"
@@ -84,7 +84,7 @@ done
 
 if [ "${HEALTHY}" = "false" ]; then
     log "FAILED -- ${INACTIVE} not healthy. Keeping ${ACTIVE} running."
-    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
+    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" || true
     exit 1
 fi
 
@@ -93,7 +93,7 @@ log "Switching Nginx to ${INACTIVE} (:${INACTIVE_PORT})..."
 echo "upstream lrda_api { server 127.0.0.1:${INACTIVE_PORT}; }" | \
     sudo tee "${UPSTREAM_FILE}" > /dev/null
 
-if sudo nginx -t 2>/dev/null; then
+if sudo nginx -t; then
     sudo systemctl reload nginx
     log "Nginx reloaded"
 else
@@ -102,7 +102,7 @@ else
         echo "upstream lrda_api { server 127.0.0.1:${ACTIVE_PORT}; }" | \
             sudo tee "${UPSTREAM_FILE}" > /dev/null
     fi
-    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" 2>/dev/null || true
+    docker compose -f "${COMPOSE_FILE}" stop "api-${INACTIVE}" || true
     exit 1
 fi
 
@@ -115,7 +115,7 @@ if [ "${ACTIVE}" != "none" ]; then
 fi
 
 # ---- Cleanup old images ----
-docker image prune -f --filter "until=168h" 2>/dev/null || true
+docker image prune -f --filter "until=168h" || true
 
 log "Deploy complete. Active: ${INACTIVE} on :${INACTIVE_PORT}"
 log "Image: ${FULL_IMAGE}"

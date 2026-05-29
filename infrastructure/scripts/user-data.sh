@@ -137,122 +137,10 @@ services:
 COMPOSE
 chown ubuntu:ubuntu /home/ubuntu/lrda/docker-compose.prod.yml
 
-# Copy deploy script
-cat > /home/ubuntu/lrda/deploy.sh << 'DEPLOY'
-#!/usr/bin/env bash
-# Blue/green deploy script for LRDA API
-# Usage: deploy.sh <image_tag>
-set -euo pipefail
-
-IMAGE_TAG="$${1:?Usage: deploy.sh <image_tag>}"
-
-APP_DIR="/home/ubuntu/lrda"
-COMPOSE_FILE="$${APP_DIR}/docker-compose.prod.yml"
-NGINX_CONF_DIR="/etc/nginx/conf.d"
-BLUE_PORT=3002
-GREEN_PORT=3003
-HEALTH_RETRIES=20
-HEALTH_DELAY=3
-LOG_PREFIX="[deploy]"
-
-log() { echo "$${LOG_PREFIX} $(date -u +%H:%M:%S) $*"; }
-
-cd "$${APP_DIR}"
-
-# ---- Determine active color ----
-if [ -f "$${NGINX_CONF_DIR}/upstream-blue.conf" ] && \
-   ! [ -f "$${NGINX_CONF_DIR}/upstream-blue.conf.disabled" ]; then
-    ACTIVE="blue"; INACTIVE="green"
-    ACTIVE_PORT="$${BLUE_PORT}"; INACTIVE_PORT="$${GREEN_PORT}"
-elif [ -f "$${NGINX_CONF_DIR}/upstream-green.conf" ] && \
-     ! [ -f "$${NGINX_CONF_DIR}/upstream-green.conf.disabled" ]; then
-    ACTIVE="green"; INACTIVE="blue"
-    ACTIVE_PORT="$${GREEN_PORT}"; INACTIVE_PORT="$${BLUE_PORT}"
-else
-    log "No active upstream found. First deploy, defaulting to blue."
-    ACTIVE="none"; INACTIVE="blue"
-    ACTIVE_PORT="0"; INACTIVE_PORT="$${BLUE_PORT}"
-fi
-
-log "Active: $${ACTIVE} (:$${ACTIVE_PORT}), deploying to: $${INACTIVE} (:$${INACTIVE_PORT})"
-log "Image tag: $${IMAGE_TAG}"
-
-export IMAGE_TAG
-export GITHUB_REPOSITORY="$${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set}"
-
-FULL_IMAGE="ghcr.io/$${GITHUB_REPOSITORY}/api:$${IMAGE_TAG}"
-log "Pulling image: $${FULL_IMAGE}"
-docker pull "$${FULL_IMAGE}"
-
-log "Running database migrations..."
-docker run --rm \
-    --network host \
-    --env-file "$${APP_DIR}/.env" \
-    "$${FULL_IMAGE}" \
-    pnpm exec drizzle-kit migrate
-
-log "Starting $${INACTIVE} container..."
-if [ "$${INACTIVE}" = "green" ]; then
-    docker compose -f "$${COMPOSE_FILE}" --profile green up -d api-green
-else
-    docker compose -f "$${COMPOSE_FILE}" up -d api-blue
-fi
-
-log "Health checking $${INACTIVE} on :$${INACTIVE_PORT}..."
-HEALTHY=false
-for i in $(seq 1 $${HEALTH_RETRIES}); do
-    sleep $${HEALTH_DELAY}
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%%{http_code}" \
-        "http://localhost:$${INACTIVE_PORT}/api/health" 2>/dev/null || echo "000")
-    if [ "$${HTTP_STATUS}" = "200" ]; then
-        HEALTHY=true
-        log "Health check passed (attempt $${i})"
-        break
-    fi
-    log "Attempt $${i}/$${HEALTH_RETRIES}: HTTP $${HTTP_STATUS}"
-done
-
-if [ "$${HEALTHY}" = "false" ]; then
-    log "FAILED -- $${INACTIVE} not healthy. Keeping $${ACTIVE} running."
-    docker compose -f "$${COMPOSE_FILE}" stop "api-$${INACTIVE}" 2>/dev/null || true
-    exit 1
-fi
-
-log "Switching Nginx to $${INACTIVE} (:$${INACTIVE_PORT})..."
-echo "upstream lrda_api { server 127.0.0.1:$${INACTIVE_PORT}; }" | \
-    sudo tee "$${NGINX_CONF_DIR}/upstream-$${INACTIVE}.conf" > /dev/null
-
-if [ "$${ACTIVE}" != "none" ]; then
-    sudo mv "$${NGINX_CONF_DIR}/upstream-$${ACTIVE}.conf" \
-            "$${NGINX_CONF_DIR}/upstream-$${ACTIVE}.conf.disabled" 2>/dev/null || true
-fi
-
-if sudo nginx -t 2>/dev/null; then
-    sudo systemctl reload nginx
-    log "Nginx reloaded"
-else
-    log "ERROR: Nginx config test failed, rolling back"
-    if [ "$${ACTIVE}" != "none" ]; then
-        sudo mv "$${NGINX_CONF_DIR}/upstream-$${ACTIVE}.conf.disabled" \
-                "$${NGINX_CONF_DIR}/upstream-$${ACTIVE}.conf" 2>/dev/null || true
-    fi
-    sudo rm -f "$${NGINX_CONF_DIR}/upstream-$${INACTIVE}.conf"
-    docker compose -f "$${COMPOSE_FILE}" stop "api-$${INACTIVE}" 2>/dev/null || true
-    exit 1
-fi
-
-if [ "$${ACTIVE}" != "none" ]; then
-    log "Stopping old $${ACTIVE} container..."
-    docker compose -f "$${COMPOSE_FILE}" stop "api-$${ACTIVE}"
-fi
-
-docker image prune -f --filter "until=168h" 2>/dev/null || true
-
-log "Deploy complete. Active: $${INACTIVE} on :$${INACTIVE_PORT}"
-log "Image: $${FULL_IMAGE}"
-DEPLOY
-chmod +x /home/ubuntu/lrda/deploy.sh
-chown ubuntu:ubuntu /home/ubuntu/lrda/deploy.sh
+# NOTE: The deploy script is the single source of truth in the repo
+# (infrastructure/scripts/deploy.sh) and is copied to /home/ubuntu/lrda/deploy.sh
+# by CI (.github/workflows/deploy.yml) on every deploy. It is intentionally not
+# provisioned here, to avoid a divergent second copy.
 
 # Copy backup script
 cat > /home/ubuntu/lrda/backup-db.sh << 'BACKUP'
@@ -284,8 +172,8 @@ BACKUP
 chmod +x /home/ubuntu/lrda/backup-db.sh
 chown ubuntu:ubuntu /home/ubuntu/lrda/backup-db.sh
 
-# Initial Nginx upstream config (blue as default)
-echo "upstream lrda_api { server 127.0.0.1:3002; }" > /etc/nginx/conf.d/upstream-blue.conf
+# Initial Nginx upstream config (single-file scheme; deploy.sh overwrites it)
+echo "upstream lrda_api { server 127.0.0.1:3002; }" > /etc/nginx/conf.d/upstream-api.conf
 
 # Configure Nginx for API-only (frontend is on Cloudflare Workers)
 # NOTE: This heredoc is intentionally UNQUOTED so \$ becomes $ in the nginx config
