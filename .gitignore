@@ -57,3 +57,6 @@ media-download/
 # VitePress
 packages/docs/.vitepress/dist
 packages/docs/.vitepress/cache
+
+# Claude Code agent worktrees (created inside the repo)
+.claude/worktrees/
