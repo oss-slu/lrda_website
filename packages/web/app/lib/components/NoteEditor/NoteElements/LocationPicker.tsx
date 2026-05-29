@@ -27,11 +27,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [locationName, setLocationName] = useState<string>(initialLocationName || '');
   const mapRef = useRef<google.maps.Map | null>(null);
-  const isLoaded = useGoogleMaps();
+  const { isMapsApiLoaded } = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const searchBarRef = useRef<HTMLInputElement | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  // Set when the location name is already known (e.g. from a Places search
+  // result) so the reverse-geocode effect skips a redundant lookup.
+  const skipGeocodeRef = useRef(false);
 
   const onPlaceChanged = () => {
     if (autocomplete) {
@@ -39,11 +42,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       if (place.geometry && place.geometry.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
+        // Places already returns a human-readable name; use it directly
+        // instead of issuing a redundant reverse-geocode call.
+        const name = place.formatted_address || place.name || '';
+        skipGeocodeRef.current = true;
         setLatitude(lat);
         setLongitude(lng);
         onLocationChange(lng, lat);
-        setLocationName('');
-        onLocationNameChange?.('');
+        setLocationName(name);
+        onLocationNameChange?.(name);
         mapRef.current?.panTo({ lat, lng });
         mapRef.current?.setZoom(12);
       }
@@ -65,6 +72,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       if (initialLocationName) {
         setLocationName(initialLocationName);
         onLocationNameChange?.(initialLocationName);
+        return;
+      }
+      // Name already set from a Places search result; skip the redundant lookup.
+      if (skipGeocodeRef.current) {
+        skipGeocodeRef.current = false;
         return;
       }
       if (latitude && longitude && latitude !== 0 && longitude !== 0) {
@@ -219,7 +231,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             </Autocomplete>
           </div>
 
-          {isLoaded && (
+          {isMapsApiLoaded && (
             <div
               className='absolute inset-0 z-40 flex items-center justify-center'
               onClick={() => setIsExpanded(false)}

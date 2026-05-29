@@ -312,17 +312,15 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
-    // Reverse geocode to get a human-readable address if coords are provided
-    let computedLocation: string | null = null;
-    if (body.latitude != null && body.longitude != null) {
+    // Prefer a client-provided location name; only reverse geocode when one
+    // wasn't supplied, to avoid duplicating the client's geocoding call.
+    let computedLocation: string | null = body.locationName?.trim() ? body.locationName : null;
+    if (!computedLocation && body.latitude != null && body.longitude != null) {
       computedLocation = await reverseGeocode(
         body.latitude,
         body.longitude,
         getEnv(c).GOOGLE_MAPS_API_KEY,
       );
-    }
-    if (!computedLocation && body.locationName) {
-      computedLocation = body.locationName;
     }
 
     // Create the note
@@ -425,18 +423,17 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.time !== undefined) updateData.time = new Date(body.time);
 
-    // Re-geocode if coordinates changed
-    if (body.latitude !== undefined || body.longitude !== undefined) {
+    // Prefer a client-provided location name; only re-geocode when coordinates
+    // change and no name was supplied, to avoid duplicating the client's call.
+    if (body.locationName?.trim()) {
+      updateData.locationName = body.locationName;
+    } else if (body.latitude !== undefined || body.longitude !== undefined) {
       const lat = body.latitude ?? existingNote.latitude;
       const lng = body.longitude ?? existingNote.longitude;
-      if (lat != null && lng != null) {
-        updateData.locationName = await reverseGeocode(lat, lng, getEnv(c).GOOGLE_MAPS_API_KEY);
-      } else {
-        updateData.locationName = null;
-      }
-    }
-    if (updateData.locationName == null && body.locationName) {
-      updateData.locationName = body.locationName;
+      updateData.locationName =
+        lat != null && lng != null
+          ? await reverseGeocode(lat, lng, getEnv(c).GOOGLE_MAPS_API_KEY)
+          : null;
     }
 
     // Update the note

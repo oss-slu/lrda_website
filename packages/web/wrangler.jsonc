@@ -6,7 +6,7 @@
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
-    { "pattern": "staging.wheresreligion.org", "custom_domain": true }
+    { "pattern": "wheresreligion.org", "custom_domain": true }
   ],
   "vars": {
     "VITE_API_URL": "https://api.wheresreligion.org"
