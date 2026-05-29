@@ -26,6 +26,10 @@ export { fetchStudents } from './instructor.service';
 // Tags service
 export { tagsService } from './tags.service';
 
+// Writing assistant service
+export { writingAssistantService } from './writing-assistant.service';
+export type { WritingAssistantMessage } from './writing-assistant.service';
+
 // Migration service -- TEMPORARY, remove after Firebase migration
 export { checkMigrationStatus } from './migration.service';
 
