@@ -6,9 +6,10 @@ import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { env } from './env';
 import { db, closePool } from './db';
-import { user, account } from './db/schema';
+import { user, account, verification } from './db/schema';
 import { routes } from './routes';
 import { auth } from './auth';
+import { stashPassword } from './lib/pending-password-resets';
 import { testRoutes } from './routes/test';
 import type { AppEnv } from './types';
 
@@ -78,6 +79,25 @@ app.post('/api/auth/reset-password', async c => {
 
     if (!newPassword || !PASSWORD_REGEX.test(newPassword)) {
       return c.json(PASSWORD_ERROR, 400);
+    }
+
+    // Stash plaintext password so onPasswordReset can push it to Firebase.
+    // Resolve token -> userId -> email via the verification table.
+    const token = json?.token;
+    if (token) {
+      const [verif] = await db
+        .select({ value: verification.value })
+        .from(verification)
+        .where(eq(verification.identifier, `reset-password:${token}`))
+        .limit(1);
+      if (verif) {
+        const [usr] = await db
+          .select({ email: user.email })
+          .from(user)
+          .where(eq(user.id, verif.value))
+          .limit(1);
+        if (usr) stashPassword(usr.email, newPassword);
+      }
     }
 
     return forwardToAuth(c, json);

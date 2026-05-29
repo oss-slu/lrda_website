@@ -5,6 +5,7 @@ import { expo } from '@better-auth/expo';
 import { db } from './db';
 import { env } from './env';
 import { sendVerificationEmail, sendPasswordResetEmail } from './lib/email';
+import { consumePassword } from './lib/pending-password-resets';
 
 // Parse trusted origins from environment variable or use defaults
 const getTrustedOrigins = (): string[] => {
@@ -52,6 +53,42 @@ export const auth = betterAuth({
     sendResetPassword: async data => {
       const resetUrl = `${env.WEB_URL}/reset-password?token=${data.token}`;
       await sendPasswordResetEmail(data.user.email, resetUrl);
+    },
+
+    // Sync password to Firebase so the mobile app (still on Firebase Auth)
+    // stays in sync. Remove when the mobile app migrates.
+    onPasswordReset: async ({ user }) => {
+      const plaintext = consumePassword(user.email);
+      if (!plaintext) return;
+
+      try {
+        const { getApps, initializeApp, cert } = await import('firebase-admin/app');
+        const { getAuth } = await import('firebase-admin/auth');
+
+        if (getApps().length === 0) {
+          const credPath = env.FIREBASE_SERVICE_ACCOUNT_PATH;
+          const credJson = env.FIREBASE_SERVICE_ACCOUNT;
+          if (!credPath && !credJson) {
+            console.warn('[auth] Firebase credentials not configured, skipping password sync');
+            return;
+          }
+          let serviceAccount;
+          if (credPath) {
+            const fs = await import('node:fs');
+            serviceAccount = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+          } else {
+            serviceAccount = JSON.parse(credJson!);
+          }
+          initializeApp({ credential: cert(serviceAccount) });
+        }
+
+        const fbAuth = getAuth();
+        const fbUser = await fbAuth.getUserByEmail(user.email);
+        await fbAuth.updateUser(fbUser.uid, { password: plaintext });
+        console.log(`[auth] Synced password reset to Firebase for ${user.email}`);
+      } catch (error) {
+        console.error('[auth] Failed to sync password reset to Firebase:', error);
+      }
     },
   },
   emailVerification: {

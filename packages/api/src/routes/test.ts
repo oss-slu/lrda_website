@@ -141,6 +141,68 @@ async function hmacSign(value: string, secret: string): Promise<string> {
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
+// ============================================
+// Firebase test helpers (for password sync e2e)
+// ============================================
+
+async function getFirebaseAuth() {
+  const { getApps, initializeApp, cert } = await import('firebase-admin/app');
+  const { getAuth } = await import('firebase-admin/auth');
+
+  if (getApps().length === 0) {
+    const credPath = env.FIREBASE_SERVICE_ACCOUNT_PATH;
+    const credJson = env.FIREBASE_SERVICE_ACCOUNT;
+    if (!credPath && !credJson) throw new Error('Firebase credentials not configured');
+
+    let serviceAccount;
+    if (credPath) {
+      const fs = await import('node:fs');
+      serviceAccount = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+    } else {
+      serviceAccount = JSON.parse(credJson!);
+    }
+    initializeApp({ credential: cert(serviceAccount) });
+  }
+
+  return getAuth();
+}
+
+testRoutes.post('/firebase/create-user', async c => {
+  try {
+    const { email, password } = (await c.req.json()) as { email: string; password: string };
+    const auth = await getFirebaseAuth();
+    const user = await auth.createUser({ email, password });
+    return c.json({ uid: user.uid }, 200);
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+});
+
+testRoutes.get('/firebase/password-hash', async c => {
+  try {
+    const email = c.req.query('email');
+    if (!email) return c.json({ error: 'Missing email' }, 400);
+    const auth = await getFirebaseAuth();
+    const user = await auth.getUserByEmail(email);
+    return c.json({ passwordHash: user.passwordHash ?? null, passwordSalt: user.passwordSalt ?? null }, 200);
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+});
+
+testRoutes.delete('/firebase/user', async c => {
+  try {
+    const email = c.req.query('email');
+    if (!email) return c.json({ error: 'Missing email' }, 400);
+    const auth = await getFirebaseAuth();
+    const user = await auth.getUserByEmail(email);
+    await auth.deleteUser(user.uid);
+    return c.json({ success: true }, 200);
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+});
+
 /**
  * Build a SQL string with inline-escaped parameters.
  * Only for dev/test use -- never in production.

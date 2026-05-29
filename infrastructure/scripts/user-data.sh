@@ -76,6 +76,7 @@ DATABASE_URL=postgresql://lrda_app:${db_password_encoded}@localhost:5432/lrda_${
 BETTER_AUTH_SECRET=__AUTH_SECRET__
 BETTER_AUTH_URL=https://${api_subdomain}.${domain_name}
 WEB_URL=https://${frontend_origin}
+COOKIE_DOMAIN=.${domain_name}
 
 # CORS
 CORS_ORIGINS=https://${frontend_origin}
