@@ -9,6 +9,6 @@
     { "pattern": "staging.wheresreligion.org", "custom_domain": true }
   ],
   "vars": {
-    "VITE_API_URL": "https://api-staging.wheresreligion.org"
+    "VITE_API_URL": "https://api.wheresreligion.org"
   }
 }
