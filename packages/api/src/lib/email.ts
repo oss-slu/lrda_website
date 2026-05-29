@@ -11,18 +11,30 @@ const resend = !isDev && env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : n
  */
 export let lastDevEmailUrl: string | null = null;
 
+/** Dev-mode email URLs keyed by `${recipient}::${type}` for e2e retrieval by type. */
+const devEmailUrls = new Map<string, string>();
+
+export function getDevEmailUrl(to: string, type: string): string | null {
+  return devEmailUrls.get(`${to}::${type}`) ?? null;
+}
+
 interface SendEmailParams {
   to: string;
   subject: string;
   text: string;
   /** Logged in dev mode so developers can click the link */
   url?: string;
+  /** Email category, lets e2e tests fetch the right URL by recipient + type */
+  type?: 'verification' | 'reset-password';
 }
 
-async function sendEmail({ to, subject, text, url }: SendEmailParams): Promise<void> {
+async function sendEmail({ to, subject, text, url, type }: SendEmailParams): Promise<void> {
   if (isDev) {
     console.log('[email] (dev mode -- not sent)', JSON.stringify({ to, subject, url }));
-    if (url) lastDevEmailUrl = url;
+    if (url) {
+      lastDevEmailUrl = url;
+      if (type) devEmailUrls.set(`${to}::${type}`, url);
+    }
     return;
   }
 
@@ -54,6 +66,7 @@ export async function sendVerificationEmail(to: string, verificationUrl: string)
     to,
     subject: "Verify your Where's Religion? account",
     url: verificationUrl,
+    type: 'verification',
     text: [
       "Welcome to Where's Religion!",
       '',
@@ -71,6 +84,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
     to,
     subject: "Reset your Where's Religion? password",
     url: resetUrl,
+    type: 'reset-password',
     text: [
       'A password reset was requested for your account.',
       '',

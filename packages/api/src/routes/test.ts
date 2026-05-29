@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { env } from '../env';
 import { sql } from 'drizzle-orm';
-import { lastDevEmailUrl } from '../lib/email';
+import { lastDevEmailUrl, getDevEmailUrl } from '../lib/email';
 
 /**
  * Dev-only test endpoint for e2e tests.
@@ -64,6 +64,24 @@ testRoutes.post('/', async c => {
  */
 testRoutes.get('/last-email-url', c => {
   return c.json({ url: lastDevEmailUrl }, 200);
+});
+
+/**
+ * GET /api/test/auth-url?email=<email>&type=<verification|reset-password>
+ * Returns the most recent dev-mode email URL for a specific recipient + type.
+ * 404 while not yet captured -- e2e helper retries.
+ */
+testRoutes.get('/auth-url', c => {
+  const email = c.req.query('email');
+  const type = c.req.query('type');
+  if (!email || !type) {
+    return c.json({ error: 'Missing email or type query param' }, 400);
+  }
+  const url = getDevEmailUrl(email, type);
+  if (!url) {
+    return c.json({ error: 'No URL captured for that email/type yet' }, 404);
+  }
+  return c.json({ url }, 200);
 });
 
 /**
