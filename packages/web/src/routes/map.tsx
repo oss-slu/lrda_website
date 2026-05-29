@@ -92,6 +92,7 @@ function MapPage() {
     data: viewportNotes = [],
     allNotes: allViewportNotes = [],
     isPending: isViewportPending,
+    isFetching: isViewportFetching,
     isError: isViewportError,
     error: viewportError,
   } = useViewportNotes();
@@ -100,12 +101,14 @@ function MapPage() {
   const {
     data: personalNotes = [],
     isPending: isPersonalPending,
+    isFetching: isPersonalFetching,
     isError: isPersonalError,
     error: personalError,
   } = usePersonalMapNotes(authUser?.id ?? null);
 
   // Derived loading and error states based on current view
   const notesLoading = isGlobalView ? isViewportPending : isPersonalPending;
+  const notesFetching = isGlobalView ? isViewportFetching : isPersonalFetching;
   const notesError = isGlobalView ? isViewportError : isPersonalError;
   const notesErrorMessage = isGlobalView ? viewportError?.message : personalError?.message;
 
@@ -122,7 +125,6 @@ function MapPage() {
 
   // Defer panel updates so they don't block map interactions (pan/zoom)
   const deferredFilteredNotes = useDeferredValue(filteredNotes);
-  const isPanelStale = deferredFilteredNotes !== filteredNotes;
 
   // Infinite scroll for notes panel
   const infinite = useInfiniteNotes<Note>({
@@ -309,7 +311,7 @@ function MapPage() {
       <MapNotesPanel
         ref={notesListRef}
         isPanelOpen={isPanelOpen}
-        isLoading={notesLoading || (isPanelStale && deferredFilteredNotes.length === 0)}
+        isLoading={notesLoading || (notesFetching && deferredFilteredNotes.length === 0)}
         isError={notesError}
         errorMessage={notesErrorMessage}
         visibleItems={infinite.visibleItems}

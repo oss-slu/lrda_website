@@ -42,7 +42,6 @@ import {
   Clock,
   ChevronLeft,
   Users,
-  Database,
   ExternalLink,
   ArrowUpDown,
   ArrowUp,
@@ -534,10 +533,10 @@ export function SyncTab() {
     }
   };
 
-  const handleTrigger = async (full: boolean) => {
-    setActionLoading(full ? 'full' : 'trigger');
+  const handleTrigger = async () => {
+    setActionLoading('trigger');
     try {
-      const result = await triggerSync(full);
+      const result = await triggerSync();
       toast.success(
         `Sync complete: ${result.notesCreated} created, ${result.notesUpdated} updated`,
       );
@@ -704,7 +703,7 @@ export function SyncTab() {
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => handleTrigger(false)}
+                  onClick={() => handleTrigger()}
                   disabled={actionLoading !== null}
                 >
                   {actionLoading === 'trigger' ? (
@@ -712,20 +711,7 @@ export function SyncTab() {
                   ) : (
                     <Zap className='mr-2 h-4 w-4' />
                   )}
-                  Trigger Incremental
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => handleTrigger(true)}
-                  disabled={actionLoading !== null}
-                >
-                  {actionLoading === 'full' ? (
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  ) : (
-                    <Database className='mr-2 h-4 w-4' />
-                  )}
-                  Trigger Full Sync
+                  Trigger Sync
                 </Button>
 
                 <AlertDialog>

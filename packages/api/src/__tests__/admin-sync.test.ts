@@ -7,18 +7,54 @@ import { user, syncRun, syncRunDetail, syncState } from '../db/schema';
 // Mock global fetch to intercept RERUM API calls
 const originalFetch = globalThis.fetch;
 
+// Pull the `$gt` timestamp out of an incremental sync's $or date filter, if present.
+function extractSinceTs(query: Record<string, unknown>): string | null {
+  const or = query?.$or;
+  if (!Array.isArray(or)) return null;
+  for (const clause of or) {
+    for (const cond of Object.values(clause as Record<string, unknown>)) {
+      if (cond && typeof cond === 'object' && '$gt' in (cond as Record<string, unknown>)) {
+        return String((cond as Record<string, unknown>).$gt);
+      }
+    }
+  }
+  return null;
+}
+
 function mockRerumFetch(notes: object[] = []) {
-  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString();
 
     if (url.includes('query')) {
-      return new Response(JSON.stringify(notes), {
+      // Everything fits in the first batch; later paginated calls return empty.
+      const skip = Number(url.match(/skip=(\d+)/)?.[1] ?? 0);
+      if (skip > 0) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Mimic RERUM's server-side date filter: for incremental syncs (which
+      // carry an $or/$gt on modification dates), only return notes modified
+      // after the watermark -- same as MongoDB string comparison on ISO dates.
+      let result = notes as Array<{ __rerum?: Record<string, string> }>;
+      const query = init?.body ? (JSON.parse(init.body as string) as Record<string, unknown>) : {};
+      const since = extractSinceTs(query);
+      if (since) {
+        result = result.filter(n => {
+          const ts = n.__rerum?.isOverwritten || n.__rerum?.modifiedAt || n.__rerum?.createdAt;
+          return ts ? ts.replace('Z', '') > since : true;
+        });
+      }
+
+      return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    return originalFetch(input);
+    return originalFetch(input as RequestInfo | URL, init);
   }) as typeof fetch;
 }
 
@@ -114,7 +150,7 @@ describe('Admin Sync Endpoints', () => {
 
     await db.delete(syncRunDetail).where(eq(syncRunDetail.noteId, 'test-note-1')).catch(() => {});
     await db.delete(syncRunDetail).where(eq(syncRunDetail.noteId, 'test-note-2')).catch(() => {});
-    await db.execute(`DELETE FROM sync_run_detail WHERE run_id IN (SELECT id FROM sync_run WHERE triggered_by IN ('manual', 'full'))`).catch(() => {});
+    await db.execute(`DELETE FROM sync_run_detail WHERE run_id IN (SELECT id FROM sync_run WHERE triggered_by IN ('manual'))`).catch(() => {});
     await db.execute(`DELETE FROM sync_run`).catch(() => {});
     await db.execute(`DELETE FROM audio WHERE note_id LIKE 'test-note-%'`).catch(() => {});
     await db.execute(`DELETE FROM media WHERE note_id LIKE 'test-note-%'`).catch(() => {});
@@ -138,7 +174,7 @@ describe('Admin Sync Endpoints', () => {
     const body = res.json as Record<string, unknown>;
     expect(body.running).toBe(false);
     expect(body.lastRunAt).toBeNull();
-    expect(body.intervalMs).toBe(30000);
+    expect(body.intervalMs).toBe(600000); // SYNC_INTERVAL_MS: 10 minutes
   });
 
   it('GET /admin/sync/status returns 401 without auth', async () => {
@@ -151,7 +187,7 @@ describe('Admin Sync Endpoints', () => {
 
     const res = await request(app, 'POST', '/api/admin/sync/trigger', {
       headers: adminAuth.headers,
-      body: { full: true },
+      body: {},
     });
 
     expect(res.status).toBe(200);
@@ -204,21 +240,22 @@ describe('Admin Sync Endpoints', () => {
     }
   });
 
-  it('POST /admin/sync/trigger incremental sync skips unchanged notes', async () => {
+  it('POST /admin/sync/trigger incremental sync returns no notes when nothing changed', async () => {
     mockRerumFetch(MOCK_RERUM_NOTES);
 
     const res = await request(app, 'POST', '/api/admin/sync/trigger', {
       headers: adminAuth.headers,
-      body: { full: false },
+      body: {},
     });
 
     expect(res.status).toBe(200);
     const body = res.json as Record<string, unknown>;
     expect(body.status).toBe('success');
-    // All notes should be skipped since modifiedAt hasn't changed
+    // The previous sync advanced the watermark past every mock note's
+    // modifiedAt, so RERUM's date filter returns nothing -- no work to do.
     expect(body.notesCreated).toBe(0);
     expect(body.notesUpdated).toBe(0);
-    expect(body.notesSkipped).toBeGreaterThan(0);
+    expect(body.notesSkipped).toBe(0);
   });
 
   it('tags are normalized correctly (strings and objects)', async () => {

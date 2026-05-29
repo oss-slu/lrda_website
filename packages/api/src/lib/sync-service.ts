@@ -11,6 +11,7 @@ import { db, type Database } from '../db';
 import * as schema from '../db/schema';
 import { env } from '../env';
 import type { Tag } from '../db/types';
+import { reverseGeocode } from './geocode';
 
 // RERUM API configuration
 const SYNC_INTERVAL_MS = 600_000; // 10 minutes
@@ -213,7 +214,7 @@ async function updateLastNoteSyncTime(time: Date) {
 // ============================================
 
 interface SyncResult {
-  runId: string;
+  runId?: string;
   created: number;
   updated: number;
   skipped: number;
@@ -223,21 +224,29 @@ interface SyncResult {
   error?: string;
 }
 
-async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<SyncResult> {
-  const fullSync = triggeredBy === 'full';
+async function syncNotes(
+  triggeredBy: 'watch' | 'manual',
+  options: { dryRun?: boolean } = {},
+): Promise<SyncResult> {
+  const dryRun = options.dryRun ?? false;
   const startTime = Date.now();
   const syncStartTime = new Date();
 
-  // Create audit log run entry
-  const [run] = await db
-    .insert(schema.syncRun)
-    .values({
-      status: 'running',
-      triggeredBy,
-    })
-    .returning({ id: schema.syncRun.id });
-
-  const runId = run.id;
+  // Create audit log run entry. Dry runs write nothing -- they only log what
+  // they would do -- so the run/detail audit rows are skipped entirely.
+  let runId: string | undefined;
+  if (!dryRun) {
+    const [run] = await db
+      .insert(schema.syncRun)
+      .values({
+        status: 'running',
+        triggeredBy,
+      })
+      .returning({ id: schema.syncRun.id });
+    runId = run.id;
+  } else {
+    console.log('[sync dry-run] No changes will be written.');
+  }
 
   let created = 0;
   let updated = 0;
@@ -245,9 +254,9 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
   let errored = 0;
 
   try {
-    await ensureFallbackUser();
+    if (!dryRun) await ensureFallbackUser();
 
-    const lastSync = fullSync ? null : await getLastNoteSyncTime();
+    const lastSync = await getLastNoteSyncTime();
 
     // Build RERUM query -- for incremental syncs, filter server-side by modification date
     // RERUM passes queries directly to MongoDB, so $or/$gt operators work.
@@ -313,11 +322,38 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
           where: eq(schema.note.id, noteId),
         });
 
+        if (dryRun) {
+          if (existing) updated++;
+          else created++;
+          console.log(
+            `[sync dry-run] would ${existing ? 'update' : 'create'} note ${noteId}` +
+              (noteData.latitude != null && noteData.longitude != null
+                ? ` @ (${noteData.latitude}, ${noteData.longitude})`
+                : ''),
+          );
+          continue;
+        }
+
+        // RERUM does not store a human-readable location name, so reverse
+        // geocode it here. Only call the Geocoding API when needed (new note,
+        // changed coordinates, or a missing name) to limit quota usage, and
+        // never overwrite an existing name with a failed (null) lookup.
+        const { latitude: lat, longitude: lng } = noteData;
+        let locationName = existing?.locationName ?? null;
+        const coordsChanged =
+          !!existing && (existing.latitude !== lat || existing.longitude !== lng);
+        if (lat != null && lng != null && (!existing || coordsChanged || existing.locationName == null)) {
+          const geocoded = await reverseGeocode(lat, lng, env.GOOGLE_MAPS_API_KEY);
+          if (geocoded) locationName = geocoded;
+        }
+
+        const noteValues = { ...noteData, locationName };
+
         await db.transaction(async (tx) => {
           if (existing) {
-            await tx.update(schema.note).set(noteData).where(eq(schema.note.id, noteId));
+            await tx.update(schema.note).set(noteValues).where(eq(schema.note.id, noteId));
           } else {
-            await tx.insert(schema.note).values(noteData);
+            await tx.insert(schema.note).values(noteValues);
           }
 
           // Sync media
@@ -358,7 +394,7 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
 
         // Write per-note audit detail
         await db.insert(schema.syncRunDetail).values({
-          runId,
+          runId: runId!,
           noteId,
           action,
         });
@@ -367,18 +403,30 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
         const noteId = extractId(rerumNote['@id']);
         const errorMsg = error instanceof Error ? error.message : String(error);
 
-        await db.insert(schema.syncRunDetail).values({
-          runId,
-          noteId: noteId || 'unknown',
-          action: 'errored',
-          error: errorMsg,
-        });
+        if (dryRun) {
+          console.log(`[sync dry-run] would error on note ${noteId || 'unknown'}: ${errorMsg}`);
+        } else {
+          await db.insert(schema.syncRunDetail).values({
+            runId: runId!,
+            noteId: noteId || 'unknown',
+            action: 'errored',
+            error: errorMsg,
+          });
+        }
       }
     }
 
-    await updateLastNoteSyncTime(syncStartTime);
-
     const durationMs = Date.now() - startTime;
+
+    if (dryRun) {
+      console.log(
+        `[sync dry-run] complete: would create ${created}, update ${updated}, ` +
+          `skip ${skipped}, error ${errored} (${durationMs}ms)`,
+      );
+      return { created, updated, skipped, errored, durationMs, status: 'success' };
+    }
+
+    await updateLastNoteSyncTime(syncStartTime);
 
     // Update run summary
     await db
@@ -392,7 +440,7 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
         notesSkipped: skipped,
         notesErrored: errored,
       })
-      .where(eq(schema.syncRun.id, runId));
+      .where(eq(schema.syncRun.id, runId!));
 
     lastRunAt = new Date();
     lastRunStatus = 'success';
@@ -401,6 +449,11 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
   } catch (error) {
     const durationMs = Date.now() - startTime;
     const errorMsg = error instanceof Error ? error.message : String(error);
+
+    if (dryRun) {
+      console.log(`[sync dry-run] failed: ${errorMsg}`);
+      return { created, updated, skipped, errored, durationMs, status: 'failed', error: errorMsg };
+    }
 
     // Update run as failed
     await db
@@ -415,7 +468,7 @@ async function syncNotes(triggeredBy: 'watch' | 'manual' | 'full'): Promise<Sync
         notesErrored: errored,
         error: errorMsg,
       })
-      .where(eq(schema.syncRun.id, runId));
+      .where(eq(schema.syncRun.id, runId!));
 
     lastRunAt = new Date();
     lastRunStatus = 'failed';
@@ -492,27 +545,14 @@ export async function stopSync(): Promise<{ stopped: boolean; message: string }>
   return { stopped: true, message: 'Sync stopped' };
 }
 
-export async function triggerSync(): Promise<SyncResult> {
+export async function triggerSync(options: { dryRun?: boolean } = {}): Promise<SyncResult> {
   if (syncInProgress) {
     throw new Error('A sync is already in progress');
   }
 
   syncInProgress = true;
   try {
-    return await syncNotes('manual');
-  } finally {
-    syncInProgress = false;
-  }
-}
-
-export async function triggerFullSync(): Promise<SyncResult> {
-  if (syncInProgress) {
-    throw new Error('A sync is already in progress');
-  }
-
-  syncInProgress = true;
-  try {
-    return await syncNotes('full');
+    return await syncNotes('manual', options);
   } finally {
     syncInProgress = false;
   }

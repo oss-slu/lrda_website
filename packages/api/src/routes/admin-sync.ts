@@ -15,7 +15,6 @@ import {
   startSync,
   stopSync,
   triggerSync,
-  triggerFullSync,
   syncUsersFromFirebase,
 } from '../lib/sync-service';
 import { requireAuth, requireAdmin } from '../middleware/auth';
@@ -107,7 +106,7 @@ const triggerSyncRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            full: z.boolean().optional().default(false),
+            dryRun: z.boolean().optional().default(false),
           }),
         },
       },
@@ -249,11 +248,11 @@ export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
   .openapi(triggerSyncRoute, async c => {
     try {
       const body = c.req.valid('json');
-      const full = body?.full === true;
-      const result = full ? await triggerFullSync() : await triggerSync();
+      const dryRun = body?.dryRun === true;
+      const result = await triggerSync({ dryRun });
       return c.json(
         {
-          id: result.runId,
+          id: result.runId ?? 'dry-run',
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
           durationMs: result.durationMs,
@@ -263,7 +262,7 @@ export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
           notesSkipped: result.skipped,
           notesErrored: result.errored,
           error: result.error || null,
-          triggeredBy: full ? 'full' : 'manual',
+          triggeredBy: dryRun ? 'manual (dry-run)' : 'manual',
         },
         200,
       );

@@ -309,7 +309,7 @@ export const syncRun = pgTable(
     notesSkipped: integer('notes_skipped').notNull().default(0),
     notesErrored: integer('notes_errored').notNull().default(0),
     error: text('error'),
-    triggeredBy: text('triggered_by'), // 'watch' | 'manual' | 'full'
+    triggeredBy: text('triggered_by'), // 'watch' | 'manual'
   },
   table => [index('sync_run_started_at_idx').on(table.startedAt)],
 );

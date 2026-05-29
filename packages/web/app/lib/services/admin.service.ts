@@ -186,10 +186,10 @@ export async function stopSync(): Promise<{ success: boolean; message: string }>
   return fetchWithAuth('/api/admin/sync/stop', { method: 'POST' });
 }
 
-export async function triggerSync(full = false): Promise<SyncRun> {
+export async function triggerSync(): Promise<SyncRun> {
   return fetchWithAuth<SyncRun>('/api/admin/sync/trigger', {
     method: 'POST',
-    body: JSON.stringify({ full }),
+    body: JSON.stringify({}),
   });
 }
 

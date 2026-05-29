@@ -96,7 +96,6 @@ export function useViewportNotes() {
   const allNotes = useMemo(() => {
     if (isSearchMode) return query.data ?? [];
     return Array.from(accumulatedRef.current.values());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data, isSearchMode]);
 
   return {
