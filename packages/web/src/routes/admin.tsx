@@ -46,6 +46,7 @@ export type AdminSearchParams = z.infer<typeof adminSearchSchema>;
 
 export const Route = createFileRoute('/admin')({
   validateSearch: adminSearchSchema,
+  ssr: false,
   loader: async () => {
     const data = await fetchAdminData();
     if (!data?.user || !isAdminUser(data.user)) {

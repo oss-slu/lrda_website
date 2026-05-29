@@ -1,5 +1,5 @@
 import { useMemo, useRef, useCallback } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, queryOptions, keepPreviousData } from '@tanstack/react-query';
 import { notesService } from '../../services';
 import { useMapStore } from '../../stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -10,6 +10,35 @@ import type { Note } from '@/app/types';
 
 const DEBOUNCE_MS = 400;
 const STALE_TIME = 60_000;
+
+type SnappedBounds = ReturnType<typeof snapBounds> | null;
+
+/**
+ * Query options for published notes within a map viewport.
+ * Takes already-resolved (debounced, snapped) search/bounds so it stays
+ * usable outside React.
+ */
+export function viewportNotesOptions(params: { search?: string; bounds?: SnappedBounds }) {
+  const { search, bounds } = params;
+  const isSearchMode = !!search && search.length > 0;
+
+  return queryOptions({
+    queryKey:
+      isSearchMode ?
+        [...notesKeys.all, 'viewport', 'search', search]
+      : [...notesKeys.all, 'viewport', bounds],
+    queryFn: (): Promise<Note[]> => {
+      if (isSearchMode) {
+        return notesService.fetchViewport({ search });
+      }
+      if (!bounds) {
+        return notesService.fetchViewport({});
+      }
+      return notesService.fetchViewport(bounds);
+    },
+    staleTime: STALE_TIME,
+  });
+}
 
 /**
  * Accumulates notes across viewport fetches so panning back to a
@@ -47,21 +76,8 @@ export function useViewportNotes() {
   }, []);
 
   const query = useQuery({
-    queryKey:
-      isSearchMode ?
-        [...notesKeys.all, 'viewport', 'search', debouncedSearch]
-      : [...notesKeys.all, 'viewport', debouncedBounds],
-    queryFn: async () => {
-      if (isSearchMode) {
-        return notesService.fetchViewport({ search: debouncedSearch });
-      }
-      if (!debouncedBounds) {
-        return notesService.fetchViewport({});
-      }
-      return notesService.fetchViewport(debouncedBounds);
-    },
+    ...viewportNotesOptions({ search: debouncedSearch, bounds: debouncedBounds }),
     placeholderData: keepPreviousData,
-    staleTime: STALE_TIME,
   });
 
   // Merge fetched notes into the accumulated set

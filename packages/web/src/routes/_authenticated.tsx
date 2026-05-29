@@ -8,6 +8,7 @@ const getSessionUser = createServerFn().handler(async () => {
 });
 
 export const Route = createFileRoute('/_authenticated')({
+  ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) {

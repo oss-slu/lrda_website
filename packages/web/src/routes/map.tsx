@@ -18,6 +18,7 @@ import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
 import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
 
 export const Route = createFileRoute('/map')({
+  ssr: false,
   head: () => ({
     meta: [{ title: "Map | Where's Religion?" }],
   }),

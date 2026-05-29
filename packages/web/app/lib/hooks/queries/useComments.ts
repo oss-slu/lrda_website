@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import type { CommentData } from '../../services/comments.types';
 import { commentsService, fetchCreatorName } from '../../services';
 
-const commentsKeys = {
+export const commentsKeys = {
   all: ['comments'] as const,
   forNote: (noteId: string) => [...commentsKeys.all, noteId] as const,
 };
@@ -30,17 +30,25 @@ async function enrichCommentsWithAuthorNames(comments: CommentData[]): Promise<C
 }
 
 /**
+ * Query options for a note's comments (enriched with author display names).
+ */
+export function commentsOptions(noteId: string) {
+  return queryOptions({
+    queryKey: commentsKeys.forNote(noteId),
+    queryFn: async (): Promise<CommentData[]> => {
+      const raw = await commentsService.fetchForNote(noteId);
+      return enrichCommentsWithAuthorNames(raw);
+    },
+  });
+}
+
+/**
  * Hook for fetching comments for a note with automatic polling
  * Polls every 15 seconds when the page is visible
  */
 export function useComments(noteId: string | null) {
   return useQuery({
-    queryKey: commentsKeys.forNote(noteId ?? ''),
-    queryFn: async (): Promise<CommentData[]> => {
-      if (!noteId) return [];
-      const raw = await commentsService.fetchForNote(noteId);
-      return enrichCommentsWithAuthorNames(raw);
-    },
+    ...commentsOptions(noteId ?? ''),
     enabled: !!noteId,
     refetchInterval: 15000, // Poll every 15 seconds
     refetchIntervalInBackground: false, // Pause when tab is hidden

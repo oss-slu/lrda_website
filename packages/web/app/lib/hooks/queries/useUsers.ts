@@ -1,5 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, queryOptions } from '@tanstack/react-query';
 import { fetchCreatorName } from '../../services';
+
+export const usersKeys = {
+  all: ['users'] as const,
+  name: (userId: string) => [...usersKeys.all, userId, 'name'] as const,
+};
+
+/**
+ * Query options for a creator's display name by ID.
+ * TanStack Query dedupes concurrent requests for the same ID.
+ */
+export function creatorNameOptions(creatorId: string) {
+  return queryOptions({
+    queryKey: usersKeys.name(creatorId),
+    queryFn: (): Promise<string> => fetchCreatorName(creatorId),
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
+}
 
 /**
  * Hook for fetching creator name by ID.
@@ -8,13 +26,7 @@ import { fetchCreatorName } from '../../services';
  */
 export function useCreatorName(creatorId: string | null) {
   return useQuery({
-    queryKey: ['users', creatorId ?? '', 'name'],
-    queryFn: async (): Promise<string> => {
-      if (!creatorId) return 'Unknown';
-      return await fetchCreatorName(creatorId);
-    },
+    ...creatorNameOptions(creatorId ?? ''),
     enabled: !!creatorId,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 }

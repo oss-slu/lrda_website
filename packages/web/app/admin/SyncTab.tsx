@@ -29,7 +29,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import ClickableNote from '@/app/lib/components/click_note_card';
 import {
   Play,
@@ -42,6 +49,7 @@ import {
   Clock,
   ChevronLeft,
   Users,
+  Eye,
   ExternalLink,
   ArrowUpDown,
   ArrowUp,
@@ -474,6 +482,7 @@ export function SyncTab() {
   const [selectedRun, setSelectedRun] = useState<SyncRunWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [dryRunLog, setDryRunLog] = useState<string[] | null>(null);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -544,6 +553,19 @@ export function SyncTab() {
     } catch (error) {
       console.error('Sync failed:', error);
       toast.error('Sync failed');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePreview = async () => {
+    setActionLoading('preview');
+    try {
+      const result = await triggerSync(true);
+      setDryRunLog(result.logs ?? []);
+    } catch (error) {
+      console.error('Dry-run sync failed:', error);
+      toast.error('Dry-run sync failed');
     } finally {
       setActionLoading(null);
     }
@@ -713,6 +735,19 @@ export function SyncTab() {
                   )}
                   Trigger Sync
                 </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handlePreview()}
+                  disabled={actionLoading !== null}
+                >
+                  {actionLoading === 'preview' ? (
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  ) : (
+                    <Eye className='mr-2 h-4 w-4' />
+                  )}
+                  Preview Sync
+                </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -744,6 +779,21 @@ export function SyncTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dry-run preview log */}
+      <Dialog open={dryRunLog !== null} onOpenChange={open => !open && setDryRunLog(null)}>
+        <DialogContent className='max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>Dry-Run Preview</DialogTitle>
+            <DialogDescription>
+              No changes were written. This is what a sync would do.
+            </DialogDescription>
+          </DialogHeader>
+          <pre className='max-h-[60vh] overflow-auto rounded-md border border-gray-200 bg-gray-50 p-4 text-xs whitespace-pre-wrap text-gray-800'>
+            {dryRunLog && dryRunLog.length > 0 ? dryRunLog.join('\n') : 'No changes to sync.'}
+          </pre>
+        </DialogContent>
+      </Dialog>
 
       {/* Audit Log */}
       <Card>

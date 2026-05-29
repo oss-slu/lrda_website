@@ -222,6 +222,7 @@ interface SyncResult {
   durationMs: number;
   status: 'success' | 'failed';
   error?: string;
+  logs?: string[];
 }
 
 async function syncNotes(
@@ -231,6 +232,14 @@ async function syncNotes(
   const dryRun = options.dryRun ?? false;
   const startTime = Date.now();
   const syncStartTime = new Date();
+
+  // Dry runs collect their log lines so the caller (e.g. the admin UI) can
+  // display them, in addition to writing them to the server console.
+  const dryRunLog: string[] = [];
+  const logDry = (msg: string) => {
+    console.log(msg);
+    dryRunLog.push(msg);
+  };
 
   // Create audit log run entry. Dry runs write nothing -- they only log what
   // they would do -- so the run/detail audit rows are skipped entirely.
@@ -245,7 +254,7 @@ async function syncNotes(
       .returning({ id: schema.syncRun.id });
     runId = run.id;
   } else {
-    console.log('[sync dry-run] No changes will be written.');
+    logDry('[sync dry-run] No changes will be written.');
   }
 
   let created = 0;
@@ -325,7 +334,7 @@ async function syncNotes(
         if (dryRun) {
           if (existing) updated++;
           else created++;
-          console.log(
+          logDry(
             `[sync dry-run] would ${existing ? 'update' : 'create'} note ${noteId}` +
               (noteData.latitude != null && noteData.longitude != null
                 ? ` @ (${noteData.latitude}, ${noteData.longitude})`
@@ -404,7 +413,7 @@ async function syncNotes(
         const errorMsg = error instanceof Error ? error.message : String(error);
 
         if (dryRun) {
-          console.log(`[sync dry-run] would error on note ${noteId || 'unknown'}: ${errorMsg}`);
+          logDry(`[sync dry-run] would error on note ${noteId || 'unknown'}: ${errorMsg}`);
         } else {
           await db.insert(schema.syncRunDetail).values({
             runId: runId!,
@@ -419,11 +428,11 @@ async function syncNotes(
     const durationMs = Date.now() - startTime;
 
     if (dryRun) {
-      console.log(
+      logDry(
         `[sync dry-run] complete: would create ${created}, update ${updated}, ` +
           `skip ${skipped}, error ${errored} (${durationMs}ms)`,
       );
-      return { created, updated, skipped, errored, durationMs, status: 'success' };
+      return { created, updated, skipped, errored, durationMs, status: 'success', logs: dryRunLog };
     }
 
     await updateLastNoteSyncTime(syncStartTime);
@@ -451,8 +460,17 @@ async function syncNotes(
     const errorMsg = error instanceof Error ? error.message : String(error);
 
     if (dryRun) {
-      console.log(`[sync dry-run] failed: ${errorMsg}`);
-      return { created, updated, skipped, errored, durationMs, status: 'failed', error: errorMsg };
+      logDry(`[sync dry-run] failed: ${errorMsg}`);
+      return {
+        created,
+        updated,
+        skipped,
+        errored,
+        durationMs,
+        status: 'failed',
+        error: errorMsg,
+        logs: dryRunLog,
+      };
     }
 
     // Update run as failed

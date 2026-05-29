@@ -115,7 +115,10 @@ const triggerSyncRoute = createRoute({
   },
   responses: {
     200: {
-      content: { 'application/json': { schema: SyncRunSchema } },
+      // Dry runs return the log lines they would have produced.
+      content: {
+        'application/json': { schema: SyncRunSchema.extend({ logs: z.array(z.string()).optional() }) },
+      },
       description: 'Sync completed',
     },
     400: {
@@ -248,7 +251,7 @@ export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
   .openapi(triggerSyncRoute, async c => {
     try {
       const body = c.req.valid('json');
-      const dryRun = body?.dryRun === true;
+      const dryRun = body.dryRun === true;
       const result = await triggerSync({ dryRun });
       return c.json(
         {
@@ -263,6 +266,7 @@ export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
           notesErrored: result.errored,
           error: result.error || null,
           triggeredBy: dryRun ? 'manual (dry-run)' : 'manual',
+          logs: result.logs,
         },
         200,
       );
