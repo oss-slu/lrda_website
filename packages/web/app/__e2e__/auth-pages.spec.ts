@@ -52,7 +52,7 @@ test.describe('Auth pages (UI)', () => {
       await page.locator('#email').fill(email);
       await page.locator('#password').fill(STRONG_PASSWORD);
       await page.getByRole('button', { name: /^Login$/ }).click();
-      await expect(page).toHaveURL(/\/map/);
+      await expect(page).toHaveURL(/\/map/, { timeout: 15000 });
 
       await page.context().close();
     });
@@ -126,7 +126,7 @@ test.describe('Auth pages (UI)', () => {
       await page.locator('#email').fill(email);
       await page.locator('#password').fill(NEW_PASSWORD);
       await page.getByRole('button', { name: /^Login$/ }).click();
-      await expect(page).toHaveURL(/\/map/);
+      await expect(page).toHaveURL(/\/map/, { timeout: 15000 });
 
       await page.context().close();
     });

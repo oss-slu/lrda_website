@@ -6,10 +6,34 @@ import {
   UpdateCommentInputSchema,
 } from '@lrda/shared';
 import { eq, and, desc } from 'drizzle-orm';
-import { comment, note } from '../db/schema';
+import { comment, note, user } from '../db/schema';
 import { requireAuth, authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../types';
 import { getDb } from './helpers';
+
+/**
+ * Who may view a note's comments. Published notes are public; unpublished notes
+ * are visible to the creator, admins, and the creator's instructor (mirrors the
+ * note access rules in notes.ts so instructors can review student drafts).
+ */
+async function canViewNoteComments(
+  db: ReturnType<typeof getDb>,
+  authUser: { id: string; role?: string | null; isInstructor?: boolean | null } | null | undefined,
+  noteRow: { isPublished: boolean; creatorId: string },
+): Promise<boolean> {
+  if (noteRow.isPublished) return true;
+  if (!authUser) return false;
+  if (authUser.id === noteRow.creatorId) return true;
+  if (authUser.role === 'admin') return true;
+  if (authUser.isInstructor === true && noteRow.creatorId !== authUser.id) {
+    const creator = await db.query.user.findFirst({
+      where: eq(user.id, noteRow.creatorId),
+      columns: { instructorId: true },
+    });
+    return creator?.instructorId === authUser.id;
+  }
+  return false;
+}
 
 // Routes
 
@@ -207,8 +231,8 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Note not found' }, 404);
     }
 
-    // Unpublished notes: only the creator can view comments
-    if (!existingNote.isPublished && (!authUser || authUser.id !== existingNote.creatorId)) {
+    // Unpublished notes: creator, admins, and the creator's instructor may view
+    if (!(await canViewNoteComments(db, authUser, existingNote))) {
       return c.json({ error: 'Note not found' }, 404);
     }
 
@@ -239,7 +263,7 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
       where: eq(note.id, result.noteId),
     });
 
-    if (parentNote && !parentNote.isPublished && (!authUser || authUser.id !== parentNote.creatorId)) {
+    if (parentNote && !(await canViewNoteComments(db, authUser, parentNote))) {
       return c.json({ error: 'Comment not found' }, 404);
     }
 
