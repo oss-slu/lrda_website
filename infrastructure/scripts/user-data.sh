@@ -322,7 +322,7 @@ rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
 # Set up daily database backup cron (3am UTC)
-echo "0 3 * * * ubuntu /home/ubuntu/lrda/backup-db.sh >> /home/ubuntu/lrda/logs/backup.log 2>&1" > /etc/cron.d/lrda-backup
+echo "0 3 * * * ubuntu DB_NAME=lrda_${environment} /home/ubuntu/lrda/backup-db.sh >> /home/ubuntu/lrda/logs/backup.log 2>&1" > /etc/cron.d/lrda-backup
 chmod 644 /etc/cron.d/lrda-backup
 
 echo "LRDA server setup complete!"
