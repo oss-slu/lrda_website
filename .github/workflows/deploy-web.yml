@@ -72,4 +72,4 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_MAP_KEY: ${{ secrets.VITE_MAP_KEY }}
           VITE_MAP_ID: ${{ secrets.VITE_MAP_ID }}
-          VITE_S3_PROXY_PREFIX: http://s3-proxy.rerum.io/S3/
+          VITE_S3_PROXY_PREFIX: https://s3-proxy.rerum.io/S3/
