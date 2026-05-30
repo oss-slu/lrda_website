@@ -22,13 +22,9 @@ export interface UpdateProfileOptions {
   pendingInstructorDescription?: string | null;
 }
 
-/**
- * Response from the instructors endpoint.
- */
 export interface InstructorInfo {
   id: string;
   name: string;
-  email: string;
   image?: string | null;
   createdAt: string;
 }

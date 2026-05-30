@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { ErrorSchema, UserSchema, PublicUserSchema, UserDetailSchema } from '@lrda/shared';
-import { eq } from 'drizzle-orm';
+import { and, asc, eq, ilike } from 'drizzle-orm';
 import { user } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
 import type { AppEnv } from '../types';
@@ -88,6 +88,11 @@ const getInstructorsRoute = createRoute({
   method: 'get',
   path: '/instructors',
   tags: ['Users'],
+  request: {
+    query: z.object({
+      search: z.string().min(1).max(100).optional(),
+    }),
+  },
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(PublicUserSchema) } },
@@ -301,8 +306,15 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
   // GET /users/instructors - public
   .openapi(getInstructorsRoute, async c => {
     const db = getDb(c);
+    const { search } = c.req.valid('query');
+
+    const conditions = [eq(user.isInstructor, true)];
+    if (search) {
+      conditions.push(ilike(user.name, `%${search}%`));
+    }
+
     const instructors = await db.query.user.findMany({
-      where: eq(user.isInstructor, true),
+      where: and(...conditions),
       columns: {
         id: true,
         name: true,
@@ -310,6 +322,8 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
         isInstructor: true,
         createdAt: true,
       },
+      orderBy: asc(user.name),
+      limit: 50,
     });
 
     return c.json(instructors, 200);

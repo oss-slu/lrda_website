@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
@@ -49,9 +49,11 @@ export const Route = createFileRoute('/_public/signup')({
 function SignupPage() {
   const navigate = useNavigate();
   const [instructors, setInstructors] = useState<{ value: string; label: string }[]>([]);
+  const [instructorSearch, setInstructorSearch] = useState('');
   const [passwordRequirements, setPasswordRequirements] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuthStore(useShallow(state => ({ signup: state.signup })));
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const form = useForm<SignupFormData>({
     defaultValues: {
@@ -69,27 +71,35 @@ function SignupPage() {
   const selectedRole = form.watch('role');
   const passwordValue = form.watch('password');
 
-  // Fetch instructors when role changes to student
-  useEffect(() => {
-    const loadInstructors = async () => {
-      try {
-        const instructorsList = await fetchInstructors();
-        setInstructors(
-          instructorsList.map(i => ({
-            value: i.id,
-            label: i.name || i.email || 'Unknown Instructor',
-          })),
-        );
-      } catch (error) {
-        console.error('Error fetching instructors:', error);
-        toast.error('Failed to fetch instructors. Please try again.');
-      }
-    };
+  const loadInstructors = useCallback(async (search?: string) => {
+    try {
+      const instructorsList = await fetchInstructors(search);
+      setInstructors(
+        instructorsList.map(i => ({
+          value: i.id,
+          label: i.name || 'Unknown Instructor',
+        })),
+      );
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+      toast.error('Failed to fetch instructors. Please try again.');
+    }
+  }, []);
 
+  useEffect(() => {
     if (selectedRole === 'student') {
       loadInstructors();
     }
-  }, [selectedRole]);
+  }, [selectedRole, loadInstructors]);
+
+  useEffect(() => {
+    if (selectedRole !== 'student') return;
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      loadInstructors(instructorSearch || undefined);
+    }, 300);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [instructorSearch, selectedRole, loadInstructors]);
 
   const onSubmit = async (data: SignupFormData) => {
     // Validate password strength
@@ -347,6 +357,13 @@ function SignupPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='text-gray-700'>Select Your Instructor</FormLabel>
+                      <Input
+                        placeholder='Search instructors...'
+                        value={instructorSearch}
+                        onChange={e => setInstructorSearch(e.target.value)}
+                        className='border-gray-300'
+                        disabled={isLoading}
+                      />
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}

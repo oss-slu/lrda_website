@@ -32,12 +32,10 @@ async function fetchProfileById(id: string): Promise<UserProfile | null> {
   }
 }
 
-/**
- * Fetch all instructors.
- */
-export async function fetchInstructors(): Promise<InstructorInfo[]> {
+export async function fetchInstructors(search?: string): Promise<InstructorInfo[]> {
   try {
-    return await fetchWithAuth<InstructorInfo[]>('/api/users/instructors');
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return await fetchWithAuth<InstructorInfo[]>(`/api/users/instructors${params}`);
   } catch (error) {
     console.warn('Failed to fetch instructors:', error);
     return [];
