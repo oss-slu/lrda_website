@@ -1,4 +1,4 @@
-import { getRequestHeaders } from '@tanstack/react-start/server';
+import { getRequestHeader } from '@tanstack/react-start/server';
 import { API_URL } from '../services/api';
 
 /**
@@ -6,11 +6,7 @@ import { API_URL } from '../services/api';
  * forwarding the request cookies.
  */
 export async function fetchFromAPI<T>(path: string): Promise<T | null> {
-  const headers = getRequestHeaders();
-  const cookieHeader =
-    headers instanceof Headers ?
-      headers.get('cookie')
-    : (headers as Record<string, string>).cookie;
+  const cookieHeader = getRequestHeader('cookie');
 
   try {
     const res = await fetch(`${API_URL}${path}`, {
