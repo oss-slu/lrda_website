@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React from 'react';
+import { NoteContent } from '@/components/NoteContent';
 import { sanitizeHtml } from '@/utils/sanitize';
 import { Tag } from '@/types';
 import { useCreatorName } from '@/hooks/queries/useUsers';
@@ -42,11 +43,6 @@ const ClickableNote: React.FC<{
   const { data: note, isPending } = useNoteDetail(noteId);
   const { data: creator = 'Loading...' } = useCreatorName(note?.creator ?? null);
   const tags: Tag[] = convertOldTags(note?.tags);
-
-  const sanitizedContent = useMemo(
-    () => (note?.text ? sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) : ''),
-    [note?.text],
-  );
 
   if (isPending || !note) {
     return (
@@ -102,9 +98,11 @@ const ClickableNote: React.FC<{
         <div className='pb-20'>
           {' '}
           {/* Padding at the bottom */}
-          {note.text && note.text.length > 0 ?
+          {note.textJson ?
+            <NoteContent doc={note.textJson} className='note-content prose mb-5 max-w-none px-6' />
+          : note.text && note.text.length > 0 ?
             <div
-              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) }}
               className='note-content mb-5 px-6'
             />
           : <div className='px-6 pb-6'>This Note has no content</div>}

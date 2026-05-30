@@ -36,6 +36,13 @@
       "when": 1776197510250,
       "tag": "0004_fuzzy_harrier",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780168301809,
+      "tag": "0005_slim_starhawk",
+      "breakpoints": true
     }
   ]
 }

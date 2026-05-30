@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { useMemo } from 'react';
 import { Tag } from '@/types';
-import { sanitizeHtml, extractTextFromHtml } from '@/utils/sanitize';
+import { NoteContent } from '@/components/NoteContent';
+import { sanitizeHtml, extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
 import { formatDate, format12hourTime } from '@/utils/data_conversion';
 import { useNoteDetail, noteDetailOptions } from '@/hooks/queries/useNotes';
 import { useCreatorName } from '@/hooks/queries/useUsers';
@@ -29,7 +29,9 @@ export const Route = createFileRoute('/_public/notes/$id')({
     const title =
       loaderData?.title ? `${loaderData.title} | Where's Religion?` : "Note | Where's Religion?";
     const description =
-      loaderData?.text ? extractTextFromHtml(loaderData.text).slice(0, 160) : undefined;
+      loaderData?.textJson ? extractTextFromJson(loaderData.textJson).slice(0, 160)
+      : loaderData?.text ? extractTextFromHtml(loaderData.text).slice(0, 160)
+      : undefined;
     const url = `https://wheresreligion.org/notes/${params.id}`;
     return {
       meta: [
@@ -65,11 +67,6 @@ function NoteDetailPage() {
 
   const { data: note, isLoading, error: queryError } = useNoteDetail(noteId);
   const { data: creatorName } = useCreatorName(note?.creator ?? null);
-
-  const sanitizedContent = useMemo(
-    () => (note?.text ? sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) : ''),
-    [note?.text],
-  );
 
   if (isLoading) {
     return (
@@ -150,9 +147,11 @@ function NoteDetailPage() {
       {/* Scrollable content */}
       <ScrollArea className='flex-1'>
         <div className='px-6 py-4 pb-24'>
-          {note.text && note.text.length > 0 ?
+          {note.textJson ?
+            <NoteContent doc={note.textJson} />
+          : note.text && note.text.length > 0 ?
             <div
-              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) }}
               className='note-content prose max-w-none'
             />
           : <p className='text-muted-foreground'>This note has no content.</p>}

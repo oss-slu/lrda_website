@@ -136,6 +136,7 @@ export const note = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     title: text('title'),
     text: text('text').notNull().default(''),
+    textJson: jsonb('text_json'),
     creatorId: text('creator_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),

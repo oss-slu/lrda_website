@@ -48,6 +48,7 @@ function transformApiNote(data: ApiNoteData): Note {
     id: data.id,
     title: data.title || '',
     text: data.text || '',
+    textJson: data.textJson ?? undefined,
     time: data.time ? new Date(data.time) : new Date(data.createdAt),
     media: transformedMedia,
     audio: transformedAudio,
@@ -70,6 +71,7 @@ function transformNoteToApi(note: Note | CreateNotePayload): Record<string, unkn
   return {
     title: note.title,
     text: note.text,
+    textJson: note.textJson ?? undefined,
     latitude: note.latitude ?? undefined,
     longitude: note.longitude ?? undefined,
     isPublished: note.published ?? false,

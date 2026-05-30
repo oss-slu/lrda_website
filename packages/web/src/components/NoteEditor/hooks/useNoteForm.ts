@@ -4,6 +4,7 @@ import type { Note, Tag, PhotoMedia, VideoMedia, AudioMedia, NoteMedia } from '@
 export interface NoteDraft {
   title: string;
   text: string;
+  textJson?: unknown;
   tags: Tag[];
   images: PhotoMedia[];
   videos: VideoMedia[];
@@ -19,7 +20,7 @@ export interface NoteDraft {
 
 type Action =
   | { type: 'SET_TITLE'; title: string }
-  | { type: 'SET_TEXT'; text: string }
+  | { type: 'SET_TEXT'; text: string; textJson?: unknown }
   | { type: 'SET_TAGS'; tags: (Tag | string)[] }
   | { type: 'ADD_IMAGE'; image: PhotoMedia }
   | { type: 'ADD_VIDEO'; video: VideoMedia }
@@ -43,6 +44,7 @@ function extractDraft(note: Note): NoteDraft {
   return {
     title: note.title,
     text: note.text,
+    textJson: note.textJson,
     tags: note.tags,
     images: note.media.filter((m): m is PhotoMedia => m.type === 'image'),
     videos: note.media.filter((m): m is VideoMedia => m.type === 'video'),
@@ -62,7 +64,7 @@ function reducer(state: NoteDraft, action: Action): NoteDraft {
     case 'SET_TITLE':
       return { ...state, title: action.title };
     case 'SET_TEXT':
-      return { ...state, text: action.text };
+      return { ...state, text: action.text, textJson: action.textJson };
     case 'SET_TAGS':
       return { ...state, tags: normalizeTags(action.tags) };
     case 'ADD_IMAGE':
@@ -97,7 +99,7 @@ function reducer(state: NoteDraft, action: Action): NoteDraft {
 
 export interface NoteFormActions {
   setTitle: (title: string) => void;
-  setText: (text: string) => void;
+  setText: (text: string, textJson?: unknown) => void;
   setTags: (tags: (Tag | string)[]) => void;
   addImage: (image: PhotoMedia) => void;
   addVideo: (video: VideoMedia) => void;
@@ -129,7 +131,7 @@ export function useNoteForm(note: Note): { draft: NoteDraft; actions: NoteFormAc
 
   const actions: NoteFormActions = {
     setTitle: useCallback((title: string) => dispatch({ type: 'SET_TITLE', title }), []),
-    setText: useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []),
+    setText: useCallback((text: string, textJson?: unknown) => dispatch({ type: 'SET_TEXT', text, textJson }), []),
     setTags: useCallback((tags: (Tag | string)[]) => dispatch({ type: 'SET_TAGS', tags }), []),
     addImage: useCallback((image: PhotoMedia) => dispatch({ type: 'ADD_IMAGE', image }), []),
     addVideo: useCallback((video: VideoMedia) => dispatch({ type: 'ADD_VIDEO', video }), []),
@@ -167,6 +169,7 @@ export function buildNoteFromDraft(draft: NoteDraft, note: Note): Note {
     ...note,
     title: draft.title || 'Untitled',
     text: draft.text,
+    textJson: draft.textJson,
     media: [...draft.images, ...draft.videos] as NoteMedia[],
     audio: draft.audio,
     tags: draft.tags,

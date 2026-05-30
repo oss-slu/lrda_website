@@ -269,6 +269,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       const summaries = results.map(r => ({
         ...r,
         text: '',
+        textJson: null,
         media: r.media.slice(0, 1),
         audio: [],
       }));
@@ -329,6 +330,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
       .values({
         title: body.title || null,
         text: body.text,
+        textJson: body.textJson ?? null,
         creatorId: authUser.id,
         latitude: body.latitude ?? null,
         longitude: body.longitude ?? null,
@@ -415,6 +417,7 @@ export const noteRoutes = new OpenAPIHono<AppEnv>()
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (body.title !== undefined) updateData.title = body.title;
     if (body.text !== undefined) updateData.text = body.text;
+    if (body.textJson !== undefined) updateData.textJson = body.textJson;
     if (body.latitude !== undefined) updateData.latitude = body.latitude;
     if (body.longitude !== undefined) updateData.longitude = body.longitude;
     if (body.isPublished !== undefined) updateData.isPublished = body.isPublished;

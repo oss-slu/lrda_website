@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note } from '@/types';
 import { format12hourTime } from '@/utils/data_conversion';
-import { extractTextFromHtml } from '@/utils/sanitize';
+import { extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
 import { getNoteStatus, statusConfig } from '@/utils/noteStatus';
 import { FileText, Search, Loader2 } from 'lucide-react';
 import { useNotesStore } from '@/stores/notesStore';
@@ -128,7 +128,7 @@ const NoteListView: React.FC<NoteListViewProps> = ({
     <div id='notes-list' className='my-4 flex flex-col gap-2'>
       {/* Note cards */}
       {notes.slice(0, visibleCount).map(note => {
-        let noteTextContent = extractTextFromHtml(note.text);
+        let noteTextContent = note.textJson ? extractTextFromJson(note.textJson) : extractTextFromHtml(note.text);
         if (!noteTextContent || noteTextContent === 'undefined') {
           noteTextContent = 'Empty note';
         }

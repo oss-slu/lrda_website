@@ -33,6 +33,7 @@ export const NoteSchema = z.object({
   id: z.string(),
   title: z.string().nullable().optional(),
   text: z.string(),
+  textJson: z.unknown().nullable().optional(),
   creatorId: z.string(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
@@ -70,6 +71,7 @@ export const AudioInputSchema = z.object({
 export const CreateNoteInputSchema = z.object({
   title: z.string().optional(),
   text: z.string().default(''),
+  textJson: z.unknown().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   locationName: z.string().optional(),
@@ -84,6 +86,7 @@ export const CreateNoteInputSchema = z.object({
 export const UpdateNoteInputSchema = z.object({
   title: z.string().optional(),
   text: z.string().optional(),
+  textJson: z.unknown().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   locationName: z.string().optional(),

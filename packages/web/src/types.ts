@@ -61,6 +61,7 @@ export type Note = {
   id: string;
   title: string;
   text: string;
+  textJson?: unknown;
   time: Date;
   media: NoteMedia[];
   audio: AudioMedia[];
@@ -79,6 +80,7 @@ export type Note = {
 export type newNote = {
   title: string;
   text: string;
+  textJson?: unknown;
   time: Date;
   media: NoteMedia[];
   audio: AudioMedia[];

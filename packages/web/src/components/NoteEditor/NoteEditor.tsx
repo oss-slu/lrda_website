@@ -84,12 +84,12 @@ export default function NoteEditor({
 
   const editor = useEditor({
     extensions,
-    content: draft.text,
+    content: draft.textJson ?? draft.text,
     immediatelyRender: false,
     editable,
     onUpdate: ({ editor: ed }) => {
       if (editable) {
-        actions.setText(ed.getHTML());
+        actions.setText(ed.getHTML(), ed.getJSON());
       }
     },
   });

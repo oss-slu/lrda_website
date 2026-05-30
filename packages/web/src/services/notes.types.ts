@@ -41,6 +41,7 @@ export interface NoteQueryOptions {
 export interface CreateNotePayload {
   title: string;
   text: string;
+  textJson?: unknown;
   creator: string;
   latitude?: number | null;
   longitude?: number | null;

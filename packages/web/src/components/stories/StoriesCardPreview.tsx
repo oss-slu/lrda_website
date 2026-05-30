@@ -5,7 +5,7 @@ import { useCreatorName } from '@/hooks/queries/useUsers';
 import { getCachedLocation } from '@/utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
 import { formatDateCompact, format12hourTime } from '@/utils/data_conversion';
-import { extractTextFromHtml } from '@/utils/sanitize';
+import { extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
 
 interface StoriesCardPreviewProps {
   note: Note;
@@ -15,8 +15,12 @@ interface StoriesCardPreviewProps {
 /**
  * Extracts the first few sentences from a string of HTML content.
  */
-const getBodyPreview = (bodyText: string, sentenceCount = 2): string => {
-  const plainText = extractTextFromHtml(bodyText);
+function getPlainText(note: Note): string {
+  if (note.textJson) return extractTextFromJson(note.textJson);
+  return extractTextFromHtml(note.text || '');
+}
+
+const getBodyPreview = (plainText: string, sentenceCount = 2): string => {
   if (!plainText) return '';
   const sentences = plainText.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s/);
   return sentences.slice(0, sentenceCount).join(' ');
@@ -50,7 +54,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [location, setLocation] = useState<string>('');
 
-  const bodyPreview = getBodyPreview(note.text || '');
+  const bodyPreview = getBodyPreview(getPlainText(note));
   const coverImage = note.media[0]?.uri;
   const isValidImageUrl =
     coverImage && !coverImage.startsWith('blob:') && !coverImage.startsWith('data:');
