@@ -474,7 +474,7 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
 // ============================================
 
 export function SyncTab() {
-  const { syncRunId } = useSearch({ from: '/admin' });
+  const { syncRunId } = useSearch({ from: '/_app/admin' });
   const navigate = useNavigate();
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [runs, setRuns] = useState<SyncRun[]>([]);

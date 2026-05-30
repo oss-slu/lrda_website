@@ -7,7 +7,7 @@ const getSessionUser = createServerFn().handler(async () => {
   return fetchFromAPI<UserProfile>('/api/users/me');
 });
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute('/_app/_authenticated')({
   ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();

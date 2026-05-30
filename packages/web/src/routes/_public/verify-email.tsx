@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertTriangle, Loader2, ShieldCheck, ArrowLeft, Mail } from 'lucide-react';
 
-export const Route = createFileRoute('/verify-email')({
+export const Route = createFileRoute('/_public/verify-email')({
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === 'string' ? search.token : '',
   }),

@@ -8,7 +8,7 @@ import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui
 import { ResendButton } from '@/components/ui/resend-button';
 import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react';
 
-export const Route = createFileRoute('/forgot-password')({
+export const Route = createFileRoute('/_public/forgot-password')({
   validateSearch: (search: Record<string, unknown>): { email?: string } => ({
     email: typeof search.email === 'string' ? search.email : undefined,
   }),

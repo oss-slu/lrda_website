@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ResendButton } from '@/components/ui/resend-button';
 import { Mail, ArrowLeft, Inbox } from 'lucide-react';
 
-export const Route = createFileRoute('/confirm')({
+export const Route = createFileRoute('/_public/confirm')({
   validateSearch: (search: Record<string, unknown>) => ({
     email: typeof search.email === 'string' ? search.email : '',
     sent: search.sent === true || search.sent === 'true',

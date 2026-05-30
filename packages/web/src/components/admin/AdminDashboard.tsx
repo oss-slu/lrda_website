@@ -98,7 +98,7 @@ export default function AdminDashboard({
   initialContentStats,
   initialRecentActivity,
 }: AdminDashboardProps) {
-  const { tab: urlTab } = useSearch({ from: '/admin' });
+  const { tab: urlTab } = useSearch({ from: '/_app/admin' });
   const navigate = useNavigate();
   const activeTab = urlTab || 'applications';
 

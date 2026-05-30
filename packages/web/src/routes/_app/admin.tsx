@@ -44,7 +44,7 @@ const adminSearchSchema = z.object({
 
 export type AdminSearchParams = z.infer<typeof adminSearchSchema>;
 
-export const Route = createFileRoute('/admin')({
+export const Route = createFileRoute('/_app/admin')({
   validateSearch: adminSearchSchema,
   ssr: false,
   loader: async () => {

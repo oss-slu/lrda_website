@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useReveal, motionVariants } from '@/utils/motion';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 
-export const Route = createFileRoute('/wheres-religion')({
+export const Route = createFileRoute('/_public/wheres-religion')({
   head: () => ({
     meta: [{ title: "About | Where's Religion?" }],
   }),

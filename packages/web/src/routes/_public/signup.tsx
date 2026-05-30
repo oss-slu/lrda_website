@@ -39,7 +39,7 @@ interface SignupFormData {
   instructorDescription?: string;
 }
 
-export const Route = createFileRoute('/signup')({
+export const Route = createFileRoute('/_public/signup')({
   head: () => ({
     meta: [{ title: "Sign Up | Where's Religion?" }],
   }),

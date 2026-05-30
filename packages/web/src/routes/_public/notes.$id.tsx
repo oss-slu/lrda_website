@@ -22,7 +22,7 @@ import {
   X,
 } from 'lucide-react';
 
-export const Route = createFileRoute('/notes/$id')({
+export const Route = createFileRoute('/_public/notes/$id')({
   loader: ({ context: { queryClient }, params }) =>
     queryClient.ensureQueryData(noteDetailOptions(params.id)),
   head: ({ loaderData }) => {

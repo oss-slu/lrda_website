@@ -11,7 +11,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { PasswordInput } from '@/components/ui/password-input';
 import { LogIn } from 'lucide-react';
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute('/_public/login')({
   head: () => ({
     meta: [{ title: "Log In | Where's Religion?" }],
   }),

@@ -17,7 +17,7 @@ import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMapIntro } from '@/hooks/useMapIntro';
 import { MAP_WIDTH_WITH_PANEL } from '@/utils/mapConstants';
 
-export const Route = createFileRoute('/map')({
+export const Route = createFileRoute('/_app/map')({
   ssr: false,
   head: () => ({
     meta: [{ title: "Map | Where's Religion?" }],

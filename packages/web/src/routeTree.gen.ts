@@ -9,166 +9,179 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WheresReligionRouteImport } from './routes/wheres-religion'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as StoriesRouteImport } from './routes/stories'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResourcesRouteImport } from './routes/resources'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as MapRouteImport } from './routes/map'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ConfirmRouteImport } from './routes/confirm'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as NotesIdRouteImport } from './routes/notes.$id'
-import { Route as AuthenticatedInstructorDashboardRouteImport } from './routes/_authenticated/instructor-dashboard'
-import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes.index'
+import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicWheresReligionRouteImport } from './routes/_public/wheres-religion'
+import { Route as PublicVerifyEmailRouteImport } from './routes/_public/verify-email'
+import { Route as PublicStoriesRouteImport } from './routes/_public/stories'
+import { Route as PublicSignupRouteImport } from './routes/_public/signup'
+import { Route as PublicResourcesRouteImport } from './routes/_public/resources'
+import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as PublicForgotPasswordRouteImport } from './routes/_public/forgot-password'
+import { Route as PublicConfirmRouteImport } from './routes/_public/confirm'
+import { Route as AppMapRouteImport } from './routes/_app/map'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppAuthenticatedRouteImport } from './routes/_app/_authenticated'
+import { Route as PublicNotesIdRouteImport } from './routes/_public/notes.$id'
+import { Route as AppAuthenticatedInstructorDashboardRouteImport } from './routes/_app/_authenticated/instructor-dashboard'
+import { Route as AppAuthenticatedNotesIndexRouteImport } from './routes/_app/_authenticated/notes.index'
 
-const WheresReligionRoute = WheresReligionRouteImport.update({
-  id: '/wheres-religion',
-  path: '/wheres-religion',
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StoriesRoute = StoriesRouteImport.update({
-  id: '/stories',
-  path: '/stories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResourcesRoute = ResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MapRoute = MapRouteImport.update({
-  id: '/map',
-  path: '/map',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfirmRoute = ConfirmRouteImport.update({
-  id: '/confirm',
-  path: '/confirm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PublicRoute,
 } as any)
-const NotesIdRoute = NotesIdRouteImport.update({
+const PublicWheresReligionRoute = PublicWheresReligionRouteImport.update({
+  id: '/wheres-religion',
+  path: '/wheres-religion',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicVerifyEmailRoute = PublicVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicStoriesRoute = PublicStoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSignupRoute = PublicSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResourcesRoute = PublicResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResetPasswordRoute = PublicResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicForgotPasswordRoute = PublicForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicConfirmRoute = PublicConfirmRouteImport.update({
+  id: '/confirm',
+  path: '/confirm',
+  getParentRoute: () => PublicRoute,
+} as any)
+const AppMapRoute = AppMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAuthenticatedRoute = AppAuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => AppRoute,
+} as any)
+const PublicNotesIdRoute = PublicNotesIdRouteImport.update({
   id: '/notes/$id',
   path: '/notes/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PublicRoute,
 } as any)
-const AuthenticatedInstructorDashboardRoute =
-  AuthenticatedInstructorDashboardRouteImport.update({
+const AppAuthenticatedInstructorDashboardRoute =
+  AppAuthenticatedInstructorDashboardRouteImport.update({
     id: '/instructor-dashboard',
     path: '/instructor-dashboard',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AppAuthenticatedRoute,
   } as any)
-const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
-  id: '/notes/',
-  path: '/notes/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AppAuthenticatedNotesIndexRoute =
+  AppAuthenticatedNotesIndexRouteImport.update({
+    id: '/notes/',
+    path: '/notes/',
+    getParentRoute: () => AppAuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/confirm': typeof ConfirmRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/map': typeof MapRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/resources': typeof ResourcesRoute
-  '/signup': typeof SignupRoute
-  '/stories': typeof StoriesRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/wheres-religion': typeof WheresReligionRoute
-  '/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
-  '/notes/$id': typeof NotesIdRoute
-  '/notes/': typeof AuthenticatedNotesIndexRoute
+  '/': typeof PublicIndexRoute
+  '/admin': typeof AppAdminRoute
+  '/map': typeof AppMapRoute
+  '/confirm': typeof PublicConfirmRoute
+  '/forgot-password': typeof PublicForgotPasswordRoute
+  '/login': typeof PublicLoginRoute
+  '/reset-password': typeof PublicResetPasswordRoute
+  '/resources': typeof PublicResourcesRoute
+  '/signup': typeof PublicSignupRoute
+  '/stories': typeof PublicStoriesRoute
+  '/verify-email': typeof PublicVerifyEmailRoute
+  '/wheres-religion': typeof PublicWheresReligionRoute
+  '/instructor-dashboard': typeof AppAuthenticatedInstructorDashboardRoute
+  '/notes/$id': typeof PublicNotesIdRoute
+  '/notes/': typeof AppAuthenticatedNotesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/confirm': typeof ConfirmRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/map': typeof MapRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/resources': typeof ResourcesRoute
-  '/signup': typeof SignupRoute
-  '/stories': typeof StoriesRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/wheres-religion': typeof WheresReligionRoute
-  '/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
-  '/notes/$id': typeof NotesIdRoute
-  '/notes': typeof AuthenticatedNotesIndexRoute
+  '/': typeof PublicIndexRoute
+  '/admin': typeof AppAdminRoute
+  '/map': typeof AppMapRoute
+  '/confirm': typeof PublicConfirmRoute
+  '/forgot-password': typeof PublicForgotPasswordRoute
+  '/login': typeof PublicLoginRoute
+  '/reset-password': typeof PublicResetPasswordRoute
+  '/resources': typeof PublicResourcesRoute
+  '/signup': typeof PublicSignupRoute
+  '/stories': typeof PublicStoriesRoute
+  '/verify-email': typeof PublicVerifyEmailRoute
+  '/wheres-religion': typeof PublicWheresReligionRoute
+  '/instructor-dashboard': typeof AppAuthenticatedInstructorDashboardRoute
+  '/notes/$id': typeof PublicNotesIdRoute
+  '/notes': typeof AppAuthenticatedNotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/admin': typeof AdminRoute
-  '/confirm': typeof ConfirmRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/map': typeof MapRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/resources': typeof ResourcesRoute
-  '/signup': typeof SignupRoute
-  '/stories': typeof StoriesRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/wheres-religion': typeof WheresReligionRoute
-  '/_authenticated/instructor-dashboard': typeof AuthenticatedInstructorDashboardRoute
-  '/notes/$id': typeof NotesIdRoute
-  '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_public': typeof PublicRouteWithChildren
+  '/_app/_authenticated': typeof AppAuthenticatedRouteWithChildren
+  '/_app/admin': typeof AppAdminRoute
+  '/_app/map': typeof AppMapRoute
+  '/_public/confirm': typeof PublicConfirmRoute
+  '/_public/forgot-password': typeof PublicForgotPasswordRoute
+  '/_public/login': typeof PublicLoginRoute
+  '/_public/reset-password': typeof PublicResetPasswordRoute
+  '/_public/resources': typeof PublicResourcesRoute
+  '/_public/signup': typeof PublicSignupRoute
+  '/_public/stories': typeof PublicStoriesRoute
+  '/_public/verify-email': typeof PublicVerifyEmailRoute
+  '/_public/wheres-religion': typeof PublicWheresReligionRoute
+  '/_public/': typeof PublicIndexRoute
+  '/_app/_authenticated/instructor-dashboard': typeof AppAuthenticatedInstructorDashboardRoute
+  '/_public/notes/$id': typeof PublicNotesIdRoute
+  '/_app/_authenticated/notes/': typeof AppAuthenticatedNotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/map'
     | '/confirm'
     | '/forgot-password'
     | '/login'
-    | '/map'
     | '/reset-password'
     | '/resources'
     | '/signup'
@@ -182,10 +195,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/map'
     | '/confirm'
     | '/forgot-password'
     | '/login'
-    | '/map'
     | '/reset-password'
     | '/resources'
     | '/signup'
@@ -197,187 +210,224 @@ export interface FileRouteTypes {
     | '/notes'
   id:
     | '__root__'
-    | '/'
-    | '/_authenticated'
-    | '/admin'
-    | '/confirm'
-    | '/forgot-password'
-    | '/login'
-    | '/map'
-    | '/reset-password'
-    | '/resources'
-    | '/signup'
-    | '/stories'
-    | '/verify-email'
-    | '/wheres-religion'
-    | '/_authenticated/instructor-dashboard'
-    | '/notes/$id'
-    | '/_authenticated/notes/'
+    | '/_app'
+    | '/_public'
+    | '/_app/_authenticated'
+    | '/_app/admin'
+    | '/_app/map'
+    | '/_public/confirm'
+    | '/_public/forgot-password'
+    | '/_public/login'
+    | '/_public/reset-password'
+    | '/_public/resources'
+    | '/_public/signup'
+    | '/_public/stories'
+    | '/_public/verify-email'
+    | '/_public/wheres-religion'
+    | '/_public/'
+    | '/_app/_authenticated/instructor-dashboard'
+    | '/_public/notes/$id'
+    | '/_app/_authenticated/notes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AdminRoute: typeof AdminRoute
-  ConfirmRoute: typeof ConfirmRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRoute
-  MapRoute: typeof MapRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
-  ResourcesRoute: typeof ResourcesRoute
-  SignupRoute: typeof SignupRoute
-  StoriesRoute: typeof StoriesRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
-  WheresReligionRoute: typeof WheresReligionRoute
-  NotesIdRoute: typeof NotesIdRoute
+  AppRoute: typeof AppRouteWithChildren
+  PublicRoute: typeof PublicRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wheres-religion': {
-      id: '/wheres-religion'
-      path: '/wheres-religion'
-      fullPath: '/wheres-religion'
-      preLoaderRoute: typeof WheresReligionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stories': {
-      id: '/stories'
-      path: '/stories'
-      fullPath: '/stories'
-      preLoaderRoute: typeof StoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resources': {
-      id: '/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof ResourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/map': {
-      id: '/map'
-      path: '/map'
-      fullPath: '/map'
-      preLoaderRoute: typeof MapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/confirm': {
-      id: '/confirm'
-      path: '/confirm'
-      fullPath: '/confirm'
-      preLoaderRoute: typeof ConfirmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
+    '/_public': {
+      id: '/_public'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+      preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_public/': {
+      id: '/_public/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/notes/$id': {
-      id: '/notes/$id'
+    '/_public/wheres-religion': {
+      id: '/_public/wheres-religion'
+      path: '/wheres-religion'
+      fullPath: '/wheres-religion'
+      preLoaderRoute: typeof PublicWheresReligionRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/verify-email': {
+      id: '/_public/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof PublicVerifyEmailRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/stories': {
+      id: '/_public/stories'
+      path: '/stories'
+      fullPath: '/stories'
+      preLoaderRoute: typeof PublicStoriesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/signup': {
+      id: '/_public/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof PublicSignupRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/resources': {
+      id: '/_public/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof PublicResourcesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/reset-password': {
+      id: '/_public/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof PublicResetPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/forgot-password': {
+      id: '/_public/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof PublicForgotPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/confirm': {
+      id: '/_public/confirm'
+      path: '/confirm'
+      fullPath: '/confirm'
+      preLoaderRoute: typeof PublicConfirmRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_app/map': {
+      id: '/_app/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof AppMapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/_authenticated': {
+      id: '/_app/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppAuthenticatedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_public/notes/$id': {
+      id: '/_public/notes/$id'
       path: '/notes/$id'
       fullPath: '/notes/$id'
-      preLoaderRoute: typeof NotesIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof PublicNotesIdRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_authenticated/instructor-dashboard': {
-      id: '/_authenticated/instructor-dashboard'
+    '/_app/_authenticated/instructor-dashboard': {
+      id: '/_app/_authenticated/instructor-dashboard'
       path: '/instructor-dashboard'
       fullPath: '/instructor-dashboard'
-      preLoaderRoute: typeof AuthenticatedInstructorDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof AppAuthenticatedInstructorDashboardRouteImport
+      parentRoute: typeof AppAuthenticatedRoute
     }
-    '/_authenticated/notes/': {
-      id: '/_authenticated/notes/'
+    '/_app/_authenticated/notes/': {
+      id: '/_app/_authenticated/notes/'
       path: '/notes'
       fullPath: '/notes/'
-      preLoaderRoute: typeof AuthenticatedNotesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof AppAuthenticatedNotesIndexRouteImport
+      parentRoute: typeof AppAuthenticatedRoute
     }
   }
 }
 
-interface AuthenticatedRouteChildren {
-  AuthenticatedInstructorDashboardRoute: typeof AuthenticatedInstructorDashboardRoute
-  AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
+interface AppAuthenticatedRouteChildren {
+  AppAuthenticatedInstructorDashboardRoute: typeof AppAuthenticatedInstructorDashboardRoute
+  AppAuthenticatedNotesIndexRoute: typeof AppAuthenticatedNotesIndexRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedInstructorDashboardRoute: AuthenticatedInstructorDashboardRoute,
-  AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
+const AppAuthenticatedRouteChildren: AppAuthenticatedRouteChildren = {
+  AppAuthenticatedInstructorDashboardRoute:
+    AppAuthenticatedInstructorDashboardRoute,
+  AppAuthenticatedNotesIndexRoute: AppAuthenticatedNotesIndexRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AppAuthenticatedRouteWithChildren =
+  AppAuthenticatedRoute._addFileChildren(AppAuthenticatedRouteChildren)
+
+interface AppRouteChildren {
+  AppAuthenticatedRoute: typeof AppAuthenticatedRouteWithChildren
+  AppAdminRoute: typeof AppAdminRoute
+  AppMapRoute: typeof AppMapRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAuthenticatedRoute: AppAuthenticatedRouteWithChildren,
+  AppAdminRoute: AppAdminRoute,
+  AppMapRoute: AppMapRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface PublicRouteChildren {
+  PublicConfirmRoute: typeof PublicConfirmRoute
+  PublicForgotPasswordRoute: typeof PublicForgotPasswordRoute
+  PublicLoginRoute: typeof PublicLoginRoute
+  PublicResetPasswordRoute: typeof PublicResetPasswordRoute
+  PublicResourcesRoute: typeof PublicResourcesRoute
+  PublicSignupRoute: typeof PublicSignupRoute
+  PublicStoriesRoute: typeof PublicStoriesRoute
+  PublicVerifyEmailRoute: typeof PublicVerifyEmailRoute
+  PublicWheresReligionRoute: typeof PublicWheresReligionRoute
+  PublicIndexRoute: typeof PublicIndexRoute
+  PublicNotesIdRoute: typeof PublicNotesIdRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PublicConfirmRoute: PublicConfirmRoute,
+  PublicForgotPasswordRoute: PublicForgotPasswordRoute,
+  PublicLoginRoute: PublicLoginRoute,
+  PublicResetPasswordRoute: PublicResetPasswordRoute,
+  PublicResourcesRoute: PublicResourcesRoute,
+  PublicSignupRoute: PublicSignupRoute,
+  PublicStoriesRoute: PublicStoriesRoute,
+  PublicVerifyEmailRoute: PublicVerifyEmailRoute,
+  PublicWheresReligionRoute: PublicWheresReligionRoute,
+  PublicIndexRoute: PublicIndexRoute,
+  PublicNotesIdRoute: PublicNotesIdRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AdminRoute: AdminRoute,
-  ConfirmRoute: ConfirmRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRoute,
-  MapRoute: MapRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
-  ResourcesRoute: ResourcesRoute,
-  SignupRoute: SignupRoute,
-  StoriesRoute: StoriesRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
-  WheresReligionRoute: WheresReligionRoute,
-  NotesIdRoute: NotesIdRoute,
+  AppRoute: AppRouteWithChildren,
+  PublicRoute: PublicRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

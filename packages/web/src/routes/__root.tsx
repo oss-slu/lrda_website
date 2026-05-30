@@ -5,7 +5,6 @@ import * as React from 'react';
 
 import globalsCss from '@/globals.css?url';
 
-import Navbar from '@/components/navbar';
 import { Toaster } from '@/components/ui/sonner';
 import { GoogleMapsProvider } from '@/utils/GoogleMapsContext';
 import { AuthProvider } from '@/components/AuthProvider';
@@ -62,13 +61,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className='flex h-screen flex-col'>
+      <body className='min-h-screen bg-white'>
         <AuthProvider>
           <GoogleMapsProvider>
-            <Navbar />
-            <TrackingWrapper>
-              <main className='flex-grow overflow-y-auto scroll-smooth'>{children}</main>
-            </TrackingWrapper>
+            <TrackingWrapper>{children}</TrackingWrapper>
             <Toaster />
           </GoogleMapsProvider>
         </AuthProvider>
@@ -86,3 +82,4 @@ function TrackingWrapper({ children }: { children: React.ReactNode }) {
   usePageView();
   return <>{children}</>;
 }
+

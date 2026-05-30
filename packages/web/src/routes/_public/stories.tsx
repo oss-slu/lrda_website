@@ -16,7 +16,7 @@ import {
 } from '@/hooks/queries/useNotes';
 import { useCreatorName } from '@/hooks/queries/useUsers';
 
-export const Route = createFileRoute('/stories')({
+export const Route = createFileRoute('/_public/stories')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureInfiniteQueryData(publishedNotesInfiniteOptions(20)),
   head: () => ({
