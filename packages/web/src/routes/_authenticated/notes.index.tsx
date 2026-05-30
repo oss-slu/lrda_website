@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Notes from '@/app/notes/Notes';
+import Notes from '@/components/notes/Notes';
 
 export const Route = createFileRoute('/_authenticated/notes/')({
   head: () => ({

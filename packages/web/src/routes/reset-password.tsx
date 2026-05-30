@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { authClient } from '@/app/lib/auth/client';
+import { authClient } from '@/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';

@@ -1,6 +1,6 @@
 import { createFileRoute, Link  } from '@tanstack/react-router';
 import { useState, useCallback } from 'react';
-import { authClient } from '@/app/lib/auth/client';
+import { authClient } from '@/auth/client';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

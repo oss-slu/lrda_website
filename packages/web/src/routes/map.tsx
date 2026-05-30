@@ -1,21 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useCallback, useDeferredValue } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
-import { Note } from '@/app/types';
-import { useAuthStore } from '@/app/lib/stores/authStore';
-import { useMapStore } from '@/app/lib/stores/mapStore';
+import { Note } from '@/types';
+import { useAuthStore } from '@/stores/authStore';
+import { useMapStore } from '@/stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
-import ClickableNote from '@/app/lib/components/click_note_card';
-import { MapControls, MapNotesPanel } from '@/app/lib/components/map';
-import { useInfiniteNotes, NOTES_PAGE_SIZE } from '@/app/lib/hooks/useInfiniteNotes';
-import { useGoogleMaps } from '@/app/lib/utils/GoogleMapsContext';
+import ClickableNote from '@/components/click_note_card';
+import { MapControls, MapNotesPanel } from '@/components/map';
+import { useInfiniteNotes, NOTES_PAGE_SIZE } from '@/hooks/useInfiniteNotes';
+import { useGoogleMaps } from '@/utils/GoogleMapsContext';
 import { Dialog } from '@/components/ui/dialog';
-import { usePersonalMapNotes } from '@/app/lib/hooks/queries/useNotes';
-import { useViewportNotes } from '@/app/lib/hooks/queries/useViewportNotes';
-import { useMapLocation } from '@/app/lib/hooks/useMapLocation';
-import { useMapMarkers } from '@/app/lib/hooks/useMapMarkers';
-import { useMapIntro } from '@/app/lib/hooks/useMapIntro';
-import { MAP_WIDTH_WITH_PANEL } from '@/app/lib/utils/mapConstants';
+import { usePersonalMapNotes } from '@/hooks/queries/useNotes';
+import { useViewportNotes } from '@/hooks/queries/useViewportNotes';
+import { useMapLocation } from '@/hooks/useMapLocation';
+import { useMapMarkers } from '@/hooks/useMapMarkers';
+import { useMapIntro } from '@/hooks/useMapIntro';
+import { MAP_WIDTH_WITH_PANEL } from '@/utils/mapConstants';
 
 export const Route = createFileRoute('/map')({
   ssr: false,

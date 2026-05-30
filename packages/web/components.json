@@ -3,7 +3,7 @@
   "style": "default",
   "rsc": true,
   "tailwind": {
-    "css": "app/globals.css",
+    "css": "src/globals.css",
     "baseColor": "slate",
     "cssVariables": true
   },

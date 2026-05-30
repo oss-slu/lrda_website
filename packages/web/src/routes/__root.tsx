@@ -3,15 +3,15 @@ import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/reac
 import type { QueryClient } from '@tanstack/react-query';
 import * as React from 'react';
 
-import globalsCss from '@/app/globals.css?url';
+import globalsCss from '@/globals.css?url';
 
-import Navbar from '@/app/lib/components/navbar';
+import Navbar from '@/components/navbar';
 import { Toaster } from '@/components/ui/sonner';
-import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext';
-import { AuthProvider } from '@/app/lib/components/AuthProvider';
-import NotFound from '@/app/lib/components/NotFound';
-import RootError from '@/app/lib/components/RootError';
-import { usePageView } from '@/app/lib/hooks/usePageView';
+import { GoogleMapsProvider } from '@/utils/GoogleMapsContext';
+import { AuthProvider } from '@/components/AuthProvider';
+import NotFound from '@/components/NotFound';
+import RootError from '@/components/RootError';
+import { usePageView } from '@/hooks/usePageView';
 
 const TanStackRouterDevtools =
   import.meta.env.PROD ?
