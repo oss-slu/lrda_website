@@ -3,7 +3,26 @@ import { formatCitation } from '@/utils/citation_formatter';
 
 export const Route = createFileRoute('/_public/resources')({
   head: () => ({
-    meta: [{ title: "Resources | Where's Religion?" }],
+    meta: [
+      { title: "Resources | Where's Religion?" },
+      {
+        name: 'description',
+        content:
+          'Curated resources for studying lived religion, including ethics guides, research methods, and academic references.',
+      },
+      { property: 'og:title', content: "Resources | Where's Religion?" },
+      {
+        property: 'og:description',
+        content: 'Curated resources for studying lived religion, including ethics guides and research methods.',
+      },
+      { property: 'og:url', content: 'https://wheresreligion.org/resources' },
+      { name: 'twitter:title', content: "Resources | Where's Religion?" },
+      {
+        name: 'twitter:description',
+        content: 'Curated resources for studying lived religion, including ethics guides and research methods.',
+      },
+    ],
+    links: [{ rel: 'canonical', href: 'https://wheresreligion.org/resources' }],
   }),
   component: ResourcesPage,
 });

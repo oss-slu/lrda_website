@@ -25,24 +25,28 @@ import {
 export const Route = createFileRoute('/_public/notes/$id')({
   loader: ({ context: { queryClient }, params }) =>
     queryClient.ensureQueryData(noteDetailOptions(params.id)),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const title =
       loaderData?.title ? `${loaderData.title} | Where's Religion?` : "Note | Where's Religion?";
     const description =
       loaderData?.text ? extractTextFromHtml(loaderData.text).slice(0, 160) : undefined;
+    const url = `https://wheresreligion.org/notes/${params.id}`;
     return {
       meta: [
         { title },
         { property: 'og:title', content: loaderData?.title ?? 'Note' },
         { property: 'og:type', content: 'article' },
-        { name: 'twitter:card', content: 'summary' },
+        { property: 'og:url', content: url },
+        { name: 'twitter:title', content: loaderData?.title ?? 'Note' },
         ...(description ?
           [
             { name: 'description', content: description },
             { property: 'og:description', content: description },
+            { name: 'twitter:description', content: description },
           ]
         : []),
       ],
+      links: [{ rel: 'canonical', href: url }],
     };
   },
   component: NoteDetailPage,

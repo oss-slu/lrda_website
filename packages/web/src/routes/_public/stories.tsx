@@ -20,7 +20,26 @@ export const Route = createFileRoute('/_public/stories')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureInfiniteQueryData(publishedNotesInfiniteOptions(20)),
   head: () => ({
-    meta: [{ title: "Stories | Where's Religion?" }],
+    meta: [
+      { title: "Stories | Where's Religion?" },
+      {
+        name: 'description',
+        content:
+          'Browse published field notes and stories from researchers documenting lived religion around the world.',
+      },
+      { property: 'og:title', content: "Stories | Where's Religion?" },
+      {
+        property: 'og:description',
+        content: 'Browse published field notes and stories documenting lived religion around the world.',
+      },
+      { property: 'og:url', content: 'https://wheresreligion.org/stories' },
+      { name: 'twitter:title', content: "Stories | Where's Religion?" },
+      {
+        name: 'twitter:description',
+        content: 'Browse published field notes and stories documenting lived religion around the world.',
+      },
+    ],
+    links: [{ rel: 'canonical', href: 'https://wheresreligion.org/stories' }],
   }),
   component: StoriesPage,
 });

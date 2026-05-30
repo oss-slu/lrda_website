@@ -42,12 +42,67 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { title: "Where's Religion?" },
       {
         name: 'description',
-        content: 'Document and map lived religion research with rich text, media, and geolocation.',
+        content:
+          'Document and map lived religion research with rich text, media, and geolocation.',
       },
+      { name: 'robots', content: 'index,follow,max-image-preview:large' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: "Where's Religion?" },
+      {
+        property: 'og:title',
+        content: "Where's Religion?",
+      },
+      {
+        property: 'og:description',
+        content:
+          'Document and map lived religion research with rich text, media, and geolocation.',
+      },
+      { property: 'og:url', content: 'https://wheresreligion.org' },
+      { property: 'og:image', content: 'https://wheresreligion.org/og-image.png' },
+      { property: 'og:image:alt', content: "Where's Religion? landing page" },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:locale', content: 'en_US' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:image', content: 'https://wheresreligion.org/og-image.png' },
+      { name: 'theme-color', content: '#ffffff' },
     ],
     links: [
       { rel: 'stylesheet', href: globalsCss },
       { rel: 'icon', href: '/favicon.ico' },
+    ],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Organization',
+              name: "Where's Religion?",
+              url: 'https://wheresreligion.org',
+              logo: 'https://wheresreligion.org/LivedReligion.png',
+            },
+            {
+              '@type': 'WebApplication',
+              name: "Where's Religion?",
+              url: 'https://wheresreligion.org',
+              applicationCategory: 'EducationalApplication',
+              applicationSubCategory: 'Research Tool',
+              description:
+                'Document and map lived religion research with rich text, media, and geolocation.',
+              operatingSystem: 'Any',
+              browserRequirements: 'Requires a modern web browser',
+              offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'USD',
+                description: 'Free to use',
+              },
+            },
+          ],
+        }),
+      },
     ],
   }),
   shellComponent: RootDocument,

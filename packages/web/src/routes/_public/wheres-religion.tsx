@@ -6,7 +6,26 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 
 export const Route = createFileRoute('/_public/wheres-religion')({
   head: () => ({
-    meta: [{ title: "About | Where's Religion?" }],
+    meta: [
+      { title: "About | Where's Religion?" },
+      {
+        name: 'description',
+        content:
+          "Learn about the Where's Religion? project, its mission to advance the study of religion and public life, and the team behind it.",
+      },
+      { property: 'og:title', content: "About | Where's Religion?" },
+      {
+        property: 'og:description',
+        content: "Learn about the Where's Religion? project and its mission to advance the study of religion and public life.",
+      },
+      { property: 'og:url', content: 'https://wheresreligion.org/wheres-religion' },
+      { name: 'twitter:title', content: "About | Where's Religion?" },
+      {
+        name: 'twitter:description',
+        content: "Learn about the Where's Religion? project and its mission to advance the study of religion and public life.",
+      },
+    ],
+    links: [{ rel: 'canonical', href: 'https://wheresreligion.org/wheres-religion' }],
   }),
   component: WheresReligionPage,
 });
