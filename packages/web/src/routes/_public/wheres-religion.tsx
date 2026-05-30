@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useReveal, motionVariants } from '@/utils/motion';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 
 export const Route = createFileRoute('/_public/wheres-religion')({
@@ -31,15 +30,11 @@ export const Route = createFileRoute('/_public/wheres-religion')({
 });
 
 function WheresReligionPage() {
-  const { ref: heroRef, isVisible: heroVisible } = useReveal<HTMLDivElement>();
-
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50'>
       {/* Hero Section */}
       <div
-        ref={heroRef}
-        className={`relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 px-4 py-16 sm:px-6 sm:py-24 lg:px-8 ${motionVariants.fadeIn}`}
-        data-reveal={heroVisible}
+        className='relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 px-4 py-16 sm:px-6 sm:py-24 lg:px-8'
       >
         {/* Animated background elements */}
         <div className='pointer-events-none absolute inset-0 overflow-hidden'>
