@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useReveal, motionVariants } from '@/app/utils/motion';
-import { CollapsibleSection } from '@/app/components/CollapsibleSection';
+import { useReveal, motionVariants } from '@/utils/motion';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 
 export const Route = createFileRoute('/wheres-religion')({
   head: () => ({

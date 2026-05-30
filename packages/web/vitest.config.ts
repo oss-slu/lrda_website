@@ -9,15 +9,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./setupTests.ts'],
-    include: ['app/__tests__/**/*.test.{ts,tsx}'],
-    exclude: ['app/__e2e__/**'],
+    include: ['src/__tests__/**/*.test.{ts,tsx}'],
+    exclude: ['src/__e2e__/**'],
     css: false,
     alias: {
       // Module mocks for packages that break in jsdom
-      uuid: './app/__mocks__/uuid.js',
-      'react-player': './app/__mocks__/react-player.js',
-      'intro.js': './app/__mocks__/intro.js',
-      'intro.js/introjs.css': './app/__mocks__/styleMock.js',
+      uuid: './src/__mocks__/uuid.js',
+      'react-player': './src/__mocks__/react-player.js',
+      'intro.js': './src/__mocks__/intro.js',
+      'intro.js/introjs.css': './src/__mocks__/styleMock.js',
     },
   },
 });

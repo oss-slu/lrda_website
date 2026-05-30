@@ -1,0 +1,97 @@
+import React, { useEffect, useState, lazy, Suspense  } from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
+import { type CarouselApi } from '@/components/ui/carousel';
+import type { NoteMedia } from '@/types';
+
+const ReactPlayer = lazy(() => import('react-player'));
+
+export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[] }) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = React.useState(0);
+  const [count, setCount] = React.useState(0);
+  const [isHovered, setIsHovered] = useState(false); // State to track hover
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+     
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
+  const handleRightClick = (event: React.MouseEvent) => {
+    api?.scrollNext();
+    event.stopPropagation();
+  };
+  const handleLeftClick = (event: React.MouseEvent) => {
+    api?.scrollPrev();
+    event.stopPropagation();
+  };
+  return (
+    <Carousel
+      setApi={setApi}
+      className='flex h-auto w-full items-center justify-center'
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CarouselContent>
+        {mediaArray.map((media, index) => (
+          <CarouselItem key={index} className='flex h-full items-center justify-center self-center'>
+            {media.type === 'image' && (
+              <img
+                src={media.uri}
+                loading='eager'
+                decoding='async'
+                className='h-[180px] w-[256px] rounded-t-sm object-cover'
+                alt='Media content'
+              />
+            )}
+            {media.type === 'video' && (
+              <Suspense fallback={null}>
+                <ReactPlayer
+                  {...({
+                    url: media.uri,
+                    controls: true,
+                    width: '256px',
+                    height: '180px',
+                    className: 'self-center object-cover bg-black',
+                  } as any)}
+                />
+              </Suspense>
+            )}
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      {count > 1 && isHovered && (
+        <div className='absolute bottom-4 left-1/2 flex h-5 -translate-x-1/2 flex-row items-center justify-center rounded bg-black/60 px-2'>
+          <span className='text-xs font-medium text-white'>
+            {current} / {count}
+          </span>
+        </div>
+      )}
+      {mediaArray.length > 1 && current > 1 && isHovered && (
+        <CarouselPrevious
+          className='absolute left-0 bg-[rgb(255,255,255,0.5)] hover:z-50'
+          onClick={handleLeftClick}
+        />
+      )}
+      {mediaArray.length > 1 && current < count && isHovered && (
+        <CarouselNext
+          className='absolute right-0 bg-[rgb(255,255,255,0.5)] hover:z-50'
+          onClick={handleRightClick}
+        />
+      )}
+    </Carousel>
+  );
+}

@@ -1,16 +1,16 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useMemo } from 'react';
-import { Tag } from '@/app/types';
-import { sanitizeHtml, extractTextFromHtml } from '@/app/utils/sanitize';
-import { formatDate, format12hourTime } from '@/app/utils/data_conversion';
-import { useNoteDetail, noteDetailOptions } from '@/app/hooks/queries/useNotes';
-import { useCreatorName } from '@/app/hooks/queries/useUsers';
+import { Tag } from '@/types';
+import { sanitizeHtml, extractTextFromHtml } from '@/utils/sanitize';
+import { formatDate, format12hourTime } from '@/utils/data_conversion';
+import { useNoteDetail, noteDetailOptions } from '@/hooks/queries/useNotes';
+import { useCreatorName } from '@/hooks/queries/useUsers';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PopoverClose } from '@radix-ui/react-popover';
-import AudioPicker from '@/app/components/NoteEditor/NoteElements/AudioPicker';
-import MediaViewer from '@/app/components/media_viewer';
+import AudioPicker from '@/components/NoteEditor/NoteElements/AudioPicker';
+import MediaViewer from '@/components/media_viewer';
 import {
   ArrowLeft,
   CalendarDays,

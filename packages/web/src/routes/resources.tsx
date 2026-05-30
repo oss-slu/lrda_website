@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { formatCitation } from '@/app/utils/citation_formatter';
+import { formatCitation } from '@/utils/citation_formatter';
 
 export const Route = createFileRoute('/resources')({
   head: () => ({

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, Link  } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useAuthStore } from '@/app/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { checkMigrationStatus } from '@/app/services';
+import { checkMigrationStatus } from '@/services';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
