@@ -1,5 +1,9 @@
-import { createStart, createMiddleware } from '@tanstack/react-start';
+import { createStart, createMiddleware, createCsrfMiddleware } from '@tanstack/react-start';
 import { setResponseHeader } from '@tanstack/react-start/server';
+
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === 'serverFn',
+});
 
 /**
  * Cache policies for SSR responses.
@@ -45,5 +49,5 @@ const cacheHeadersMiddleware = createMiddleware().server(async ({ next, request 
 });
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [cacheHeadersMiddleware],
+  requestMiddleware: [csrfMiddleware, cacheHeadersMiddleware],
 }));
