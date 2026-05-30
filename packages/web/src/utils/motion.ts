@@ -7,16 +7,13 @@ type RevealOptions = {
 
 function usePrefersReducedMotion(): boolean {
   // Initialize with SSR-safe default, then sync via effect
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
+  const [reduced, setReduced] = useState(false);
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mql.matches);
     const onChange = () => setReduced(mql.matches);
-    mql.addEventListener?.('change', onChange);
-    return () => mql.removeEventListener?.('change', onChange);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
   return reduced;
 }

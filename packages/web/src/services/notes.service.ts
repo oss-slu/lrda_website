@@ -118,7 +118,7 @@ async function fetchAll(options: NoteQueryOptions = {}): Promise<Note[]> {
 
   const qs = buildQueryString(params);
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
-  return (data ?? []).map(transformApiNote);
+  return data.map(transformApiNote);
 }
 
 /**
@@ -148,7 +148,7 @@ async function fetchPublished(
  */
 async function fetchByStudents(instructorId: string): Promise<Note[]> {
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes/students/${instructorId}`);
-  return (data ?? []).map(transformApiNote);
+  return data.map(transformApiNote);
 }
 
 /**
@@ -157,7 +157,7 @@ async function fetchByStudents(instructorId: string): Promise<Note[]> {
 async function fetchUserNotes(userId: string, limit = 150, skip = 0): Promise<Note[]> {
   const qs = buildQueryString({ creatorId: userId, limit, offset: skip });
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
-  return (data ?? []).map(transformApiNote);
+  return data.map(transformApiNote);
 }
 
 /**
@@ -224,7 +224,7 @@ async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
     offset: params.offset ?? 0,
   });
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
-  return (data ?? []).map(transformApiNote);
+  return data.map(transformApiNote);
 }
 
 /**
@@ -233,7 +233,7 @@ async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
 async function fetchById(id: string): Promise<Note | null> {
   try {
     const data = await fetchWithAuth<ApiNoteData>(`/api/notes/${id}`);
-    return data ? transformApiNote(data) : null;
+    return transformApiNote(data);
   } catch {
     return null;
   }

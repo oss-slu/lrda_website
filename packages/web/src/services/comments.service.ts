@@ -33,7 +33,7 @@ function transformComment(item: ApiCommentData): CommentData {
 async function fetchForNote(noteId: string): Promise<CommentData[]> {
   try {
     const data = await fetchWithAuth<ApiCommentData[]>(`/api/comments/note/${noteId}`);
-    return (data ?? []).map(transformComment);
+    return data.map(transformComment);
   } catch (error) {
     console.error('Error fetching comments:', error);
     return [];

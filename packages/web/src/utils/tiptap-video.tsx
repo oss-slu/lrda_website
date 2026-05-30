@@ -111,6 +111,7 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected, editor }:
 }
 
 declare module '@tiptap/core' {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Commands<ReturnType> {
     video: {
       setVideo: (options: { src: string; width?: number }) => ReturnType;
@@ -130,8 +131,8 @@ export const VideoNode = Node.create({
       width: {
         default: 100,
         parseHTML: (el) => {
-          const style = (el as HTMLElement).style.width;
-          if (style?.endsWith('%')) return parseInt(style, 10);
+          const style = el.style.width;
+          if (style.endsWith('%')) return parseInt(style, 10);
           return 100;
         },
         renderHTML: (attrs) => ({

@@ -373,7 +373,7 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
         },
       },
     ],
-    [],
+    [isUserSync],
   );
 
   const table = useReactTable({
