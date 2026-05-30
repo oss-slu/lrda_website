@@ -167,7 +167,6 @@ function MapPage() {
   useMapIntro({
     searchBarRef,
     notesListRef,
-    noteRefs,
   });
 
   // Reset map-bound state on unmount so markers rebuild cleanly on re-visit

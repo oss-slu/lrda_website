@@ -3,92 +3,80 @@ import { useEffect, useRef } from 'react';
 interface UseMapIntroProps {
   searchBarRef: React.RefObject<HTMLDivElement | null>;
   notesListRef: React.RefObject<HTMLDivElement | null>;
-  noteRefs: React.MutableRefObject<{ [key: string]: HTMLElement | undefined }>;
 }
 
-/**
- * Hook to manage the intro.js tutorial for first-time users.
- */
-export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntroProps) {
+export function useMapIntro({ searchBarRef, notesListRef }: UseMapIntroProps) {
   const introStartedRef = useRef(false);
 
   useEffect(() => {
-    // Reset on mount to allow intro to run if conditions are met
-    introStartedRef.current = false;
+    if (introStartedRef.current) return;
 
-    const observer = new MutationObserver(async () => {
-      // Prevent multiple initializations
+    const introShown = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('introShown='))
+      ?.split('=')[1];
+    if (introShown) return;
+
+    // Wait one frame for layout to settle, then check elements
+    const rafId = requestAnimationFrame(async () => {
       if (introStartedRef.current) return;
 
+      const searchBar = searchBarRef.current;
+      const notesList = notesListRef.current;
       const navbarCreateNoteButton = document.getElementById('navbar-create-note');
+
+      if (!searchBar || !notesList || !navbarCreateNoteButton) return;
+
+      introStartedRef.current = true;
+
+      const { loadIntroStyles } = await import('@/utils/loadIntroStyles');
+      await loadIntroStyles();
+      const introJs = (await import('intro.js')).default;
+      const intro = introJs.tour();
+
+      const steps: { element?: HTMLElement; intro: string }[] = [
+        {
+          intro: "Welcome! Let's explore the website together.",
+        },
+        {
+          element: searchBar,
+          intro:
+            "First, here's the search bar. You can use it to help you find locations on the map.",
+        },
+        {
+          element: notesList,
+          intro: "Now, this is the notes list. You can use it to explore other people's notes!",
+        },
+        {
+          element: navbarCreateNoteButton,
+          intro: 'Click here to create your own note!',
+        },
+      ];
+
       const navbarLogoutButton = document.getElementById('navbar-logout');
-
-      if (searchBarRef.current && navbarCreateNoteButton && notesListRef.current) {
-        // Check if the intro has been shown before (from cookies)
-        const introShown = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('introShown='))
-          ?.split('=')[1];
-
-        // If intro was already shown, just disconnect and return
-        if (introShown) {
-          observer.disconnect();
-          return;
-        }
-
-        // Mark as started immediately to prevent race conditions
-        introStartedRef.current = true;
-        observer.disconnect();
-
-        // Dynamically load intro.js and its styles only on client side
-        const { loadIntroStyles } = await import('@/utils/loadIntroStyles');
-        await loadIntroStyles();
-        const introJs = (await import('intro.js')).default;
-        const intro = introJs.tour();
-
-        intro.setOptions({
-          steps: [
-            {
-              element: (noteRefs.current as any)?.current,
-              intro: "Welcome! Let's explore the website together.",
-            },
-            {
-              element: searchBarRef.current,
-              intro:
-                "First, here's the search bar. You can use it to help you find locations on the map.",
-            },
-            {
-              element: notesListRef.current,
-              intro: "Now, this is the notes list. You can use it to explore other people's notes!",
-            },
-            {
-              element: navbarCreateNoteButton,
-              intro: 'Click here to create your own note!',
-            },
-            {
-              element: navbarLogoutButton,
-              intro: 'Done for the day? Make sure to logout!',
-            },
-          ],
-          scrollToElement: true,
-          skipLabel: 'Skip',
+      if (navbarLogoutButton) {
+        steps.push({
+          element: navbarLogoutButton,
+          intro: 'Done for the day? Make sure to logout!',
         });
-
-        const setIntroShownCookie = () => {
-          document.cookie = 'introShown=true; path=/; max-age=31536000'; // 1 year expiry
-        };
-
-        intro.oncomplete(setIntroShownCookie);
-        intro.onexit(setIntroShownCookie);
-
-        intro.start();
       }
+
+      intro.setOptions({
+        steps,
+        scrollToElement: true,
+        skipLabel: 'Skip',
+      });
+
+      const setIntroShownCookie = () => {
+        document.cookie = 'introShown=true; path=/; max-age=31536000';
+      };
+
+      intro.oncomplete(setIntroShownCookie);
+      intro.onexit(setIntroShownCookie);
+
+      intro.start();
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [searchBarRef, noteRefs, notesListRef]);
+    return () => cancelAnimationFrame(rafId);
+  }, [searchBarRef, notesListRef]);
 }
