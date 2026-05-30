@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';
 import { Note } from '@/types';
@@ -16,6 +16,8 @@ interface SearchBarMapProps {
   filteredNotes: Note[];
 }
 
+const LISTBOX_ID = 'map-search-listbox';
+
 const SearchBarMap: React.FC<SearchBarMapProps> = ({
   onSearch,
   onNotesSearch,
@@ -24,6 +26,7 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
 }) => {
   const [searchText, setSearchText] = useState('');
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const searchTextRef = useRef('');
   const prevSearchTextRef = useRef('');
 
@@ -50,20 +53,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
       }
     },
     [onSearch, onNotesSearch, search],
-  );
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const typedLocation = searchTextRef.current.trim();
-        if (typedLocation) {
-          onSearch(typedLocation);
-          setIsDropdownVisible(false);
-        }
-      }
-    },
-    [onSearch],
   );
 
   const handleResultClick = useCallback(
@@ -96,6 +85,7 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
 
   const handleBlur = useCallback(() => {
     setIsDropdownVisible(false);
+    setActiveIndex(-1);
   }, []);
 
   const combinedResults = useMemo((): CombinedResult[] => {
@@ -147,6 +137,46 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
     return results;
   }, [searchText, suggestions, filteredNotes]);
 
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [searchText]);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          setIsDropdownVisible(true);
+          setActiveIndex(prev => (prev < combinedResults.length - 1 ? prev + 1 : prev));
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          setActiveIndex(prev => (prev > 0 ? prev - 1 : -1));
+          break;
+        case 'Escape':
+          setIsDropdownVisible(false);
+          setActiveIndex(-1);
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (activeIndex >= 0 && activeIndex < combinedResults.length) {
+            handleResultClick(combinedResults[activeIndex]!);
+            setActiveIndex(-1);
+          } else {
+            const typedLocation = searchTextRef.current.trim();
+            if (typedLocation) {
+              onSearch(typedLocation);
+              setIsDropdownVisible(false);
+            }
+          }
+          break;
+      }
+    },
+    [onSearch, activeIndex, combinedResults, handleResultClick],
+  );
+
+  const activeOptionId = activeIndex >= 0 ? `map-search-option-${activeIndex}` : undefined;
+
   return (
     <div className='relative flex w-full flex-col'>
       <SearchBarUI
@@ -155,7 +185,9 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className='rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none'
+        ariaExpanded={isDropdownVisible && combinedResults.length > 0}
+        ariaControls={LISTBOX_ID}
+        ariaActiveDescendant={activeOptionId}
       />
       {isDropdownVisible && (
         <div className='absolute top-full z-50 mt-2 w-full'>
@@ -167,18 +199,25 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
               </div>
             )}
             {!loading && combinedResults.length > 0 && (
-              <div className='divide-y'>
-                {combinedResults.map(result => {
+              <div role='listbox' id={LISTBOX_ID} className='divide-y'>
+                {combinedResults.map((result, index) => {
                   const isSuggestion = result.type === 'suggestion';
                   const key = isSuggestion ? result.place_id : result.id;
                   const displayText = isSuggestion ? result.description : result.title;
+                  const optionId = `map-search-option-${index}`;
 
                   return (
                     <button
                       key={key}
-                      className='hover:bg-accent flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors'
+                      id={optionId}
+                      role='option'
+                      aria-selected={index === activeIndex}
+                      className={`hover:bg-accent flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                        index === activeIndex ? 'bg-accent' : ''
+                      }`}
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => handleResultClick(result)}
+                      onMouseEnter={() => setActiveIndex(index)}
                       type='button'
                     >
                       {isSuggestion ?

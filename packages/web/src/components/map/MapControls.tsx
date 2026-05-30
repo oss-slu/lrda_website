@@ -60,8 +60,9 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           {isLoggedIn && (
             <button
               onClick={onToggleView}
+              aria-label={isGlobalView ? 'Show my notes' : 'Show all notes'}
               title={isGlobalView ? 'Show my notes' : 'Show all notes'}
-              className={`bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl ${
+              className={`bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-accent hover:shadow-xl ${
                 isGlobalView ? 'text-blue-600' : 'text-green-600'
               }`}
             >
@@ -80,9 +81,10 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           }}
         >
           {/* Zoom controls grouped in a pill */}
-          <div className='flex items-center gap-0.5 rounded-full bg-white p-1 shadow-lg'>
+          <div className='bg-card flex items-center gap-0.5 rounded-full p-1 shadow-lg'>
             <button
               onClick={onZoomOut}
+              aria-label='Zoom out'
               title='Zoom out'
               className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
             >
@@ -91,6 +93,7 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
             <div className='bg-border h-4 w-px' />
             <button
               onClick={onZoomIn}
+              aria-label='Zoom in'
               title='Zoom in'
               className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
             >
@@ -101,8 +104,9 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           {/* Location button */}
           <button
             onClick={onLocate}
+            aria-label='Find my location'
             title='Find my location'
-            className='bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-gray-200 hover:shadow-xl'
+            className='bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-accent hover:shadow-xl'
           >
             <Crosshair className='text-muted-foreground h-5 w-5' />
           </button>

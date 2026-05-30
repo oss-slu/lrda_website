@@ -101,6 +101,7 @@ function MapPage() {
   // Personal view: viewport-based fetching with summary mode (debounced, server-side filtering)
   const {
     data: personalNotes = [],
+    allNotes: allPersonalNotes = [],
     isPending: isPersonalPending,
     isFetching: isPersonalFetching,
     isError: isPersonalError,
@@ -116,7 +117,7 @@ function MapPage() {
   // Viewport-filtered notes for the panel list
   const filteredNotes = isGlobalView ? viewportNotes : personalNotes;
   // All accumulated notes for markers (keeps markers drawn beyond viewport)
-  const markerNotes = isGlobalView ? allViewportNotes : personalNotes;
+  const markerNotes = isGlobalView ? allViewportNotes : allPersonalNotes;
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);

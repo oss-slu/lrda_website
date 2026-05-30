@@ -1,6 +1,5 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { getItem, setItem } from '../utils/local_storage';
 import type { Location } from '../utils/mapUtils';
 
 const DEFAULT_LOCATION: Location = { lat: 38.637334, lng: -90.286021 };
@@ -14,9 +13,6 @@ interface UseMapLocationProps {
   setLocationFound: (found: boolean) => void;
 }
 
-/**
- * Hook to manage map location - fetching from storage, geolocation, and manual location setting.
- */
 export function useMapLocation({
   mapRef,
   locationFound,
@@ -24,150 +20,71 @@ export function useMapLocation({
   setMapZoom,
   setLocationFound,
 }: UseMapLocationProps) {
-  const isSubscribedRef = useRef(true);
+  // Set initial position from localStorage or default, then save
+  // current geolocation in the background for next visit.
+  useEffect(() => {
+    if (locationFound) return;
 
-  // Helper to trigger map resize
-  const triggerMapResize = useCallback(() => {
-    setTimeout(() => {
-      if (mapRef.current) {
-        google.maps.event.trigger(mapRef.current, 'resize');
+    let center = DEFAULT_LOCATION;
+    try {
+      const saved = localStorage.getItem('LastLocation');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.lat === 'number' && typeof parsed.lng === 'number') {
+          center = parsed;
+        }
       }
-    }, 100);
-  }, [mapRef]);
+    } catch {
+      // Corrupted localStorage entry -- use default
+    }
 
-  // Get current geolocation
-  const getLocation = useCallback((): Promise<Location> => {
+    setMapCenter(center);
+    setMapZoom(DEFAULT_ZOOM);
+    setLocationFound(true);
+
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const loc: Location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        localStorage.setItem('LastLocation', JSON.stringify(loc));
+        if (!cancelled) {
+          setMapCenter(loc);
+          mapRef.current?.panTo(loc);
+        }
+      },
+      () => {},
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locationFound, setMapCenter, setMapZoom, setLocationFound, mapRef]);
+
+  const handleSetLocation = useCallback(() => {
     toast('Fetching Location', {
       description: 'Getting your location. This can take a second.',
       duration: 3000,
     });
 
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const newCenter: Location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          resolve(newCenter);
-        },
-        error => {
-          console.error('Error fetching location', error);
-          reject(error);
-        },
-      );
-    });
-  }, []);
-
-  // Handle manual location button click
-  const handleSetLocation = useCallback(async () => {
-    try {
-      const newCenter = await getLocation();
-
-      if (typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
-        setMapCenter(newCenter);
-        mapRef.current?.panTo(newCenter);
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const loc: Location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setMapCenter(loc);
+        mapRef.current?.panTo(loc);
         mapRef.current?.setZoom(13);
-        triggerMapResize();
-      } else {
-        throw new Error('Failed to get valid coordinates from getLocation()');
-      }
-    } catch (error) {
-      console.error('Failed to set location:', error);
-    }
-  }, [getLocation, setMapCenter, mapRef, triggerMapResize]);
+        localStorage.setItem('LastLocation', JSON.stringify(loc));
+      },
+      error => {
+        console.error('Failed to get location:', error);
+      },
+    );
+  }, [setMapCenter, mapRef]);
 
-  // Fetch last saved location on mount (skip if map was already positioned)
-  useEffect(() => {
-    isSubscribedRef.current = true;
-
-    if (locationFound) {
-      return () => {
-        isSubscribedRef.current = false;
-      };
-    }
-
-    const fetchLastLocation = async () => {
-      try {
-        const lastLocationString = await getItem('LastLocation');
-        const lastLocation = lastLocationString ? JSON.parse(lastLocationString) : null;
-
-        if (isSubscribedRef.current) {
-          if (
-            lastLocation &&
-            typeof lastLocation.lat === 'number' &&
-            typeof lastLocation.lng === 'number'
-          ) {
-            setMapCenter(lastLocation);
-            setMapZoom(DEFAULT_ZOOM);
-            setLocationFound(true);
-            triggerMapResize();
-          } else {
-            setMapCenter(DEFAULT_LOCATION);
-            setMapZoom(DEFAULT_ZOOM);
-            setLocationFound(true);
-          }
-        }
-      } catch (error) {
-        setMapCenter(DEFAULT_LOCATION);
-        setMapZoom(DEFAULT_ZOOM);
-        setLocationFound(true);
-
-        if (error instanceof Error && !error.message.includes('Invalid or missing last location')) {
-          console.error('Failed to fetch the last location', error);
-        }
-      }
-    };
-
-    fetchLastLocation();
-
-    return () => {
-      isSubscribedRef.current = false;
-    };
-  }, [setMapCenter, setMapZoom, setLocationFound, triggerMapResize, locationFound]);
-
-  // Fetch current location and update if no location found yet
-  useEffect(() => {
-    if (locationFound) return;
-
-    let isComponentMounted = true;
-
-    const fetchCurrentLocationAndUpdate = async () => {
-      try {
-        const currentLocation = await getLocation();
-
-        if (
-          typeof currentLocation.lat === 'number' &&
-          typeof currentLocation.lng === 'number'
-        ) {
-          if (isComponentMounted) {
-            setMapCenter(currentLocation);
-            setMapZoom(DEFAULT_ZOOM);
-            triggerMapResize();
-          }
-          await setItem('LastLocation', JSON.stringify(currentLocation));
-        } else {
-          throw new Error('Failed to get valid coordinates from getLocation()');
-        }
-      } catch (error) {
-        if (isComponentMounted) {
-          setMapCenter(DEFAULT_LOCATION);
-          setMapZoom(DEFAULT_ZOOM);
-          setLocationFound(true);
-          console.log('Using default location due to error:', error);
-        }
-      }
-    };
-
-    fetchCurrentLocationAndUpdate();
-
-    return () => {
-      isComponentMounted = false;
-    };
-  }, [locationFound, getLocation, setMapCenter, setMapZoom, setLocationFound, triggerMapResize]);
-
-  return {
-    handleSetLocation,
-    triggerMapResize,
-  };
+  return { handleSetLocation };
 }

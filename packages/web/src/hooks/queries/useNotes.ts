@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 import {
   useQuery,
   useInfiniteQuery,
@@ -86,7 +86,8 @@ export function personalMapNotesOptions(params: {
 /**
  * Hook for fetching personal notes for Map page using viewport-based
  * server-side filtering with summary mode.
- * Mirrors useViewportNotes but scoped to the authenticated user's notes.
+ * Mirrors useViewportNotes but scoped to the authenticated user's notes,
+ * including the same accumulation pattern so markers persist when panning.
  */
 export function usePersonalMapNotes(userId: string | null) {
   const { mapBounds, searchQuery } = useMapStore(
@@ -96,11 +97,21 @@ export function usePersonalMapNotes(userId: string | null) {
     })),
   );
 
-  const boundsParams = useMemo(() => boundsToParams(mapBounds), [mapBounds]);
-  const debouncedBounds = useDebounce(boundsParams, PERSONAL_MAP_DEBOUNCE_MS);
+  const rawBounds = useMemo(() => boundsToParams(mapBounds), [mapBounds]);
+  const debouncedBounds = useDebounce(rawBounds, PERSONAL_MAP_DEBOUNCE_MS);
   const debouncedSearch = useDebounce(searchQuery, PERSONAL_MAP_DEBOUNCE_MS);
 
-  return useQuery({
+  const isSearchMode = debouncedSearch.length > 0;
+
+  const accumulatedRef = useRef(new Map<string, Note>());
+
+  const mergeNotes = useCallback((notes: Note[]) => {
+    for (const note of notes) {
+      accumulatedRef.current.set(note.id, note);
+    }
+  }, []);
+
+  const query = useQuery({
     ...personalMapNotesOptions({
       userId: userId ?? '',
       search: debouncedSearch,
@@ -109,6 +120,43 @@ export function usePersonalMapNotes(userId: string | null) {
     enabled: !!userId,
     placeholderData: keepPreviousData,
   });
+
+  if (query.data && !isSearchMode) {
+    mergeNotes(query.data);
+  }
+
+  const data = useMemo(() => {
+    if (isSearchMode) return query.data ?? [];
+
+    const bounds = rawBounds;
+    if (!bounds) return Array.from(accumulatedRef.current.values());
+
+    const visible: Note[] = [];
+    for (const note of accumulatedRef.current.values()) {
+      if (
+        note.latitude != null &&
+        note.longitude != null &&
+        note.latitude >= bounds.minLat &&
+        note.latitude <= bounds.maxLat &&
+        note.longitude >= bounds.minLng &&
+        note.longitude <= bounds.maxLng
+      ) {
+        visible.push(note);
+      }
+    }
+    return visible;
+  }, [rawBounds, query.data, isSearchMode]);
+
+  const allNotes = useMemo(() => {
+    if (isSearchMode) return query.data ?? [];
+    return Array.from(accumulatedRef.current.values());
+  }, [query.data, isSearchMode]);
+
+  return {
+    ...query,
+    data,
+    allNotes,
+  };
 }
 
 /**

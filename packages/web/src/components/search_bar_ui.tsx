@@ -10,6 +10,9 @@ type SearchBarUIProps = {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   className?: string;
   placeholder?: string;
+  ariaExpanded?: boolean;
+  ariaControls?: string;
+  ariaActiveDescendant?: string;
 };
 
 const SearchBarUI: React.FC<SearchBarUIProps> = ({
@@ -20,6 +23,9 @@ const SearchBarUI: React.FC<SearchBarUIProps> = ({
   onBlur,
   onKeyDown,
   placeholder = 'Search notes...',
+  ariaExpanded,
+  ariaControls,
+  ariaActiveDescendant,
 }) => {
   const isActive = searchText.length > 0;
 
@@ -32,6 +38,11 @@ const SearchBarUI: React.FC<SearchBarUIProps> = ({
       />
       <input
         type='text'
+        role='combobox'
+        aria-expanded={ariaExpanded ?? false}
+        aria-controls={ariaControls}
+        aria-autocomplete='list'
+        aria-activedescendant={ariaActiveDescendant}
         placeholder={placeholder}
         className={`placeholder:text-muted-foreground h-10 w-full rounded-full border bg-white pr-10 pl-10 text-sm shadow-sm transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none md:h-11 md:text-base ${
           isActive ? 'border-blue-300 bg-blue-50/50' : 'border-border'
