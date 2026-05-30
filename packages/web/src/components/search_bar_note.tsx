@@ -1,44 +1,29 @@
-import React from 'react';
+import { useState } from 'react';
 import SearchBarUI from './search_bar_ui';
 
 type SearchBarNotesProps = {
   onSearch: (query: string) => void;
 };
 
-type SearchBarNotesState = {
-  searchText: string;
-};
+export default function SearchBarNotes({ onSearch }: SearchBarNotesProps) {
+  const [searchText, setSearchText] = useState('');
 
-class SearchBarNotes extends React.Component<SearchBarNotesProps, SearchBarNotesState> {
-  constructor(props: SearchBarNotesProps) {
-    super(props);
-    this.state = {
-      searchText: '',
-    };
-  }
-
-  handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
-    this.setState({ searchText: query }, () => {
-      this.props.onSearch(query);
-    });
+    setSearchText(query);
+    onSearch(query);
   };
 
-  handleClear = () => {
-    this.setState({ searchText: '' }, () => {
-      this.props.onSearch('');
-    });
+  const handleClear = () => {
+    setSearchText('');
+    onSearch('');
   };
 
-  render() {
-    return (
-      <SearchBarUI
-        searchText={this.state.searchText}
-        onInputChange={this.handleInputChange}
-        onClear={this.handleClear}
-      />
-    );
-  }
+  return (
+    <SearchBarUI
+      searchText={searchText}
+      onInputChange={handleInputChange}
+      onClear={handleClear}
+    />
+  );
 }
-
-export default SearchBarNotes;

@@ -12,13 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { fetchCreatorName } from '../../services';
-import { getCachedLocation } from '../../utils/location_cache';
+import { useCreatorName } from '@/hooks/queries/useUsers';
+import { getCachedLocation } from '@/utils/location_cache';
 import AudioPicker from '@/components/NoteEditor/NoteElements/AudioPicker';
-import MediaViewer from '../media_viewer';
+import MediaViewer from '@/components/media_viewer';
 import { StoryMapPopover } from './StoryMapPopover';
-import { sanitizeHtml } from '../../utils/sanitize';
-import { formatDate, format12hourTime } from '../../utils/data_conversion';
+import { sanitizeHtml } from '@/utils/sanitize';
+import { formatDate, format12hourTime } from '@/utils/data_conversion';
 
 interface StoryDetailDialogProps {
   note: Note;
@@ -34,22 +34,13 @@ const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
 };
 
 export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, children }) => {
-  const [creator, setCreator] = useState<string>('Loading...');
+  const { data: creator = 'Loading...' } = useCreatorName(note.creator);
   const [location, setLocation] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const noteText = String(note.text || (note as any).BodyText || '');
   const hasValidCoordinates = note.latitude != null && note.longitude != null;
   const tags: Tag[] = convertOldTags(note.tags);
-
-  // Fetch creator name
-  useEffect(() => {
-    if (note.creator) {
-      fetchCreatorName(note.creator).then(name => {
-        setCreator(name);
-      });
-    }
-  }, [note.creator]);
 
   // Use stored location name or fall back to reverse geocoding
   useEffect(() => {

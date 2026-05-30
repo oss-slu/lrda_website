@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Note } from '../types';
-import { format12hourTime } from '../utils/data_conversion';
-import { extractTextFromHtml } from '../utils/sanitize';
-import { getNoteStatus, statusConfig } from '../utils/noteStatus';
+import { Note } from '@/types';
+import { format12hourTime } from '@/utils/data_conversion';
+import { extractTextFromHtml } from '@/utils/sanitize';
+import { getNoteStatus, statusConfig } from '@/utils/noteStatus';
 import { FileText, Search, Loader2 } from 'lucide-react';
-import { useNotesStore } from '../stores/notesStore';
+import { useNotesStore } from '@/stores/notesStore';
 import { useShallow } from 'zustand/react/shallow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -32,15 +32,16 @@ const NoteListView: React.FC<NoteListViewProps> = ({
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const onNoteSelectRef = useRef(onNoteSelect);
+  onNoteSelectRef.current = onNoteSelect;
 
   useEffect(() => {
     if (notes.length > 0 && fresh && notes[0]) {
-      onNoteSelect(notes[0], false);
+      onNoteSelectRef.current(notes[0], false);
       setSelectedNoteId(notes[0].id);
-       
       setFresh(false);
     }
-  }, [notes, onNoteSelect, fresh, setSelectedNoteId]);
+  }, [notes, fresh, setSelectedNoteId]);
 
   // Infinite scroll with IntersectionObserver
   const loadMore = useCallback(() => {

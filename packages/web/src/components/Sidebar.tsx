@@ -4,11 +4,11 @@ import { Plus, Loader2 } from 'lucide-react';
 import SearchBarNote from './search_bar_note';
 import NoteListView from './note_listview';
 import { Note, newNote } from '@/types';
-import { useNotesStore } from '../stores/notesStore';
-import { useAuthStore } from '../stores/authStore';
+import { useNotesStore } from '@/stores/notesStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService } from '../services';
-import { usePersonalNotes, notesKeys } from '../hooks/queries/useNotes';
+import { notesService } from '@/services';
+import { usePersonalNotes, notesKeys } from '@/hooks/queries/useNotes';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

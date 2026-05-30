@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { GoogleMap } from '@react-google-maps/api';
-import { useGoogleMaps } from '../../utils/GoogleMapsContext';
+import { useGoogleMaps } from '@/utils/GoogleMapsContext';
 import { MapPin } from 'lucide-react';
 
 interface StoryMapPopoverProps {

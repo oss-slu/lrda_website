@@ -13,11 +13,13 @@ function isDirty(draft: NoteDraft, snapshot: NoteDraft): boolean {
   return (
     draft.title !== snapshot.title ||
     draft.text !== snapshot.text ||
+    draft.time.getTime() !== snapshot.time.getTime() ||
+    draft.latitude !== snapshot.latitude ||
+    draft.longitude !== snapshot.longitude ||
+    draft.locationName !== snapshot.locationName ||
     draft.isPublished !== snapshot.isPublished ||
     draft.approvalRequested !== snapshot.approvalRequested ||
     draft.isReturned !== snapshot.isReturned ||
-    draft.latitude !== snapshot.latitude ||
-    draft.longitude !== snapshot.longitude ||
     JSON.stringify(draft.tags) !== JSON.stringify(snapshot.tags) ||
     mediaFingerprint([...draft.images, ...draft.videos]) !==
       mediaFingerprint([...snapshot.images, ...snapshot.videos]) ||

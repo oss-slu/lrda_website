@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Note } from '@/types';
-import { useCreatorName } from '../hooks/queries/useUsers';
+import { useCreatorName } from '@/hooks/queries/useUsers';
 import { Calendar, User, ImageIcon } from 'lucide-react';
 import CompactCarousel from './compact_carousel';
 import { Card, CardContent } from '@/components/ui/card';

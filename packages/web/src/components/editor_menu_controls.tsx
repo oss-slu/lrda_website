@@ -31,7 +31,7 @@ import {
   MenuSelectTextAlign,
   isTouchDevice,
 } from 'mui-tiptap';
-import { uploadMedia } from '../utils/s3_proxy';
+import { uploadMedia } from '@/utils/s3_proxy';
 
 type EditorMenuControlsProps = {
   onMediaUpload: (media: { type: 'image' | 'video' | 'audio'; uri: string }) => void;
