@@ -36,7 +36,17 @@ export default defineConfig({
         enabled: true,
         crawlLinks: false,
         filter: ({ path }) => {
-          const staticPaths = ['/', '/resources', '/wheres-religion'];
+          const staticPaths = [
+            '/',
+            '/resources',
+            '/wheres-religion',
+            '/login',
+            '/signup',
+            '/forgot-password',
+            '/reset-password',
+            '/confirm',
+            '/verify-email',
+          ];
           return staticPaths.includes(path);
         },
       },
