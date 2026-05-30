@@ -101,8 +101,8 @@ describe('Sidebar - auth initialization gate', () => {
     // usePersonalNotes should be called with null (disabled)
     // so the API call doesn't fire before auth is ready
     expect(mockUsePersonalNotes).toHaveBeenCalled();
-    const firstCallArg = mockUsePersonalNotes.mock.calls[0][0];
-    expect(firstCallArg).toBeNull();
+    const firstCall = mockUsePersonalNotes.mock.calls[0];
+    expect(firstCall?.[0]).toBeNull();
   });
 
   test('passes userId to usePersonalNotes when auth IS initialized', () => {
@@ -111,7 +111,7 @@ describe('Sidebar - auth initialization gate', () => {
     render(<Sidebar onNoteSelect={vi.fn()} />);
 
     expect(mockUsePersonalNotes).toHaveBeenCalled();
-    const firstCallArg = mockUsePersonalNotes.mock.calls[0][0];
-    expect(firstCallArg).toBe('student-1');
+    const firstCall = mockUsePersonalNotes.mock.calls[0];
+    expect(firstCall?.[0]).toBe('student-1');
   });
 });
