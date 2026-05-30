@@ -8,10 +8,10 @@
  */
 import { describe, test, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render } from '@testing-library/react';
-import { usePersonalNotes } from '../lib/hooks/queries/useNotes';
-import Sidebar from '../lib/components/Sidebar';
+import { usePersonalNotes } from '../hooks/queries/useNotes';
+import Sidebar from '../components/Sidebar';
 
-vi.mock('../lib/hooks/queries/useNotes', () => ({
+vi.mock('../hooks/queries/useNotes', () => ({
   usePersonalNotes: vi.fn((_userId?: any) => ({ data: [] })),
   notesKeys: {
     all: ['notes'],
@@ -29,7 +29,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 // Mock services
-vi.mock('../lib/services', () => ({
+vi.mock('../services', () => ({
   fetchMe: vi.fn().mockResolvedValue(null),
   fetchInstructors: vi.fn().mockResolvedValue([]),
   fetchCreatorName: vi.fn().mockResolvedValue('Test User'),
@@ -40,7 +40,7 @@ vi.mock('../lib/services', () => ({
 }));
 
 // Mock notes store
-vi.mock('../lib/stores/notesStore', () => ({
+vi.mock('../stores/notesStore', () => ({
   useNotesStore: Object.assign(
     vi.fn((selector?: (state: any) => any) => {
       const mockStore = {
@@ -68,7 +68,7 @@ const mockAuthState: Record<string, any> = {
   isInitialized: true,
 };
 
-vi.mock('../lib/stores/authStore', () => ({
+vi.mock('../stores/authStore', () => ({
   useAuthStore: vi.fn((selector?: (state: any) => any) => {
     return selector ? selector(mockAuthState) : mockAuthState;
   }),

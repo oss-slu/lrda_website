@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { FileText, Search } from 'lucide-react';
 import type { Note } from '@/app/types';
-import type { StudentInfo } from '@/app/lib/services/instructor.types';
-import { useNotesStore } from '@/app/lib/stores/notesStore';
-import { extractTextFromHtml } from '@/app/lib/utils/sanitize';
-import { getNoteStatus, statusConfig, isUnreviewed, isReviewed } from '@/app/lib/utils/noteStatus';
-import SearchBarNote from '@/app/lib/components/search_bar_note';
+import type { StudentInfo } from '@/app/services/instructor.types';
+import { useNotesStore } from '@/app/stores/notesStore';
+import { extractTextFromHtml } from '@/app/utils/sanitize';
+import { getNoteStatus, statusConfig, isUnreviewed, isReviewed } from '@/app/utils/noteStatus';
+import SearchBarNote from '@/app/components/search_bar_note';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {

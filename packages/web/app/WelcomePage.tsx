@@ -1,5 +1,5 @@
-import { useReveal, motionVariants } from '@/app/lib/utils/motion';
-import { IconLink } from './lib/components/IconLink';
+import { useReveal, motionVariants } from '@/app/utils/motion';
+import { IconLink } from './components/IconLink';
 
 const ANIMATE_CLASS = 'animate-fade-in opacity-0';
 

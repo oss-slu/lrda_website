@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import EnhancedClickableNote from '@/app/lib/components/stories_card';
+import EnhancedClickableNote from '@/app/components/stories_card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,8 +13,8 @@ import {
 import {
   useInfinitePublishedNotes,
   publishedNotesInfiniteOptions,
-} from '@/app/lib/hooks/queries/useNotes';
-import { useCreatorName } from '@/app/lib/hooks/queries/useUsers';
+} from '@/app/hooks/queries/useNotes';
+import { useCreatorName } from '@/app/hooks/queries/useUsers';
 
 export const Route = createFileRoute('/stories')({
   loader: ({ context: { queryClient } }) =>

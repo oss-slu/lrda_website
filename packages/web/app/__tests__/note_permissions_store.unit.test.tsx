@@ -8,11 +8,11 @@
  */
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useNotePermissions } from '../lib/components/NoteEditor/hooks/useNotePermissions';
+import { useNotePermissions } from '../components/NoteEditor/hooks/useNotePermissions';
 import type { Note } from '@/app/types';
 
 // Mock services
-vi.mock('../lib/services', () => ({
+vi.mock('../services', () => ({
   fetchCreatorName: vi.fn().mockResolvedValue('Unknown'),
 }));
 
@@ -23,7 +23,7 @@ const mockAuthState: Record<string, any> = {
   isInitialized: true,
 };
 
-vi.mock('../lib/stores/authStore', () => ({
+vi.mock('../stores/authStore', () => ({
   useAuthStore: vi.fn((selector?: (state: any) => any) => {
     return selector ? selector(mockAuthState) : mockAuthState;
   }),

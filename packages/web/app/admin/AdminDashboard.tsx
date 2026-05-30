@@ -12,17 +12,17 @@ import {
   banUser,
   unbanUser,
   removeUser,
-} from '@/app/lib/services';
+} from '@/app/services';
 import type {
   AdminUserData,
   PendingApplication,
   AdminStats,
   ContentStats,
   RecentActivityItem,
-} from '@/app/lib/services';
-import { isAdminUser, isInstructorUser } from '@/app/lib/stores/authHelpers';
+} from '@/app/services';
+import { isAdminUser, isInstructorUser } from '@/app/stores/authHelpers';
 import { toast } from 'sonner';
-import { formatDateShort } from '@/app/lib/utils/data_conversion';
+import { formatDateShort } from '@/app/utils/data_conversion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

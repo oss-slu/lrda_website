@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { formatDateShort } from '@/app/lib/utils/data_conversion';
+import { formatDateShort } from '@/app/utils/data_conversion';
 import {
   getSyncStatus,
   startSync,
@@ -10,8 +10,8 @@ import {
   getSyncLog,
   getSyncRunDetail,
   syncUsers,
-} from '@/app/lib/services';
-import type { SyncStatus, SyncRun, SyncRunWithDetails } from '@/app/lib/services';
+} from '@/app/services';
+import type { SyncStatus, SyncRun, SyncRunWithDetails } from '@/app/services';
 import type { SyncRunDetail } from '@lrda/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import ClickableNote from '@/app/lib/components/click_note_card';
+import ClickableNote from '@/app/components/click_note_card';
 import {
   Play,
   Square,

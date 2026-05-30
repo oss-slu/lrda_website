@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import TagManager from '../lib/components/NoteEditor/NoteElements/TagManager';
+import TagManager from '../components/NoteEditor/NoteElements/TagManager';
 
 // Define Tag type to match the component
 type Tag = {

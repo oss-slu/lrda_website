@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import PublishToggle from '../lib/components/NoteEditor/NoteElements/PublishToggle';
+import PublishToggle from '../components/NoteEditor/NoteElements/PublishToggle';
 
 // Mock tooltip component (now at ui/tooltip)
 vi.mock('../../components/ui/tooltip', () => ({
@@ -19,7 +19,7 @@ let mockUser: Record<string, any> = {
   isInstructor: true,
 };
 
-vi.mock('../lib/stores/authStore', () => ({
+vi.mock('../stores/authStore', () => ({
   useAuthStore: vi.fn((selector?: (state: any) => any) => {
     const mockAuthState = {
       user: mockUser,

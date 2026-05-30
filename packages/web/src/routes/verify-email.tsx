@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { authClient } from '@/app/lib/auth/client';
+import { authClient } from '@/app/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertTriangle, Loader2, ShieldCheck, ArrowLeft, Mail } from 'lucide-react';

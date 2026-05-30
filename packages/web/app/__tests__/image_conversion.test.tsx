@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { convertToJpeg } from '../lib/utils/image';
+import { convertToJpeg } from '../utils/image';
 
 describe('convertToJpeg', () => {
   let originalFileReader: typeof FileReader;

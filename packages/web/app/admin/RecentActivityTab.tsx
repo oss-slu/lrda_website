@@ -1,5 +1,5 @@
-import type { RecentActivityItem } from '@/app/lib/services';
-import { formatDateShort } from '@/app/lib/utils/data_conversion';
+import type { RecentActivityItem } from '@/app/services';
+import { formatDateShort } from '@/app/utils/data_conversion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

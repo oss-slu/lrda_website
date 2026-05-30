@@ -1,4 +1,4 @@
-import type { CommentData } from './lib/services/comments.types';
+import type { CommentData } from './services/comments.types';
 import type { Tag, CommentPosition } from '@lrda/shared';
 
 // Re-export shared types so existing imports from '@/app/types' keep working

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import Sidebar from '@/app/lib/components/Sidebar';
-import NoteEditor from '@/app/lib/components/NoteEditor';
+import Sidebar from '@/app/components/Sidebar';
+import NoteEditor from '@/app/components/NoteEditor';
 import { Note, newNote } from '@/app/types';
-import { useNotesStore } from '@/app/lib/stores/notesStore';
-import { useAuthStore } from '@/app/lib/stores/authStore';
+import { useNotesStore } from '@/app/stores/notesStore';
+import { useAuthStore } from '@/app/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQueryClient } from '@tanstack/react-query';
-import { notesKeys } from '../lib/hooks/queries/useNotes';
+import { notesKeys } from '../hooks/queries/useNotes';
 
 export default function Notes() {
   const { setSelectedNoteId } = useNotesStore(

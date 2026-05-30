@@ -1,15 +1,15 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 import { createServerFn } from '@tanstack/react-start';
-import { fetchFromAPI } from '@/app/lib/auth/server';
-import { isAdminUser } from '@/app/lib/stores/authHelpers';
+import { fetchFromAPI } from '@/app/auth/server';
+import { isAdminUser } from '@/app/stores/authHelpers';
 import type {
   AdminUserData,
   PendingApplication,
   AdminStats,
   ContentStats,
   RecentActivityItem,
-} from '@/app/lib/services';
+} from '@/app/services';
 import type { UserProfile } from '@/app/types';
 import AdminDashboard from '@/app/admin/AdminDashboard';
 

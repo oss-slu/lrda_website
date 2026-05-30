@@ -5,13 +5,13 @@ import * as React from 'react';
 
 import globalsCss from '@/app/globals.css?url';
 
-import Navbar from '@/app/lib/components/navbar';
+import Navbar from '@/app/components/navbar';
 import { Toaster } from '@/components/ui/sonner';
-import { GoogleMapsProvider } from '@/app/lib/utils/GoogleMapsContext';
-import { AuthProvider } from '@/app/lib/components/AuthProvider';
-import NotFound from '@/app/lib/components/NotFound';
-import RootError from '@/app/lib/components/RootError';
-import { usePageView } from '@/app/lib/hooks/usePageView';
+import { GoogleMapsProvider } from '@/app/utils/GoogleMapsContext';
+import { AuthProvider } from '@/app/components/AuthProvider';
+import NotFound from '@/app/components/NotFound';
+import RootError from '@/app/components/RootError';
+import { usePageView } from '@/app/hooks/usePageView';
 
 const TanStackRouterDevtools =
   import.meta.env.PROD ?

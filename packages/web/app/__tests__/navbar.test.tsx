@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import Navbar from '../lib/components/navbar';
-import { formatCitation } from '../lib/utils/citation_formatter';
+import Navbar from '../components/navbar';
+import { formatCitation } from '../utils/citation_formatter';
 
 // Define mock auth state that can be mutated in tests
 const mockAuthState = {
@@ -36,7 +36,7 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 // Mock auth store
-vi.mock('../lib/stores/authStore', () => ({
+vi.mock('../stores/authStore', () => ({
   useAuthStore: vi.fn((selector?: (state: any) => any) =>
     selector ? selector(mockAuthState) : mockAuthState,
   ),
@@ -46,7 +46,7 @@ vi.mock('../lib/stores/authStore', () => ({
 // so that role-conditional UI reflects the actual mockAuthState.user
 
 // Mock services - inline to avoid hoisting issues
-vi.mock('../lib/services', () => ({
+vi.mock('../services', () => ({
   fetchMe: vi.fn().mockResolvedValue(null),
   fetchInstructors: vi.fn().mockResolvedValue([]),
   fetchCreatorName: vi.fn().mockResolvedValue('Test User'),

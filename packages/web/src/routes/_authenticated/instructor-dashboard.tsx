@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { hasInstructorAccess } from '@/app/lib/stores/authHelpers';
+import { hasInstructorAccess } from '@/app/stores/authHelpers';
 import InstructorDashboard from '@/app/instructor-dashboard/InstructorDashboard';
 
 export const Route = createFileRoute('/_authenticated/instructor-dashboard')({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAnalyticsSummary, useAnalyticsTimeseries } from '@/app/lib/hooks/queries/useAnalytics';
+import { useAnalyticsSummary, useAnalyticsTimeseries } from '@/app/hooks/queries/useAnalytics';
 import { StatsCard } from './StatsCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
