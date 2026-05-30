@@ -31,7 +31,7 @@ export default function RootError({ error }: { error: Error }) {
           An unexpected error occurred. Please try refreshing the page.
         </p>
 
-        {import.meta.env.DEV && error?.message && (
+        {import.meta.env.DEV && error.message && (
           <pre className='mx-auto mb-8 max-w-2xl overflow-auto rounded-lg border border-white/10 bg-white/5 p-4 text-left text-sm text-blue-300'>
             {error.message}
           </pre>

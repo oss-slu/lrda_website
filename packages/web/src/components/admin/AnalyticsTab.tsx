@@ -40,8 +40,8 @@ export function AnalyticsTab() {
     );
   }
 
-  const topPage = summary.data?.topPages?.[0];
-  const topReferrer = summary.data?.topReferrers?.[0];
+  const topPage = summary.data?.topPages[0];
+  const topReferrer = summary.data?.topReferrers[0];
 
   return (
     <div className='space-y-6'>
@@ -260,7 +260,7 @@ export function AnalyticsTab() {
             : summary.data?.browsers && summary.data.browsers.length > 0 ?
               <div className='space-y-2'>
                 {summary.data.browsers.map((browser, i) => {
-                  const total = summary.data!.totalViews;
+                  const total = summary.data.totalViews;
                   const percentage = total > 0 ? Math.round((browser.views / total) * 100) : 0;
                   return (
                     <div key={i} className='space-y-1'>
@@ -297,7 +297,7 @@ export function AnalyticsTab() {
             : summary.data?.devices && summary.data.devices.length > 0 ?
               <div className='space-y-2'>
                 {summary.data.devices.map((device, i) => {
-                  const total = summary.data!.totalViews;
+                  const total = summary.data.totalViews;
                   const percentage = total > 0 ? Math.round((device.views / total) * 100) : 0;
                   return (
                     <div key={i} className='space-y-1'>
@@ -331,7 +331,7 @@ export function AnalyticsTab() {
             : summary.data?.screenWidths && summary.data.screenWidths.length > 0 ?
               <div className='space-y-2'>
                 {summary.data.screenWidths.map((screen, i) => {
-                  const total = summary.data!.totalViews;
+                  const total = summary.data.totalViews;
                   const percentage = total > 0 ? Math.round((screen.views / total) * 100) : 0;
                   const labels: Record<string, string> = {
                     sm: 'Mobile (<640px)',
@@ -374,7 +374,7 @@ export function AnalyticsTab() {
             : summary.data?.languages && summary.data.languages.length > 0 ?
               <div className='space-y-2'>
                 {summary.data.languages.slice(0, 5).map((lang, i) => {
-                  const total = summary.data!.totalViews;
+                  const total = summary.data.totalViews;
                   const percentage = total > 0 ? Math.round((lang.views / total) * 100) : 0;
                   return (
                     <div key={i} className='space-y-1'>
@@ -409,7 +409,7 @@ export function AnalyticsTab() {
           : summary.data?.operatingSystems && summary.data.operatingSystems.length > 0 ?
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
               {summary.data.operatingSystems.map((os, i) => {
-                const total = summary.data!.totalViews;
+                const total = summary.data.totalViews;
                 const percentage = total > 0 ? Math.round((os.views / total) * 100) : 0;
                 return (
                   <div key={i} className='rounded-lg border p-3'>

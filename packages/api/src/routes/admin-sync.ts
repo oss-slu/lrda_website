@@ -227,7 +227,7 @@ const syncUsersRoute = createRoute({
 // ============================================
 
 export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
-  .openapi(getStatusRoute, async c => {
+  .openapi(getStatusRoute, c => {
     const status = getSyncStatus();
     return c.json(status, 200);
   })

@@ -64,7 +64,7 @@ export function useMapLocation({
     try {
       const newCenter = await getLocation();
 
-      if (newCenter && typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
+      if (typeof newCenter.lat === 'number' && typeof newCenter.lng === 'number') {
         setMapCenter(newCenter);
         mapRef.current?.panTo(newCenter);
         mapRef.current?.setZoom(13);
@@ -137,11 +137,10 @@ export function useMapLocation({
         const currentLocation = await getLocation();
 
         if (
-          currentLocation &&
           typeof currentLocation.lat === 'number' &&
           typeof currentLocation.lng === 'number'
         ) {
-          if (!locationFound && isComponentMounted) {
+          if (isComponentMounted) {
             setMapCenter(currentLocation);
             setMapZoom(DEFAULT_ZOOM);
             triggerMapResize();

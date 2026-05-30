@@ -80,6 +80,7 @@ export const analyticsRoutes = new OpenAPIHono<AppEnv>().openapi(trackPageViewRo
   }
 
   // Path validation: must be a same-origin path, no control characters
+  // eslint-disable-next-line no-control-regex -- intentionally matching control characters to reject them
   if (!body.path.startsWith('/') || /[\x00-\x1f\x7f]/.test(body.path)) {
     return c.json({ error: 'Invalid path' }, 400);
   }

@@ -125,7 +125,7 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
         type: 'suggestion' as const,
       })),
       ...filteredNotes
-        .filter(note => note && note.title)
+        .filter(note => note.title)
         .map(note => ({
           ...note,
           type: 'note' as const,

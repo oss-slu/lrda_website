@@ -214,7 +214,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
     const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const body = c.req.valid('json');
 
-    const [updated] = await db
+    const rows = await db
       .update(user)
       .set({
         ...body,
@@ -223,7 +223,7 @@ export const userRoutes = new OpenAPIHono<AppEnv>()
       .where(eq(user.id, authUser.id))
       .returning();
 
-    if (!updated) {
+    if (rows.length === 0) {
       return c.json({ error: 'User not found' }, 404);
     }
 

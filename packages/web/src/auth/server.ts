@@ -10,7 +10,7 @@ export async function fetchFromAPI<T>(path: string): Promise<T | null> {
   const cookieHeader =
     headers instanceof Headers ?
       headers.get('cookie')
-    : (headers as Record<string, string>)?.cookie;
+    : (headers as Record<string, string>).cookie;
 
   try {
     const res = await fetch(`${API_URL}${path}`, {

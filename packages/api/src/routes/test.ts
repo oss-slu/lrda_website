@@ -46,7 +46,7 @@ testRoutes.post('/', async c => {
 
     if (action === 'query') {
       const result = await db.execute(built);
-      return c.json({ rows: result.rows ?? result }, 200);
+      return c.json({ rows: result.rows }, 200);
     }
 
     await db.execute(built);
@@ -169,7 +169,7 @@ async function getFirebaseAuth() {
 
 testRoutes.post('/firebase/create-user', async c => {
   try {
-    const { email, password } = (await c.req.json()) as { email: string; password: string };
+    const { email, password } = await c.req.json<{ email: string; password: string }>();
     const auth = await getFirebaseAuth();
     const user = await auth.createUser({ email, password });
     return c.json({ uid: user.uid }, 200);
@@ -180,7 +180,7 @@ testRoutes.post('/firebase/create-user', async c => {
 
 testRoutes.post('/firebase/verify-password', async c => {
   try {
-    const { email, password } = (await c.req.json()) as { email: string; password: string };
+    const { email, password } = await c.req.json<{ email: string; password: string }>();
     const auth = await getFirebaseAuth();
     const { credential } = auth.app.options;
     const accessToken = await (credential as any).getAccessToken();

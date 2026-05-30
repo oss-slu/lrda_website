@@ -23,7 +23,7 @@ export function useMapIntro({ searchBarRef, notesListRef, noteRefs }: UseMapIntr
       const navbarCreateNoteButton = document.getElementById('navbar-create-note');
       const navbarLogoutButton = document.getElementById('navbar-logout');
 
-      if (searchBarRef.current && navbarCreateNoteButton && noteRefs && notesListRef.current) {
+      if (searchBarRef.current && navbarCreateNoteButton && notesListRef.current) {
         // Check if the intro has been shown before (from cookies)
         const introShown = document.cookie
           .split('; ')

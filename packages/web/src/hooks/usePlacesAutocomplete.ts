@@ -14,15 +14,14 @@ export function usePlacesAutocomplete(isLoaded: boolean) {
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
 
   useEffect(() => {
-    if (isLoaded && window.google?.maps?.places) {
-      if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-      }
-      if (!placesServiceRef.current) {
-        placesServiceRef.current = new window.google.maps.places.PlacesService(
-          document.createElement('div'),
-        );
-      }
+    if (!isLoaded) return;
+    if (!autocompleteServiceRef.current) {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+    }
+    if (!placesServiceRef.current) {
+      placesServiceRef.current = new window.google.maps.places.PlacesService(
+        document.createElement('div'),
+      );
     }
   }, [isLoaded]);
 

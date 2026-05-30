@@ -115,9 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
     const filtered = personalNotes.filter(note => {
       const matchesText =
         note.title.toLowerCase().includes(query) ||
-        (note.tags &&
-          Array.isArray(note.tags) &&
-          note.tags.some(tag => tag.label.toLowerCase().includes(query)));
+        note.tags.some(tag => tag.label.toLowerCase().includes(query));
 
       if (!matchesText) return false;
 

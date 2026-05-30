@@ -37,7 +37,7 @@ const NoteCard = memo<NoteCardProps>(function NoteCard({ note, isActive = false 
   const title = note.title;
   const tags = getTagLabels(note.tags);
   const { data: creator, isPending: isCreatorLoading } = useCreatorName(note.creator);
-  const noteDate = note.time ? new Date(note.time) : undefined;
+  const noteDate = new Date(note.time);
 
   return (
     <Card

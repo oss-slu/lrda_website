@@ -11,7 +11,7 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
       headers: c.req.raw.headers,
     });
 
-    c.set('user', (session?.user as AuthUser) || null);
+    c.set('user', session ? (session.user as AuthUser) : null);
     c.set('session', session?.session || null);
   } catch (error) {
     console.error('Auth middleware error:', error);

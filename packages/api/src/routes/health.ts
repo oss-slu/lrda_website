@@ -45,7 +45,7 @@ export const healthRoutes = new OpenAPIHono<AppEnv>().openapi(getHealthRoute, as
       status: healthy ? ('healthy' as const) : ('unhealthy' as const),
       timestamp: new Date().toISOString(),
       database: dbConnected ? ('connected' as const) : ('disconnected' as const),
-      environment: env.ENVIRONMENT ?? 'unknown',
+      environment: env.ENVIRONMENT,
       slot: env.PORT === 3002 ? 'blue' : env.PORT === 3003 ? 'green' : undefined,
     },
     healthy ? 200 : 503,

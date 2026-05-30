@@ -84,7 +84,7 @@ export const tagRoutes = new OpenAPIHono<AppEnv>().openapi(generateTagsRoute, as
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    const message = (body as { error?: { message?: string } })?.error?.message || response.statusText;
+    const message = (body as { error?: { message?: string } }).error?.message || response.statusText;
     console.error('OpenRouter API error:', message);
     return c.json({ error: `OpenRouter error: ${message}` }, 500);
   }
@@ -93,7 +93,7 @@ export const tagRoutes = new OpenAPIHono<AppEnv>().openapi(generateTagsRoute, as
     choices?: { message?: { content?: string | null } }[];
   };
 
-  const raw = result?.choices?.[0]?.message?.content;
+  const raw = result.choices?.[0]?.message?.content;
   if (!raw?.trim()) {
     return c.json({ error: 'Empty response from OpenRouter' }, 500);
   }

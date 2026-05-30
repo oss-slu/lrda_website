@@ -104,7 +104,7 @@ export const StoryMapPopover: React.FC<StoryMapPopoverProps> = ({
         align='start'
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        {isMapsApiLoaded && hasValidCoordinates ?
+        {isMapsApiLoaded ?
           <GoogleMap
             mapContainerStyle={{
               width: '100%',
