@@ -1,27 +1,24 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
 
 interface NoteEditorHeaderProps {
+  title: string;
+  onTitleChange: (title: string) => void;
   isViewingStudentNote: boolean;
   titleRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export default function NoteEditorHeader({
+  title,
+  onTitleChange,
   isViewingStudentNote,
   titleRef,
 }: NoteEditorHeaderProps) {
-  const title = useNoteEditorStore(s => s.title);
-
   return (
     <Input
       id='note-title-input'
       value={title}
-      onChange={e => {
-        const store = useNoteEditorStore.getState();
-        store.setTitle(e.target.value);
-        store.markEdited();
-      }}
+      onChange={e => onTitleChange(e.target.value)}
       placeholder='Untitled'
       disabled={isViewingStudentNote}
       readOnly={isViewingStudentNote}

@@ -1,142 +1,119 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { notesService } from '@/services';
-import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '@/hooks/queries/useNotes';
-import { Note } from '@/types';
-import { useNoteEditorStore, type NoteEditorStore } from '@/stores/noteEditorStore';
+import type { Note } from '@/types';
+import { type NoteDraft, buildNoteFromDraft } from './useNoteForm';
 
 function mediaFingerprint(items: { uri?: string; uuid?: string }[]): string {
-  return JSON.stringify(items.map(m => m.uri || m.uuid || ''));
+  return items.map(m => m.uri || m.uuid || '').join('|');
 }
 
-interface Snapshot {
-  title: string;
-  text: string;
-  tags: unknown[];
-  published: boolean;
-  approvalRequested: boolean;
-  isReturned: boolean;
-  latitude: number | null;
-  longitude: number | null;
-  mediaFp: string;
-  audioFp: string;
-}
-
-function takeSnapshot(s: NoteEditorStore): Snapshot {
-  return {
-    title: s.title,
-    text: s.editorContent,
-    tags: s.tags,
-    published: s.isPublished,
-    approvalRequested: s.approvalRequested,
-    isReturned: s.isReturned,
-    latitude: s.latitude,
-    longitude: s.longitude,
-    mediaFp: mediaFingerprint([...s.images, ...s.videos]),
-    audioFp: mediaFingerprint(s.audio),
-  };
-}
-
-function isDirty(s: NoteEditorStore, last: Snapshot | null): boolean {
-  if (!last) return true;
-  const mediaFp = mediaFingerprint([...s.images, ...s.videos]);
-  const audioFp = mediaFingerprint(s.audio);
+function isDirty(draft: NoteDraft, snapshot: NoteDraft): boolean {
   return (
-    last.title !== s.title ||
-    last.text !== s.editorContent ||
-    last.published !== s.isPublished ||
-    last.approvalRequested !== s.approvalRequested ||
-    last.isReturned !== s.isReturned ||
-    last.latitude !== s.latitude ||
-    last.longitude !== s.longitude ||
-    JSON.stringify(last.tags) !== JSON.stringify(s.tags) ||
-    last.mediaFp !== mediaFp ||
-    last.audioFp !== audioFp
+    draft.title !== snapshot.title ||
+    draft.text !== snapshot.text ||
+    draft.isPublished !== snapshot.isPublished ||
+    draft.approvalRequested !== snapshot.approvalRequested ||
+    draft.isReturned !== snapshot.isReturned ||
+    draft.latitude !== snapshot.latitude ||
+    draft.longitude !== snapshot.longitude ||
+    JSON.stringify(draft.tags) !== JSON.stringify(snapshot.tags) ||
+    mediaFingerprint([...draft.images, ...draft.videos]) !==
+      mediaFingerprint([...snapshot.images, ...snapshot.videos]) ||
+    mediaFingerprint(draft.audio) !== mediaFingerprint(snapshot.audio)
   );
 }
 
-export function useAutoSave(isViewingStudentNote: boolean) {
+function cloneDraft(draft: NoteDraft): NoteDraft {
+  return {
+    ...draft,
+    tags: [...draft.tags],
+    images: [...draft.images],
+    videos: [...draft.videos],
+    audio: [...draft.audio],
+    time: new Date(draft.time.getTime()),
+  };
+}
+
+export interface AutoSaveState {
+  isSaving: boolean;
+  lastSavedAt: Date | null;
+  saveError: Error | null;
+  retry: () => void;
+}
+
+export function useAutoSave(
+  draft: NoteDraft,
+  note: Note,
+  editable: boolean,
+): AutoSaveState {
   const queryClient = useQueryClient();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const snapshotRef = useRef<Snapshot | null>(null);
-  const savingRef = useRef(false);
+  const snapshotRef = useRef<NoteDraft>(cloneDraft(draft));
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const pendingDraftRef = useRef<NoteDraft | null>(null);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   useEffect(() => {
-    const store = useNoteEditorStore;
+    snapshotRef.current = cloneDraft(draftRef.current);
+  }, [note.id]);
 
-    const initState = store.getState();
-    if (initState.note?.id) {
-      snapshotRef.current = takeSnapshot(initState);
-    }
-
-    const unsub = store.subscribe((state, prev) => {
-      if (isViewingStudentNote || !state.note?.id) return;
-
-      if (state.note.id !== prev.note?.id) {
-        snapshotRef.current = takeSnapshot(state);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        return;
+  const mutation = useMutation({
+    mutationFn: async (updatedNote: Note) => {
+      await notesService.update(updatedNote);
+      return updatedNote;
+    },
+    onSuccess: (updatedNote) => {
+      if (note.creator) {
+        queryClient.setQueryData<Note[]>(notesKeys.personal(note.creator), old => {
+          if (!old) return old;
+          return old.map(n => (n.id === note.id ? { ...n, ...updatedNote } : n));
+        });
       }
+      snapshotRef.current = cloneDraft(pendingDraftRef.current ?? draft);
+      setLastSavedAt(new Date());
+    },
+  });
 
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (!isDirty(state, snapshotRef.current)) return;
+  const save = useCallback(() => {
+    if (!editable || !note.id || mutation.isPending) return;
+    const currentDraft = pendingDraftRef.current ?? draft;
+    if (!isDirty(currentDraft, snapshotRef.current)) return;
 
-      timerRef.current = setTimeout(async () => {
-        if (savingRef.current) return;
-        savingRef.current = true;
+    const updatedNote = buildNoteFromDraft(currentDraft, note);
+    mutation.mutate(updatedNote);
+  }, [editable, note, draft, mutation]);
 
-        const s = store.getState();
-        s.setSaving(true);
+  const retry = useCallback(() => {
+    mutation.reset();
+    save();
+  }, [mutation, save]);
 
-        const lastSnap = snapshotRef.current;
-        const currentMediaFp = mediaFingerprint([...s.images, ...s.videos]);
-        const currentAudioFp = mediaFingerprint(s.audio);
-        const mediaDirty = !lastSnap || lastSnap.mediaFp !== currentMediaFp;
-        const audioDirty = !lastSnap || lastSnap.audioFp !== currentAudioFp;
+  useEffect(() => {
+    if (!editable || !note.id) return;
 
-        const { media: _, audio: _a, ...noteBase } = s.note || {};
-        const updatedNote: Partial<Note> & { id: string; creator: string } = {
-          ...noteBase,
-          text: s.editorContent,
-          title: s.title || 'Untitled',
-          published: s.isPublished,
-          approvalRequested: s.approvalRequested,
-          isReturned: s.isReturned,
-          time: s.time,
-          longitude: s.longitude,
-          latitude: s.latitude,
-          tags: s.tags,
-          id: s.note!.id,
-          creator: s.note!.creator,
-        } as Note;
+    pendingDraftRef.current = draft;
 
-        if (mediaDirty) (updatedNote as Note).media = [...s.images, ...s.videos];
-        if (audioDirty) (updatedNote as Note).audio = s.audio;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!isDirty(draft, snapshotRef.current)) return;
 
-        try {
-          await notesService.update(updatedNote as Note);
-
-          if (s.note?.creator) {
-            queryClient.setQueryData<Note[]>(notesKeys.personal(s.note.creator), old => {
-              if (!old) return old;
-              return old.map(n => (n.id === s.note?.id ? { ...n, ...updatedNote } : n));
-            });
-          }
-
-          snapshotRef.current = takeSnapshot(s);
-          store.getState().setLastSavedAt(new Date());
-        } catch (error) {
-          console.error('Auto-save error:', error);
-        } finally {
-          savingRef.current = false;
-          store.getState().setSaving(false);
-        }
-      }, 500);
-    });
+    timerRef.current = setTimeout(() => {
+      if (!mutation.isPending) {
+        save();
+      }
+    }, 500);
 
     return () => {
-      unsub();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isViewingStudentNote, queryClient]);
+  }, [draft, editable, note.id, mutation.isPending, save]);
+
+  return {
+    isSaving: mutation.isPending,
+    lastSavedAt,
+    saveError: mutation.error,
+    retry,
+  };
 }

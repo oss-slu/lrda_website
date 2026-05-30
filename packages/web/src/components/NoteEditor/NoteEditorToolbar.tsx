@@ -2,57 +2,67 @@ import { useState, RefObject } from 'react';
 import { Calendar as CalendarIcon, Download, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
+import type { NoteDraft } from './hooks/useNoteForm';
 import TimePicker from './NoteElements/TimePicker';
 import LocationPicker from './NoteElements/LocationPicker';
 
 interface NoteEditorToolbarProps {
   isViewingStudentNote: boolean;
+  time: Date;
+  latitude: number | null;
+  longitude: number | null;
+  locationName: string;
+  onTimeChange: (time: Date) => void;
+  onLocationChange: (lat: number | null, lng: number | null) => void;
+  onLocationNameChange: (name: string) => void;
+  draft: NoteDraft;
   dateRef: RefObject<HTMLDivElement | null>;
   locationRef: RefObject<HTMLDivElement | null>;
 }
 
 export default function NoteEditorToolbar({
   isViewingStudentNote,
+  time,
+  latitude,
+  longitude,
+  locationName,
+  onTimeChange,
+  onLocationChange,
+  onLocationNameChange,
+  draft,
   dateRef,
   locationRef,
 }: NoteEditorToolbarProps) {
-  const time = useNoteEditorStore(s => s.time);
-  const latitude = useNoteEditorStore(s => s.latitude);
-  const longitude = useNoteEditorStore(s => s.longitude);
-  const locationName = useNoteEditorStore(s => s.locationName);
-
   const [isDownloadPopoverOpen, setIsDownloadPopoverOpen] = useState(false);
 
   const handleDownload = async (fileType: 'pdf' | 'docx') => {
-    const s = useNoteEditorStore.getState();
-    const plainTextContent = new DOMParser().parseFromString(s.editorContent, 'text/html').body
+    const plainTextContent = new DOMParser().parseFromString(draft.text, 'text/html').body
       .innerText;
 
     const noteContent = `
-      Title: ${s.title}
+      Title: ${draft.title}
       Content: ${plainTextContent}
-      Tags: ${s.tags.map(tag => tag.label).join(', ')}
-      Location: ${s.latitude ?? 'N/A'}, ${s.longitude ?? 'N/A'}
-      Time: ${s.time}
+      Tags: ${draft.tags.map(tag => tag.label).join(', ')}
+      Location: ${draft.latitude ?? 'N/A'}, ${draft.longitude ?? 'N/A'}
+      Time: ${draft.time}
     `;
 
     if (fileType === 'pdf') {
       const { default: jsPDF } = await import('jspdf');
       const pdf = new jsPDF();
       pdf.text(noteContent, 10, 10);
-      pdf.save(`${s.title || 'note'}.pdf`);
-    } else if (fileType === 'docx') {
+      pdf.save(`${draft.title || 'note'}.pdf`);
+    } else {
       const { Document, Packer, Paragraph } = await import('docx');
       const doc = new Document({
         sections: [
           {
             children: [
-              new Paragraph({ text: `Title: ${s.title}` }),
+              new Paragraph({ text: `Title: ${draft.title}` }),
               new Paragraph(`Content: ${plainTextContent}`),
-              new Paragraph(`Tags: ${s.tags.map(tag => tag.label).join(', ')}`),
-              new Paragraph(`Location: ${s.latitude ?? 'N/A'}, ${s.longitude ?? 'N/A'}`),
-              new Paragraph(`Time: ${s.time}`),
+              new Paragraph(`Tags: ${draft.tags.map(tag => tag.label).join(', ')}`),
+              new Paragraph(`Location: ${draft.latitude ?? 'N/A'}, ${draft.longitude ?? 'N/A'}`),
+              new Paragraph(`Time: ${draft.time}`),
             ],
           },
         ],
@@ -62,7 +72,7 @@ export default function NoteEditorToolbar({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${s.title || 'note'}.docx`;
+      link.download = `${draft.title || 'note'}.docx`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -93,12 +103,8 @@ export default function NoteEditorToolbar({
       : <>
           <div ref={dateRef}>
             <TimePicker
-              initialDate={time || new Date()}
-              onTimeChange={newDate => {
-                const store = useNoteEditorStore.getState();
-                store.setTime(newDate);
-                store.markEdited();
-              }}
+              date={time}
+              onTimeChange={onTimeChange}
             />
           </div>
           <div ref={locationRef}>
@@ -107,14 +113,10 @@ export default function NoteEditorToolbar({
               lat={latitude}
               locationName={locationName}
               onLocationChange={(newLong, newLat) => {
-                const store = useNoteEditorStore.getState();
-                store.setLocationName('');
-                store.setLocation(newLat, newLong);
-                store.markEdited();
+                onLocationNameChange('');
+                onLocationChange(newLat, newLong);
               }}
-              onLocationNameChange={name => {
-                useNoteEditorStore.getState().setLocationName(name);
-              }}
+              onLocationNameChange={onLocationNameChange}
             />
           </div>
         </>
