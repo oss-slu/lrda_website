@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { fetchCreatorName } from '../services';
-import { sanitizeHtml } from '../utils/sanitize';
+import React, { useMemo } from 'react';
+import { sanitizeHtml } from '@/utils/sanitize';
 import { Tag } from '@/types';
+import { useCreatorName } from '@/hooks/queries/useUsers';
 import {
   CalendarDays,
   UserCircle,
@@ -24,8 +24,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import AudioPicker from './NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from './media_viewer';
 import { PopoverClose } from '@radix-ui/react-popover';
-import { useNoteDetail } from '../hooks/queries/useNotes';
-import { formatDate, format12hourTime } from '../utils/data_conversion';
+import { useNoteDetail } from '@/hooks/queries/useNotes';
+import { formatDate, format12hourTime } from '@/utils/data_conversion';
 
 const formatTime = format12hourTime;
 
@@ -40,24 +40,13 @@ const ClickableNote: React.FC<{
   noteId: string;
 }> = ({ noteId }) => {
   const { data: note, isPending } = useNoteDetail(noteId);
-  const [creator, setCreator] = useState<string>('Loading...');
+  const { data: creator = 'Loading...' } = useCreatorName(note?.creator ?? null);
   const tags: Tag[] = convertOldTags(note?.tags);
 
   const sanitizedContent = useMemo(
     () => (note?.text ? sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) : ''),
     [note?.text],
   );
-
-  // Fetch the creator's name based on the note's creator ID
-  useEffect(() => {
-    if (!note?.creator) return;
-    fetchCreatorName(note.creator)
-      .then((name: string) => setCreator(name))
-      .catch((error: Error) => {
-        console.error('Error fetching creator name:', error, note.creator);
-        setCreator('Error loading name');
-      });
-  }, [note?.creator]);
 
   if (isPending || !note) {
     return (

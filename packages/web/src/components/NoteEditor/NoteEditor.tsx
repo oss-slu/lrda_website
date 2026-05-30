@@ -36,7 +36,7 @@ import { useIntroTour } from './hooks/useIntroTour';
 import NoteEditorHeader from './NoteEditorHeader';
 import NoteEditorToolbar from './NoteEditorToolbar';
 import NoteEditorContent from './NoteEditorContent';
-import EditorMenuControls from '../editor_menu_controls';
+import EditorMenuControls from '@/components/editor_menu_controls';
 import AutoSaveIndicator from './AutoSaveIndicator';
 import PublishToggle from './NoteElements/PublishToggle';
 import { CommentSidebarPanel } from './NoteEditorComments';

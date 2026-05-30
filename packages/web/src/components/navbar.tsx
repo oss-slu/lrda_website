@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '../stores/authStore';
-import { hasInstructorAccess, isAdminUser } from '../stores/authHelpers';
+import { useAuthStore } from '@/stores/authStore';
+import { hasInstructorAccess, isAdminUser } from '@/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
 export default function Navbar() {

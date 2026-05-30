@@ -1,5 +1,5 @@
 import { useEffect, useRef, RefObject } from 'react';
-import { getCookie, setCookie } from '../utils/noteHelpers';
+import { getCookie, setCookie } from '@/components/NoteEditor/utils/noteHelpers';
 
 interface IntroTourRefs {
   titleRef: RefObject<HTMLInputElement | null>;

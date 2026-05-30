@@ -1,4 +1,4 @@
-import CommentSidebar from '../comments/CommentSidebar';
+import CommentSidebar from '@/components/comments/CommentSidebar';
 import type { Editor } from '@tiptap/core';
 
 export function CommentSidebarPanel({

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Comment } from '@/types';
-import CommentPopover from '../CommentPopover';
-import { fetchCreatorName } from '../../services';
+import CommentPopover from '@/components/CommentPopover';
+import { fetchCreatorName } from '@/services';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { v4 as uuidv4 } from 'uuid';
-import { useComments, useCommentMutations } from '../../hooks/queries/useComments';
+import { useComments, useCommentMutations } from '@/hooks/queries/useComments';
 import { CommentThreadList } from './CommentThreadList';
 
 interface CommentSidebarProps {
@@ -144,7 +144,7 @@ export default function CommentSidebar({
         <div className='mt-auto border-t bg-white pt-2 pb-2'>
           {showPopover ?
             <CommentPopover
-              initialValue={commentDraft}
+              value={commentDraft}
               onSubmit={handleSubmitComment}
               onClose={() => setShowPopover(false)}
               onTextChange={setCommentDraft}

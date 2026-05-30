@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';
-import { Note, CombinedResult } from '../types';
+import { Note } from '@/types';
 import { Card } from '@/components/ui/card';
+import { usePlacesAutocomplete } from '@/hooks/usePlacesAutocomplete';
+
+type CombinedResult =
+  | (google.maps.places.AutocompletePrediction & { type: 'suggestion' })
+  | (Note & { type: 'note' });
 
 interface SearchBarMapProps {
   onSearch: (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => void;
@@ -18,135 +23,83 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
   filteredNotes,
 }) => {
   const [searchText, setSearchText] = useState('');
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const searchTextRef = useRef('');
   const prevSearchTextRef = useRef('');
 
-  // Initialize autocomplete service when Google Maps API is loaded
-  useEffect(() => {
-    if (isLoaded && window.google?.maps?.places && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-    }
-  }, [isLoaded]);
+  const { suggestions, loading, search, selectPlace, clearSuggestions } =
+    usePlacesAutocomplete(isLoaded);
 
-  // Handle predictions callback
-  const handlePredictions = useCallback(
-    (
-      predictions: google.maps.places.AutocompletePrediction[] | null,
-      status: google.maps.places.PlacesServiceStatus,
-    ) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-        setSuggestions(predictions);
-      } else {
-        setSuggestions([]);
-      }
-      setLoading(false);
-    },
-    [],
-  );
+  searchTextRef.current = searchText;
 
-  // Handle place details callback
-  const handlePlaceDetails = useCallback(
-    (
-      result: google.maps.places.PlaceResult | null,
-      status: google.maps.places.PlacesServiceStatus,
-    ) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && result?.geometry?.location) {
-        const lat = result.geometry.location.lat();
-        const lng = result.geometry.location.lng();
-        onSearch(result.formatted_address || '', lat, lng);
-        setSearchText(result.formatted_address || '');
-        setSuggestions([]);
-        setIsDropdownVisible(false);
-      }
-    },
-    [onSearch],
-  );
-
-  // Handle input change
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const query = e.target.value;
-      prevSearchTextRef.current = searchText;
+      const prevText = prevSearchTextRef.current;
+      prevSearchTextRef.current = query;
       setSearchText(query);
       setIsDropdownVisible(true);
-      setLoading(true);
 
-      if (query.length > 2 && autocompleteServiceRef.current) {
-        autocompleteServiceRef.current.getPlacePredictions({ input: query }, handlePredictions);
+      search(query);
+
+      if (query.length > 2) {
         onNotesSearch(query);
-      } else {
-        setSuggestions([]);
-        setLoading(false);
-        if (query.length === 0 && prevSearchTextRef.current.length > 0) {
-          onSearch('');
-          onNotesSearch('');
-        }
+      } else if (query.length === 0 && prevText.length > 0) {
+        onSearch('');
+        onNotesSearch('');
       }
     },
-    [searchText, onSearch, onNotesSearch, handlePredictions],
+    [onSearch, onNotesSearch, search],
   );
 
-  // Handle Enter key press
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        const typedLocation = searchText.trim();
+        const typedLocation = searchTextRef.current.trim();
         if (typedLocation) {
           onSearch(typedLocation);
           setIsDropdownVisible(false);
         }
       }
     },
-    [searchText, onSearch],
-  );
-
-  // Handle suggestion selection
-  const handleSelectSuggestion = useCallback(
-    (placeId: string) => {
-      if (isLoaded && window.google?.maps?.places) {
-        const placesService = new window.google.maps.places.PlacesService(
-          document.createElement('div'),
-        );
-        placesService.getDetails({ placeId }, handlePlaceDetails);
-      }
-    },
-    [isLoaded, handlePlaceDetails],
-  );
-
-  // Handle note selection
-  const handleNoteSelection = useCallback(
-    (note: CombinedResult) => {
-      if (note.type === 'note') {
-        if (note.latitude != null && note.longitude != null) {
-          onSearch(note.title, note.latitude, note.longitude, true);
-          setSearchText(note.title);
-          setIsDropdownVisible(false);
-        }
-      }
-    },
     [onSearch],
   );
 
-  // Handle focus
+  const handleResultClick = useCallback(
+    (result: CombinedResult) => {
+      if (result.type === 'suggestion') {
+        if (result.place_id === 'typed-location') {
+          onSearch(result.description);
+          setSearchText(result.description);
+          setIsDropdownVisible(false);
+        } else {
+          selectPlace(result.place_id, ({ address, lat, lng }) => {
+            onSearch(address, lat, lng);
+            setSearchText(address);
+            clearSuggestions();
+            setIsDropdownVisible(false);
+          });
+        }
+      } else if (result.latitude != null && result.longitude != null) {
+        onSearch(result.title, result.latitude, result.longitude, true);
+        setSearchText(result.title);
+        setIsDropdownVisible(false);
+      }
+    },
+    [onSearch, selectPlace, clearSuggestions],
+  );
+
   const handleFocus = useCallback(() => {
     setIsDropdownVisible(true);
   }, []);
 
-  // Handle blur
   const handleBlur = useCallback(() => {
-    // Hide dropdown after a slight delay to allow clicks on suggestions
-    setTimeout(() => setIsDropdownVisible(false), 200);
+    setIsDropdownVisible(false);
   }, []);
 
-  // Compute combined results
   const combinedResults = useMemo((): CombinedResult[] => {
-    // Add typed location at the top of the combined list
-    const typedLocation =
+    const typedLocation: CombinedResult[] =
       searchText ?
         [
           {
@@ -179,7 +132,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
         })),
     ];
 
-    // Sort combined results alphabetically
     results.sort((a, b) => {
       const textA =
         'description' in a ? a.description || ''
@@ -194,24 +146,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
 
     return results;
   }, [searchText, suggestions, filteredNotes]);
-
-  // Handle result click
-  const handleResultClick = useCallback(
-    (result: CombinedResult) => {
-      if (result.type === 'suggestion') {
-        if (result.place_id === 'typed-location') {
-          onSearch(result.description);
-          setSearchText(result.description);
-          setIsDropdownVisible(false);
-        } else {
-          handleSelectSuggestion(result.place_id);
-        }
-      } else {
-        handleNoteSelection(result);
-      }
-    },
-    [onSearch, handleSelectSuggestion, handleNoteSelection],
-  );
 
   return (
     <div className='relative flex w-full flex-col'>
@@ -243,6 +177,7 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
                     <button
                       key={key}
                       className='hover:bg-accent flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors'
+                      onMouseDown={e => e.preventDefault()}
                       onClick={() => handleResultClick(result)}
                       type='button'
                     >

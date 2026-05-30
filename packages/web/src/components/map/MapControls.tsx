@@ -1,8 +1,8 @@
 import { forwardRef } from 'react';
 import { UserIcon, Plus, Minus, Users, Crosshair } from 'lucide-react';
-import SearchBarMap from '../search_bar_map';
+import SearchBarMap from '@/components/search_bar_map';
 import { Note } from '@/types';
-import { PANEL_WIDTH } from '../../utils/mapConstants';
+import { PANEL_WIDTH } from '@/utils/mapConstants';
 
 interface MapControlsProps {
   // Search

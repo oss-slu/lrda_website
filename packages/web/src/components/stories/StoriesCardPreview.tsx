@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Note, Tag } from '@/types';
 import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin } from 'lucide-react';
-import { fetchCreatorName } from '../../services';
-import { getCachedLocation } from '../../utils/location_cache';
+import { useCreatorName } from '@/hooks/queries/useUsers';
+import { getCachedLocation } from '@/utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
-import { formatDateCompact, format12hourTime } from '../../utils/data_conversion';
-import { extractTextFromHtml } from '../../utils/sanitize';
+import { formatDateCompact, format12hourTime } from '@/utils/data_conversion';
+import { extractTextFromHtml } from '@/utils/sanitize';
 
 interface StoriesCardPreviewProps {
   note: Note;
@@ -46,7 +46,7 @@ function normalizeTags(tags: (Tag | string | null | undefined)[] | null | undefi
 }
 
 export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, onClick }) => {
-  const [creator, setCreator] = useState<string>('Loading...');
+  const { data: creator = 'Loading...' } = useCreatorName(note.creator);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [location, setLocation] = useState<string>('');
 
@@ -61,15 +61,6 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
   const normalizedTags = normalizeTags(note.tags);
   const displayTags = normalizedTags.slice(0, 2);
   const remainingTagCount = Math.max(0, normalizedTags.length - 2);
-
-  // Fetch creator name
-  useEffect(() => {
-    if (note.creator) {
-      fetchCreatorName(note.creator).then(name => {
-        setCreator(name);
-      });
-    }
-  }, [note.creator]);
 
   // Use stored location name or fall back to reverse geocoding
   useEffect(() => {
