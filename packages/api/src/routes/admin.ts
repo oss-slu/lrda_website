@@ -195,15 +195,17 @@ const getRecentActivityRoute = createRoute({
   },
 });
 
+const DaysQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).optional().default(30),
+});
+
 const getAnalyticsSummaryRoute = createRoute({
   method: 'get',
   path: '/analytics/summary',
   tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   request: {
-    query: z.object({
-      days: z.string().regex(/^\d+$/).optional().default('30'),
-    }),
+    query: DaysQuerySchema,
   },
   responses: {
     200: {
@@ -227,9 +229,7 @@ const getAnalyticsTimeSeriesRoute = createRoute({
   tags: ['Admin'],
   middleware: [requireAuth, requireAdmin],
   request: {
-    query: z.object({
-      days: z.string().regex(/^\d+$/).optional().default('30'),
-    }),
+    query: DaysQuerySchema,
   },
   responses: {
     200: {
@@ -305,23 +305,27 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
   // GET /admin/stats - get statistics
   .openapi(getStatsRoute, async c => {
     const db = getDb(c);
-    const users = await db.query.user.findMany({
-      columns: {
-        role: true,
-        isInstructor: true,
-        pendingInstructorDescription: true,
+
+    const [result] = await db
+      .select({
+        totalUsers: count(),
+        totalAdmins: count(sql`CASE WHEN ${user.role} = 'admin' THEN 1 END`),
+        totalInstructors: count(sql`CASE WHEN ${user.isInstructor} = true THEN 1 END`),
+        pendingApplications: count(
+          sql`CASE WHEN ${user.pendingInstructorDescription} IS NOT NULL AND ${user.pendingInstructorDescription} != '' AND ${user.isInstructor} = false THEN 1 END`,
+        ),
+      })
+      .from(user);
+
+    return c.json(
+      {
+        totalUsers: Number(result.totalUsers),
+        totalAdmins: Number(result.totalAdmins),
+        totalInstructors: Number(result.totalInstructors),
+        pendingApplications: Number(result.pendingApplications),
       },
-    });
-
-    const stats = {
-      totalUsers: users.length,
-      totalAdmins: users.filter(u => u.role === 'admin').length,
-      totalInstructors: users.filter(u => u.isInstructor).length,
-      pendingApplications: users.filter(u => u.pendingInstructorDescription && !u.isInstructor)
-        .length,
-    };
-
-    return c.json(stats, 200);
+      200,
+    );
   })
 
   // POST /admin/approve-instructor/:id - approve application
@@ -451,7 +455,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
   // GET /admin/analytics/summary - analytics summary
   .openapi(getAnalyticsSummaryRoute, async c => {
     const db = getDb(c);
-    const days = parseInt(c.req.valid('query').days || '30', 10);
+    const { days } = c.req.valid('query');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -615,7 +619,7 @@ export const adminRoutes = new OpenAPIHono<AppEnv>()
   // GET /admin/analytics/timeseries - analytics timeseries
   .openapi(getAnalyticsTimeSeriesRoute, async c => {
     const db = getDb(c);
-    const days = parseInt(c.req.valid('query').days || '30', 10);
+    const { days } = c.req.valid('query');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

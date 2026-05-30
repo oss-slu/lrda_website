@@ -83,20 +83,21 @@ app.post('/api/auth/reset-password', async c => {
 
     // Stash plaintext password so onPasswordReset can push it to Firebase.
     // Resolve token -> userId -> email via the verification table.
+    // Coupled to Better Auth's internal storage format: `reset-password:${token}` as identifier.
     const token = json?.token;
     if (token) {
-      const [verif] = await db
+      const verifRows = await db
         .select({ value: verification.value })
         .from(verification)
         .where(eq(verification.identifier, `reset-password:${token}`))
         .limit(1);
-      if (verif) {
-        const [usr] = await db
+      if (verifRows.length > 0) {
+        const usrRows = await db
           .select({ email: user.email })
           .from(user)
-          .where(eq(user.id, verif.value))
+          .where(eq(user.id, verifRows[0].value))
           .limit(1);
-        if (usr) stashPassword(usr.email, newPassword);
+        if (usrRows.length > 0) stashPassword(usrRows[0].email, newPassword);
       }
     }
 

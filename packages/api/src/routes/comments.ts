@@ -258,12 +258,11 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Comment not found' }, 404);
     }
 
-    // Check parent note visibility
     const parentNote = await db.query.note.findFirst({
       where: eq(note.id, result.noteId),
     });
 
-    if (parentNote && !(await canViewNoteComments(db, authUser, parentNote))) {
+    if (!parentNote || !(await canViewNoteComments(db, authUser, parentNote))) {
       return c.json({ error: 'Comment not found' }, 404);
     }
 
@@ -334,10 +333,22 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Comment not found' }, 404);
     }
 
-    // Allow update if user owns the comment OR is admin/instructor
     const isAdmin = authUser.role === 'admin';
-    const isInstructor = authUser.isInstructor === true;
-    if (existingComment.authorId !== authUser.id && !isAdmin && !isInstructor) {
+    let isCreatorsInstructor = false;
+    if (authUser.isInstructor === true) {
+      const noteRow = await db.query.note.findFirst({
+        where: eq(note.id, existingComment.noteId),
+        columns: { creatorId: true },
+      });
+      if (noteRow) {
+        const noteCreator = await db.query.user.findFirst({
+          where: eq(user.id, noteRow.creatorId),
+          columns: { instructorId: true },
+        });
+        isCreatorsInstructor = noteCreator?.instructorId === authUser.id;
+      }
+    }
+    if (existingComment.authorId !== authUser.id && !isAdmin && !isCreatorsInstructor) {
       return c.json({ error: 'You can only update your own comments' }, 403);
     }
 
@@ -370,10 +381,22 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Comment not found' }, 404);
     }
 
-    // Allow delete if user owns the comment OR is admin/instructor
     const isAdmin = authUser.role === 'admin';
-    const isInstructor = authUser.isInstructor === true;
-    if (existingComment.authorId !== authUser.id && !isAdmin && !isInstructor) {
+    let isCreatorsInstructor = false;
+    if (authUser.isInstructor === true) {
+      const noteRow = await db.query.note.findFirst({
+        where: eq(note.id, existingComment.noteId),
+        columns: { creatorId: true },
+      });
+      if (noteRow) {
+        const noteCreator = await db.query.user.findFirst({
+          where: eq(user.id, noteRow.creatorId),
+          columns: { instructorId: true },
+        });
+        isCreatorsInstructor = noteCreator?.instructorId === authUser.id;
+      }
+    }
+    if (existingComment.authorId !== authUser.id && !isAdmin && !isCreatorsInstructor) {
       return c.json({ error: 'You can only delete your own comments' }, 403);
     }
 
@@ -389,20 +412,35 @@ export const commentRoutes = new OpenAPIHono<AppEnv>()
     const authUser = c.get('user') as NonNullable<AppEnv['Variables']['user']>;
     const { threadId } = c.req.valid('param');
 
-    // Only admins and instructors can resolve threads
     const isAdmin = authUser.role === 'admin';
     const isInstructor = authUser.isInstructor === true;
     if (!isAdmin && !isInstructor) {
       return c.json({ error: 'Only instructors can resolve threads' }, 403);
     }
 
-    // Get all comments in this thread
     const threadComments = await db.query.comment.findMany({
       where: eq(comment.threadId, threadId),
     });
 
     if (threadComments.length === 0) {
       return c.json({ error: 'Thread not found' }, 404);
+    }
+
+    // Instructors can only resolve threads on their own students' notes
+    if (isInstructor && !isAdmin) {
+      const noteRow = await db.query.note.findFirst({
+        where: eq(note.id, threadComments[0].noteId),
+        columns: { creatorId: true },
+      });
+      if (noteRow) {
+        const noteCreator = await db.query.user.findFirst({
+          where: eq(user.id, noteRow.creatorId),
+          columns: { instructorId: true },
+        });
+        if (noteCreator?.instructorId !== authUser.id) {
+          return c.json({ error: 'Only instructors can resolve threads' }, 403);
+        }
+      }
     }
 
     // Update all comments in the thread to resolved

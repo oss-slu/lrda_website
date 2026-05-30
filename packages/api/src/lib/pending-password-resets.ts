@@ -4,14 +4,22 @@
 // onPasswordReset callback in auth.ts consumes and deletes the entry.
 // Remove this file when the mobile app migrates off Firebase Auth.
 
-const pending = new Map<string, string>();
+const STASH_TTL_MS = 5 * 60 * 1000;
+
+const pending = new Map<string, { plaintext: string; timer: ReturnType<typeof setTimeout> }>();
 
 export function stashPassword(email: string, plaintext: string) {
-  pending.set(email, plaintext);
+  const existing = pending.get(email);
+  if (existing) clearTimeout(existing.timer);
+
+  const timer = setTimeout(() => pending.delete(email), STASH_TTL_MS);
+  pending.set(email, { plaintext, timer });
 }
 
 export function consumePassword(email: string): string | undefined {
-  const pw = pending.get(email);
-  if (pw !== undefined) pending.delete(email);
-  return pw;
+  const entry = pending.get(email);
+  if (!entry) return undefined;
+  clearTimeout(entry.timer);
+  pending.delete(email);
+  return entry.plaintext;
 }
