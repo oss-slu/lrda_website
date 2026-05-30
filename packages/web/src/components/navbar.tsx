@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from '@tanstack/react-router';
+import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
 import { Menu, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,63 +93,73 @@ export default function Navbar() {
 
       {/* Desktop links */}
       <div className='hidden items-center gap-1 md:flex'>
-        {navItems.map(
-          item =>
-            (!item.authRequired || name) && (
+        {navItems
+          .filter(item => !item.authRequired)
+          .map(item => (
+            <Link key={item.href} to={item.href} className={linkClass(item.href)}>
+              {item.label}
+            </Link>
+          ))}
+        <ClientOnly>
+          {navItems
+            .filter(item => item.authRequired && name)
+            .map(item => (
               <Link key={item.href} to={item.href} className={linkClass(item.href)}>
                 {item.label}
               </Link>
-            ),
-        )}
+            ))}
+        </ClientOnly>
       </div>
 
       {/* Right side: auth */}
       <div className='flex items-center'>
-        {name ?
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                className='gap-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600'
-              >
-                <User className='h-4 w-4' />
-                <span className='max-w-[120px] truncate text-sm'>{name}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-48'>
-              <DropdownMenuLabel className='font-normal'>
-                <p className='truncate text-sm font-medium'>{name}</p>
-                {user?.email && (
-                  <p className='text-muted-foreground truncate text-xs'>{user.email}</p>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {isAdminUser(user) && (
-                <>
-                  <DropdownMenuItem asChild className='cursor-pointer'>
-                    <Link to='/admin'>
-                      <LayoutDashboard className='mr-2 h-4 w-4' />
-                      Admin
-                    </Link>
-                  </DropdownMenuItem>
+        <ClientOnly fallback={<div className='h-9 w-[150px]' />}>
+          {name ?
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    className='gap-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                  >
+                    <User className='h-4 w-4' />
+                    <span className='max-w-[120px] truncate text-sm'>{name}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='w-48'>
+                  <DropdownMenuLabel className='font-normal'>
+                    <p className='truncate text-sm font-medium'>{name}</p>
+                    {user?.email && (
+                      <p className='text-muted-foreground truncate text-xs'>{user.email}</p>
+                    )}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
-                <LogOut className='mr-2 h-4 w-4' />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        : <div className='flex items-center gap-2'>
-            <Button variant='default' asChild className='whitespace-nowrap'>
-              <Link to='/login'>Login</Link>
-            </Button>
-            <Button variant='outline' asChild className='whitespace-nowrap'>
-              <Link to='/signup'>Sign Up</Link>
-            </Button>
-          </div>
-        }
+                  {isAdminUser(user) && (
+                    <>
+                      <DropdownMenuItem asChild className='cursor-pointer'>
+                        <Link to='/admin'>
+                          <LayoutDashboard className='mr-2 h-4 w-4' />
+                          Admin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
+                    <LogOut className='mr-2 h-4 w-4' />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+          : <div className='flex items-center gap-2'>
+              <Button variant='default' asChild className='whitespace-nowrap'>
+                <Link to='/login'>Login</Link>
+              </Button>
+              <Button variant='outline' asChild className='whitespace-nowrap'>
+                <Link to='/signup'>Sign Up</Link>
+              </Button>
+            </div>
+          }
+        </ClientOnly>
       </div>
 
       {/* Mobile sheet drawer */}
@@ -159,51 +169,56 @@ export default function Navbar() {
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
           <nav className='mt-4 flex flex-col gap-1'>
-            {navItems.map(item => (!item.authRequired || name) && renderMobileLink(item))}
+            {navItems.filter(item => !item.authRequired).map(item => renderMobileLink(item))}
+            <ClientOnly>
+              {navItems.filter(item => item.authRequired && name).map(item => renderMobileLink(item))}
+            </ClientOnly>
           </nav>
-          <div className='mt-auto border-t border-gray-200 pt-6'>
-            {name ?
-              <div className='space-y-2'>
-                <p className='truncate px-3 text-sm font-medium text-gray-900'>{name}</p>
-                {user?.email && <p className='truncate px-3 text-xs text-gray-500'>{user.email}</p>}
-                {isAdminUser(user) && (
-                  <Button
-                    variant='ghost'
-                    asChild
-                    className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
-                  >
-                    <Link to='/admin' onClick={() => setMobileOpen(false)}>
-                      <LayoutDashboard className='mr-2 h-4 w-4' />
-                      Admin
-                    </Link>
-                  </Button>
-                )}
-                <Button
-                  variant='ghost'
-                  className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
-                  onClick={() => {
-                    setMobileOpen(false);
-                    handleLogout();
-                  }}
-                >
-                  <LogOut className='mr-2 h-4 w-4' />
-                  Log out
-                </Button>
-              </div>
-            : <div className='flex flex-col gap-2 px-3'>
-                <Button variant='default' asChild>
-                  <Link to='/login' onClick={() => setMobileOpen(false)}>
-                    Login
-                  </Link>
-                </Button>
-                <Button variant='outline' asChild>
-                  <Link to='/signup' onClick={() => setMobileOpen(false)}>
-                    Sign Up
-                  </Link>
-                </Button>
-              </div>
-            }
-          </div>
+          <ClientOnly>
+            <div className='mt-auto border-t border-gray-200 pt-6'>
+              {name ?
+                  <div className='space-y-2'>
+                    <p className='truncate px-3 text-sm font-medium text-gray-900'>{name}</p>
+                    {user?.email && <p className='truncate px-3 text-xs text-gray-500'>{user.email}</p>}
+                    {isAdminUser(user) && (
+                      <Button
+                        variant='ghost'
+                        asChild
+                        className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                      >
+                        <Link to='/admin' onClick={() => setMobileOpen(false)}>
+                          <LayoutDashboard className='mr-2 h-4 w-4' />
+                          Admin
+                        </Link>
+                      </Button>
+                    )}
+                    <Button
+                      variant='ghost'
+                      className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleLogout();
+                      }}
+                    >
+                      <LogOut className='mr-2 h-4 w-4' />
+                      Log out
+                    </Button>
+                  </div>
+                : <div className='flex flex-col gap-2 px-3'>
+                    <Button variant='default' asChild>
+                      <Link to='/login' onClick={() => setMobileOpen(false)}>
+                        Login
+                      </Link>
+                    </Button>
+                    <Button variant='outline' asChild>
+                      <Link to='/signup' onClick={() => setMobileOpen(false)}>
+                        Sign Up
+                      </Link>
+                    </Button>
+                  </div>
+                }
+            </div>
+          </ClientOnly>
         </SheetContent>
       </Sheet>
     </nav>
