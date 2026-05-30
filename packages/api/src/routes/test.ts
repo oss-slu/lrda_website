@@ -178,13 +178,27 @@ testRoutes.post('/firebase/create-user', async c => {
   }
 });
 
-testRoutes.get('/firebase/password-hash', async c => {
+testRoutes.post('/firebase/verify-password', async c => {
   try {
-    const email = c.req.query('email');
-    if (!email) return c.json({ error: 'Missing email' }, 400);
+    const { email, password } = (await c.req.json()) as { email: string; password: string };
     const auth = await getFirebaseAuth();
-    const user = await auth.getUserByEmail(email);
-    return c.json({ passwordHash: user.passwordHash ?? null, passwordSalt: user.passwordSalt ?? null }, 200);
+    const { credential } = auth.app.options;
+    const accessToken = await (credential as any).getAccessToken();
+    const projectId = auth.app.options.projectId
+      ?? (auth.app.options.credential as any)?.projectId;
+
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken.access_token}`,
+        },
+        body: JSON.stringify({ email, password, returnSecureToken: false }),
+      },
+    );
+    return c.json({ valid: res.ok }, 200);
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
