@@ -3,6 +3,9 @@
   "account_id": "5100661403ca1e484379f9064b8f6f6f",
   "name": "lrda-web",
   "main": "@tanstack/react-start/server-entry",
+  "assets": {
+    "html_handling": "drop-trailing-slash"
+  },
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [

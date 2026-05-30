@@ -1,7 +1,0 @@
-# Trailing-slash 301 redirects for SEO canonicalization
-/stories/           /stories          301
-/resources/         /resources        301
-/wheres-religion/   /wheres-religion  301
-/map/               /map              301
-/login/             /login            301
-/signup/            /signup           301
