@@ -18,12 +18,14 @@ async function fbCreateUser(email: string, password: string): Promise<string> {
   return ((await res.json()) as { uid: string }).uid;
 }
 
-async function fbPasswordHash(email: string): Promise<string | null> {
-  const res = await fetch(
-    `${API_URL}/api/test/firebase/password-hash?email=${encodeURIComponent(email)}`,
-  );
-  if (!res.ok) throw new Error(`Firebase password-hash failed: ${await res.text()}`);
-  return ((await res.json()) as { passwordHash: string | null }).passwordHash;
+async function fbVerifyPassword(email: string, password: string): Promise<boolean> {
+  const res = await fetch(`${API_URL}/api/test/firebase/verify-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error(`Firebase verify-password failed: ${await res.text()}`);
+  return ((await res.json()) as { valid: boolean }).valid;
 }
 
 async function fbDeleteUser(email: string): Promise<void> {
@@ -45,7 +47,11 @@ test.describe('Firebase password sync on reset', () => {
     // 1. Create the user in Firebase with the initial password
     await fbCreateUser(email, INITIAL_PASSWORD);
 
-    // 2. Seed a matching PostgreSQL user (unverified, no credential account = migrated state)
+    // 2. Verify the initial password works in Firebase
+    const initialValid = await fbVerifyPassword(email, INITIAL_PASSWORD);
+    expect(initialValid, 'Initial password should work in Firebase').toBe(true);
+
+    // 3. Seed a matching PostgreSQL user (unverified, no credential account = migrated state)
     await execute(
       `INSERT INTO "user" (id, name, email, email_verified, role, created_at, updated_at)
        VALUES ($1, $2, $3, FALSE, 'user', NOW(), NOW())`,
@@ -54,15 +60,11 @@ test.describe('Firebase password sync on reset', () => {
       email,
     );
 
-    // 3. Record the Firebase password hash before reset
-    const hashBefore = await fbPasswordHash(email);
-    expect(hashBefore, 'Firebase user should have a password hash').toBeTruthy();
-
     // 4. Request a password reset via the forgot-password page
     const page = await anonPage(browser);
     await page.goto('/forgot-password');
     await page.waitForLoadState('networkidle');
-    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Email address').fill(email);
     await page.getByRole('button', { name: /Send reset link/i }).click();
     await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
 
@@ -78,10 +80,12 @@ test.describe('Firebase password sync on reset', () => {
     await page.getByRole('button', { name: /^Reset password$/ }).click();
     await expect(page).toHaveURL(/\/login/);
 
-    // 6. Verify that the Firebase password hash changed
-    const hashAfter = await fbPasswordHash(email);
-    expect(hashAfter, 'Firebase password hash should still exist').toBeTruthy();
-    expect(hashAfter).not.toBe(hashBefore);
+    // 6. Verify the new password works in Firebase and the old one doesn't
+    const newValid = await fbVerifyPassword(email, RESET_PASSWORD);
+    expect(newValid, 'New password should work in Firebase after reset').toBe(true);
+
+    const oldValid = await fbVerifyPassword(email, INITIAL_PASSWORD);
+    expect(oldValid, 'Old password should no longer work in Firebase').toBe(false);
 
     await page.context().close();
   });
