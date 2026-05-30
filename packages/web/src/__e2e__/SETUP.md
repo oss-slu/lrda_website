@@ -33,14 +33,14 @@ The dev server is NOT started automatically -- start it manually before running 
 ### 4. Run Tests
 
 ```bash
-# Run all E2E tests (API + browser)
+# Run all tests (unit + integration + e2e)
+pnpm --filter web test
+
+# Run only API integration tests (Vitest, HTTP against running server)
+pnpm --filter web test:integration
+
+# Run only browser e2e specs (Playwright)
 pnpm --filter web test:e2e
-
-# Run only browser specs (Playwright)
-pnpm --filter web test:e2e:browser
-
-# Run only API tests (Vitest)
-pnpm --filter web test:e2e:api
 
 # Run browser specs with a visible browser
 pnpm --filter web test:e2e:headed
@@ -53,24 +53,24 @@ pnpm --filter web test:e2e:ui
 
 Two runners, each for what it's good at:
 
-- **Browser specs** (`app/__e2e__/**/*.spec.ts`) run on **`@playwright/test`** (`playwright.config.ts`)
+- **Browser e2e specs** (`src/__e2e__/**/*.spec.ts`) run on **`@playwright/test`** (`playwright.config.ts`)
   -- web-first auto-waiting assertions, traces/screenshots on failure, `--ui` mode.
-- **API e2e** (`tests/e2e/**/*.test.ts`) run on **Vitest** (`vitest.e2e.config.ts`)
+- **API integration tests** (`tests/integration/**/*.test.ts`) run on **Vitest** (`vitest.integration.config.ts`)
   -- plain HTTP/fetch tests, no browser.
 
-Browser helpers (`app/__e2e__/helpers/`):
+Browser helpers (`src/__e2e__/helpers/`):
 
 - `pw.ts` -- `authedPage(browser, userId)` (injects a real signed session cookie),
   `anonPage(browser)`, and `url()`. Each call uses an isolated browser context.
 - `auth-ui.ts` -- dev-mode email capture (`getLastEmailUrl`, `extractToken`,
   `verifyEmailToken`) and `cleanupByEmail` for the auth-page specs.
 
-Both layers share the seed/query helpers in `tests/e2e/helpers/` (raw SQL + session
+Both layers share the seed/query helpers in `tests/integration/helpers/` (raw SQL + session
 minting via the test-only `/api/test` endpoints, which are disabled in production).
 
 ## Test Structure
 
-### Browser Specs (in `app/__e2e__/`)
+### Browser E2E Specs (in `src/__e2e__/`)
 
 - `authenticated.spec.ts` -- Authenticated flows: notes page, admin dashboard, nav state
   (session injected; navigates client-side because the authenticated routes' document
@@ -78,7 +78,7 @@ minting via the test-only `/api/test` endpoints, which are disabled in productio
 - `auth-pages.spec.ts` -- Auth UI: protected-route guard, full signup -> verify -> login
   through the forms, and a negative login
 
-### API E2E Tests (in `tests/e2e/`)
+### API Integration Tests (in `tests/integration/`)
 
 - `admin/admin.test.ts` -- Admin API endpoints
 - `auth/auth-flows.test.ts` -- Full auth lifecycle: signup, email verification, password reset, Firebase migration
@@ -88,17 +88,17 @@ minting via the test-only `/api/test` endpoints, which are disabled in productio
 
 ## Adding New Tests
 
-### Browser spec
+### Browser e2e spec
 
-1. Create a `.spec.ts` file in `app/__e2e__/`
+1. Create a `.spec.ts` file in `src/__e2e__/`
 2. `import { test, expect } from '@playwright/test'`
 3. Use the `browser` fixture with `authedPage` / `anonPage` from `./helpers/pw`
 4. Use Playwright's web-first locator + `expect` API
 
-### API test
+### API integration test
 
-1. Create a `.test.ts` file in `tests/e2e/`
-2. Use the helpers in `tests/e2e/helpers/` (client, auth, db-seed)
+1. Create a `.test.ts` file in `tests/integration/`
+2. Use the helpers in `tests/integration/helpers/` (client, auth, db-seed)
 
 ## Troubleshooting
 

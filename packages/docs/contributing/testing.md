@@ -23,12 +23,12 @@ Use React Testing Library for component tests. Mock files are in `packages/web/a
 
 ## End-to-End Tests (Playwright)
 
-E2E tests live in `packages/web/app/__e2e__/` with the `.spec.ts` extension.
+Browser e2e specs live in `packages/web/src/__e2e__/` (`.spec.ts`, Playwright).
+API integration tests live in `packages/web/tests/integration/` (`.test.ts`, Vitest).
 
 ```bash
-pnpm test:e2e                # Run all e2e tests
-pnpm test:e2e:api            # API-focused e2e tests
-pnpm test:e2e:browser        # Browser-focused e2e tests
+pnpm test:integration        # API integration tests (HTTP against running server)
+pnpm test:e2e                # Browser e2e tests (Playwright)
 pnpm test:e2e:headed         # Run with visible browser
 pnpm test:e2e:install        # Install Playwright browsers
 ```

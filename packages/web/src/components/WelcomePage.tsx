@@ -180,7 +180,7 @@ export default function WelcomePage() {
                 <img
                   src='/01googleplay.svg'
                   alt='Google Play Store'
-                  style={{ transform: 'scale(1.15)' }}
+                  style={{ height: 40, width: 'auto' }}
                 />
               </a>
             </div>

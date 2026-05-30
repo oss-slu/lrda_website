@@ -7,7 +7,7 @@ import {
   TEST_USER_ID_2,
   TEST_INSTRUCTOR_ID,
   TEST_NOTE_USER2_ID,
-} from '../../tests/e2e/helpers/db-seed';
+} from '../../tests/integration/helpers/db-seed';
 
 const NOTE_TITLE = 'User 2 Draft';
 

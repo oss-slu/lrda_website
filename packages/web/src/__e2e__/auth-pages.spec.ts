@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { anonPage } from './helpers/pw';
 import { getAuthUrl, extractToken, verifyEmailToken, cleanupByEmail } from './helpers/auth-ui';
-import { execute } from '../../tests/e2e/helpers/db-seed';
+import { execute } from '../../tests/integration/helpers/db-seed';
 
 const PREFIX = `auth-ui-e2e-${Date.now()}`;
 const STRONG_PASSWORD = 'TestStr0ng!Pass#1';
