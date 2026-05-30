@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { ResendButton } from '@/components/ui/resend-button';
-import { ArrowLeft, CheckCircle2, Mail } from 'lucide-react';
+import { ArrowLeft, CircleCheckBig, Mail } from 'lucide-react';
 
 export const Route = createFileRoute('/_public/forgot-password')({
   validateSearch: (search: Record<string, unknown>): { email?: string } => ({
@@ -74,7 +74,7 @@ function ForgotPasswordPage() {
           {submitted ?
             <div className='space-y-4'>
               <div className='flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4'>
-                <CheckCircle2 className='mt-0.5 h-5 w-5 shrink-0 text-green-600' />
+                <CircleCheckBig className='mt-0.5 h-5 w-5 shrink-0 text-green-600' />
                 <p className='text-sm text-green-800'>
                   If an account exists for that email, you will receive a password reset link
                   shortly. Be sure to check your spam folder.

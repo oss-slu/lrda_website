@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { authClient } from '@/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, AlertTriangle, Loader2, ShieldCheck, ArrowLeft, Mail } from 'lucide-react';
+import { CircleCheckBig, AlertTriangle, Loader2, ShieldCheck, ArrowLeft, Mail } from 'lucide-react';
 
 export const Route = createFileRoute('/_public/verify-email')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -96,7 +96,7 @@ function VerifyEmailPage() {
             <CardHeader>
               <div className='mb-2 flex justify-center'>
                 <div className='rounded-full bg-green-100 p-3'>
-                  <CheckCircle2 className='h-6 w-6 text-green-600' />
+                  <CircleCheckBig className='h-6 w-6 text-green-600' />
                 </div>
               </div>
               <CardTitle className='text-center'>Email verified</CardTitle>
@@ -106,7 +106,7 @@ function VerifyEmailPage() {
             </CardHeader>
             <CardContent className='space-y-6'>
               <div className='flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4'>
-                <CheckCircle2 className='mt-0.5 h-5 w-5 shrink-0 text-green-600' />
+                <CircleCheckBig className='mt-0.5 h-5 w-5 shrink-0 text-green-600' />
                 <p className='text-sm text-green-800'>
                   Your account is ready. Redirecting to login in {countdown}s...
                 </p>

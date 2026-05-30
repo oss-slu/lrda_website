@@ -1,5 +1,5 @@
 import React from 'react';
-import { UploadIcon, XCircle, ArrowDownToLine } from 'lucide-react';
+import { UploadIcon, CircleX, ArrowDownToLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/stores/authStore';
 import { hasInstructorAccess } from '@/stores/authHelpers';
@@ -76,7 +76,7 @@ const PublishToggle: React.FC<PublishToggleProps> = ({
       iconClass = 'text-yellow-500';
       labelText = 'Cancel Request';
       tooltipText = 'Cancel your approval request.';
-      IconComponent = XCircle;
+      IconComponent = CircleX;
     } else {
       iconClass = 'text-blue-500';
       labelText = 'Request Approval';

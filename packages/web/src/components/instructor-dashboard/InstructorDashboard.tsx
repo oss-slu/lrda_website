@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CircleCheck, CircleX } from 'lucide-react';
 import type { Note } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotesStore } from '@/stores/notesStore';
@@ -178,7 +178,7 @@ export default function InstructorDashboard() {
                 onClick={() => setIsDeclineDialogOpen(true)}
                 disabled={isSubmitting}
               >
-                <XCircle className='mr-1.5 h-4 w-4' />
+                <CircleX className='mr-1.5 h-4 w-4' />
                 Decline
               </Button>
               <Button
@@ -186,7 +186,7 @@ export default function InstructorDashboard() {
                 disabled={isSubmitting}
                 className='bg-blue-600 text-white hover:bg-blue-700'
               >
-                <CheckCircle className='mr-1.5 h-4 w-4' />
+                <CircleCheck className='mr-1.5 h-4 w-4' />
                 {isSubmitting ? 'Approving...' : 'Approve'}
               </Button>
             </div>

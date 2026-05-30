@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { CircleAlert, CircleCheckBig, Loader2 } from 'lucide-react';
 
 function formatTimeAgo(date: Date): string {
   const now = new Date();
@@ -54,7 +54,7 @@ export default function AutoSaveIndicator({
         onClick={onRetry}
         className='inline-flex items-center gap-2 rounded-md bg-red-50 px-2.5 py-1.5 text-sm text-red-700 transition-all duration-300 hover:bg-red-100'
       >
-        <AlertCircle className='h-3.5 w-3.5' />
+        <CircleAlert className='h-3.5 w-3.5' />
         <span className='font-medium'>Save failed</span>
         <span className='text-red-600 underline'>Retry</span>
       </button>
@@ -74,7 +74,7 @@ export default function AutoSaveIndicator({
 
   return (
     <div className='inline-flex items-center gap-2 rounded-md bg-green-50 px-2.5 py-1.5 text-sm text-green-700 transition-all duration-300'>
-      <CheckCircle2 className='h-3.5 w-3.5' />
+      <CircleCheckBig className='h-3.5 w-3.5' />
       <span className='font-medium'>Saved</span>
       {timeAgo && <span className='text-green-600'>({timeAgo})</span>}
     </div>

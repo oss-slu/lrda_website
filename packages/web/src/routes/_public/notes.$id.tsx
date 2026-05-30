@@ -18,7 +18,7 @@ import {
   FileAudio,
   ImageIcon,
   Tags,
-  UserCircle,
+  CircleUser,
   X,
 } from 'lucide-react';
 
@@ -121,7 +121,7 @@ function NoteDetailPage() {
             {formatTime(note.time)}
           </span>
           <span className='flex items-center gap-1'>
-            <UserCircle className='h-4 w-4' />
+            <CircleUser className='h-4 w-4' />
             {creatorName ?? 'Loading...'}
           </span>
         </div>

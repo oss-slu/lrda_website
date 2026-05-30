@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Note, Tag } from '@/types';
-import { CalendarDays, UserCircle, Clock3, ImageIcon, MapPin } from 'lucide-react';
+import { CalendarDays, CircleUser, Clock3, ImageIcon, MapPin } from 'lucide-react';
 import { useCreatorName } from '@/hooks/queries/useUsers';
 import { getCachedLocation } from '@/utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
@@ -118,7 +118,7 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
 
         {/* Creator */}
         <div className='mb-2 flex items-center text-xs text-gray-600'>
-          <UserCircle size={14} className='mr-1.5 shrink-0' />
+          <CircleUser size={14} className='mr-1.5 shrink-0' />
           <span className='truncate text-sm'>{creator}</span>
         </div>
 

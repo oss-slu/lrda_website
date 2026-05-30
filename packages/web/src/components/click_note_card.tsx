@@ -4,7 +4,7 @@ import { Tag } from '@/types';
 import { useCreatorName } from '@/hooks/queries/useUsers';
 import {
   CalendarDays,
-  UserCircle,
+  CircleUser,
   Tags,
   Clock3,
   FileAudio,
@@ -71,7 +71,7 @@ const ClickableNote: React.FC<{
           <Clock3 className='h-5 w-5' />: {formatTime(note.time)}
         </DialogDescription>
         <DialogDescription className='flex flex-row items-center'>
-          <UserCircle className='h-5 w-5' />: {creator}
+          <CircleUser className='h-5 w-5' />: {creator}
         </DialogDescription>
 
         {tags.length > 0 && (

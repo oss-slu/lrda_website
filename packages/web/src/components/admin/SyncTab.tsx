@@ -44,8 +44,8 @@ import {
   Zap,
   RefreshCw,
   Loader2,
-  CheckCircle2,
-  XCircle,
+  CircleCheckBig,
+  CircleX,
   Clock,
   ChevronLeft,
   Users,
@@ -82,14 +82,14 @@ function StatusBadge({ status }: { status: string }) {
     case 'success':
       return (
         <Badge variant='default' className='bg-green-600 text-xs'>
-          <CheckCircle2 className='mr-1 h-3 w-3' />
+          <CircleCheckBig className='mr-1 h-3 w-3' />
           Success
         </Badge>
       );
     case 'failed':
       return (
         <Badge variant='destructive' className='text-xs'>
-          <XCircle className='mr-1 h-3 w-3' />
+          <CircleX className='mr-1 h-3 w-3' />
           Failed
         </Badge>
       );

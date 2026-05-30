@@ -3,7 +3,7 @@ import { Note } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
+import { CircleAlert, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
 import NoteCard from '@/components/note_card';
 import { PANEL_WIDTH } from '@/utils/mapConstants';
 import { cn } from '@/lib/utils';
@@ -117,7 +117,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
               // Error state
               <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
                 <div className='bg-destructive/10 mb-4 rounded-full p-4'>
-                  <AlertCircle className='text-destructive h-8 w-8' />
+                  <CircleAlert className='text-destructive h-8 w-8' />
                 </div>
                 <h3 className='text-foreground text-xl font-semibold'>Failed to Load Notes</h3>
                 <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
