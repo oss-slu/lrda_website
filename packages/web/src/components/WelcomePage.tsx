@@ -227,15 +227,15 @@ export default function WelcomePage() {
           {/* Wavy divider at the bottom */}
           <div className='pointer-events-none absolute right-0 bottom-0 left-0 z-20 w-full overflow-hidden'>
             <svg
-              viewBox='0 0 600 40'
+              viewBox='0 0 600 30'
               fill='none'
               xmlns='http://www.w3.org/2000/svg'
-              className='h-10 w-full'
+              className='h-7 w-full'
               preserveAspectRatio='none'
             >
               <path
-                d='M0,20 C150,40 450,0 600,20 L600,40 L0,40 Z'
-                fill='#f8fafc' // Tailwind's slate-50
+                d='M0,20 C150,40 450,0 600,20 L600,30 L0,30 Z'
+                fill='#f8fafc'
               />
             </svg>
           </div>
