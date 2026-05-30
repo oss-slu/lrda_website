@@ -1,224 +1,142 @@
-import { useState, useEffect, useRef, MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import { notesService } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '@/hooks/queries/useNotes';
 import { Note } from '@/types';
-import type { NoteStateType, NoteHandlersType } from './useNoteState';
+import { useNoteEditorStore, type NoteEditorStore } from '@/stores/noteEditorStore';
 
-// Stable fingerprint for media/audio arrays so we can skip unchanged arrays
-// in PATCH requests (avoids unnecessary delete+re-insert on the backend).
 function mediaFingerprint(items: { uri?: string; uuid?: string }[]): string {
   return JSON.stringify(items.map(m => m.uri || m.uuid || ''));
 }
 
-interface LastSavedSnapshot {
+interface Snapshot {
   title: string;
   text: string;
-  tags: any[];
+  tags: unknown[];
   published: boolean;
-  approvalRequested?: boolean;
-  isReturned?: boolean;
-  latitude?: number | null;
-  longitude?: number | null;
-  mediaFingerprint: string;
-  audioFingerprint: string;
+  approvalRequested: boolean;
+  isReturned: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  mediaFp: string;
+  audioFp: string;
 }
 
-interface UseAutoSaveOptions {
-  noteState: NoteStateType;
-  noteHandlers: NoteHandlersType;
-  isNewNote: boolean;
-  isViewingStudentNote: boolean;
-  authUserId: string | undefined;
-  lastEditTimeRef: MutableRefObject<number>;
+function takeSnapshot(s: NoteEditorStore): Snapshot {
+  return {
+    title: s.title,
+    text: s.editorContent,
+    tags: s.tags,
+    published: s.isPublished,
+    approvalRequested: s.approvalRequested,
+    isReturned: s.isReturned,
+    latitude: s.latitude,
+    longitude: s.longitude,
+    mediaFp: mediaFingerprint([...s.images, ...s.videos]),
+    audioFp: mediaFingerprint(s.audio),
+  };
 }
 
-interface UseAutoSaveResult {
-  isSaving: boolean;
-  lastSavedAt: Date | null;
+function isDirty(s: NoteEditorStore, last: Snapshot | null): boolean {
+  if (!last) return true;
+  const mediaFp = mediaFingerprint([...s.images, ...s.videos]);
+  const audioFp = mediaFingerprint(s.audio);
+  return (
+    last.title !== s.title ||
+    last.text !== s.editorContent ||
+    last.published !== s.isPublished ||
+    last.approvalRequested !== s.approvalRequested ||
+    last.isReturned !== s.isReturned ||
+    last.latitude !== s.latitude ||
+    last.longitude !== s.longitude ||
+    JSON.stringify(last.tags) !== JSON.stringify(s.tags) ||
+    last.mediaFp !== mediaFp ||
+    last.audioFp !== audioFp
+  );
 }
 
-export const useAutoSave = ({
-  noteState,
-  isViewingStudentNote,
-}: UseAutoSaveOptions): UseAutoSaveResult => {
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedSnapshotRef = useRef<LastSavedSnapshot | null>(null);
-  const isSavingRef = useRef(false);
-
+export function useAutoSave(isViewingStudentNote: boolean) {
   const queryClient = useQueryClient();
-
-  const {
-    title,
-    editorContent,
-    latitude,
-    longitude,
-    tags,
-    isPublished,
-    approvalRequested,
-    isReturned,
-    images,
-    videos,
-    audio,
-    time,
-    note,
-  } = noteState;
-
-  const noteId = note?.id;
-  const noteCreator = note?.creator;
-
-  // When switching to a different note, initialize the snapshot with its current data.
-  // This prevents the auto-save from firing just because we switched notes.
-  // Runs in useEffect (not during render) to be safe under React Strict Mode.
-  useEffect(() => {
-    if (!noteId) return;
-    lastSavedSnapshotRef.current = {
-      title,
-      text: editorContent,
-      tags,
-      published: isPublished,
-      approvalRequested,
-      isReturned,
-      latitude,
-      longitude,
-      mediaFingerprint: mediaFingerprint([...images, ...videos]),
-      audioFingerprint: mediaFingerprint(audio),
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-init when switching notes
-  }, [noteId]);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const snapshotRef = useRef<Snapshot | null>(null);
+  const savingRef = useRef(false);
 
   useEffect(() => {
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
+    const store = useNoteEditorStore;
+
+    const initState = store.getState();
+    if (initState.note?.id) {
+      snapshotRef.current = takeSnapshot(initState);
     }
 
-    // Skip auto-save if viewing student note (read-only) or no note ID
-    if (!noteId || isViewingStudentNote) {
-      return;
-    }
+    const unsub = store.subscribe((state, prev) => {
+      if (isViewingStudentNote || !state.note?.id) return;
 
-    const last = lastSavedSnapshotRef.current;
-    const currentMediaFp = mediaFingerprint([...images, ...videos]);
-    const currentAudioFp = mediaFingerprint(audio);
-
-    const isDirty =
-      !last ||
-      last.title !== title ||
-      last.text !== editorContent ||
-      last.published !== isPublished ||
-      last.approvalRequested !== approvalRequested ||
-      last.isReturned !== isReturned ||
-      last.latitude !== latitude ||
-      last.longitude !== longitude ||
-      JSON.stringify(last.tags) !== JSON.stringify(tags) ||
-      last.mediaFingerprint !== currentMediaFp ||
-      last.audioFingerprint !== currentAudioFp;
-
-    if (!isDirty) {
-      return;
-    }
-
-    // Auto-save after 500ms of inactivity
-    autoSaveTimerRef.current = setTimeout(async () => {
-      if (isSavingRef.current) return;
-      isSavingRef.current = true;
-      setIsSaving(true);
-
-      // Re-read snapshot at fire time (not from the closure's `last`) so that
-      // a concurrent save that completed during the debounce window is respected.
-      const lastAtFire = lastSavedSnapshotRef.current;
-      const mediaDirty = !lastAtFire || lastAtFire.mediaFingerprint !== currentMediaFp;
-      const audioDirty = !lastAtFire || lastAtFire.audioFingerprint !== currentAudioFp;
-
-      // Strip existing media/audio from the spread so we can conditionally include them
-      const { media: _existingMedia, audio: _existingAudio, ...noteBase } = note || {};
-
-      const updatedNote: any = {
-        ...noteBase,
-        text: editorContent,
-        title: title || 'Untitled',
-        published: isPublished,
-        approvalRequested: approvalRequested || false,
-        isReturned: isReturned || false,
-        time: time,
-        longitude: longitude,
-        latitude: latitude,
-        tags: tags,
-        id: noteId,
-        creator: noteCreator,
-      };
-
-      // Only include media/audio when they've actually changed.
-      // When omitted, the backend PATCH skips the delete+re-insert cycle.
-      if (mediaDirty) {
-        updatedNote.media = [...images, ...videos];
-      }
-      if (audioDirty) {
-        updatedNote.audio = audio;
+      if (state.note.id !== prev.note?.id) {
+        snapshotRef.current = takeSnapshot(state);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        return;
       }
 
-      try {
-        await notesService.update(updatedNote);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (!isDirty(state, snapshotRef.current)) return;
 
-        // Update the TanStack Query cache in-place (no refetch needed).
-        // Only fields present on updatedNote will overwrite cache entries.
-        if (noteCreator) {
-          queryClient.setQueryData<Note[]>(notesKeys.personal(noteCreator), old => {
-            if (!old) return old;
-            return old.map(n => (n.id === noteId ? { ...n, ...updatedNote } : n));
-          });
+      timerRef.current = setTimeout(async () => {
+        if (savingRef.current) return;
+        savingRef.current = true;
+
+        const s = store.getState();
+        s.setSaving(true);
+
+        const lastSnap = snapshotRef.current;
+        const currentMediaFp = mediaFingerprint([...s.images, ...s.videos]);
+        const currentAudioFp = mediaFingerprint(s.audio);
+        const mediaDirty = !lastSnap || lastSnap.mediaFp !== currentMediaFp;
+        const audioDirty = !lastSnap || lastSnap.audioFp !== currentAudioFp;
+
+        const { media: _, audio: _a, ...noteBase } = s.note || {};
+        const updatedNote: Partial<Note> & { id: string; creator: string } = {
+          ...noteBase,
+          text: s.editorContent,
+          title: s.title || 'Untitled',
+          published: s.isPublished,
+          approvalRequested: s.approvalRequested,
+          isReturned: s.isReturned,
+          time: s.time,
+          longitude: s.longitude,
+          latitude: s.latitude,
+          tags: s.tags,
+          id: s.note!.id,
+          creator: s.note!.creator,
+        } as Note;
+
+        if (mediaDirty) (updatedNote as Note).media = [...s.images, ...s.videos];
+        if (audioDirty) (updatedNote as Note).audio = s.audio;
+
+        try {
+          await notesService.update(updatedNote as Note);
+
+          if (s.note?.creator) {
+            queryClient.setQueryData<Note[]>(notesKeys.personal(s.note.creator), old => {
+              if (!old) return old;
+              return old.map(n => (n.id === s.note?.id ? { ...n, ...updatedNote } : n));
+            });
+          }
+
+          snapshotRef.current = takeSnapshot(s);
+          store.getState().setLastSavedAt(new Date());
+        } catch (error) {
+          console.error('Auto-save error:', error);
+        } finally {
+          savingRef.current = false;
+          store.getState().setSaving(false);
         }
-
-        lastSavedSnapshotRef.current = {
-          title: title,
-          text: editorContent,
-          tags: tags,
-          published: isPublished,
-          approvalRequested: approvalRequested,
-          isReturned: isReturned,
-          latitude: latitude,
-          longitude: longitude,
-          mediaFingerprint: currentMediaFp,
-          audioFingerprint: currentAudioFp,
-        };
-        setLastSavedAt(new Date());
-      } catch (error) {
-        console.error('Auto-save error:', error);
-      } finally {
-        isSavingRef.current = false;
-        setIsSaving(false);
-      }
-    }, 500);
+      }, 500);
+    });
 
     return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
+      unsub();
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [
-    title,
-    latitude,
-    longitude,
-    editorContent,
-    tags,
-    isPublished,
-    noteId,
-    approvalRequested,
-    isReturned,
-    isViewingStudentNote,
-    time,
-    images,
-    videos,
-    audio,
-    noteCreator,
-    note,
-    queryClient,
-  ]);
-
-  return {
-    isSaving,
-    lastSavedAt,
-  };
-};
+  }, [isViewingStudentNote, queryClient]);
+}

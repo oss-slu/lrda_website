@@ -1,44 +1,39 @@
 import { useState } from 'react';
 import { LinkBubbleMenu, RichTextContent } from 'mui-tiptap';
 import type { Editor } from '@tiptap/core';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import TagManager from './NoteElements/TagManager';
 import { tagsService } from '@/services';
-import { handleTagsChange } from './handlers/noteHandlers';
-import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';
 
 interface NoteEditorContentProps {
-  noteState: NoteStateType;
-  noteHandlers: NoteHandlersType;
   editor: Editor | null;
   isViewingStudentNote: boolean;
-  onEdit: () => void;
 }
 
 export default function NoteEditorContent({
-  noteState,
-  noteHandlers,
   editor,
   isViewingStudentNote,
-  onEdit,
 }: NoteEditorContentProps) {
+  const tags = useNoteEditorStore(s => s.tags);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [loadingTags, setLoadingTags] = useState<boolean>(false);
+  const [loadingTags, setLoadingTags] = useState(false);
 
   const fetchSuggestedTags = async () => {
+    if (!editor) {
+      console.error('Editor instance is not available');
+      return;
+    }
     setLoadingTags(true);
     try {
-      if (editor) {
-        const tags = await tagsService.generateTags({
-          content: editor.getText(),
-          title: noteState.title,
-          locationName: noteState.locationName || undefined,
-          existingTags: noteState.tags.map(t => t.label),
-          time: noteState.time?.toISOString(),
-        });
-        setSuggestedTags(tags);
-      } else {
-        console.error('Editor instance is not available');
-      }
+      const s = useNoteEditorStore.getState();
+      const result = await tagsService.generateTags({
+        content: editor.getText(),
+        title: s.title,
+        locationName: s.locationName || undefined,
+        existingTags: s.tags.map(t => t.label),
+        time: s.time?.toISOString(),
+      });
+      setSuggestedTags(result);
     } catch (error) {
       console.error('Error generating tags:', error);
     } finally {
@@ -50,11 +45,12 @@ export default function NoteEditorContent({
     <>
       <div className='mt-3'>
         <TagManager
-          inputTags={noteState.tags}
+          inputTags={tags}
           suggestedTags={suggestedTags}
           onTagsChange={newTags => {
-            onEdit();
-            handleTagsChange(noteHandlers.setTags, newTags);
+            const store = useNoteEditorStore.getState();
+            store.setTags(newTags);
+            store.markEdited();
           }}
           fetchSuggestedTags={fetchSuggestedTags}
           onDismissSuggestions={() => setSuggestedTags([])}

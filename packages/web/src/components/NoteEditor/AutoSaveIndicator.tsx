@@ -1,10 +1,6 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-
-interface AutoSaveIndicatorProps {
-  isSaving: boolean;
-  lastSavedAt: Date | null;
-}
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 
 function formatTimeAgo(date: Date): string {
   const now = new Date();
@@ -32,7 +28,10 @@ function formatTimeAgo(date: Date): string {
   return `${diffInHours} hours ago`;
 }
 
-export default function AutoSaveIndicator({ isSaving, lastSavedAt }: AutoSaveIndicatorProps) {
+export default function AutoSaveIndicator() {
+  const isSaving = useNoteEditorStore(s => s.isSaving);
+  const lastSavedAt = useNoteEditorStore(s => s.lastSavedAt);
+
   const timeAgo = useMemo(() => {
     if (!lastSavedAt) return null;
     return formatTimeAgo(lastSavedAt);

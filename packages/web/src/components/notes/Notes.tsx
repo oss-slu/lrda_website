@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import NoteEditor from '@/components/NoteEditor';
 import { Note, newNote } from '@/types';
 import { useNotesStore } from '@/stores/notesStore';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,6 +30,7 @@ export default function Notes() {
   const [isNewNote, setIsNewNote] = useState(false);
 
   const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
+    useNoteEditorStore.getState().reset(note as Note);
     setSelectedNote(note);
     setIsNewNote(isNew);
   };
@@ -36,10 +38,14 @@ export default function Notes() {
   const handleNoteDeleted = () => {
     const userId = user?.id ?? '';
     const currentNotes = queryClient.getQueryData<Note[]>(notesKeys.personal(userId)) ?? [];
-    setSelectedNote(currentNotes[0] || undefined);
+    const nextNote = currentNotes[0] || undefined;
+
+    if (nextNote) {
+      useNoteEditorStore.getState().reset(nextNote);
+    }
+    setSelectedNote(nextNote);
     setSelectedNoteId(currentNotes[0]?.id || null);
 
-    // Reconcile cache with server to recover if the optimistic removal failed
     queryClient.invalidateQueries({ queryKey: notesKeys.personal(userId) });
   };
 
@@ -53,7 +59,6 @@ export default function Notes() {
           selectedNote ?
             <NoteEditor
               key={selectedNote && 'id' in selectedNote ? selectedNote.id : 'new'}
-              note={selectedNote}
               isNewNote={isNewNote}
               onNoteDeleted={handleNoteDeleted}
             />

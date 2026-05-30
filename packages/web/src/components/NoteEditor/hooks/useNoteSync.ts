@@ -1,258 +1,84 @@
-import { useEffect, useRef, useMemo, MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { usePersonalNotes } from '@/hooks/queries/useNotes';
-import { Note, newNote } from '@/types';
 import type { PhotoMedia, VideoMedia } from '@/types';
-import type { NoteStateType, NoteHandlersType } from './useNoteState';
 import type { Editor } from '@tiptap/core';
 
-interface UseNoteSyncOptions {
-  noteState: NoteStateType;
-  noteHandlers: NoteHandlersType;
-  initialNote: Note | newNote | undefined;
-  editor: Editor | null;
-  lastEditTimeRef: MutableRefObject<number>;
-}
-
-export const useNoteSync = ({
-  noteState,
-  noteHandlers,
-  initialNote,
-  editor,
-  lastEditTimeRef,
-}: UseNoteSyncOptions) => {
-  // Get personal notes from TanStack Query instead of Zustand store.
-  // Only subscribe when viewing own notes (not when instructor views student notes).
+export function useNoteSync(editor: Editor | null) {
   const user = useAuthStore(state => state.user);
-  const noteCreator = noteState.note?.creator;
+  const noteId = useNoteEditorStore(state => state.note?.id);
+  const noteCreator = useNoteEditorStore(state => state.note?.creator);
+
   const isOwnNote = !noteCreator || noteCreator === user?.id;
   const { data: notes = [] } = usePersonalNotes(isOwnNote ? (user?.id ?? null) : null);
 
-  const lastSyncedNoteRef = useRef<string>('');
+  const lastSyncedRef = useRef<string>('');
 
-  // Store noteHandlers in ref to avoid dependency issues
-  const noteHandlersRef = useRef(noteHandlers);
-   
-  noteHandlersRef.current = noteHandlers;
-
-  // Destructure noteState for stable dependencies
-  const {
-    note,
-    title,
-    editorContent,
-    isPublished,
-    approvalRequested,
-    tags,
-    images,
-    videos,
-    audio,
-  } = noteState;
-
-  const stateNoteId = note?.id;
-
-  // Get current note ID
-  const currentNoteId =
-    stateNoteId || (initialNote && 'id' in initialNote ? initialNote.id : undefined);
-
-  // Find current note in query data
-  const currentNoteFromQuery = useMemo(() => {
-    if (!currentNoteId) return undefined;
-    return notes.find(n => n.id === currentNoteId);
-  }, [notes, currentNoteId]);
-
-  // Content hash for change detection
-  const currentNoteContentHash = useMemo(() => {
-    if (!currentNoteFromQuery) return null;
-    return JSON.stringify({
-      id: currentNoteFromQuery.id,
-      text: currentNoteFromQuery.text,
-      title: currentNoteFromQuery.title,
-      published: currentNoteFromQuery.published,
-      approvalRequested: currentNoteFromQuery.approvalRequested,
-      tags: currentNoteFromQuery.tags,
-      comments: currentNoteFromQuery.comments?.length || 0,
-    });
-  }, [currentNoteFromQuery]);
-
-  // Initialize note from initialNote prop
   useEffect(() => {
-    if (initialNote) {
-      const handlers = noteHandlersRef.current;
-      handlers.setNote(initialNote as Note);
-      handlers.setEditorContent(initialNote.text || '');
-      handlers.setTitle(initialNote.title || '');
-      handlers.setImages(
-        initialNote.media.filter((item): item is PhotoMedia => item.type === 'image'),
-      );
-      handlers.setTime(initialNote.time || new Date());
-      handlers.setLongitude(initialNote.longitude ?? null);
-      handlers.setLatitude(initialNote.latitude ?? null);
-      handlers.setTags(
-        (initialNote.tags || []).map(tag =>
-          typeof tag === 'string' ? { label: tag, origin: 'user' } : tag,
-        ),
-      );
-      handlers.setAudio(initialNote.audio || []);
-      handlers.setIsPublished(initialNote.published || false);
-      handlers.setApprovalRequested(initialNote.approvalRequested || false);
-      handlers.setCounter(prevCounter => prevCounter + 1);
-      handlers.setVideos(
-        initialNote.media.filter((item): item is VideoMedia => item.type === 'video'),
-      );
-
-      lastSyncedNoteRef.current = '';
-      lastEditTimeRef.current = Date.now();
-    }
-  }, [initialNote, lastEditTimeRef]);
-
-  // Sync from query data to local state when external changes are detected
-  useEffect(() => {
-    if (!currentNoteId) {
-      lastSyncedNoteRef.current = '';
+    if (!noteId) {
+      lastSyncedRef.current = '';
       return;
     }
 
-    // First try to use initialNote if it matches
-    let sourceNote: Note | undefined = undefined;
-    if (initialNote && 'id' in initialNote) {
-      if (initialNote.id === currentNoteId) {
-        sourceNote = initialNote;
-      }
-    }
+    const sourceNote = notes.find(n => n.id === noteId);
+    if (!sourceNote) return;
 
-    // Fall back to query data
-    if (!sourceNote) {
-      sourceNote = notes.find(n => n.id === currentNoteId);
-    }
-
-    if (!sourceNote) {
-      return;
-    }
-
-    const storeNote = sourceNote;
-    const storeNoteText = storeNote.text || '';
-
-    const storeNoteKey = JSON.stringify({
-      id: storeNote.id,
-      published: storeNote.published,
-      approvalRequested: storeNote.approvalRequested,
-      tags: storeNote.tags,
-      comments: storeNote.comments?.length || 0,
-      text: storeNoteText,
-      title: storeNote.title,
+    const key = JSON.stringify({
+      id: sourceNote.id,
+      published: sourceNote.published,
+      approvalRequested: sourceNote.approvalRequested,
+      tags: sourceNote.tags,
+      text: sourceNote.text || '',
+      title: sourceNote.title,
     });
 
-    const hasChanged = storeNoteKey !== lastSyncedNoteRef.current;
+    if (key === lastSyncedRef.current) return;
 
-    if (hasChanged) {
-      const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
-      const shouldUpdate = timeSinceLastEdit > 2000;
+    const store = useNoteEditorStore.getState();
+    const timeSinceEdit = Date.now() - store.lastEditTime;
+    if (timeSinceEdit < 2000) return;
 
-      if (shouldUpdate) {
-        const handlers = noteHandlersRef.current;
-        handlers.setNote(storeNote);
+    store.setNote(sourceNote);
 
-        if (storeNote.title !== title && timeSinceLastEdit > 5000) {
-          handlers.setTitle(storeNote.title);
-        }
-        if (storeNoteText !== editorContent && timeSinceLastEdit > 5000) {
-          handlers.setEditorContent(storeNoteText);
-          if (editor) {
-            const currentHtml = editor.getHTML();
-            if (currentHtml !== storeNoteText) {
-              editor.commands.setContent(storeNoteText);
-            }
-          }
-          handlers.setCounter(prev => prev + 1);
-        }
+    if (timeSinceEdit > 5000) {
+      if (sourceNote.title !== store.title) store.setTitle(sourceNote.title);
 
-        if (storeNote.published !== isPublished) {
-          handlers.setIsPublished(storeNote.published || false);
+      const sourceText = sourceNote.text || '';
+      if (sourceText !== store.editorContent) {
+        store.setEditorContent(sourceText);
+        if (editor && editor.getHTML() !== sourceText) {
+          editor.commands.setContent(sourceText);
         }
-        if (storeNote.approvalRequested !== approvalRequested) {
-          handlers.setApprovalRequested(storeNote.approvalRequested || false);
-        }
-        if (JSON.stringify(storeNote.tags) !== JSON.stringify(tags)) {
-          handlers.setTags(storeNote.tags || []);
-        }
-
-        const storeImages = (storeNote.media || []).filter(
-          (item): item is PhotoMedia => item.type === 'image',
-        );
-        const storeVideos = (storeNote.media || []).filter(
-          (item): item is VideoMedia => item.type === 'video',
-        );
-        if (JSON.stringify(storeImages) !== JSON.stringify(images)) {
-          handlers.setImages(storeImages);
-        }
-        if (JSON.stringify(storeVideos) !== JSON.stringify(videos)) {
-          handlers.setVideos(storeVideos);
-        }
-        if (JSON.stringify(storeNote.audio) !== JSON.stringify(audio)) {
-          handlers.setAudio(storeNote.audio || []);
-        }
-
-        lastSyncedNoteRef.current = storeNoteKey;
-      }
-    } else {
-      if (!lastSyncedNoteRef.current) {
-        lastSyncedNoteRef.current = storeNoteKey;
       }
     }
-  }, [
-    notes,
-    currentNoteId,
-    stateNoteId,
-    editorContent,
-    initialNote,
-    title,
-    isPublished,
-    approvalRequested,
-    tags,
-    images,
-    videos,
-    audio,
-    editor,
-    lastEditTimeRef,
-  ]);
 
-  // Watch for external content changes and update editor
-  useEffect(() => {
-    if (!editor) return;
-
-    const currentEditorContent = editor.getHTML();
-    const stateContent = editorContent || '';
-
-    if (currentEditorContent !== stateContent) {
-      const timeSinceLastEdit = Date.now() - lastEditTimeRef.current;
-      if (timeSinceLastEdit > 2000) {
-        editor.commands.setContent(stateContent);
-      }
+    if (sourceNote.published !== store.isPublished) {
+      store.setIsPublished(sourceNote.published || false);
     }
-  }, [editorContent, editor, lastEditTimeRef]);
-
-  // Focus at start only when switching to a different note
-  const initialNoteIdRef = useRef<string | undefined>(
-    initialNote && 'id' in initialNote ? initialNote.id : undefined,
-  );
-
-  useEffect(() => {
-    const currentInitialId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
-    const previousInitialId = initialNoteIdRef.current;
-
-    if (currentInitialId !== previousInitialId || previousInitialId === undefined) {
-      if (editor) {
-        const t = setTimeout(() => editor.chain().focus('start').run(), 0);
-        initialNoteIdRef.current = currentInitialId;
-        return () => clearTimeout(t);
-      }
+    if (sourceNote.approvalRequested !== store.approvalRequested) {
+      store.setApprovalRequested(sourceNote.approvalRequested || false);
     }
-    initialNoteIdRef.current = currentInitialId;
-  }, [initialNote, editor]);
+    if (JSON.stringify(sourceNote.tags) !== JSON.stringify(store.tags)) {
+      store.setTags(sourceNote.tags || []);
+    }
 
-  return {
-    currentNoteId,
-    currentNoteFromStore: currentNoteFromQuery,
-    currentNoteContentHash,
-  };
-};
+    const storeImages = (sourceNote.media || []).filter(
+      (m): m is PhotoMedia => m.type === 'image',
+    );
+    const storeVideos = (sourceNote.media || []).filter(
+      (m): m is VideoMedia => m.type === 'video',
+    );
+    if (JSON.stringify(storeImages) !== JSON.stringify(store.images)) {
+      store.setImages(storeImages);
+    }
+    if (JSON.stringify(storeVideos) !== JSON.stringify(store.videos)) {
+      store.setVideos(storeVideos);
+    }
+    if (JSON.stringify(sourceNote.audio) !== JSON.stringify(store.audio)) {
+      store.setAudio(sourceNote.audio || []);
+    }
+
+    lastSyncedRef.current = key;
+  }, [notes, noteId, editor]);
+}

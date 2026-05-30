@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { hasInstructorAccess } from '@/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
-import { Note } from '@/types';
 
 interface UseNotePermissionsResult {
   userId: string | null;
@@ -14,12 +14,14 @@ interface UseNotePermissionsResult {
   canComment: boolean;
 }
 
-export const useNotePermissions = (note: Note | undefined): UseNotePermissionsResult => {
+export const useNotePermissions = (): UseNotePermissionsResult => {
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
       user: state.user,
     })),
   );
+
+  const noteCreator = useNoteEditorStore(state => state.note?.creator);
 
   return useMemo(() => {
     if (!authUser) {
@@ -41,11 +43,11 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
 
     const canCommentValue = isInstr || isStudentInTeacherStudentModel;
 
-    const isViewingStudentNote = !!(isInstr && note?.creator && note.creator !== userId);
+    const isViewingStudentNote = !!(isInstr && noteCreator && noteCreator !== userId);
     const isStudentViewingOwnNote = !!(
       isStudentInTeacherStudentModel &&
-      note?.creator &&
-      note.creator === userId
+      noteCreator &&
+      noteCreator === userId
     );
 
     return {
@@ -57,5 +59,5 @@ export const useNotePermissions = (note: Note | undefined): UseNotePermissionsRe
       isStudentViewingOwnNote,
       canComment: canCommentValue,
     };
-  }, [authUser, note?.creator]);
+  }, [authUser, noteCreator]);
 };

@@ -8,6 +8,8 @@ yarn.lock
 pnpm-lock.yaml
 scheduled_tasks.lock
 
+.tanstack
+
 all_notes.json
 *.tsbuildinfo
 

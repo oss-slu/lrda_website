@@ -9,12 +9,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileX2, MessageSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '@/hooks/queries/useNotes';
 import { notesService } from '@/services';
-import { Note, newNote } from '@/types';
-import type { PhotoMedia, VideoMedia, AudioMedia } from '@/types';
+import { Note } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import {
   AlertDialog,
@@ -29,12 +29,10 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import useExtensions from '@/utils/use_extensions';
-import useNoteState from './hooks/useNoteState';
 import { useNotePermissions } from './hooks/useNotePermissions';
 import { useNoteSync } from './hooks/useNoteSync';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useIntroTour } from './hooks/useIntroTour';
-import { handleEditorChange } from './handlers/noteHandlers';
 
 import NoteEditorHeader from './NoteEditorHeader';
 import NoteEditorToolbar from './NoteEditorToolbar';
@@ -45,18 +43,32 @@ import PublishToggle from './NoteElements/PublishToggle';
 import { CommentSidebarPanel } from './NoteEditorComments';
 
 type NoteEditorProps = {
-  note?: Note | newNote;
-  isNewNote: boolean;
+  isNewNote?: boolean;
   onNoteDeleted?: () => void;
 };
 
+function buildNotePayload(authUserId: string | undefined, overrides: Partial<Note> = {}): Note {
+  const s = useNoteEditorStore.getState();
+  return {
+    ...s.note!,
+    text: s.editorContent,
+    title: s.title,
+    media: [...s.images, ...s.videos],
+    time: s.time,
+    longitude: s.longitude,
+    latitude: s.latitude,
+    tags: s.tags,
+    audio: s.audio,
+    id: s.note?.id || '',
+    uid: s.note?.uid ?? '',
+    creator: s.note?.creator || authUserId || '',
+    ...overrides,
+  };
+}
+
 export default function NoteEditor({
-  note: initialNote,
-  isNewNote,
   onNoteDeleted,
 }: NoteEditorProps) {
-  const { noteState, noteHandlers } = useNoteState(initialNote as Note);
-
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
       user: state.user,
@@ -65,24 +77,23 @@ export default function NoteEditor({
 
   const queryClient = useQueryClient();
 
-  // Refs
+  const noteId = useNoteEditorStore(s => s.note?.id);
+  const isSaving = useNoteEditorStore(s => s.isSaving);
+  const isPublished = useNoteEditorStore(s => s.isPublished);
+  const approvalRequested = useNoteEditorStore(s => s.approvalRequested);
+  const isReturned = useNoteEditorStore(s => s.isReturned);
+
   const titleRef = useRef<HTMLInputElement | null>(null);
   const dateRef = useRef<HTMLDivElement | null>(null);
   const deleteRef = useRef<HTMLButtonElement | null>(null);
   const locationRef = useRef<HTMLDivElement | null>(null);
-  const lastEditTimeRef = useRef<number>(0);
 
-  // State
-  const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState<boolean>(false);
+  const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState(false);
 
-  // Editor setup
   const extensions = useExtensions({
     placeholder: 'Add your own content here...',
   });
 
-  const noteId = initialNote && 'id' in initialNote ? initialNote.id : undefined;
-
-  // Hooks
   const {
     userId,
     instructorId,
@@ -90,30 +101,24 @@ export default function NoteEditor({
     isViewingStudentNote,
     isStudentViewingOwnNote,
     canComment,
-  } = useNotePermissions(noteState.note);
+  } = useNotePermissions();
 
-  // Bumped on selection changes so the toolbar re-renders and updates
-  // which buttons are active (e.g. grayed out when an atom node is selected).
-  const [, setSelectionEpoch] = useState(0);
+  const editorContent = useNoteEditorStore(s => s.editorContent);
 
   const editor = useEditor({
     extensions,
-    content: noteState.editorContent,
+    content: editorContent,
     immediatelyRender: false,
     editable: !isViewingStudentNote,
-    onSelectionUpdate: () => {
-      setSelectionEpoch(n => n + 1);
-    },
     onUpdate: ({ editor: ed }) => {
       if (!isViewingStudentNote) {
-        lastEditTimeRef.current = Date.now();
-        handleEditorChange(noteHandlers.setEditorContent, ed.getHTML());
+        const store = useNoteEditorStore.getState();
+        store.setEditorContent(ed.getHTML());
+        store.markEdited();
       }
     },
   });
 
-  // Focus the editor after mount so the toolbar initializes as active.
-  // Finds the first text-editable position, skipping atom nodes (video/audio).
   useEffect(() => {
     if (editor && !isViewingStudentNote) {
       requestAnimationFrame(() => {
@@ -134,22 +139,9 @@ export default function NoteEditor({
     }
   }, [editor, isViewingStudentNote]);
 
-  useNoteSync({
-    noteState,
-    noteHandlers,
-    initialNote,
-    editor,
-    lastEditTimeRef,
-  });
+  useNoteSync(editor);
 
-  const { isSaving, lastSavedAt } = useAutoSave({
-    noteState,
-    noteHandlers,
-    isNewNote,
-    isViewingStudentNote,
-    authUserId: authUser?.id,
-    lastEditTimeRef,
-  });
+  useAutoSave(isViewingStudentNote);
 
   useIntroTour({
     titleRef,
@@ -158,82 +150,55 @@ export default function NoteEditor({
     locationRef,
   });
 
-  // Media upload handler
   const handleMediaUpload = (media: { type: 'image' | 'video' | 'audio'; uri: string }) => {
+    const store = useNoteEditorStore.getState();
     if (media.type === 'image') {
-      if (editor) {
-        editor
-          .chain()
-          .focus()
-          .setImage({ src: media.uri, alt: 'Image description', width: 100 })
-          .run();
-      }
-      const photo: PhotoMedia = { type: 'image', uuid: uuidv4(), uri: media.uri };
-      noteHandlers.setImages(prevImages => [...prevImages, photo]);
+      editor
+        ?.chain()
+        .focus()
+        .setImage({ src: media.uri, alt: 'Image description', width: 100 })
+        .run();
+      store.addImage({ type: 'image', uuid: uuidv4(), uri: media.uri });
     } else if (media.type === 'video') {
-      const newVideo: VideoMedia = {
-        type: 'video',
+      const video = {
+        type: 'video' as const,
         uuid: uuidv4(),
         uri: media.uri,
         thumbnail: '',
         duration: '0:00',
       };
-      noteHandlers.setVideos(prevVideos => [...prevVideos, newVideo]);
-      if (editor) {
-        editor.chain().focus().setVideo({ src: media.uri }).run();
-      }
+      store.addVideo(video);
+      editor?.chain().focus().setVideo({ src: media.uri }).run();
     } else {
-      const newAudio: AudioMedia = {
-        type: 'audio',
+      const audioItem = {
+        type: 'audio' as const,
         uuid: uuidv4(),
         uri: media.uri,
         duration: '0:00',
-        name: `Audio ${noteState.audio.length + 1}`,
+        name: `Audio ${store.audio.length + 1}`,
       };
-      noteHandlers.setAudio(prevAudio => [...prevAudio, newAudio]);
-      if (editor) {
-        editor
-          .chain()
-          .focus()
-          .setAudio({ src: media.uri, title: newAudio.name })
-          .run();
-      }
+      store.addAudio(audioItem);
+      editor?.chain().focus().setAudio({ src: media.uri, title: audioItem.name }).run();
     }
+    store.markEdited();
   };
 
-  // Helpers
-  const buildNotePayload = (overrides: Partial<Note> = {}): Note => ({
-    ...noteState.note!,
-    text: noteState.editorContent,
-    title: noteState.title,
-    media: [...noteState.images, ...noteState.videos],
-    time: noteState.time,
-    longitude: noteState.longitude,
-    latitude: noteState.latitude,
-    tags: noteState.tags,
-    audio: noteState.audio,
-    id: noteState.note?.id || '',
-    uid: noteState.note?.uid ?? '',
-    creator: noteState.note?.creator || authUser?.id || '',
-    ...overrides,
-  });
-
-  // Handlers
   const handleRequestApprovalClick = async () => {
+    const store = useNoteEditorStore.getState();
+    const updatedApprovalStatus = !store.approvalRequested;
+
+    const updatedNote = buildNotePayload(authUser?.id, {
+      approvalRequested: updatedApprovalStatus,
+      published: false,
+      isReturned: false,
+    });
+
     try {
-      const updatedApprovalStatus = !noteState.approvalRequested;
-
-      const updatedNote = buildNotePayload({
-        approvalRequested: updatedApprovalStatus,
-        published: false,
-        isReturned: false,
-      });
-
       await notesService.update(updatedNote);
 
-      noteHandlers.setApprovalRequested(updatedApprovalStatus);
-      noteHandlers.setIsReturned(false);
-      lastEditTimeRef.current = Date.now();
+      store.setApprovalRequested(updatedApprovalStatus);
+      store.setIsReturned(false);
+      store.markEdited();
 
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 
@@ -253,18 +218,19 @@ export default function NoteEditor({
   };
 
   const handlePublishClick = async () => {
-    const updatedNote = buildNotePayload({
-      published: !noteState.isPublished,
-      approvalRequested: !isInstructorUser ? false : noteState.approvalRequested,
+    const store = useNoteEditorStore.getState();
+    const updatedNote = buildNotePayload(authUser?.id, {
+      published: !store.isPublished,
+      approvalRequested: !isInstructorUser ? false : store.approvalRequested,
     });
 
     try {
       await notesService.update(updatedNote);
 
-      noteHandlers.setIsPublished(updatedNote.published ?? false);
-      noteHandlers.setApprovalRequested(updatedNote.approvalRequested ?? false);
-      noteHandlers.setNote(updatedNote);
-      lastEditTimeRef.current = Date.now();
+      store.setIsPublished(updatedNote.published ?? false);
+      store.setApprovalRequested(updatedNote.approvalRequested ?? false);
+      store.setNote(updatedNote);
+      store.markEdited();
 
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 
@@ -275,8 +241,6 @@ export default function NoteEditor({
           : 'Your note has been unpublished successfully.',
         duration: 4000,
       });
-
-      noteHandlers.setCounter(prevCounter => prevCounter + 1);
     } catch (error) {
       console.error('Error updating note state:', error);
       toast('Error', {
@@ -287,8 +251,9 @@ export default function NoteEditor({
   };
 
   const handleDeleteNote = async (): Promise<boolean> => {
-    const noteId = noteState.note?.id;
-    const creatorId = noteState.note?.creator || authUser?.id;
+    const store = useNoteEditorStore.getState();
+    const noteId = store.note?.id;
+    const creatorId = store.note?.creator || authUser?.id;
 
     if (!noteId) {
       toast('Error', {
@@ -309,7 +274,6 @@ export default function NoteEditor({
       }
 
       await notesService.delete(noteId);
-
       queryClient.invalidateQueries({ queryKey: notesKeys.all });
 
       toast('Note Deleted', {
@@ -328,10 +292,6 @@ export default function NoteEditor({
     }
   };
 
-  const handleEdit = () => {
-    lastEditTimeRef.current = Date.now();
-  };
-
   return (
     <CacheProvider value={emotionCache}>
       <RichTextEditorProvider editor={editor}>
@@ -341,11 +301,7 @@ export default function NoteEditor({
             {/* Row 1: Metadata + actions */}
             <div className='flex items-center gap-1 px-3 py-1.5'>
               <NoteEditorToolbar
-                noteState={noteState}
-                noteHandlers={noteHandlers}
                 isViewingStudentNote={isViewingStudentNote}
-                onLocationChange={handleEdit}
-                onTimeChange={handleEdit}
                 dateRef={dateRef}
                 locationRef={locationRef}
               />
@@ -353,16 +309,16 @@ export default function NoteEditor({
               <div className='ml-auto flex shrink-0 items-center gap-2'>
                 {!isViewingStudentNote && (
                   <>
-                    <AutoSaveIndicator isSaving={isSaving} lastSavedAt={lastSavedAt} />
+                    <AutoSaveIndicator />
 
                     <div className='mx-1 h-5 w-px bg-gray-300' aria-hidden='true' />
 
                     <PublishToggle
                       id='publish-toggle-button'
-                      isPublished={Boolean(noteState.isPublished)}
-                      isApprovalRequested={noteState.approvalRequested || false}
-                      isReturned={noteState.isReturned || false}
-                      noteId={noteState.note?.id || ''}
+                      isPublished={Boolean(isPublished)}
+                      isApprovalRequested={approvalRequested || false}
+                      isReturned={isReturned || false}
+                      noteId={noteId || ''}
                       userId={userId}
                       instructorId={instructorId}
                       onPublishClick={handlePublishClick}
@@ -373,10 +329,10 @@ export default function NoteEditor({
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button
-                          disabled={!noteState.note?.id || isSaving}
+                          disabled={!noteId || isSaving}
                           className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
                           title={
-                            !noteState.note?.id ?
+                            !noteId ?
                               'Please wait for note to save before deleting'
                             : 'Delete this note'
                           }
@@ -447,26 +403,20 @@ export default function NoteEditor({
               {/* Centered white canvas */}
               <div className='mx-auto my-8 max-w-3xl rounded-sm bg-white px-12 py-10 shadow-sm'>
                 <NoteEditorHeader
-                  title={noteState.title}
-                  setTitle={noteHandlers.setTitle}
                   isViewingStudentNote={isViewingStudentNote}
-                  onTitleChange={handleEdit}
                   titleRef={titleRef}
                 />
 
                 <NoteEditorContent
-                  noteState={noteState}
-                  noteHandlers={noteHandlers}
                   editor={editor}
                   isViewingStudentNote={isViewingStudentNote}
-                  onEdit={handleEdit}
                 />
               </div>
             </ScrollArea>
 
             {!!noteId && canComment && (isViewingStudentNote || isStudentViewingOwnNote) && (
               <CommentSidebarPanel
-                noteId={noteState.note?.id as string}
+                noteId={noteId}
                 editor={editor}
                 isInstructor={isInstructorUser}
                 canComment={canComment}

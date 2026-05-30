@@ -2,64 +2,57 @@ import { useState, RefObject } from 'react';
 import { Calendar as CalendarIcon, Download, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import TimePicker from './NoteElements/TimePicker';
 import LocationPicker from './NoteElements/LocationPicker';
-import { handleTimeChange, handleLocationChange } from './handlers/noteHandlers';
-import type { NoteStateType, NoteHandlersType } from './hooks/useNoteState';
 
 interface NoteEditorToolbarProps {
-  noteState: NoteStateType;
-  noteHandlers: NoteHandlersType;
   isViewingStudentNote: boolean;
-  onLocationChange: () => void;
-  onTimeChange: () => void;
   dateRef: RefObject<HTMLDivElement | null>;
   locationRef: RefObject<HTMLDivElement | null>;
 }
 
 export default function NoteEditorToolbar({
-  noteState,
-  noteHandlers,
   isViewingStudentNote,
-  onLocationChange,
-  onTimeChange,
   dateRef,
   locationRef,
 }: NoteEditorToolbarProps) {
-  const [isDownloadPopoverOpen, setIsDownloadPopoverOpen] = useState<boolean>(false);
+  const time = useNoteEditorStore(s => s.time);
+  const latitude = useNoteEditorStore(s => s.latitude);
+  const longitude = useNoteEditorStore(s => s.longitude);
+  const locationName = useNoteEditorStore(s => s.locationName);
+
+  const [isDownloadPopoverOpen, setIsDownloadPopoverOpen] = useState(false);
 
   const handleDownload = async (fileType: 'pdf' | 'docx') => {
-    const plainTextContent = new DOMParser().parseFromString(noteState.editorContent, 'text/html')
-      .body.innerText;
+    const s = useNoteEditorStore.getState();
+    const plainTextContent = new DOMParser().parseFromString(s.editorContent, 'text/html').body
+      .innerText;
 
     const noteContent = `
-      Title: ${noteState.title}
+      Title: ${s.title}
       Content: ${plainTextContent}
-      Tags: ${noteState.tags.map(tag => tag.label).join(', ')}
-      Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}
-      Time: ${noteState.time}
+      Tags: ${s.tags.map(tag => tag.label).join(', ')}
+      Location: ${s.latitude ?? 'N/A'}, ${s.longitude ?? 'N/A'}
+      Time: ${s.time}
     `;
 
     if (fileType === 'pdf') {
       const { default: jsPDF } = await import('jspdf');
       const pdf = new jsPDF();
       pdf.text(noteContent, 10, 10);
-      pdf.save(`${noteState.title || 'note'}.pdf`);
+      pdf.save(`${s.title || 'note'}.pdf`);
     } else if (fileType === 'docx') {
       const { Document, Packer, Paragraph } = await import('docx');
       const doc = new Document({
         sections: [
           {
             children: [
-              new Paragraph({
-                text: `Title: ${noteState.title}`,
-              }),
+              new Paragraph({ text: `Title: ${s.title}` }),
               new Paragraph(`Content: ${plainTextContent}`),
-              new Paragraph(`Tags: ${noteState.tags.map(tag => tag.label).join(', ')}`),
-              new Paragraph(
-                `Location: ${noteState.latitude ?? 'N/A'}, ${noteState.longitude ?? 'N/A'}`,
-              ),
-              new Paragraph(`Time: ${noteState.time}`),
+              new Paragraph(`Tags: ${s.tags.map(tag => tag.label).join(', ')}`),
+              new Paragraph(`Location: ${s.latitude ?? 'N/A'}, ${s.longitude ?? 'N/A'}`),
+              new Paragraph(`Time: ${s.time}`),
             ],
           },
         ],
@@ -69,7 +62,7 @@ export default function NoteEditorToolbar({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${noteState.title || 'note'}.docx`;
+      link.download = `${s.title || 'note'}.docx`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -78,12 +71,10 @@ export default function NoteEditorToolbar({
   };
 
   const dateDisplay =
-    noteState.time instanceof Date && !isNaN(noteState.time.getTime()) ?
-      noteState.time.toDateString()
-    : 'No date';
+    time instanceof Date && !isNaN(time.getTime()) ? time.toDateString() : 'No date';
   const locationDisplay =
-    noteState.latitude && noteState.longitude ?
-      `${noteState.latitude.toFixed(4)}, ${noteState.longitude.toFixed(4)}`
+    latitude && longitude ?
+      `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
     : 'No location';
 
   return (
@@ -102,29 +93,28 @@ export default function NoteEditorToolbar({
       : <>
           <div ref={dateRef}>
             <TimePicker
-              initialDate={noteState.time || new Date()}
+              initialDate={time || new Date()}
               onTimeChange={newDate => {
-                handleTimeChange(noteHandlers.setTime, newDate);
-                onTimeChange();
+                const store = useNoteEditorStore.getState();
+                store.setTime(newDate);
+                store.markEdited();
               }}
             />
           </div>
           <div ref={locationRef}>
             <LocationPicker
-              long={noteState.longitude}
-              lat={noteState.latitude}
-              locationName={noteState.locationName}
+              long={longitude}
+              lat={latitude}
+              locationName={locationName}
               onLocationChange={(newLong, newLat) => {
-                noteHandlers.setLocationName('');
-                handleLocationChange(
-                  noteHandlers.setLongitude,
-                  noteHandlers.setLatitude,
-                  newLong,
-                  newLat,
-                );
-                onLocationChange();
+                const store = useNoteEditorStore.getState();
+                store.setLocationName('');
+                store.setLocation(newLat, newLong);
+                store.markEdited();
               }}
-              onLocationNameChange={noteHandlers.setLocationName}
+              onLocationNameChange={name => {
+                useNoteEditorStore.getState().setLocationName(name);
+              }}
             />
           </div>
         </>
