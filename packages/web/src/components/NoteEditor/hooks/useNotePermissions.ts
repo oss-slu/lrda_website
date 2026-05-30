@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { hasInstructorAccess } from '@/stores/authHelpers';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -14,14 +13,12 @@ interface UseNotePermissionsResult {
   canComment: boolean;
 }
 
-export const useNotePermissions = (): UseNotePermissionsResult => {
+export const useNotePermissions = (noteCreator: string | undefined): UseNotePermissionsResult => {
   const { user: authUser } = useAuthStore(
     useShallow(state => ({
       user: state.user,
     })),
   );
-
-  const noteCreator = useNoteEditorStore(state => state.note?.creator);
 
   return useMemo(() => {
     if (!authUser) {

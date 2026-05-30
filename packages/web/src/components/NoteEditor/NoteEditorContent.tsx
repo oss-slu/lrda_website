@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import { LinkBubbleMenu, RichTextContent } from 'mui-tiptap';
 import type { Editor } from '@tiptap/core';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
+import type { Tag } from '@/types';
+import type { NoteDraft } from './hooks/useNoteForm';
 import TagManager from './NoteElements/TagManager';
 import { tagsService } from '@/services';
 
 interface NoteEditorContentProps {
   editor: Editor | null;
+  tags: Tag[];
+  onTagsChange: (tags: (Tag | string)[]) => void;
+  draft: NoteDraft;
   isViewingStudentNote: boolean;
 }
 
 export default function NoteEditorContent({
   editor,
+  tags,
+  onTagsChange,
+  draft,
   isViewingStudentNote,
 }: NoteEditorContentProps) {
-  const tags = useNoteEditorStore(s => s.tags);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 
@@ -25,13 +31,12 @@ export default function NoteEditorContent({
     }
     setLoadingTags(true);
     try {
-      const s = useNoteEditorStore.getState();
       const result = await tagsService.generateTags({
         content: editor.getText(),
-        title: s.title,
-        locationName: s.locationName || undefined,
-        existingTags: s.tags.map(t => t.label),
-        time: s.time?.toISOString(),
+        title: draft.title,
+        locationName: draft.locationName || undefined,
+        existingTags: draft.tags.map(t => t.label),
+        time: draft.time.toISOString(),
       });
       setSuggestedTags(result);
     } catch (error) {
@@ -47,11 +52,7 @@ export default function NoteEditorContent({
         <TagManager
           inputTags={tags}
           suggestedTags={suggestedTags}
-          onTagsChange={newTags => {
-            const store = useNoteEditorStore.getState();
-            store.setTags(newTags);
-            store.markEdited();
-          }}
+          onTagsChange={onTagsChange}
           fetchSuggestedTags={fetchSuggestedTags}
           onDismissSuggestions={() => setSuggestedTags([])}
           loading={loadingTags}

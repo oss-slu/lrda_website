@@ -6,7 +6,6 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import type { Note } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotesStore } from '@/stores/notesStore';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { hasInstructorAccess } from '@/stores/authHelpers';
 import { useStudentNotes, notesKeys } from '@/hooks/queries/useNotes';
 import { notesService, fetchStudents, commentsService } from '@/services';
@@ -49,7 +48,6 @@ export default function InstructorDashboard() {
     enabled: !!user?.id && isInstructor && isInitialized,
   });
 
-  // Derive selectedNote from live query data so polling keeps it fresh
   const selectedNote = useMemo(
     () => studentNotes.find(n => n.id === selectedNoteId) ?? undefined,
     [studentNotes, selectedNoteId],
@@ -60,7 +58,6 @@ export default function InstructorDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNoteSelect = (note: Note) => {
-    useNoteEditorStore.getState().reset(note);
     setSelectedNoteId(note.id);
   };
 
@@ -131,7 +128,6 @@ export default function InstructorDashboard() {
     }
   };
 
-  // Loading state while auth initializes
   if (!isInitialized) {
     return (
       <div className='flex h-full'>
@@ -152,7 +148,6 @@ export default function InstructorDashboard() {
     );
   }
 
-  // Access denied for non-instructors
   if (!isInstructor) {
     return (
       <div className='flex h-full w-full items-center justify-center bg-gray-100'>
@@ -199,7 +194,7 @@ export default function InstructorDashboard() {
         )}
 
         {selectedNote ?
-          <NoteEditor key={selectedNote.id} isNewNote={false} />
+          <NoteEditor key={selectedNote.id} note={selectedNote} />
         : <div className='flex h-full w-full items-center justify-center bg-gray-100'>
             <div className='flex max-w-md flex-col items-center rounded-sm bg-white px-12 py-16 text-center shadow-sm'>
               <h2 className='mb-2 text-2xl font-semibold text-gray-800'>No note selected</h2>

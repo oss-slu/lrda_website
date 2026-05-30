@@ -4,7 +4,6 @@ import Sidebar from '@/components/Sidebar';
 import NoteEditor from '@/components/NoteEditor';
 import { Note, newNote } from '@/types';
 import { useNotesStore } from '@/stores/notesStore';
-import { useNoteEditorStore } from '@/stores/noteEditorStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,12 +26,12 @@ export default function Notes() {
   const queryClient = useQueryClient();
 
   const [selectedNote, setSelectedNote] = useState<Note | newNote>();
-  const [isNewNote, setIsNewNote] = useState(false);
 
-  const handleNoteSelect = (note: Note | newNote, isNew: boolean) => {
-    useNoteEditorStore.getState().reset(note as Note);
+  const handleNoteSelect = (note: Note | newNote, _isNew: boolean) => {
     setSelectedNote(note);
-    setIsNewNote(isNew);
+    if ('id' in note) {
+      setSelectedNoteId(note.id);
+    }
   };
 
   const handleNoteDeleted = () => {
@@ -40,14 +39,13 @@ export default function Notes() {
     const currentNotes = queryClient.getQueryData<Note[]>(notesKeys.personal(userId)) ?? [];
     const nextNote = currentNotes[0] || undefined;
 
-    if (nextNote) {
-      useNoteEditorStore.getState().reset(nextNote);
-    }
     setSelectedNote(nextNote);
-    setSelectedNoteId(currentNotes[0]?.id || null);
+    setSelectedNoteId(nextNote?.id || null);
 
     queryClient.invalidateQueries({ queryKey: notesKeys.personal(userId) });
   };
+
+  const noteToEdit = selectedNote && 'id' in selectedNote ? selectedNote : undefined;
 
   return (
     <div className='flex h-full'>
@@ -56,10 +54,10 @@ export default function Notes() {
       </div>
       <div className='relative flex min-w-0 flex-1 flex-col'>
         {isLoggedIn ?
-          selectedNote ?
+          noteToEdit ?
             <NoteEditor
-              key={selectedNote && 'id' in selectedNote ? selectedNote.id : 'new'}
-              isNewNote={isNewNote}
+              key={noteToEdit.id}
+              note={noteToEdit}
               onNoteDeleted={handleNoteDeleted}
             />
           : <div className='flex h-full w-full items-center justify-center bg-gray-100'>
