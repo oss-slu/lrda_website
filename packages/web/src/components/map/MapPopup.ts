@@ -64,15 +64,46 @@ export function createPopupClass(refs: PopupRefs) {
     }
 
     draw() {
-      const divPosition = this.getProjection().fromLatLngToDivPixel(this.position)!;
+      const projection = this.getProjection();
+      const divPosition = projection.fromLatLngToDivPixel(this.position)!;
       const display =
         Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ? 'block' : 'none';
 
       if (display === 'block') {
         this.containerDiv.style.left = divPosition.x + 'px';
         this.containerDiv.style.top = divPosition.y + 'px';
-        // Position above marker: center horizontally, move up by popup height + marker height (40px) + gap
-        this.containerDiv.style.transform = 'translate(-50%, calc(-100% - 48px))';
+
+        const containerPos = projection.fromLatLngToContainerPixel(this.position);
+        const map = this.getMap();
+        const mapDiv = map instanceof google.maps.Map ? map.getDiv() : null;
+
+        if (containerPos && mapDiv) {
+          const MARKER_SIZE = 40;
+          const GAP = 8;
+          const popupWidth = this.containerDiv.offsetWidth || 220;
+          const popupHeight = this.containerDiv.offsetHeight || 200;
+          const mapWidth = mapDiv.offsetWidth;
+
+          // Vertical: prefer above marker, flip below if clipped
+          const offsetY =
+            containerPos.y - popupHeight - MARKER_SIZE - GAP >= 0
+              ? -popupHeight - MARKER_SIZE - GAP
+              : GAP;
+
+          // Horizontal: center on marker, then clamp to map edges
+          let offsetX = -popupWidth / 2;
+          const leftEdge = containerPos.x + offsetX;
+          const rightEdge = leftEdge + popupWidth;
+          if (leftEdge < GAP) {
+            offsetX = -containerPos.x + GAP;
+          } else if (rightEdge > mapWidth - GAP) {
+            offsetX = mapWidth - GAP - popupWidth - containerPos.x;
+          }
+
+          this.containerDiv.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        } else {
+          this.containerDiv.style.transform = 'translate(-50%, calc(-100% - 48px))';
+        }
       }
 
       if (this.containerDiv.style.display !== display) {

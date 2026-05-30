@@ -189,18 +189,16 @@ export function useMapMarkers({
 
   // One-time setup: map click listener and Popup class
   useEffect(() => {
-    if (!isMapsApiLoaded || !mapRef.current) return;
+    if (!isMapsApiLoaded || !isMapReady || !mapRef.current) return;
 
     const map = mapRef.current;
 
-    // Create Popup class once
     popupClassRef.current = createPopupClass({
       popupHoveredRef,
       hoverTimerRef,
       startPopupCloseTimer: startPopupCloseTimerRef.current,
     });
 
-    // Map click listener -- set up once
     mapClickListenerRef.current = map.addListener('click', () => {
       closePopup();
       setActiveNoteRef.current(null);
@@ -212,7 +210,7 @@ export function useMapMarkers({
         mapClickListenerRef.current = null;
       }
     };
-  }, [isMapsApiLoaded, mapRef, closePopup]);
+  }, [isMapsApiLoaded, isMapReady, mapRef, closePopup]);
 
   // Diff-based marker sync: only add/remove markers that changed
   useEffect(() => {

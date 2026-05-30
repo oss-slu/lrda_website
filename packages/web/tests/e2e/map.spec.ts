@@ -147,12 +147,9 @@ test.describe('Map markers', () => {
   });
 
   test('hovering a marker shows a popup', async () => {
-    // Find a visible marker's wrapper element (marker.element) and hover it
-    const hovered = await page.evaluate(() => {
+    await page.evaluate(() => {
       for (const m of document.querySelectorAll('.custom-marker')) {
-        const wrapper = m.parentElement;
-        if (!wrapper) continue;
-        const rect = wrapper.getBoundingClientRect();
+        const rect = m.getBoundingClientRect();
         if (
           rect.width > 0 &&
           rect.height > 0 &&
@@ -161,20 +158,26 @@ test.describe('Map markers', () => {
           rect.x < window.innerWidth &&
           rect.y < window.innerHeight
         ) {
-          wrapper.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false }));
-          return true;
+          m.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+          return;
         }
       }
-      return false;
     });
-    expect(hovered).toBe(true);
 
     const popup = page.locator('.popup-bubble');
     await expect(popup).toBeVisible({ timeout: 5_000 });
   });
 
   test('popup closes when mouse leaves', async () => {
-    await page.mouse.move(0, 0);
+    await page.evaluate(() => {
+      for (const m of document.querySelectorAll('.custom-marker')) {
+        const rect = m.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          m.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
+          return;
+        }
+      }
+    });
     const popup = page.locator('.popup-bubble');
     await expect(popup).toBeHidden({ timeout: 3_000 });
   });
