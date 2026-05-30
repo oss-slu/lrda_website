@@ -103,7 +103,7 @@ export default function NoteEditorToolbar({
       : <>
           <div ref={dateRef}>
             <TimePicker
-              initialDate={time}
+              date={time}
               onTimeChange={onTimeChange}
             />
           </div>

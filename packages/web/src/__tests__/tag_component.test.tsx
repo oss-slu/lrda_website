@@ -21,14 +21,14 @@ describe('TagManager', () => {
 
   it('renders without crashing', () => {
     // Test to ensure the TagManager component renders without throwing an error
-    render(<TagManager onTagsChange={vi.fn()} fetchSuggestedTags={vi.fn()} />);
+    render(<TagManager tags={[]} onTagsChange={vi.fn()} fetchSuggestedTags={vi.fn()} />);
   });
 
   it('adds a new valid tag', () => {
     const mockOnTagsChange = vi.fn();
     render(
       <TagManager
-        inputTags={initialTags}
+        tags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={vi.fn()}
       />,
@@ -38,7 +38,6 @@ describe('TagManager', () => {
     fireEvent.change(input, { target: { value: 'NewTag' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(screen.getByText('NewTag')).toBeInTheDocument();
     expect(mockOnTagsChange).toHaveBeenCalledWith([
       ...initialTags,
       { label: 'NewTag', origin: 'user' },
@@ -47,7 +46,7 @@ describe('TagManager', () => {
 
   it('does not add a tag with spaces', () => {
     const mockOnTagsChange = vi.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
+    render(<TagManager tags={[]} onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'Invalid Tag' } });
@@ -59,7 +58,7 @@ describe('TagManager', () => {
 
   it('adds a tag with exactly 1 character (minimum)', () => {
     const mockOnTagsChange = vi.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
+    render(<TagManager tags={[]} onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'a' } });
@@ -72,7 +71,7 @@ describe('TagManager', () => {
     const mockOnTagsChange = vi.fn();
     render(
       <TagManager
-        inputTags={initialTags}
+        tags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={vi.fn()}
       />,
@@ -87,7 +86,7 @@ describe('TagManager', () => {
 
   it('does not add a tag with more than 28 characters', () => {
     const mockOnTagsChange = vi.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
+    render(<TagManager tags={[]} onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const input = openAddTag();
     fireEvent.change(input, { target: { value: 'ThisIsWayTooLongTagNameForTesting' } });
@@ -99,7 +98,7 @@ describe('TagManager', () => {
 
   it('adds a tag with exactly 28 characters (maximum)', () => {
     const mockOnTagsChange = vi.fn();
-    render(<TagManager onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
+    render(<TagManager tags={[]} onTagsChange={mockOnTagsChange} fetchSuggestedTags={vi.fn()} />);
 
     const tag28 = 'a'.repeat(28); // exactly 28 characters
     const input = openAddTag();
@@ -116,7 +115,7 @@ describe('TagManager', () => {
     const mockFetchSuggestedTags = vi.fn();
     render(
       <TagManager
-        inputTags={initialTags}
+        tags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={mockFetchSuggestedTags}
         disabled={true}
@@ -138,7 +137,7 @@ describe('TagManager', () => {
     const mockOnTagsChange = vi.fn();
     render(
       <TagManager
-        inputTags={initialTags}
+        tags={initialTags}
         onTagsChange={mockOnTagsChange}
         fetchSuggestedTags={vi.fn()}
         disabled={false}

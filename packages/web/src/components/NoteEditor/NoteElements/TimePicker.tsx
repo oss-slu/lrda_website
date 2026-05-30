@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,38 +9,26 @@ const START_MONTH = new Date(1200, 0);
 const END_MONTH = new Date(new Date().getFullYear(), 11);
 
 interface TimePickerProps {
-  initialDate?: Date; // Now optional -- will fall back to today if not provided
-  onTimeChange?: (date: Date) => void;
-  disabled?: boolean; // Whether the time picker is disabled (read-only)
+  date: Date;
+  onTimeChange: (date: Date) => void;
+  disabled?: boolean;
 }
 
 export default function TimePicker({
-  initialDate,
+  date,
   onTimeChange,
   disabled = false,
 }: TimePickerProps) {
-  // Use lazy initializer to set initial date from prop
-  const [date, setDate] = useState(() => initialDate || new Date());
-  const [viewMonth, setViewMonth] = useState(() => initialDate || new Date());
+  const [viewMonth, setViewMonth] = useState(() => date);
 
-  // Only sync when initialDate changes from parent (e.g., loading different note)
-  useEffect(() => {
-    if (initialDate) {
-      setDate(initialDate);
-      setViewMonth(initialDate);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDate?.getTime()]);
-
-  const formatTimeForInput = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  const formatTimeForInput = (d: Date) => {
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
   const handleDayClick = (newDay: Date) => {
     const updatedDate = new Date(date);
     updatedDate.setFullYear(newDay.getFullYear(), newDay.getMonth(), newDay.getDate());
-    setDate(updatedDate);
-    onTimeChange?.(updatedDate);
+    onTimeChange(updatedDate);
     setViewMonth(newDay);
   };
 
@@ -50,8 +38,7 @@ export default function TimePicker({
     const minutes = parts[1] ?? 0;
     const updatedDate = new Date(date);
     updatedDate.setHours(hours, minutes);
-    setDate(updatedDate);
-    onTimeChange?.(updatedDate);
+    onTimeChange(updatedDate);
   };
 
   return (

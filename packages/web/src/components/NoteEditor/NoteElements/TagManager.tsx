@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tag } from '@lrda/shared';
 
 interface TagManagerProps {
-  inputTags?: (Tag | string)[];
+  tags: Tag[];
   suggestedTags?: string[];
   onTagsChange: (tags: Tag[]) => void;
   fetchSuggestedTags: () => void;
@@ -14,7 +14,7 @@ interface TagManagerProps {
 }
 
 const TagManager: React.FC<TagManagerProps> = ({
-  inputTags = [],
+  tags,
   suggestedTags,
   onTagsChange,
   fetchSuggestedTags,
@@ -22,27 +22,9 @@ const TagManager: React.FC<TagManagerProps> = ({
   loading = false,
   disabled = false,
 }) => {
-  const convertOldTags = useMemo(() => {
-    return (tags: (Tag | string)[]): Tag[] => {
-      return tags.map(tag => (typeof tag === 'string' ? { label: tag, origin: 'user' } : tag));
-    };
-  }, []);
-
-  const [tags, setTags] = useState<Tag[]>(convertOldTags(inputTags));
   const [tagInput, setTagInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const newTags = convertOldTags(inputTags);
-
-    setTags(prevTags => {
-      if (JSON.stringify(prevTags) !== JSON.stringify(newTags)) {
-        return newTags;
-      }
-      return prevTags;
-    });
-  }, [inputTags, convertOldTags]);
 
   useEffect(() => {
     if (isAdding && inputRef.current) {
@@ -73,10 +55,7 @@ const TagManager: React.FC<TagManagerProps> = ({
       return;
     }
 
-    const newTag = { label: trimmed, origin };
-    const updatedTags = [...tags, newTag];
-    setTags(updatedTags);
-    onTagsChange(updatedTags);
+    onTagsChange([...tags, { label: trimmed, origin }]);
     setTagInput('');
   };
 
@@ -86,16 +65,12 @@ const TagManager: React.FC<TagManagerProps> = ({
       .filter(tag => !tags.find(t => t.label === tag))
       .map(label => ({ label, origin: 'ai' as const }));
     if (newTags.length === 0) return;
-    const updatedTags = [...tags, ...newTags];
-    setTags(updatedTags);
-    onTagsChange(updatedTags);
+    onTagsChange([...tags, ...newTags]);
   };
 
   const removeTag = (tagToRemove: string) => {
     if (disabled) return;
-    const updatedTags = tags.filter(tag => tag.label !== tagToRemove);
-    setTags(updatedTags);
-    onTagsChange(updatedTags);
+    onTagsChange(tags.filter(tag => tag.label !== tagToRemove));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

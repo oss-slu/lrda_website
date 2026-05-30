@@ -50,7 +50,7 @@ export default function NoteEditorContent({
     <>
       <div className='mt-3'>
         <TagManager
-          inputTags={tags}
+          tags={tags}
           suggestedTags={suggestedTags}
           onTagsChange={onTagsChange}
           fetchSuggestedTags={fetchSuggestedTags}
