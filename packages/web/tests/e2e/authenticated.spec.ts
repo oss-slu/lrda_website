@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { authedPage, TEST_USER_ID, TEST_ADMIN_ID } from './helpers/pw';
-import { seedTestData, resetTestData } from '../../tests/integration/helpers/db-seed';
+import { seedTestData, resetTestData } from '../helpers/db-seed';
 
 // Seed test users once for all authenticated specs in this file
 test.beforeAll(async () => {

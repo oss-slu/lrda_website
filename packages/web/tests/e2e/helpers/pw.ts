@@ -57,4 +57,4 @@ export function url(path: string): string {
   return `${BASE_URL}${path}`;
 }
 
-export { TEST_USER_ID, TEST_ADMIN_ID } from '../../../tests/integration/helpers/db-seed';
+export { TEST_USER_ID, TEST_ADMIN_ID } from '../../helpers/db-seed';

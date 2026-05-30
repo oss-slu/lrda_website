@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { authedPage, TEST_USER_ID } from './helpers/pw';
-import { seedTestData, resetTestData, execute } from '../../tests/integration/helpers/db-seed';
+import { seedTestData, resetTestData, execute } from '../helpers/db-seed';
 
 const TITLE = `e2e editor note ${Date.now()}`;
 const EDITED_TITLE = `${TITLE} (edited)`;

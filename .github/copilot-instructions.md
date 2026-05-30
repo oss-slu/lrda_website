@@ -95,7 +95,7 @@ lrda_website/
 
 - **Unit Tests**: Vitest
 - **E2E Tests**: Playwright
-- **Test Location**: `app/__tests__/` (unit), `app/__e2e__/` (e2e)
+- **Test Location**: `src/__tests__/` (unit), `tests/integration/` (API integration), `tests/e2e/` (browser e2e)
 
 ## Coding Standards
 
@@ -217,15 +217,18 @@ pnpm lint:fix                         # ESLint with auto-fix
 - **Only write tests when explicitly requested**
 - Do not automatically generate tests without being asked
 - When writing tests:
-  - Unit tests: `app/__tests__/` using Vitest
-  - E2E tests: `app/__e2e__/` using Playwright
+  - Unit tests: `src/__tests__/` using Vitest
+  - Integration tests: `tests/integration/` using Vitest
+  - E2E tests: `tests/e2e/` using Playwright
+  - Shared test helpers: `tests/helpers/`
   - Use React Testing Library for component tests
 
 ### Test Structure
 
-- Unit tests: `.test.tsx` or `.test.ts` files
-- E2E tests: `.spec.ts` files in `app/__e2e__/`
-- Mock files: `app/__mocks__/` and `__mocks__/`
+- Unit tests: `.test.tsx` or `.test.ts` files in `src/__tests__/`
+- Integration tests: `.test.ts` files in `tests/integration/`
+- E2E tests: `.spec.ts` files in `tests/e2e/`
+- Mock files: `__mocks__/`
 
 ## Code Quality
 

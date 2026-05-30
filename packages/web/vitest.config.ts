@@ -10,7 +10,6 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./setupTests.ts'],
     include: ['src/__tests__/**/*.test.{ts,tsx}'],
-    exclude: ['src/__e2e__/**'],
     css: false,
     alias: {
       // Module mocks for packages that break in jsdom

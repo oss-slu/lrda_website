@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createSession } from '../helpers/auth';
-import { authenticatedGet, authenticatedPost } from '../helpers/client';
+import { createSession } from '../../helpers/auth';
+import { authenticatedGet, authenticatedPost } from '../../helpers/client';
 import {
   seedTestData,
   resetTestData,
@@ -8,7 +8,7 @@ import {
   TEST_USER_ID,
   TEST_INSTRUCTOR_ID,
   TEST_NOTE_PUBLISHED_ID,
-} from '../helpers/db-seed';
+} from '../../helpers/db-seed';
 
 describe('Comment threading - parentId orphan bug', () => {
   let userCookie: string;

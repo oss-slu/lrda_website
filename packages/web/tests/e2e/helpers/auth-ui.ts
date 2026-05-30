@@ -2,7 +2,7 @@
  * Helpers for the auth-page UI specs: capture the dev-mode verification/reset
  * email URL, extract its token, verify it, and clean up created users.
  */
-import { queryOne, execute } from '../../../tests/integration/helpers/db-seed';
+import { queryOne, execute } from '../../helpers/db-seed';
 
 const API_URL = process.env.__TEST_API_URL || 'http://localhost:3002';
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from 'vitest';
-import { unauthenticatedPost, unauthenticatedGet } from '../helpers/client';
-import { queryOne, execute } from '../helpers/db-seed';
+import { unauthenticatedPost, unauthenticatedGet } from '../../helpers/client';
+import { queryOne, execute } from '../../helpers/db-seed';
 
 // Unique prefix per test run to avoid email collisions
 const PREFIX = `auth-e2e-${Date.now()}`;

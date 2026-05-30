@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createSession } from '../helpers/auth';
+import { createSession } from '../../helpers/auth';
 import {
   authenticatedGet,
   authenticatedPost,
   unauthenticatedGet,
   unauthenticatedPost,
   crossOriginPost,
-} from '../helpers/client';
+} from '../../helpers/client';
 import {
   seedTestData,
   resetTestData,
   TEST_USER_ID,
   TEST_ADMIN_ID,
-} from '../helpers/db-seed';
+} from '../../helpers/db-seed';
 
 describe('Auth guards and CSRF protection', () => {
   let userCookie: string;

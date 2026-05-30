@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { anonPage } from './helpers/pw';
 import { getAuthUrl, extractToken, cleanupByEmail } from './helpers/auth-ui';
-import { execute } from '../../tests/integration/helpers/db-seed';
+import { execute } from '../helpers/db-seed';
 
 const API_URL = process.env.__TEST_API_URL || 'http://localhost:3002';
 const PREFIX = `fb-sync-e2e-${Date.now()}`;

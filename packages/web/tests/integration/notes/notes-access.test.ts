@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createSession } from '../helpers/auth';
+import { createSession } from '../../helpers/auth';
 import {
   authenticatedGet,
   authenticatedPatch,
   authenticatedDelete,
   unauthenticatedGet,
-} from '../helpers/client';
+} from '../../helpers/client';
 import {
   seedTestData,
   resetTestData,
@@ -16,7 +16,7 @@ import {
   TEST_NOTE_DRAFT_ID,
   TEST_NOTE_PUBLISHED_ID,
   TEST_NOTE_USER2_ID,
-} from '../helpers/db-seed';
+} from '../../helpers/db-seed';
 
 describe('Note access control', () => {
   let user1Cookie: string;

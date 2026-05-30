@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createSession } from '../helpers/auth';
+import { createSession } from '../../helpers/auth';
 import {
   authenticatedGet,
   authenticatedPost,
   authenticatedPatch,
   authenticatedDelete,
-} from '../helpers/client';
-import { seedTestData, resetTestData, TEST_USER_ID } from '../helpers/db-seed';
+} from '../../helpers/client';
+import { seedTestData, resetTestData, TEST_USER_ID } from '../../helpers/db-seed';
 
 describe('Notes CRUD operations', () => {
   let userCookie: string;
