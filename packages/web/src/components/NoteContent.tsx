@@ -144,6 +144,22 @@ const render = renderJSONContentToReactElement<JSONMark, JSONNode>({
   unhandledMark: ({ children }: MarkProps) => <>{children}</>,
 });
 
-export function NoteContent({ doc, className }: { doc: unknown; className?: string }) {
-  return <div className={className ?? 'note-content prose max-w-none'}>{render({ content: doc as JSONNode })}</div>;
+const renderNoMedia = renderJSONContentToReactElement<JSONMark, JSONNode>({
+  nodeMapping: { ...nodeMapping, image: () => null, video: () => null, audio: () => null },
+  markMapping,
+  unhandledNode: () => null,
+  unhandledMark: ({ children }: MarkProps) => <>{children}</>,
+});
+
+export function NoteContent({
+  doc,
+  className,
+  stripMedia,
+}: {
+  doc: unknown;
+  className?: string;
+  stripMedia?: boolean;
+}) {
+  const renderer = stripMedia ? renderNoMedia : render;
+  return <div className={className ?? 'note-content prose max-w-none'}>{renderer({ content: doc as JSONNode })}</div>;
 }

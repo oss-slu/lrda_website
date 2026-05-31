@@ -109,7 +109,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
             </Button>
           </div>
 
-          <div className='grid grid-cols-1 content-start gap-4 p-4 md:grid-cols-2'>
+          <div className='grid grid-cols-1 content-start gap-1 p-4 md:grid-cols-2'>
             {isLoading ?
               // Loading skeletons with staggered pulse
               skeletonIndices.map(index => <SkeletonCard key={index} index={index} />)
@@ -133,7 +133,7 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
                   ref={el => {
                     if (el) noteRefs.current[note.id] = el;
                   }}
-                  className='animate-in fade-in cursor-pointer duration-200'
+                  className='animate-in fade-in cursor-pointer p-1 duration-200'
                   style={{
                     contentVisibility: 'auto',
                     containIntrinsicSize: 'auto 280px',
