@@ -92,7 +92,6 @@ pnpm deploy:docs   # Manual deploy
 | Secret | Purpose |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API token (shared by web and docs deploys) |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (docs deploy only) |
 | `VITE_API_URL` | Production API URL (web deploy only) |
 | `VITE_MAP_KEY` | Google Maps JavaScript API key (web deploy only) |
 | `VITE_MAP_ID` | Google Maps Map ID (web deploy only) |
