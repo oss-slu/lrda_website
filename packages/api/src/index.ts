@@ -154,13 +154,25 @@ app.all('/api/auth/*', async c => {
   if (cookie) headers.set('cookie', cookie);
   const authorization = c.req.raw.headers.get('authorization');
   if (authorization) headers.set('authorization', authorization);
-  return auth.handler(
+  const response = await auth.handler(
     new Request(c.req.url, {
       method: c.req.method,
       headers,
       body,
     }),
   );
+
+  // Clear stale host-only cookies from before crossSubDomainCookies was
+  // enabled. A Set-Cookie WITHOUT a Domain attribute targets the exact host
+  // (e.g. api.wheresreligion.org), while Better Auth's cookies use
+  // Domain=.wheresreligion.org -- the two scopes don't interfere.
+  if (env.COOKIE_DOMAIN) {
+    const clear = 'Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+    response.headers.append('Set-Cookie', `__Secure-better-auth.session_token=; ${clear}`);
+    response.headers.append('Set-Cookie', `__Secure-better-auth.session_data=; ${clear}`);
+  }
+
+  return response;
 });
 
 // Dev-only test endpoint for e2e tests (raw SQL access)

@@ -1,8 +1,8 @@
 # Rich-Text Note Architecture
 
-Status: proposed (not yet built). This document records the target architecture
-for authoring, storing, rendering, and sharing rich-text notes, plus the interim
-fix currently shipped to unblock note SSR.
+Status: shipped. Pattern B is the live architecture. The interim Pattern A fix
+(sanitize-html + dangerouslySetInnerHTML + path-browserify alias) has been
+fully removed.
 
 ## Background
 
@@ -109,21 +109,12 @@ consumer forces an HTML contract.
   media is purely separate attachments (current `note.media`/`note.audio` arrays
   + popovers).
 
-## Open questions / prerequisites
+## Resolved prerequisites
 
-1. note.text corpus audit: what tags/attributes actually occur, any raw
-   `iframe`/`video`/`script`, note counts and sizes. This grounds the schema and
-   the migration risk, and resolves the media-model decision.
-2. Schema definition derived from the installed TipTap extensions plus whatever
-   the audit surfaces.
-3. Renderer spike: confirm `@tiptap/static-renderer` -> React SSRs on Workers
-   and hydrates without mismatch.
-4. Migration script with dry-run diff, then cutover.
-
-## Interim fix (shipped now to unblock note SSR)
-
-Pattern A is kept for now. To make `sanitize-html` run in the browser bundle (so
-client-side rendering and `notes.$id` SSR work), the client build aliases node's
-`path` to `path-browserify` (`packages/web/vite.config.ts`, `environments.client`).
-The Worker build continues to use native `path` via `nodejs_compat`. This is a
-deliberate stopgap; Pattern B above is the intended end state.
+1. Corpus audit: all 763 production notes converted with zero failures via
+   `generateJSON(html, extensions)` using happy-dom. No unexpected tags.
+2. Schema: matches the installed TipTap extensions (see `use_extensions.ts`).
+3. Renderer spike: `@tiptap/static-renderer` SSRs on Workers and hydrates
+   without mismatch (validated on spike branch, then shipped).
+4. Migration: one-time backfill script at `packages/web/scripts/backfill-text-json.ts`
+   was run against both local and production databases.
