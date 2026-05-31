@@ -120,7 +120,15 @@ pnpm api:db:seed
 
 Truncates all tables and populates them with fixture data (users, notes with media/audio, threaded comments). Uses a shared seed password for all test accounts. Safe to re-run.
 
-## Sync Scripts
+## RERUM Integration
+
+[RERUM](https://rerum.io) is an open Linked Data store maintained by SLU's research computing team (primary contact: Bryan). It was originally the primary backend for Where's Religion?, but has been replaced by our own PostgreSQL database.
+
+Going forward, RERUM will serve as a **public API layer for published notes**. When a note is published, we push its content to RERUM, where it becomes part of their open Linked Data store -- publicly queryable, version-controlled, and interoperable with other Linked Data consumers. This gives us the benefits of RERUM's open data ecosystem without the data format drawbacks of using it as a primary backend. There are no privacy concerns since only published notes (which are already public on our map) are pushed.
+
+Authenticated access to RERUM has been set up with a private key for our application.
+
+### Migration-Period Sync Scripts
 
 These scripts exist for the migration period while the mobile app still uses RERUM and Firebase. They are not needed for regular development.
 
@@ -128,7 +136,7 @@ These scripts exist for the migration period while the mobile app still uses RER
 
 **Firebase user sync:** `sync-users-from-firebase.ts` pulls users from Firebase Auth/Firestore into PostgreSQL, resolving instructor relationships after all users are created.
 
-**When can these be removed?** Once the mobile app is migrated to use the PostgreSQL backend directly, all three sync scripts, the `syncState`/`syncRun`/`syncRunDetail` tables, and the `firebase-admin` dependency can be removed.
+**When can these be removed?** Once the mobile app is migrated to use the PostgreSQL backend directly, all three sync scripts, the `syncState`/`syncRun`/`syncRunDetail` tables, and the `firebase-admin` dependency can be removed. Publishing to RERUM should be integrated directly into the note publish API endpoint rather than relying on the batch sync infrastructure.
 
 ## Key Files
 
