@@ -1,23 +1,48 @@
-/**
- * Notes Service
- *
- * Handles all note-related operations including CRUD, search, and filtering.
- * Uses the REST API backend (Hono/D1).
- */
-
-import type { Note, VideoMedia, PhotoMedia, AudioMedia  } from '@/types';
+import type { Note, VideoMedia, PhotoMedia, AudioMedia, NoteMedia } from '@/types';
+import type { Tag, NoteResponse, MediaResponse, AudioResponse } from '@lrda/shared';
 import { fetchWithAuth, buildQueryString } from './api';
-import type {
-  NoteQueryOptions,
-  CreateNotePayload,
-  ApiNoteData,
-  ApiMediaData,
-  ApiAudioData,
-} from './notes.types';
 
-/**
- * Transform API note data to internal Note format.
- */
+// Re-export shared API types for internal use
+export type ApiNoteData = NoteResponse;
+export type ApiMediaData = MediaResponse;
+export type ApiAudioData = AudioResponse;
+
+export interface NoteQueryOptions {
+  limit?: number;
+  skip?: number;
+  userId?: string;
+  published?: boolean;
+  search?: string;
+  sort?: 'newest' | 'oldest' | 'alphabetical';
+}
+
+export interface CreateNotePayload {
+  title: string;
+  text: string;
+  textJson?: unknown;
+  creator: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  media?: NoteMedia[];
+  audio?: AudioMedia[];
+  published?: boolean;
+  tags?: Tag[];
+  time?: Date;
+  approvalRequested?: boolean;
+  isReturned?: boolean;
+}
+
+export interface ViewportParams {
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+  search?: string;
+  creatorId?: string;
+  limit?: number;
+  offset?: number;
+}
+
 function transformApiNote(data: ApiNoteData): Note {
   const transformedMedia = (data.media || []).map((m: ApiMediaData): VideoMedia | PhotoMedia => {
     if (m.type === 'video') {
@@ -64,9 +89,6 @@ function transformApiNote(data: ApiNoteData): Note {
   };
 }
 
-/**
- * Transform internal Note/CreateNotePayload to API format.
- */
 function transformNoteToApi(note: Note | CreateNotePayload): Record<string, unknown> {
   return {
     title: note.title,
@@ -94,10 +116,7 @@ function transformNoteToApi(note: Note | CreateNotePayload): Record<string, unkn
   };
 }
 
-/**
- * Fetch all notes with optional filtering.
- */
-async function fetchAll(options: NoteQueryOptions = {}): Promise<Note[]> {
+export async function fetchAllNotes(options: NoteQueryOptions = {}): Promise<Note[]> {
   const { limit = 20, skip = 0, userId, published, search, sort } = options;
 
   const params: Record<string, unknown> = {
@@ -105,28 +124,17 @@ async function fetchAll(options: NoteQueryOptions = {}): Promise<Note[]> {
     offset: skip,
   };
 
-  if (userId) {
-    params.creatorId = userId;
-  }
-  if (published !== undefined) {
-    params.published = published;
-  }
-  if (search) {
-    params.search = search;
-  }
-  if (sort) {
-    params.sort = sort;
-  }
+  if (userId) params.creatorId = userId;
+  if (published !== undefined) params.published = published;
+  if (search) params.search = search;
+  if (sort) params.sort = sort;
 
   const qs = buildQueryString(params);
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
   return data.map(transformApiNote);
 }
 
-/**
- * Fetch all published notes.
- */
-async function fetchPublished(
+export async function fetchPublishedNotes(
   limit = 20,
   skip = 0,
   options: {
@@ -135,7 +143,7 @@ async function fetchPublished(
     sort?: 'newest' | 'oldest' | 'alphabetical';
   } = {},
 ): Promise<Note[]> {
-  return fetchAll({
+  return fetchAllNotes({
     limit,
     skip,
     published: true,
@@ -145,27 +153,18 @@ async function fetchPublished(
   });
 }
 
-/**
- * Fetch notes from an instructor's students using the dedicated backend endpoint.
- */
-async function fetchByStudents(instructorId: string): Promise<Note[]> {
+export async function fetchNotesByStudents(instructorId: string): Promise<Note[]> {
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes/students/${instructorId}`);
   return data.map(transformApiNote);
 }
 
-/**
- * Fetch notes for a specific user.
- */
-async function fetchUserNotes(userId: string, limit = 150, skip = 0): Promise<Note[]> {
+export async function fetchUserNotes(userId: string, limit = 150, skip = 0): Promise<Note[]> {
   const qs = buildQueryString({ creatorId: userId, limit, offset: skip });
   const data = await fetchWithAuth<ApiNoteData[]>(`/api/notes${qs}`);
   return data.map(transformApiNote);
 }
 
-/**
- * Create a new note.
- */
-async function create(note: CreateNotePayload): Promise<ApiNoteData> {
+export async function createNote(note: CreateNotePayload): Promise<ApiNoteData> {
   const payload = transformNoteToApi(note);
   return fetchWithAuth<ApiNoteData>('/api/notes', {
     method: 'POST',
@@ -173,10 +172,7 @@ async function create(note: CreateNotePayload): Promise<ApiNoteData> {
   });
 }
 
-/**
- * Update an existing note (partial update).
- */
-async function update(note: Note): Promise<ApiNoteData> {
+export async function updateNote(note: Note): Promise<ApiNoteData> {
   const payload = transformNoteToApi(note);
   return fetchWithAuth<ApiNoteData>(`/api/notes/${note.id}`, {
     method: 'PATCH',
@@ -184,36 +180,12 @@ async function update(note: Note): Promise<ApiNoteData> {
   });
 }
 
-/**
- * Delete a note.
- */
-async function deleteNote(id: string): Promise<boolean> {
+export async function deleteNote(id: string): Promise<boolean> {
   await fetchWithAuth<void>(`/api/notes/${id}`, { method: 'DELETE' });
   return true;
 }
 
-/**
- * Query params for viewport/search fetching in summary mode.
- * Bounds are optional -- omit them for a global search.
- */
-export interface ViewportParams {
-  minLat?: number;
-  maxLat?: number;
-  minLng?: number;
-  maxLng?: number;
-  search?: string;
-  creatorId?: string;
-  limit?: number;
-  offset?: number;
-}
-
-/**
- * Fetch notes in summary mode (no text, first media only, no audio).
- * Pass bounds for viewport filtering, or omit for global search.
- * Pass creatorId for personal view (shows all user notes including drafts).
- * Omit creatorId for global/public view (shows only published notes).
- */
-async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
+export async function fetchViewportNotes(params: ViewportParams = {}): Promise<Note[]> {
   const qs = buildQueryString({
     ...(params.creatorId ? { creatorId: params.creatorId } : { published: true }),
     fields: 'summary',
@@ -229,10 +201,7 @@ async function fetchViewport(params: ViewportParams = {}): Promise<Note[]> {
   return data.map(transformApiNote);
 }
 
-/**
- * Fetch a single note by ID.
- */
-async function fetchById(id: string): Promise<Note | null> {
+export async function fetchNoteById(id: string): Promise<Note | null> {
   try {
     const data = await fetchWithAuth<ApiNoteData>(`/api/notes/${id}`);
     return transformApiNote(data);
@@ -240,15 +209,3 @@ async function fetchById(id: string): Promise<Note | null> {
     return null;
   }
 }
-
-export const notesService = {
-  fetchAll,
-  fetchPublished,
-  fetchByStudents,
-  fetchUserNotes,
-  fetchById,
-  fetchViewport,
-  create,
-  update,
-  delete: deleteNote,
-};

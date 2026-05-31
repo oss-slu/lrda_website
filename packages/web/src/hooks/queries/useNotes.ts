@@ -6,12 +6,18 @@ import {
   infiniteQueryOptions,
   keepPreviousData,
 } from '@tanstack/react-query';
-import { notesService } from '../../services';
+import {
+  fetchUserNotes,
+  fetchViewportNotes,
+  fetchNotesByStudents,
+  fetchNoteById,
+  fetchPublishedNotes,
+} from '@/services/notes.service';
 import { Note } from '@/types';
-import { useMapStore } from '../../stores/mapStore';
+import { useMapStore } from '@/stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
-import { useDebounce } from '../useDebounce';
-import { boundsToParams } from '../../utils/mapUtils';
+import { useDebounce } from '@/hooks/useDebounce';
+import { boundsToParams } from '@/utils/mapUtils';
 
 // Query key factory for notes
 export const notesKeys = {
@@ -35,7 +41,7 @@ type BoundsParams = ReturnType<typeof boundsToParams>;
 export function personalNotesOptions(userId: string, limit = 150, skip = 0) {
   return queryOptions({
     queryKey: notesKeys.personal(userId),
-    queryFn: (): Promise<Note[]> => notesService.fetchUserNotes(userId, limit, skip),
+    queryFn: (): Promise<Note[]> => fetchUserNotes(userId, limit, skip),
   });
 }
 
@@ -72,12 +78,12 @@ export function personalMapNotesOptions(params: {
       : [...notesKeys.personalMap(userId), bounds],
     queryFn: (): Promise<Note[]> => {
       if (isSearchMode) {
-        return notesService.fetchViewport({ creatorId: userId, search });
+        return fetchViewportNotes({ creatorId: userId, search });
       }
       if (!bounds) {
-        return notesService.fetchViewport({ creatorId: userId });
+        return fetchViewportNotes({ creatorId: userId });
       }
-      return notesService.fetchViewport({ creatorId: userId, ...bounds });
+      return fetchViewportNotes({ creatorId: userId, ...bounds });
     },
     staleTime: PERSONAL_MAP_STALE_TIME,
   });
@@ -167,7 +173,7 @@ export function studentNotesOptions(instructorId: string) {
     queryKey: notesKeys.pendingReview(instructorId),
     queryFn: async (): Promise<Note[]> => {
       // Uses the dedicated backend endpoint that fetches all student notes in one DB query
-      const allNotes = await notesService.fetchByStudents(instructorId);
+      const allNotes = await fetchNotesByStudents(instructorId);
       return allNotes.reverse();
     },
   });
@@ -192,7 +198,7 @@ export function useStudentNotes(instructorId: string | null, isInstructor: boole
 export function noteDetailOptions(noteId: string) {
   return queryOptions({
     queryKey: notesKeys.detail(noteId),
-    queryFn: () => notesService.fetchById(noteId),
+    queryFn: () => fetchNoteById(noteId),
     staleTime: 60_000,
   });
 }
@@ -232,7 +238,7 @@ export function publishedNotesInfiniteOptions(pageSize = 20, options?: Published
       data: Note[];
       nextCursor: number | undefined;
     }> => {
-      const notes = await notesService.fetchPublished(pageSize, pageParam, {
+      const notes = await fetchPublishedNotes(pageSize, pageParam, {
         search: options?.search,
         creatorId: options?.creatorId,
         sort: options?.sort,

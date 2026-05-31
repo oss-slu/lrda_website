@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { FileText, Search } from 'lucide-react';
 import type { Note } from '@/types';
-import type { StudentInfo } from '@/services/instructor.types';
+import type { StudentInfo } from '@/services/instructor.service';
 import { useNotesStore } from '@/stores/notesStore';
 import { extractTextFromJson } from '@/utils/sanitize';
 import { getNoteStatus, statusConfig, isUnreviewed, isReviewed } from '@/utils/noteStatus';

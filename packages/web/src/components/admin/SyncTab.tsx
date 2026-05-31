@@ -10,8 +10,8 @@ import {
   getSyncLog,
   getSyncRunDetail,
   syncUsers,
-} from '@/services';
-import type { SyncStatus, SyncRun, SyncRunWithDetails } from '@/services';
+} from '@/services/admin.service';
+import type { SyncStatus, SyncRun, SyncRunWithDetails } from '@/services/admin.service';
 import type { SyncRunDetail } from '@lrda/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

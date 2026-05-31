@@ -10,9 +10,7 @@ import { FileX2, MessageSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { useQueryClient } from '@tanstack/react-query';
-import { notesKeys } from '@/hooks/queries/useNotes';
-import { notesService } from '@/services';
+import { useUpdateNote, useDeleteNote } from '@/hooks/queries/useNotesMutations';
 import { Note } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -56,7 +54,8 @@ export default function NoteEditor({
     })),
   );
 
-  const queryClient = useQueryClient();
+  const updateNote = useUpdateNote();
+  const deleteNote = useDeleteNote();
 
   const {
     userId,
@@ -152,7 +151,7 @@ export default function NoteEditor({
     }
   };
 
-  const handleRequestApprovalClick = async () => {
+  const handleRequestApprovalClick = () => {
     const updatedApprovalStatus = !draft.approvalRequested;
 
     const updatedNote = buildNoteFromDraft(
@@ -160,30 +159,29 @@ export default function NoteEditor({
       note,
     );
 
-    try {
-      await notesService.update(updatedNote);
+    updateNote.mutate(updatedNote, {
+      onSuccess: () => {
+        actions.setApprovalRequested(updatedApprovalStatus);
+        actions.setReturned(false);
 
-      actions.setApprovalRequested(updatedApprovalStatus);
-      actions.setReturned(false);
-
-      queryClient.invalidateQueries({ queryKey: notesKeys.all });
-
-      toast(updatedApprovalStatus ? 'Approval Requested' : 'Approval Request Canceled', {
-        description:
-          updatedApprovalStatus ?
-            'Your note has been submitted for instructor approval.'
-          : 'Your approval request has been canceled.',
-        duration: 4000,
-      });
-    } catch (error) {
-      console.error('Error requesting approval:', error);
-      toast('Error', {
-        description: 'Failed to request approval. Please try again later.',
-      });
-    }
+        toast(updatedApprovalStatus ? 'Approval Requested' : 'Approval Request Canceled', {
+          description:
+            updatedApprovalStatus ?
+              'Your note has been submitted for instructor approval.'
+            : 'Your approval request has been canceled.',
+          duration: 4000,
+        });
+      },
+      onError: (error) => {
+        console.error('Error requesting approval:', error);
+        toast('Error', {
+          description: 'Failed to request approval. Please try again later.',
+        });
+      },
+    });
   };
 
-  const handlePublishClick = async () => {
+  const handlePublishClick = () => {
     const newPublished = !draft.isPublished;
     const updatedNote = buildNoteFromDraft(
       {
@@ -194,69 +192,57 @@ export default function NoteEditor({
       note,
     );
 
-    try {
-      await notesService.update(updatedNote);
+    updateNote.mutate(updatedNote, {
+      onSuccess: () => {
+        actions.setPublished(newPublished);
+        if (!isInstructorUser) actions.setApprovalRequested(false);
 
-      actions.setPublished(newPublished);
-      if (!isInstructorUser) actions.setApprovalRequested(false);
-
-      queryClient.invalidateQueries({ queryKey: notesKeys.all });
-
-      toast(newPublished ? 'Note Published' : 'Note Unpublished', {
-        description:
-          newPublished ?
-            'Your note has been published successfully.'
-          : 'Your note has been unpublished successfully.',
-        duration: 4000,
-      });
-    } catch (error) {
-      console.error('Error updating note state:', error);
-      toast('Error', {
-        description: 'Failed to update note state. Please try again later.',
-        duration: 4000,
-      });
-    }
+        toast(newPublished ? 'Note Published' : 'Note Unpublished', {
+          description:
+            newPublished ?
+              'Your note has been published successfully.'
+            : 'Your note has been unpublished successfully.',
+          duration: 4000,
+        });
+      },
+      onError: (error) => {
+        console.error('Error updating note state:', error);
+        toast('Error', {
+          description: 'Failed to update note state. Please try again later.',
+          duration: 4000,
+        });
+      },
+    });
   };
 
-  const handleDeleteNote = async (): Promise<boolean> => {
-    const noteId = note.id;
-    const creatorId = note.creator || authUser?.id;
-
-    if (!noteId) {
+  const handleDeleteNote = () => {
+    if (!note.id) {
       toast('Error', {
         description: "This note hasn't been saved yet. Please wait a moment and try again.",
         duration: 4000,
       });
-      return false;
+      return;
     }
 
-    const cacheKey = notesKeys.personal(creatorId ?? '');
-    const previousNotes = queryClient.getQueryData<Note[]>(cacheKey);
-
-    try {
-      if (creatorId) {
-        queryClient.setQueryData<Note[]>(cacheKey, old =>
-          old ? old.filter(n => n.id !== noteId) : [],
-        );
-      }
-
-      await notesService.delete(noteId);
-      queryClient.invalidateQueries({ queryKey: notesKeys.all });
-
-      toast('Note Deleted', {
-        description: 'Your note has been permanently deleted.',
-        duration: 4000,
-      });
-      return true;
-    } catch (error) {
-      console.error('Error deleting note:', error);
-      queryClient.setQueryData(cacheKey, previousNotes);
-      toast('Error', {
-        description: 'Failed to delete note. Please try again later.',
-        duration: 4000,
-      });
-      return false;
-    }
+    deleteNote.mutate(
+      { noteId: note.id, creatorId: note.creator || authUser?.id },
+      {
+        onSuccess: () => {
+          toast('Note Deleted', {
+            description: 'Your note has been permanently deleted.',
+            duration: 4000,
+          });
+          onNoteDeleted?.();
+        },
+        onError: (error) => {
+          console.error('Error deleting note:', error);
+          toast('Error', {
+            description: 'Failed to delete note. Please try again later.',
+            duration: 4000,
+          });
+        },
+      },
+    );
   };
 
   return (
@@ -309,7 +295,7 @@ export default function NoteEditor({
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button
-                          disabled={!note.id || autoSave.isSaving}
+                          disabled={!note.id || autoSave.isSaving || deleteNote.isPending}
                           className='inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
                           title={
                             !note.id ?
@@ -331,14 +317,7 @@ export default function NoteEditor({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={async () => {
-                              const success = await handleDeleteNote();
-                              if (success && onNoteDeleted) {
-                                onNoteDeleted();
-                              }
-                            }}
-                          >
+                          <AlertDialogAction onClick={handleDeleteNote}>
                             Continue
                           </AlertDialogAction>
                         </AlertDialogFooter>

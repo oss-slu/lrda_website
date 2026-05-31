@@ -1,8 +1,3 @@
-/**
- * Tags Service
- *
- * Generates tags by calling the API server's OpenRouter-backed endpoint.
- */
 import { fetchWithAuth } from './api';
 
 export interface GenerateTagsInput {
@@ -13,7 +8,7 @@ export interface GenerateTagsInput {
   time?: string;
 }
 
-async function generateTags(input: GenerateTagsInput): Promise<string[]> {
+export async function generateTags(input: GenerateTagsInput): Promise<string[]> {
   try {
     const data = await fetchWithAuth<{ tags: string[] }>('/api/tags/generate', {
       method: 'POST',
@@ -25,7 +20,3 @@ async function generateTags(input: GenerateTagsInput): Promise<string[]> {
     return [];
   }
 }
-
-export const tagsService = {
-  generateTags,
-};

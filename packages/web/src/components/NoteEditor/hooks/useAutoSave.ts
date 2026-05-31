@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { notesService } from '@/services';
+import { useQueryClient } from '@tanstack/react-query';
 import { notesKeys } from '@/hooks/queries/useNotes';
+import { useUpdateNote } from '@/hooks/queries/useNotesMutations';
 import type { Note } from '@/types';
 import { type NoteDraft, buildNoteFromDraft } from './useNoteForm';
 
@@ -51,6 +51,7 @@ export function useAutoSave(
   editable: boolean,
 ): AutoSaveState {
   const queryClient = useQueryClient();
+  const mutation = useUpdateNote();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshotRef = useRef<NoteDraft>(cloneDraft(draft));
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -62,31 +63,25 @@ export function useAutoSave(
     snapshotRef.current = cloneDraft(draftRef.current);
   }, [note.id]);
 
-  const mutation = useMutation({
-    mutationFn: async (updatedNote: Note) => {
-      await notesService.update(updatedNote);
-      return updatedNote;
-    },
-    onSuccess: (updatedNote) => {
-      if (note.creator) {
-        queryClient.setQueryData<Note[]>(notesKeys.personal(note.creator), old => {
-          if (!old) return old;
-          return old.map(n => (n.id === note.id ? { ...n, ...updatedNote } : n));
-        });
-      }
-      snapshotRef.current = cloneDraft(pendingDraftRef.current ?? draft);
-      setLastSavedAt(new Date());
-    },
-  });
-
   const save = useCallback(() => {
     if (!editable || !note.id || mutation.isPending) return;
     const currentDraft = pendingDraftRef.current ?? draft;
     if (!isDirty(currentDraft, snapshotRef.current)) return;
 
     const updatedNote = buildNoteFromDraft(currentDraft, note);
-    mutation.mutate(updatedNote);
-  }, [editable, note, draft, mutation]);
+    mutation.mutate(updatedNote, {
+      onSuccess: () => {
+        if (note.creator) {
+          queryClient.setQueryData<Note[]>(notesKeys.personal(note.creator), old => {
+            if (!old) return old;
+            return old.map(n => (n.id === note.id ? { ...n, ...updatedNote } : n));
+          });
+        }
+        snapshotRef.current = cloneDraft(pendingDraftRef.current ?? draft);
+        setLastSavedAt(new Date());
+      },
+    });
+  }, [editable, note, draft, mutation, queryClient]);
 
   const retry = useCallback(() => {
     mutation.reset();

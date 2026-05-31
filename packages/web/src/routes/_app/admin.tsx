@@ -9,7 +9,7 @@ import type {
   AdminStats,
   ContentStats,
   RecentActivityItem,
-} from '@/services';
+} from '@/services/admin.service';
 import type { UserProfile } from '@/types';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 

@@ -26,17 +26,16 @@ vi.mock('@tanstack/react-query', () => ({
     invalidateQueries: vi.fn(),
     getQueryData: vi.fn(() => []),
   })),
+  useMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 // Mock services
-vi.mock('../services', () => ({
-  fetchMe: vi.fn().mockResolvedValue(null),
-  fetchInstructors: vi.fn().mockResolvedValue([]),
-  fetchCreatorName: vi.fn().mockResolvedValue('Test User'),
-  notesService: {
-    create: vi.fn().mockResolvedValue({ id: 'new-note-id' }),
-    fetchUserNotes: vi.fn().mockResolvedValue([]),
-  },
+vi.mock('../services/notes.service', () => ({
+  createNote: vi.fn().mockResolvedValue({ id: 'new-note-id' }),
+  fetchUserNotes: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock notes store

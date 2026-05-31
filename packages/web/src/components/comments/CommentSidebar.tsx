@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Comment } from '@/types';
 import CommentPopover from '@/components/CommentPopover';
-import { fetchCreatorName } from '@/services';
+import { fetchCreatorName } from '@/services/users.service';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';

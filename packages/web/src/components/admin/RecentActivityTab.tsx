@@ -1,4 +1,4 @@
-import type { RecentActivityItem } from '@/services';
+import type { RecentActivityItem } from '@/services/admin.service';
 import { formatDateShort } from '@/utils/data_conversion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

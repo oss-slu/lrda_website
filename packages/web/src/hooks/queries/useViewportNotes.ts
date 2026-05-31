@@ -1,10 +1,10 @@
 import { useMemo, useRef, useCallback } from 'react';
 import { useQuery, queryOptions, keepPreviousData } from '@tanstack/react-query';
-import { notesService } from '../../services';
-import { useMapStore } from '../../stores/mapStore';
+import { fetchViewportNotes } from '@/services/notes.service';
+import { useMapStore } from '@/stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
-import { useDebounce } from '../useDebounce';
-import { boundsToParams, snapBounds } from '../../utils/mapUtils';
+import { useDebounce } from '@/hooks/useDebounce';
+import { boundsToParams, snapBounds } from '@/utils/mapUtils';
 import { notesKeys } from './useNotes';
 import type { Note } from '@/types';
 
@@ -29,12 +29,12 @@ export function viewportNotesOptions(params: { search?: string; bounds?: Snapped
       : [...notesKeys.all, 'viewport', bounds],
     queryFn: (): Promise<Note[]> => {
       if (isSearchMode) {
-        return notesService.fetchViewport({ search });
+        return fetchViewportNotes({ search });
       }
       if (!bounds) {
-        return notesService.fetchViewport({});
+        return fetchViewportNotes({});
       }
-      return notesService.fetchViewport(bounds);
+      return fetchViewportNotes(bounds);
     },
     staleTime: STALE_TIME,
   });

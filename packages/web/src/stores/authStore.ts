@@ -7,7 +7,7 @@ import {
   signOut as authSignOut,
   getCurrentSession,
 } from '@/auth/client';
-import { fetchMe } from '@/services';
+import { fetchMe } from '@/services/users.service';
 
 interface AuthState {
   // State

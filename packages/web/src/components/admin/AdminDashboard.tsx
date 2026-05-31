@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   fetchAllUsers,
   fetchPendingApplications,
-  getAdminStats,
+  getStats as getAdminStats,
   getContentStats,
   getRecentActivity,
   approveApplication,
@@ -12,14 +12,14 @@ import {
   banUser,
   unbanUser,
   removeUser,
-} from '@/services';
+} from '@/services/admin.service';
 import type {
   AdminUserData,
   PendingApplication,
   AdminStats,
   ContentStats,
   RecentActivityItem,
-} from '@/services';
+} from '@/services/admin.service';
 import { isAdminUser, isInstructorUser } from '@/stores/authHelpers';
 import { toast } from 'sonner';
 import { formatDateShort } from '@/utils/data_conversion';

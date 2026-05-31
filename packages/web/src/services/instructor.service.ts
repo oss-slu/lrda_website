@@ -1,15 +1,11 @@
-/**
- * Instructor Service
- *
- * Handles instructor-specific operations including student management.
- */
-
-import type { StudentInfo } from './instructor.types';
 import { fetchWithAuth } from './api';
 
-/**
- * Fetch all students assigned to an instructor.
- */
+export interface StudentInfo {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export async function fetchStudents(instructorId: string): Promise<StudentInfo[]> {
   try {
     const students = await fetchWithAuth<
@@ -20,7 +16,6 @@ export async function fetchStudents(instructorId: string): Promise<StudentInfo[]
       }>
     >(`/api/users/${instructorId}/students`);
 
-    // Map API response to StudentInfo format
     return students.map(s => ({
       id: s.id,
       name: s.name,

@@ -1,4 +1,4 @@
-import type { CommentData } from '@/services/comments.types';
+import type { CommentData } from '@/services/comments.service';
 import { Button } from '@/components/ui/button';
 
 interface CommentThreadListProps {

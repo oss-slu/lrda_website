@@ -1,16 +1,22 @@
-/**
- * Users Service
- *
- * Handles user data operations via the API.
- * All data is stored in D1 via the Hono API backend.
- */
-
-import type { UserProfile, InstructorInfo } from './users.types';
+import type { UserProfile } from '@/types';
 import { fetchWithAuth } from './api';
 
-/**
- * Fetch the current authenticated user's profile.
- */
+export type { PublicUser, UserDetail } from '@lrda/shared';
+
+export interface UpdateProfileOptions {
+  name?: string;
+  image?: string | null;
+  isInstructor?: boolean;
+  pendingInstructorDescription?: string | null;
+}
+
+export interface InstructorInfo {
+  id: string;
+  name: string;
+  image?: string | null;
+  createdAt: string;
+}
+
 export async function fetchMe(): Promise<UserProfile | null> {
   try {
     return await fetchWithAuth<UserProfile>('/api/users/me');
@@ -20,9 +26,6 @@ export async function fetchMe(): Promise<UserProfile | null> {
   }
 }
 
-/**
- * Fetch user profile by ID (new format).
- */
 async function fetchProfileById(id: string): Promise<UserProfile | null> {
   try {
     return await fetchWithAuth<UserProfile>(`/api/users/${id}`);
@@ -42,10 +45,6 @@ export async function fetchInstructors(search?: string): Promise<InstructorInfo[
   }
 }
 
-/**
- * Fetch creator name by ID.
- * Returns 'Unknown creator' if not found.
- */
 export async function fetchCreatorName(creatorId: string): Promise<string> {
   try {
     const profile = await fetchProfileById(creatorId);

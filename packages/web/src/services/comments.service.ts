@@ -1,16 +1,28 @@
-/**
- * Comments Service
- *
- * Handles comment operations including CRUD, thread resolution, and deletion.
- * Uses the REST API backend (Hono/D1).
- */
-
 import { fetchWithAuth } from './api';
-import type { CommentData, ApiCommentData, ResolveThreadResult } from './comments.types';
+import type { CommentResponse, CommentPosition } from '@lrda/shared';
 
-/**
- * Transform API comment data to internal format.
- */
+export type { CommentPosition };
+export type ApiCommentData = CommentResponse;
+
+export interface CommentData {
+  id: string;
+  noteId: string;
+  text: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  position?: { from: number; to: number } | null;
+  threadId?: string | null;
+  parentId?: string | null;
+  resolved?: boolean;
+}
+
+export interface ResolveThreadResult {
+  success: boolean;
+  updatedCount: number;
+}
+
 function transformComment(item: ApiCommentData): CommentData {
   return {
     id: item.id,
@@ -27,10 +39,7 @@ function transformComment(item: ApiCommentData): CommentData {
   };
 }
 
-/**
- * Fetch all comments for a specific note.
- */
-async function fetchForNote(noteId: string): Promise<CommentData[]> {
+export async function fetchCommentsForNote(noteId: string): Promise<CommentData[]> {
   try {
     const data = await fetchWithAuth<ApiCommentData[]>(`/api/comments/note/${noteId}`);
     return data.map(transformComment);
@@ -40,10 +49,7 @@ async function fetchForNote(noteId: string): Promise<CommentData[]> {
   }
 }
 
-/**
- * Create a new comment.
- */
-async function create(comment: CommentData): Promise<ApiCommentData> {
+export async function createComment(comment: CommentData): Promise<ApiCommentData> {
   return fetchWithAuth<ApiCommentData>('/api/comments', {
     method: 'POST',
     body: JSON.stringify({
@@ -56,27 +62,18 @@ async function create(comment: CommentData): Promise<ApiCommentData> {
   });
 }
 
-/**
- * Resolve all comments in a thread.
- */
-async function resolveThread(threadId: string): Promise<ResolveThreadResult> {
+export async function resolveThread(threadId: string): Promise<ResolveThreadResult> {
   return fetchWithAuth<ResolveThreadResult>(`/api/comments/thread/${threadId}/resolve`, {
     method: 'POST',
   });
 }
 
-/**
- * Delete a comment (hard delete).
- */
-async function deleteComment(commentId: string): Promise<boolean> {
+export async function deleteComment(commentId: string): Promise<boolean> {
   await fetchWithAuth<void>(`/api/comments/${commentId}`, { method: 'DELETE' });
   return true;
 }
 
-/**
- * Update a comment's text.
- */
-async function updateComment(
+export async function updateComment(
   commentId: string,
   updates: Partial<CommentData>,
 ): Promise<ApiCommentData> {
@@ -89,11 +86,3 @@ async function updateComment(
     body: JSON.stringify(payload),
   });
 }
-
-export const commentsService = {
-  fetchForNote,
-  create,
-  resolveThread,
-  delete: deleteComment,
-  update: updateComment,
-};

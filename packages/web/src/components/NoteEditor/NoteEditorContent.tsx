@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { LinkBubbleMenu, RichTextContent } from 'mui-tiptap';
 import type { Editor } from '@tiptap/core';
 import type { Tag } from '@/types';
 import type { NoteDraft } from './hooks/useNoteForm';
 import TagManager from './NoteElements/TagManager';
-import { tagsService } from '@/services';
+import { useGenerateTags } from '@/hooks/queries/useTags';
 
 interface NoteEditorContentProps {
   editor: Editor | null;
@@ -21,29 +20,27 @@ export default function NoteEditorContent({
   draft,
   isViewingStudentNote,
 }: NoteEditorContentProps) {
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [loadingTags, setLoadingTags] = useState(false);
+  const generateTags = useGenerateTags();
 
-  const fetchSuggestedTags = async () => {
+  const fetchSuggestedTags = () => {
     if (!editor) {
       console.error('Editor instance is not available');
       return;
     }
-    setLoadingTags(true);
-    try {
-      const result = await tagsService.generateTags({
+    generateTags.mutate(
+      {
         content: editor.getText(),
         title: draft.title,
         locationName: draft.locationName || undefined,
         existingTags: draft.tags.map(t => t.label),
         time: draft.time.toISOString(),
-      });
-      setSuggestedTags(result);
-    } catch (error) {
-      console.error('Error generating tags:', error);
-    } finally {
-      setLoadingTags(false);
-    }
+      },
+      {
+        onError: (error) => {
+          console.error('Error generating tags:', error);
+        },
+      },
+    );
   };
 
   return (
@@ -51,11 +48,11 @@ export default function NoteEditorContent({
       <div className='mt-3'>
         <TagManager
           tags={tags}
-          suggestedTags={suggestedTags}
+          suggestedTags={generateTags.data ?? []}
           onTagsChange={onTagsChange}
           fetchSuggestedTags={fetchSuggestedTags}
-          onDismissSuggestions={() => setSuggestedTags([])}
-          loading={loadingTags}
+          onDismissSuggestions={() => generateTags.reset()}
+          loading={generateTags.isPending}
           disabled={isViewingStudentNote}
         />
       </div>

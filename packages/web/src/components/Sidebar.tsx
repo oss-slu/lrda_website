@@ -7,8 +7,8 @@ import { Note, newNote } from '@/types';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useShallow } from 'zustand/react/shallow';
-import { notesService } from '@/services';
 import { usePersonalNotes, notesKeys } from '@/hooks/queries/useNotes';
+import { useCreateNote } from '@/hooks/queries/useNotesMutations';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,11 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   );
 
   const queryClient = useQueryClient();
+  const createNote = useCreateNote();
 
   const [showPublished, setShowPublished] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Note[] | null>(null);
-  const [isCreatingNote, setIsCreatingNote] = useState(false);
 
   // TanStack Query for personal notes.
   // Gate on isInitialized so the API call doesn't fire before the session
@@ -43,56 +43,47 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
   // the user as anonymous and returns only published notes.
   const { data: personalNotes = [] } = usePersonalNotes(isInitialized ? (user?.id ?? null) : null);
 
-  const handleAddNote = async () => {
+  const handleAddNote = () => {
     const userId = user?.id;
     if (!userId) {
       console.error('User ID is null - cannot create a new note');
       return;
     }
 
-    if (isCreatingNote) return; // Prevent double-clicks
+    if (createNote.isPending) return;
 
-    setIsCreatingNote(true);
-    try {
-      // Create the note on the server immediately
-      const newNoteData = {
-        title: '',
-        text: '',
-        time: new Date(),
-        media: [],
-        audio: [],
-        creator: userId,
-        latitude: null,
-        longitude: null,
-        published: false,
-        tags: [],
-      };
+    const newNoteData = {
+      title: '',
+      text: '',
+      time: new Date(),
+      media: [],
+      audio: [],
+      creator: userId,
+      latitude: null,
+      longitude: null,
+      published: false,
+      tags: [],
+    };
 
-      const data = await notesService.create(newNoteData);
-      const newNoteId = data.id;
+    createNote.mutate(newNoteData, {
+      onSuccess: (data) => {
+        const savedNote: Note = {
+          ...newNoteData,
+          id: data.id,
+          uid: data.id,
+        };
 
-      if (!newNoteId) {
-        throw new Error('No ID returned from server');
-      }
+        queryClient.setQueryData<Note[]>(notesKeys.personal(userId), old =>
+          old ? [savedNote, ...old] : [savedNote],
+        );
 
-      const savedNote: Note = {
-        ...newNoteData,
-        id: newNoteId,
-        uid: newNoteId,
-      };
-
-      // Add to query cache immediately for instant UI update
-      queryClient.setQueryData<Note[]>(notesKeys.personal(userId), old =>
-        old ? [savedNote, ...old] : [savedNote],
-      );
-
-      setSelectedNoteId(newNoteId);
-      onNoteSelect(savedNote, false);
-    } catch (error) {
-      console.error('Error creating new note:', error);
-    } finally {
-      setIsCreatingNote(false);
-    }
+        setSelectedNoteId(data.id);
+        onNoteSelect(savedNote, false);
+      },
+      onError: (error) => {
+        console.error('Error creating new note:', error);
+      },
+    });
   };
 
   // Derive filteredNotes from source data
@@ -166,10 +157,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNoteSelect }) => {
           id='add-note-button'
           data-testid='add-note-button'
           onClick={handleAddNote}
-          disabled={isCreatingNote}
+          disabled={createNote.isPending}
           className='w-full rounded-lg bg-blue-600 font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-70'
         >
-          {isCreatingNote ?
+          {createNote.isPending ?
             <>
               <Loader2 size={18} className='mr-2 animate-spin' />
               Creating...

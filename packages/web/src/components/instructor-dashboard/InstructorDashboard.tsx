@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 import { CircleCheck, CircleX } from 'lucide-react';
@@ -7,8 +6,10 @@ import type { Note } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotesStore } from '@/stores/notesStore';
 import { hasInstructorAccess } from '@/stores/authHelpers';
-import { useStudentNotes, notesKeys } from '@/hooks/queries/useNotes';
-import { notesService, fetchStudents, commentsService } from '@/services';
+import { useStudentNotes } from '@/hooks/queries/useNotes';
+import { useUpdateNote } from '@/hooks/queries/useNotesMutations';
+import { useStudents } from '@/hooks/queries/useInstructor';
+import { useCommentMutations } from '@/hooks/queries/useComments';
 import { isUnreviewed } from '@/utils/noteStatus';
 import { InstructorSidebar } from '@/components/instructor-dashboard/InstructorSidebar';
 import NoteEditor from '@/components/NoteEditor';
@@ -25,8 +26,6 @@ import {
 } from '@/components/ui/dialog';
 
 export default function InstructorDashboard() {
-  const queryClient = useQueryClient();
-
   const { user, isInitialized } = useAuthStore(
     useShallow(state => ({ user: state.user, isInitialized: state.isInitialized })),
   );
@@ -41,58 +40,56 @@ export default function InstructorDashboard() {
   const instructorId = isInitialized && isInstructor ? (user?.id ?? null) : null;
 
   const { data: studentNotes = [] } = useStudentNotes(instructorId, isInstructor);
-
-  const { data: students = [] } = useQuery({
-    queryKey: ['instructor-students', user?.id],
-    queryFn: () => fetchStudents(user!.id),
-    enabled: !!user?.id && isInstructor && isInitialized,
-  });
+  const { data: students = [] } = useStudents(instructorId, isInstructor && isInitialized);
+  const updateNote = useUpdateNote();
 
   const selectedNote = useMemo(
     () => studentNotes.find(n => n.id === selectedNoteId) ?? undefined,
     [studentNotes, selectedNoteId],
   );
 
+  const { createComment } = useCommentMutations(selectedNoteId ?? '');
+
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [declineFeedback, setDeclineFeedback] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmitting = updateNote.isPending || createComment.isPending;
 
   const handleNoteSelect = (note: Note) => {
     setSelectedNoteId(note.id);
   };
 
-  const handleApprove = async () => {
+  const handleApprove = () => {
     if (!selectedNote) return;
-    setIsSubmitting(true);
-    try {
-      await notesService.update({
+    updateNote.mutate(
+      {
         ...selectedNote,
         published: true,
         approvalRequested: false,
         isReturned: false,
-      });
-      queryClient.invalidateQueries({ queryKey: notesKeys.all });
-      setSelectedNoteId(null);
-      toast('Note Approved', {
-        description: 'The note has been published successfully.',
-        duration: 4000,
-      });
-    } catch {
-      toast('Error', {
-        description: 'Failed to approve note. Please try again.',
-        duration: 4000,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setSelectedNoteId(null);
+          toast('Note Approved', {
+            description: 'The note has been published successfully.',
+            duration: 4000,
+          });
+        },
+        onError: () => {
+          toast('Error', {
+            description: 'Failed to approve note. Please try again.',
+            duration: 4000,
+          });
+        },
+      },
+    );
   };
 
   const handleDeclineConfirm = async () => {
     if (!selectedNote) return;
-    setIsSubmitting(true);
     try {
       if (declineFeedback.trim()) {
-        await commentsService.create({
+        await createComment.mutateAsync({
           id: '',
           noteId: selectedNote.id,
           text: declineFeedback.trim(),
@@ -104,13 +101,12 @@ export default function InstructorDashboard() {
           parentId: null,
         });
       }
-      await notesService.update({
+      await updateNote.mutateAsync({
         ...selectedNote,
         published: false,
         approvalRequested: false,
         isReturned: true,
       });
-      queryClient.invalidateQueries({ queryKey: notesKeys.all });
       setIsDeclineDialogOpen(false);
       setDeclineFeedback('');
       setSelectedNoteId(null);
@@ -123,8 +119,6 @@ export default function InstructorDashboard() {
         description: 'Failed to return note. Please try again.',
         duration: 4000,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
-import type { CommentData } from '../../services/comments.types';
-import { commentsService, fetchCreatorName } from '../../services';
+import type { CommentData } from '@/services/comments.service';
+import {
+  fetchCommentsForNote,
+  createComment as createCommentApi,
+  resolveThread as resolveThreadApi,
+  deleteComment as deleteCommentApi,
+} from '@/services/comments.service';
+import { fetchCreatorName } from '@/services/users.service';
 
 export const commentsKeys = {
   all: ['comments'] as const,
@@ -36,7 +42,7 @@ export function commentsOptions(noteId: string) {
   return queryOptions({
     queryKey: commentsKeys.forNote(noteId),
     queryFn: async (): Promise<CommentData[]> => {
-      const raw = await commentsService.fetchForNote(noteId);
+      const raw = await fetchCommentsForNote(noteId);
       return enrichCommentsWithAuthorNames(raw);
     },
   });
@@ -67,7 +73,7 @@ export function useCommentMutations(noteId: string) {
 
   const createComment = useMutation({
     mutationFn: async (comment: CommentData) => {
-      await commentsService.create(comment);
+      await createCommentApi(comment);
       return comment;
     },
     onSuccess: () => {
@@ -77,7 +83,7 @@ export function useCommentMutations(noteId: string) {
 
   const resolveThread = useMutation({
     mutationFn: async (threadId: string) => {
-      await commentsService.resolveThread(threadId);
+      await resolveThreadApi(threadId);
       return threadId;
     },
     onMutate: async threadId => {
@@ -109,7 +115,7 @@ export function useCommentMutations(noteId: string) {
 
   const deleteComment = useMutation({
     mutationFn: async (commentId: string) => {
-      await commentsService.delete(commentId);
+      await deleteCommentApi(commentId);
       return commentId;
     },
     onMutate: async commentId => {
