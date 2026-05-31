@@ -42,7 +42,7 @@ prod depends on. In-place promotion avoids all of that:
 - **GitHub deploy secrets are repo-level** (not scoped to the `staging`/`production`
   GitHub Environments, which have no secrets of their own). Relevant ones:
   `LIGHTSAIL_HOST`, `API_DOMAIN`, `VITE_API_URL`, `LIGHTSAIL_SSH_PRIVATE_KEY`.
-- SSH: `ssh -i ~/.ssh/lrda-ec2.pem ubuntu@<host>`, key pair `lrda-ec2`.
+- SSH: `ssh -i ~/.ssh/lrda-production.pem ubuntu@<host>`, key pair `lrda-production`.
 
 ## Gotchas
 
@@ -81,9 +81,9 @@ aws lightsail create-instance-snapshot \
   --instance-snapshot-name lrda-staging-pre-prod-migration \
   --region us-east-1
 
-ssh -i ~/.ssh/lrda-ec2.pem ubuntu@44.219.215.8 \
+ssh -i ~/.ssh/lrda-production.pem ubuntu@44.219.215.8 \
   'sudo -u postgres pg_dump -Fc lrda_staging > /tmp/lrda_staging.dump'
-scp -i ~/.ssh/lrda-ec2.pem ubuntu@44.219.215.8:/tmp/lrda_staging.dump ./lrda_staging.dump
+scp -i ~/.ssh/lrda-production.pem ubuntu@44.219.215.8:/tmp/lrda_staging.dump ./lrda_staging.dump
 ```
 
 ## Phase 2 -- Apply (DOWNTIME STARTS -- staging destroyed) -- DONE
@@ -129,8 +129,8 @@ the Actions path (uses workflow GITHUB_TOKEN) or a PAT.
 
 ```bash
 NEW_IP=<from terraform output>
-scp -i ~/.ssh/lrda-ec2.pem ./lrda_staging.dump ubuntu@$NEW_IP:/tmp/
-ssh -i ~/.ssh/lrda-ec2.pem ubuntu@$NEW_IP
+scp -i ~/.ssh/lrda-production.pem ./lrda_staging.dump ubuntu@$NEW_IP:/tmp/
+ssh -i ~/.ssh/lrda-production.pem ubuntu@$NEW_IP
 
 # on the box:
 sudo -u postgres pg_restore -d lrda_production /tmp/lrda_staging.dump

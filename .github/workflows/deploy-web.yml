@@ -40,8 +40,6 @@ jobs:
         run: pnpm test:unit --silent --no-coverage
         env:
           VITE_API_URL: 'http://localhost:3002'
-          VITE_OPENAI_API_KEY: 'mock-openai-key'
-          VITE_OPENAI_API_URL: 'https://api.openai.com/v1'
           CI: 'true'
           SUPPRESS_CONSOLE: 'true'
 

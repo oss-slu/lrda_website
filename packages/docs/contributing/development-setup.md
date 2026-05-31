@@ -24,26 +24,49 @@ VITE_MAP_ID=your-google-maps-map-id
 
 ### API (`packages/api/.env`)
 
-```ini
-# Required
-BETTER_AUTH_SECRET=your-secret-key-here
-DATABASE_URL=postgresql://lrda:lrda_dev@localhost:5433/lrda_api
+Only three variables are required locally: `ENVIRONMENT`, `DATABASE_URL`, and `BETTER_AUTH_SECRET`. The `.env.example` file documents all available variables with descriptions -- `pnpm setup` copies it for you.
 
-# Optional
-ENVIRONMENT=development
-PORT=3002
-BETTER_AUTH_URL=http://localhost:3002
-WEB_URL=http://localhost:3000
-```
+Generate a secret with: `openssl rand -base64 32`
 
-Run `pnpm setup` to create both files from the example templates.
+The remaining variables are for optional features. The app runs without them -- features degrade gracefully (map won't render, emails print to console, AI tags aren't generated). See [External Services](#external-services) for setup instructions.
 
-### Getting API Keys
+## External Services
 
-- **Google Maps API Key**: [Google Cloud Console](https://console.cloud.google.com/apis/credentials) -- enable the Maps JavaScript API
-- **BETTER_AUTH_SECRET**: `openssl rand -base64 32`
+Most services are managed under the project Google account (`lrda.adam.park@gmail.com`). Ask Adam Park or the team lead for access to any of these.
 
-For full access to the development environment, contact the team lead.
+For local development, the app runs without any of these configured -- features degrade gracefully (map won't render, emails print to console, AI tags aren't generated).
+
+### Google Maps
+
+The project's Google Cloud project is under `lrda.adam.park@gmail.com`. Ask to be added as a project member to access the API keys.
+
+Two separate API keys serve different purposes:
+
+| Key | Package | Used for |
+| --- | --- | --- |
+| `VITE_MAP_KEY` | web | Client-side Maps JavaScript API (renders the map) |
+| `VITE_MAP_ID` | web | Map styling via [Map IDs](https://developers.google.com/maps/documentation/get-map-id) |
+| `GOOGLE_MAPS_API_KEY` | api | Server-side Geocoding API (reverse geocodes lat/lng to place names) |
+
+The GCP project needs **Maps JavaScript API** and **Geocoding API** enabled, with separate keys restricted to each.
+
+**Without these keys:** The map page won't render. Notes still save coordinates, but `locationName` (reverse-geocoded place name) will be empty.
+
+### Resend (email delivery)
+
+The Resend account is under `lrda.adam.park@gmail.com`, with the sending domain `wheresreligion.org` verified. Ask Adam for an API key if you need to test email flows locally.
+
+**Without Resend:** The API logs verification and password-reset URLs to the console. Click them manually during development.
+
+### OpenRouter (AI tag generation)
+
+Used to auto-generate tags for notes. The production key has a $2 spend limit. For local development, you can create your own free account at [openrouter.ai](https://openrouter.ai) and set `OPENROUTER_API_KEY` in `packages/api/.env`.
+
+**Without OpenRouter:** Tags can only be added manually. The AI tag button won't appear.
+
+### Firebase and RERUM (migration period only)
+
+These are only needed to run sync scripts during the migration period while the mobile app still uses RERUM/Firebase. Not needed for regular development. See [Database: Sync Scripts](/architecture/database#sync-scripts) for details.
 
 ## Ports
 

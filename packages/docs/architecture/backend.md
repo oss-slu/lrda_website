@@ -66,6 +66,17 @@ export const db = drizzle(pool, { schema })
 
 All environment variables are validated at startup with Zod in `src/env.ts`. Missing or invalid values cause an immediate, descriptive error.
 
+## Analytics
+
+The API includes privacy-first page view tracking. No cookies, no PII, no third-party scripts.
+
+- The web app fires a `POST /api/analytics/pageview` on each route change via the `usePageView` hook. It sends the path, referrer, screen width bucket, language, and UTM params.
+- The API parses the User-Agent server-side (browser, OS, device type) and generates a hashed session ID from the IP + UA for deduplication. No raw IPs are stored.
+- Data is stored in the `pageView` table and visualized in the admin dashboard (`/admin` > Analytics tab).
+- A cleanup script (`packages/api/src/scripts/cleanup-pageviews.ts`) exists for pruning old data.
+
+This was built to give the client visibility into platform usage for grant applications and general understanding. The dashboard is functional but basic -- the next team should refine which metrics actually matter once real usage data is flowing.
+
 ## API Documentation
 
 The API serves interactive documentation via [Scalar](https://scalar.com/) at the `/reference` endpoint when running locally.

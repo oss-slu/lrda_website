@@ -31,6 +31,12 @@ API integration tests live in `packages/web/tests/integration/` (`.test.ts`). Th
 
 Browser e2e specs live in `packages/web/tests/e2e/` (`.spec.ts`). Shared test helpers (db-seed, client, auth) live in `packages/web/tests/helpers/`.
 
+E2e tests require the full stack running locally (API server + database + web frontend). Run `pnpm dev` first, then `pnpm test:e2e` in a separate terminal.
+
+### Known gap: e2e tests are not run in CI
+
+The Playwright e2e suite is currently **skipped in GitHub Actions CI**. Getting Playwright tests to run reliably with a real database and API server in GitHub Actions turned out to be tricky, so they are skipped for now. This means regressions in browser user flows are only caught by running e2e tests locally before merging. This is a known weakness that the next team should invest time in fixing.
+
 ## Test Policy
 
 Tests are only written when explicitly requested. Do not automatically generate tests for new features unless asked.

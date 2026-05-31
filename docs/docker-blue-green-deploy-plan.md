@@ -730,11 +730,11 @@ Optional: Create GitHub Environments (`staging`, `production`) with required rev
 |---|---|
 | **Host** | `44.219.215.8` |
 | **User** | `ubuntu` |
-| **Key** | `~/.ssh/lrda-ec2.pem` |
+| **Key** | `~/.ssh/lrda-production.pem` |
 | **Instance** | `lrda-staging` |
 
 ```bash
-ssh -i ~/.ssh/lrda-ec2.pem ubuntu@44.219.215.8
+ssh -i ~/.ssh/lrda-production.pem ubuntu@44.219.215.8
 ```
 
 Key files on the server:

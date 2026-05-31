@@ -11,13 +11,15 @@ After:   Web           -->  Hono API + PostgreSQL + Better Auth  (done)
          Mobile        -->  Hono API + PostgreSQL + Better Auth  (planned)
 ```
 
-## Current State
+## Current State (as of Summer 2026)
 
 | Component | Web | Mobile |
 | --- | --- | --- |
-| Authentication | Better Auth (complete) | Firebase Auth (legacy) |
-| Note API | Hono/PostgreSQL (complete) | RERUM (legacy) |
-| Media storage | TBD | S3 Proxy (legacy) |
+| Authentication | Better Auth (complete) | Better Auth (merged, not yet in app stores) |
+| Note API | Hono/PostgreSQL (complete) | RERUM (legacy, migration in progress) |
+| Media storage | S3 Proxy via RERUM (migrating to own S3/R2) | S3 Proxy via RERUM |
+
+The mobile app auth migration to Better Auth has been merged and tested, but the updated app has **not yet been deployed to the App Store or Google Play**. Yash currently owns the Apple Developer account, so coordination with him is necessary for mobile deployments.
 
 ## Sync Scripts
 
