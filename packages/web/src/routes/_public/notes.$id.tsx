@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { Tag } from '@/types';
 import { NoteContent } from '@/components/NoteContent';
-import { sanitizeHtml, extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
+import { extractTextFromJson } from '@/utils/sanitize';
 import { formatDate, format12hourTime } from '@/utils/data_conversion';
 import { useNoteDetail, noteDetailOptions } from '@/hooks/queries/useNotes';
 import { useCreatorName } from '@/hooks/queries/useUsers';
@@ -29,9 +29,7 @@ export const Route = createFileRoute('/_public/notes/$id')({
     const title =
       loaderData?.title ? `${loaderData.title} | Where's Religion?` : "Note | Where's Religion?";
     const description =
-      loaderData?.textJson ? extractTextFromJson(loaderData.textJson).slice(0, 160)
-      : loaderData?.text ? extractTextFromHtml(loaderData.text).slice(0, 160)
-      : undefined;
+      loaderData?.textJson ? extractTextFromJson(loaderData.textJson).slice(0, 160) : undefined;
     const url = `https://wheresreligion.org/notes/${params.id}`;
     return {
       meta: [
@@ -149,11 +147,6 @@ function NoteDetailPage() {
         <div className='px-6 py-4 pb-24'>
           {note.textJson ?
             <NoteContent doc={note.textJson} />
-          : note.text && note.text.length > 0 ?
-            <div
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) }}
-              className='note-content prose max-w-none'
-            />
           : <p className='text-muted-foreground'>This note has no content.</p>}
         </div>
       </ScrollArea>

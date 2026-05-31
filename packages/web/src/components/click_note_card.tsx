@@ -1,6 +1,5 @@
 import React from 'react';
 import { NoteContent } from '@/components/NoteContent';
-import { sanitizeHtml } from '@/utils/sanitize';
 import { Tag } from '@/types';
 import { useCreatorName } from '@/hooks/queries/useUsers';
 import {
@@ -100,11 +99,6 @@ const ClickableNote: React.FC<{
           {/* Padding at the bottom */}
           {note.textJson ?
             <NoteContent doc={note.textJson} className='note-content prose mb-5 max-w-none px-6' />
-          : note.text && note.text.length > 0 ?
-            <div
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.text, { allowVideo: true, allowAudio: true }) }}
-              className='note-content mb-5 px-6'
-            />
           : <div className='px-6 pb-6'>This Note has no content</div>}
         </div>
       </ScrollArea>

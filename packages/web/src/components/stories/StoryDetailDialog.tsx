@@ -18,7 +18,6 @@ import AudioPicker from '@/components/NoteEditor/NoteElements/AudioPicker';
 import MediaViewer from '@/components/media_viewer';
 import { StoryMapPopover } from './StoryMapPopover';
 import { NoteContent } from '@/components/NoteContent';
-import { sanitizeHtml } from '@/utils/sanitize';
 import { formatDate, format12hourTime } from '@/utils/data_conversion';
 
 interface StoryDetailDialogProps {
@@ -39,7 +38,7 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
   const [location, setLocation] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const noteText = String(note.text || (note as any).BodyText || '');
+  const hasContent = note.textJson != null;
   const hasValidCoordinates = note.latitude != null && note.longitude != null;
   const tags: Tag[] = convertOldTags(note.tags);
 
@@ -127,16 +126,10 @@ export const StoryDetailDialog: React.FC<StoryDetailDialogProps> = ({ note, chil
 
         {/* Content */}
         <ScrollArea className='min-h-0 flex-1 px-6'>
-          {note.textJson ?
+          {hasContent ?
             <NoteContent
               doc={note.textJson}
               className='prose prose-sm mt-4 max-w-none pb-4 text-base [&_img]:mx-auto [&_img]:my-4 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_video]:my-4 [&_video]:block [&_video]:h-auto [&_video]:max-h-[500px] [&_video]:w-full [&_video]:max-w-full [&_video]:rounded-lg [&_video]:object-contain'
-            />
-          : noteText ?
-            <div
-              id='note-content'
-              className='prose prose-sm mt-4 max-w-none pb-4 text-base [&_.video-wrapper]:my-4 [&_.video-wrapper]:block [&_.video-wrapper]:w-full [&_.video-wrapper]:max-w-full [&_iframe]:my-4 [&_iframe]:block [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:max-w-full [&_iframe]:rounded-lg [&_img]:mx-auto [&_img]:my-4 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_video]:my-4 [&_video]:block [&_video]:h-auto [&_video]:max-h-[500px] [&_video]:w-full [&_video]:max-w-full [&_video]:rounded-lg [&_video]:object-contain'
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(noteText, { allowVideo: true, allowIframes: true }) }}
             />
           : <p className='mt-4 pb-4 text-gray-500'>No content available.</p>}
         </ScrollArea>

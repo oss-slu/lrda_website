@@ -4,7 +4,7 @@ import { FileText, Search } from 'lucide-react';
 import type { Note } from '@/types';
 import type { StudentInfo } from '@/services/instructor.types';
 import { useNotesStore } from '@/stores/notesStore';
-import { extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
+import { extractTextFromJson } from '@/utils/sanitize';
 import { getNoteStatus, statusConfig, isUnreviewed, isReviewed } from '@/utils/noteStatus';
 import SearchBarNote from '@/components/search_bar_note';
 import { Badge } from '@/components/ui/badge';
@@ -123,7 +123,7 @@ export function InstructorSidebar({ notes, students, onNoteSelect }: InstructorS
             const status = getNoteStatus(note);
             const badge = statusConfig[status];
             const studentName = studentMap.get(note.creator) ?? 'Unknown Student';
-            let preview = note.textJson ? extractTextFromJson(note.textJson) : extractTextFromHtml(note.text);
+            let preview = extractTextFromJson(note.textJson);
             if (!preview || preview === 'undefined') {
               preview = 'Empty note';
             }

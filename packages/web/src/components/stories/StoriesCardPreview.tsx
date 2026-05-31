@@ -5,7 +5,7 @@ import { useCreatorName } from '@/hooks/queries/useUsers';
 import { getCachedLocation } from '@/utils/location_cache';
 import { StoryMapPopover } from './StoryMapPopover';
 import { formatDateCompact, format12hourTime } from '@/utils/data_conversion';
-import { extractTextFromHtml, extractTextFromJson } from '@/utils/sanitize';
+import { extractTextFromJson } from '@/utils/sanitize';
 
 interface StoriesCardPreviewProps {
   note: Note;
@@ -16,8 +16,7 @@ interface StoriesCardPreviewProps {
  * Extracts the first few sentences from a string of HTML content.
  */
 function getPlainText(note: Note): string {
-  if (note.textJson) return extractTextFromJson(note.textJson);
-  return extractTextFromHtml(note.text || '');
+  return extractTextFromJson(note.textJson);
 }
 
 const getBodyPreview = (plainText: string, sentenceCount = 2): string => {
