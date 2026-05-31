@@ -37,7 +37,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import ClickableNote from '@/components/click_note_card';
+import NoteDetail from '@/components/NoteDetail';
 import {
   Play,
   Square,
@@ -109,7 +109,13 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
-function SortHeader({ column, children }: { column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc?: boolean) => void }; children: React.ReactNode }) {
+function SortHeader({
+  column,
+  children,
+}: {
+  column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc?: boolean) => void };
+  children: React.ReactNode;
+}) {
   const sorted = column.getIsSorted();
   return (
     <Button
@@ -119,13 +125,11 @@ function SortHeader({ column, children }: { column: { getIsSorted: () => false |
       onClick={() => column.toggleSorting(sorted === 'asc')}
     >
       {children}
-      {sorted === 'asc' ? (
+      {sorted === 'asc' ?
         <ArrowUp className='ml-1 h-3 w-3' />
-      ) : sorted === 'desc' ? (
+      : sorted === 'desc' ?
         <ArrowDown className='ml-1 h-3 w-3' />
-      ) : (
-        <ArrowUpDown className='ml-1 h-3 w-3 opacity-50' />
-      )}
+      : <ArrowUpDown className='ml-1 h-3 w-3 opacity-50' />}
     </Button>
   );
 }
@@ -210,7 +214,9 @@ function SyncLogTable({
           const v = getValue<number>();
           return (
             <div className='text-right font-mono text-xs'>
-              {v > 0 ? <span className='text-red-600'>{v}</span> : v}
+              {v > 0 ?
+                <span className='text-red-600'>{v}</span>
+              : v}
             </div>
           );
         },
@@ -283,9 +289,9 @@ function SyncLogTable({
                   key={header.id}
                   className='h-10 px-2 text-left align-middle font-medium text-gray-500'
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.isPlaceholder ? null : (
+                    flexRender(header.column.columnDef.header, header.getContext())
+                  )}
                 </th>
               ))}
             </tr>
@@ -311,7 +317,13 @@ function SyncLogTable({
 // Detail table (per-note, virtualized)
 // ============================================
 
-function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; triggeredBy?: string | null }) {
+function SyncDetailTable({
+  details,
+  triggeredBy,
+}: {
+  details: SyncRunDetail[];
+  triggeredBy?: string | null;
+}) {
   const isUserSync = triggeredBy === 'users';
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -321,11 +333,13 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
     () => [
       {
         accessorKey: 'noteId',
-        header: ({ column }) => <SortHeader column={column}>{isUserSync ? 'User' : 'Note ID'}</SortHeader>,
+        header: ({ column }) => (
+          <SortHeader column={column}>{isUserSync ? 'User' : 'Note ID'}</SortHeader>
+        ),
         cell: ({ getValue }) => {
           const id = getValue<string>();
           if (isUserSync) {
-            return <span className='text-xs text-gray-600 truncate block'>{id}</span>;
+            return <span className='block truncate text-xs text-gray-600'>{id}</span>;
           }
 
           return (
@@ -336,7 +350,7 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
                   <ExternalLink className='h-3 w-3' />
                 </button>
               </DialogTrigger>
-              <ClickableNote noteId={id} />
+              <NoteDetail noteId={id} />
             </Dialog>
           );
         },
@@ -350,7 +364,8 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
             <Badge
               variant={
                 action === 'created' ? 'default'
-                : action === 'errored' ? 'destructive'
+                : action === 'errored' ?
+                  'destructive'
                 : 'secondary'
               }
               className={`text-xs ${action === 'created' ? 'bg-green-600' : ''}`}
@@ -362,14 +377,16 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
       },
       {
         accessorKey: 'error',
-        header: ({ column }) => <SortHeader column={column}>{isUserSync ? 'Changes' : 'Error'}</SortHeader>,
+        header: ({ column }) => (
+          <SortHeader column={column}>{isUserSync ? 'Changes' : 'Error'}</SortHeader>
+        ),
         cell: ({ getValue }) => {
           const v = getValue<string | null>();
-          return v ? (
-            <span className={`text-xs ${isUserSync ? 'text-gray-600' : 'text-red-600'}`}>{v}</span>
-          ) : (
-            <span className='text-xs text-gray-300'>--</span>
-          );
+          return v ?
+              <span className={`text-xs ${isUserSync ? 'text-gray-600' : 'text-red-600'}`}>
+                {v}
+              </span>
+            : <span className='text-xs text-gray-300'>--</span>;
         },
       },
     ],
@@ -427,12 +444,12 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
             headerGroup.headers.map((header, i) => (
               <div
                 key={header.id}
-                className='h-10 shrink-0 px-2 flex items-center font-medium text-gray-500'
+                className='flex h-10 shrink-0 items-center px-2 font-medium text-gray-500'
                 style={{ width: COL_WIDTHS[i] }}
               >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
+                {header.isPlaceholder ? null : (
+                  flexRender(header.column.columnDef.header, header.getContext())
+                )}
               </div>
             )),
           )}
@@ -445,13 +462,17 @@ function SyncDetailTable({ details, triggeredBy }: { details: SyncRunDetail[]; t
               return (
                 <div
                   key={row.id}
-                  className='absolute left-0 right-0 flex border-b transition-colors hover:bg-gray-50'
-                  style={{ top: 0, transform: `translateY(${virtualRow.start}px)`, height: virtualRow.size }}
+                  className='absolute right-0 left-0 flex border-b transition-colors hover:bg-gray-50'
+                  style={{
+                    top: 0,
+                    transform: `translateY(${virtualRow.start}px)`,
+                    height: virtualRow.size,
+                  }}
                 >
                   {row.getVisibleCells().map((cell, i) => (
                     <div
                       key={cell.id}
-                      className='shrink-0 px-2 flex items-center overflow-hidden'
+                      className='flex shrink-0 items-center overflow-hidden px-2'
                       style={{ width: COL_WIDTHS[i] }}
                     >
                       <div className='truncate'>
@@ -508,7 +529,10 @@ export function SyncTab() {
     if (syncRunId && syncRunId !== selectedRun?.id) {
       getSyncRunDetail(syncRunId)
         .then(setSelectedRun)
-        .catch((error) => { console.error('Failed to load run details:', error); toast.error('Failed to load run details'); });
+        .catch(error => {
+          console.error('Failed to load run details:', error);
+          toast.error('Failed to load run details');
+        });
     } else if (!syncRunId) {
       setSelectedRun(null);
     }
@@ -588,11 +612,17 @@ export function SyncTab() {
   };
 
   const handleViewDetail = (runId: string) => {
-    navigate({ to: '/admin', search: (prev: Record<string, unknown>) => ({ ...prev, syncRunId: runId }) });
+    navigate({
+      to: '/admin',
+      search: (prev: Record<string, unknown>) => ({ ...prev, syncRunId: runId }),
+    });
   };
 
   const handleBackToLog = () => {
-    navigate({ to: '/admin', search: (prev: Record<string, unknown>) => ({ ...prev, syncRunId: undefined }) });
+    navigate({
+      to: '/admin',
+      search: (prev: Record<string, unknown>) => ({ ...prev, syncRunId: undefined }),
+    });
   };
 
   // Detail view
@@ -662,10 +692,9 @@ export function SyncTab() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading ?
             <Skeleton className='h-20 w-full' />
-          ) : (
-            <div className='space-y-4'>
+          : <div className='space-y-4'>
               <div className='flex items-center gap-3'>
                 <div
                   className={`h-3 w-3 rounded-full ${status?.running ? 'animate-pulse bg-green-500' : 'bg-gray-300'}`}
@@ -694,45 +723,34 @@ export function SyncTab() {
               </div>
 
               <div className='flex flex-wrap gap-2'>
-                {status?.running ? (
+                {status?.running ?
                   <Button
                     variant='destructive'
                     size='sm'
                     onClick={handleStop}
                     disabled={actionLoading !== null}
                   >
-                    {actionLoading === 'stop' ? (
+                    {actionLoading === 'stop' ?
                       <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    ) : (
-                      <Square className='mr-2 h-4 w-4' />
-                    )}
+                    : <Square className='mr-2 h-4 w-4' />}
                     Stop Sync
                   </Button>
-                ) : (
-                  <Button
-                    size='sm'
-                    onClick={handleStart}
-                    disabled={actionLoading !== null}
-                  >
-                    {actionLoading === 'start' ? (
+                : <Button size='sm' onClick={handleStart} disabled={actionLoading !== null}>
+                    {actionLoading === 'start' ?
                       <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    ) : (
-                      <Play className='mr-2 h-4 w-4' />
-                    )}
+                    : <Play className='mr-2 h-4 w-4' />}
                     Start Sync
                   </Button>
-                )}
+                }
                 <Button
                   variant='outline'
                   size='sm'
                   onClick={() => handleTrigger()}
                   disabled={actionLoading !== null}
                 >
-                  {actionLoading === 'trigger' ? (
+                  {actionLoading === 'trigger' ?
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  ) : (
-                    <Zap className='mr-2 h-4 w-4' />
-                  )}
+                  : <Zap className='mr-2 h-4 w-4' />}
                   Trigger Sync
                 </Button>
                 <Button
@@ -741,22 +759,18 @@ export function SyncTab() {
                   onClick={() => handlePreview()}
                   disabled={actionLoading !== null}
                 >
-                  {actionLoading === 'preview' ? (
+                  {actionLoading === 'preview' ?
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  ) : (
-                    <Eye className='mr-2 h-4 w-4' />
-                  )}
+                  : <Eye className='mr-2 h-4 w-4' />}
                   Preview Sync
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant='outline' size='sm' disabled={actionLoading !== null}>
-                      {actionLoading === 'users' ? (
+                      {actionLoading === 'users' ?
                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      ) : (
-                        <Users className='mr-2 h-4 w-4' />
-                      )}
+                      : <Users className='mr-2 h-4 w-4' />}
                       Sync Users
                     </Button>
                   </AlertDialogTrigger>
@@ -776,7 +790,7 @@ export function SyncTab() {
                 </AlertDialog>
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 

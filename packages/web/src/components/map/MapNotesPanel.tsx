@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CircleAlert, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
 import NoteCard from '@/components/note_card';
+import NoteDetail from '@/components/NoteDetail';
 import { PANEL_WIDTH } from '@/utils/mapConstants';
 import { cn } from '@/lib/utils';
 
@@ -22,9 +23,11 @@ interface MapNotesPanelProps {
   isLoadingMore: boolean;
   loaderRef: React.RefCallback<HTMLDivElement>;
   activeNoteId: string | null;
+  selectedNoteId: string | null;
   noteRefs: React.MutableRefObject<Refs>;
   onNoteHover: (noteId: string | null) => void;
   onNoteClick: (noteId: string) => void;
+  onNoteClose: () => void;
   onTogglePanel: () => void;
 }
 
@@ -56,9 +59,11 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
       isLoadingMore,
       loaderRef,
       activeNoteId,
+      selectedNoteId,
       noteRefs,
       onNoteHover,
       onNoteClick,
+      onNoteClose,
       onTogglePanel,
     },
     notesListRef,
@@ -90,87 +95,97 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
         {/* Notes Panel */}
         <div
           className={cn(
-            'bg-background absolute top-0 right-0 z-30 h-full w-full overflow-y-auto border-l transition-transform duration-300 ease-in-out md:w-[34rem]',
+            'bg-background absolute top-0 right-0 z-30 h-full w-full overflow-hidden border-l transition-transform duration-300 ease-in-out md:w-[34rem]',
             isPanelOpen ? 'translate-x-0' : 'translate-x-full',
           )}
           ref={notesListRef}
         >
-          {/* Mobile header */}
-          <div className='bg-card sticky top-0 z-10 flex items-center justify-between border-b p-4 md:hidden'>
-            <h2 className='text-lg font-semibold'>Notes</h2>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={onTogglePanel}
-              aria-label='Close notes panel'
-              className='h-8 w-8 rounded-full'
-            >
-              <X className='h-4 w-4' />
-            </Button>
+          {/* Scrollable list -- kept mounted so scroll position is preserved when viewing a note */}
+          <div className='h-full overflow-y-auto'>
+            {/* Mobile header */}
+            <div className='bg-card sticky top-0 z-10 flex items-center justify-between border-b p-4 md:hidden'>
+              <h2 className='text-lg font-semibold'>Notes</h2>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={onTogglePanel}
+                aria-label='Close notes panel'
+                className='h-8 w-8 rounded-full'
+              >
+                <X className='h-4 w-4' />
+              </Button>
+            </div>
+
+            <div className='grid grid-cols-1 content-start gap-1 p-4 md:grid-cols-2'>
+              {isLoading ?
+                // Loading skeletons with staggered pulse
+                skeletonIndices.map(index => <SkeletonCard key={index} index={index} />)
+              : isError ?
+                // Error state
+                <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
+                  <div className='bg-destructive/10 mb-4 rounded-full p-4'>
+                    <CircleAlert className='text-destructive h-8 w-8' />
+                  </div>
+                  <h3 className='text-foreground text-xl font-semibold'>Failed to Load Notes</h3>
+                  <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
+                    {errorMessage ||
+                      'Something went wrong while loading notes. Please try again later.'}
+                  </p>
+                </div>
+              : visibleItems.length > 0 ?
+                // Notes grid with content-visibility for off-screen cards
+                visibleItems.map(note => (
+                  <div
+                    key={note.id}
+                    ref={el => {
+                      if (el) noteRefs.current[note.id] = el;
+                    }}
+                    className='animate-in fade-in cursor-pointer p-1 duration-200'
+                    style={{
+                      contentVisibility: 'auto',
+                      containIntrinsicSize: 'auto 280px',
+                    }}
+                    onMouseEnter={() => onNoteHover(note.id)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => onNoteClick(note.id)}
+                  >
+                    <NoteCard note={note} isActive={note.id === activeNoteId} />
+                  </div>
+                ))
+                // Empty state
+              : <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
+                  <div className='bg-muted mb-4 rounded-full p-4'>
+                    <MapPin className='text-muted-foreground h-8 w-8' />
+                  </div>
+                  <h3 className='text-foreground text-xl font-semibold'>No Notes Found</h3>
+                  <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
+                    Try zooming out or moving the map to discover notes in other areas.
+                  </p>
+                </div>
+              }
+
+              {/* Infinite scroll loader */}
+              {hasMore && (
+                <div className='col-span-full mt-4 flex min-h-10 justify-center'>
+                  <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
+                    {isLoadingMore && (
+                      <div className='text-muted-foreground flex items-center gap-2'>
+                        <div className='border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent' />
+                        <span className='text-sm'>Loading more...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className='grid grid-cols-1 content-start gap-1 p-4 md:grid-cols-2'>
-            {isLoading ?
-              // Loading skeletons with staggered pulse
-              skeletonIndices.map(index => <SkeletonCard key={index} index={index} />)
-            : isError ?
-              // Error state
-              <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
-                <div className='bg-destructive/10 mb-4 rounded-full p-4'>
-                  <CircleAlert className='text-destructive h-8 w-8' />
-                </div>
-                <h3 className='text-foreground text-xl font-semibold'>Failed to Load Notes</h3>
-                <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
-                  {errorMessage ||
-                    'Something went wrong while loading notes. Please try again later.'}
-                </p>
-              </div>
-            : visibleItems.length > 0 ?
-              // Notes grid with content-visibility for off-screen cards
-              visibleItems.map(note => (
-                <div
-                  key={note.id}
-                  ref={el => {
-                    if (el) noteRefs.current[note.id] = el;
-                  }}
-                  className='animate-in fade-in cursor-pointer p-1 duration-200'
-                  style={{
-                    contentVisibility: 'auto',
-                    containIntrinsicSize: 'auto 280px',
-                  }}
-                  onMouseEnter={() => onNoteHover(note.id)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => onNoteClick(note.id)}
-                >
-                  <NoteCard note={note} isActive={note.id === activeNoteId} />
-                </div>
-              ))
-              // Empty state
-            : <div className='col-span-full flex flex-col items-center justify-center p-8 py-20'>
-                <div className='bg-muted mb-4 rounded-full p-4'>
-                  <MapPin className='text-muted-foreground h-8 w-8' />
-                </div>
-                <h3 className='text-foreground text-xl font-semibold'>No Notes Found</h3>
-                <p className='text-muted-foreground mt-2 max-w-sm text-center text-sm'>
-                  Try zooming out or moving the map to discover notes in other areas.
-                </p>
-              </div>
-            }
-
-            {/* Infinite scroll loader */}
-            {hasMore && (
-              <div className='col-span-full mt-4 flex min-h-10 justify-center'>
-                <div ref={loaderRef} className='flex h-10 w-full items-center justify-center'>
-                  {isLoadingMore && (
-                    <div className='text-muted-foreground flex items-center gap-2'>
-                      <div className='border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent' />
-                      <span className='text-sm'>Loading more...</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Note detail -- overlays the list, lightbox renders as its own full-screen layer */}
+          {selectedNoteId && (
+            <div className='bg-background absolute inset-0 z-40'>
+              <NoteDetail variant='panel' noteId={selectedNoteId} onBack={onNoteClose} />
+            </div>
+          )}
         </div>
       </>
     );

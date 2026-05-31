@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import * as ReactDOM from 'react-dom/client';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ interface UseMapMarkersProps {
   setHoveredNoteId: (noteId: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   scrollToNoteTile: (noteId: string) => void;
+  onNoteSelect: (noteId: string) => void;
 }
 
 /**
@@ -35,6 +35,7 @@ export function useMapMarkers({
   setHoveredNoteId,
   setIsLoading,
   scrollToNoteTile,
+  onNoteSelect,
 }: UseMapMarkersProps) {
   const queryClient = useQueryClient();
 
@@ -54,9 +55,8 @@ export function useMapMarkers({
   const scrollToNoteTileRef = useRef(scrollToNoteTile);
   scrollToNoteTileRef.current = scrollToNoteTile;
 
-  const navigate = useNavigate();
-  const navigateRef = useRef(navigate);
-  navigateRef.current = navigate;
+  const onNoteSelectRef = useRef(onNoteSelect);
+  onNoteSelectRef.current = onNoteSelect;
 
   const markerClustererRef = useRef<MarkerClusterer | null>(null);
   const currentPopupRef = useRef<PopupInstance | null>(null);
@@ -137,7 +137,7 @@ export function useMapMarkers({
       iconNode.addEventListener('click', e => {
         e.stopPropagation();
         closePopup();
-        navigateRef.current({ to: `/notes/${note.id}` });
+        onNoteSelectRef.current(note.id);
       });
 
       iconNode.addEventListener('mouseenter', () => {

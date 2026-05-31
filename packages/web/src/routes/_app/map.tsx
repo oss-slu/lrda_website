@@ -5,11 +5,9 @@ import { Note } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useMapStore } from '@/stores/mapStore';
 import { useShallow } from 'zustand/react/shallow';
-import ClickableNote from '@/components/click_note_card';
 import { MapControls, MapNotesPanel } from '@/components/map';
 import { useInfiniteNotes, NOTES_PAGE_SIZE } from '@/hooks/useInfiniteNotes';
 import { useGoogleMaps } from '@/utils/GoogleMapsContext';
-import { Dialog } from '@/components/ui/dialog';
 import { usePersonalMapNotes } from '@/hooks/queries/useNotes';
 import { useViewportNotes } from '@/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/hooks/useMapLocation';
@@ -38,7 +36,7 @@ function MapPage() {
     locationFound,
     isPanelOpen,
     activeNote,
-    modalNoteId,
+    detailNoteId,
     isGlobalView,
     setMapCenter,
     setMapZoom,
@@ -48,7 +46,7 @@ function MapPage() {
     setIsLoading,
     setActiveNote,
     setHoveredNoteId,
-    setModalNoteId,
+    setDetailNoteId,
     setIsNoteSelectedFromSearch,
     setSearchQuery,
     setIsGlobalView,
@@ -60,7 +58,7 @@ function MapPage() {
       locationFound: state.locationFound,
       isPanelOpen: state.isPanelOpen,
       activeNote: state.activeNote,
-      modalNoteId: state.modalNoteId,
+      detailNoteId: state.detailNoteId,
       isGlobalView: state.isGlobalView,
       setMapCenter: state.setMapCenter,
       setMapZoom: state.setMapZoom,
@@ -70,7 +68,7 @@ function MapPage() {
       setIsLoading: state.setIsLoading,
       setActiveNote: state.setActiveNote,
       setHoveredNoteId: state.setHoveredNoteId,
-      setModalNoteId: state.setModalNoteId,
+      setDetailNoteId: state.setDetailNoteId,
       setIsNoteSelectedFromSearch: state.setIsNoteSelectedFromSearch,
       setSearchQuery: state.setSearchQuery,
       setIsGlobalView: state.setIsGlobalView,
@@ -151,6 +149,15 @@ function MapPage() {
     setLocationFound,
   });
 
+  // Open a note's detail in the panel, ensuring the panel is visible
+  const handleSelectNote = useCallback(
+    (noteId: string) => {
+      setDetailNoteId(noteId);
+      setIsPanelOpen(true);
+    },
+    [setDetailNoteId, setIsPanelOpen],
+  );
+
   // Markers hook -- uses all accumulated notes so markers persist beyond viewport
   const { handleMapClick } = useMapMarkers({
     mapRef,
@@ -162,6 +169,7 @@ function MapPage() {
     setHoveredNoteId,
     setIsLoading,
     scrollToNoteTile,
+    onNoteSelect: handleSelectNote,
   });
 
   // Intro tour hook
@@ -320,23 +328,13 @@ function MapPage() {
         isLoadingMore={infinite.isLoading}
         loaderRef={infinite.loaderRef}
         activeNoteId={activeNote?.id ?? null}
+        selectedNoteId={detailNoteId}
         noteRefs={noteRefs}
         onNoteHover={setHoveredNoteId}
-        onNoteClick={setModalNoteId}
+        onNoteClick={setDetailNoteId}
+        onNoteClose={() => setDetailNoteId(null)}
         onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
       />
-
-      {/* Note Detail Modal */}
-      <Dialog
-        open={modalNoteId !== null}
-        onOpenChange={isOpen => {
-          if (!isOpen) {
-            setModalNoteId(null);
-          }
-        }}
-      >
-        {modalNoteId && <ClickableNote noteId={modalNoteId} />}
-      </Dialog>
     </div>
   );
 }
