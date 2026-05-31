@@ -117,7 +117,7 @@ const NoteDetail: React.FC<{
         style={{ height: heroSrc ? '13rem' : '7rem' }}
       >
         {heroSrc ?
-          <img src={heroSrc} className='h-full w-full object-cover' alt='' />
+          <img src={heroSrc} className='h-full w-full object-cover' alt='' decoding='async' />
         : <div className='h-full w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' />
         }
         <div className='absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent' />
@@ -244,6 +244,7 @@ const NoteDetail: React.FC<{
                         className='h-full w-full object-cover'
                         alt=''
                         loading='lazy'
+                        decoding='async'
                       />
                     : <>
                         {media.thumbnail && (

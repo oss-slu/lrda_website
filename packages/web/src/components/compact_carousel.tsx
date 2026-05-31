@@ -51,7 +51,7 @@ export default function CompactCarousel({ mediaArray }: { mediaArray: NoteMedia[
             {media.type === 'image' && (
               <img
                 src={media.uri}
-                loading='eager'
+                loading='lazy'
                 decoding='async'
                 className='h-[180px] w-[256px] rounded-t-sm object-cover'
                 alt='Media content'
