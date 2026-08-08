@@ -7,6 +7,7 @@ import { noteRoutes } from './notes';
 import { commentRoutes } from './comments';
 import { tagRoutes } from './tags';
 import { analyticsRoutes } from './analytics';
+import { placesRoutes } from './places';
 import type { AppEnv } from '../types';
 
 export const routes = new OpenAPIHono<AppEnv>()
@@ -17,4 +18,5 @@ export const routes = new OpenAPIHono<AppEnv>()
   .route('/notes', noteRoutes)
   .route('/comments', commentRoutes)
   .route('/tags', tagRoutes)
-  .route('/analytics', analyticsRoutes);
+  .route('/analytics', analyticsRoutes)
+  .route('/places', placesRoutes);

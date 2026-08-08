@@ -273,7 +273,6 @@ function MapPage() {
         isPanelOpen={isPanelOpen}
         isGlobalView={isGlobalView}
         isLoggedIn={authIsLoggedIn}
-        isLoaded={isMapsApiLoaded}
         mapZoom={mapZoom}
         filteredNotes={filteredNotes}
         onSearch={handleSearch}

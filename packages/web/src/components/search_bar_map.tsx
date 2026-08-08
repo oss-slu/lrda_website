@@ -3,35 +3,28 @@ import { MapPin, StickyNote } from 'lucide-react';
 import SearchBarUI from './search_bar_ui';
 import { Note } from '@/types';
 import { Card } from '@/components/ui/card';
-import { usePlacesAutocomplete } from '@/hooks/usePlacesAutocomplete';
+import { usePlacesAutocomplete, type PlaceSuggestion } from '@/hooks/usePlacesAutocomplete';
 
 type CombinedResult =
-  | (google.maps.places.AutocompletePrediction & { type: 'suggestion' })
+  | (PlaceSuggestion & { type: 'suggestion' })
   | (Note & { type: 'note' });
 
 interface SearchBarMapProps {
   onSearch: (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => void;
   onNotesSearch: (searchText: string) => void;
-  isLoaded: boolean;
   filteredNotes: Note[];
 }
 
 const LISTBOX_ID = 'map-search-listbox';
 
-const SearchBarMap: React.FC<SearchBarMapProps> = ({
-  onSearch,
-  onNotesSearch,
-  isLoaded,
-  filteredNotes,
-}) => {
+const SearchBarMap: React.FC<SearchBarMapProps> = ({ onSearch, onNotesSearch, filteredNotes }) => {
   const [searchText, setSearchText] = useState('');
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const searchTextRef = useRef('');
   const prevSearchTextRef = useRef('');
 
-  const { suggestions, loading, search, selectPlace, clearSuggestions } =
-    usePlacesAutocomplete(isLoaded);
+  const { suggestions, loading, search, selectPlace, clearSuggestions } = usePlacesAutocomplete();
 
   searchTextRef.current = searchText;
 
@@ -95,14 +88,6 @@ const SearchBarMap: React.FC<SearchBarMapProps> = ({
           {
             description: searchText,
             place_id: 'typed-location',
-            matched_substrings: [],
-            structured_formatting: {
-              main_text: searchText,
-              main_text_matched_substrings: [],
-              secondary_text: '',
-            },
-            terms: [],
-            types: [],
             type: 'suggestion' as const,
           },
         ]

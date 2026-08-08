@@ -2,6 +2,7 @@
  * Location cache utility to avoid redundant geocoding API calls
  * Shared across all components that need to fetch location data
  */
+import { API_URL } from '@/services/api';
 
 // Location cache: Key: "lat,lng" string, Value: location string or "Location not found"
 const locationCache = new Map<string, string>();
@@ -15,17 +16,12 @@ const getCacheKey = (lat: number, lng: number): string => {
 };
 
 /**
- * Fetches location from cache or API
+ * Fetches location from cache or the API's geocoding proxy
  * @param lat - Latitude
  * @param lng - Longitude
- * @param apiKey - Google Maps API key
  * @returns Promise<string> - Location string or "Location not found" or empty string
  */
-export const getCachedLocation = async (
-  lat: number,
-  lng: number,
-  apiKey: string,
-): Promise<string> => {
+export const getCachedLocation = async (lat: number, lng: number): Promise<string> => {
   // Validate coordinates
   if (isNaN(lat) || isNaN(lng)) {
     return '';
@@ -42,14 +38,11 @@ export const getCachedLocation = async (
 
   // Not in cache, fetch from API
   try {
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`,
-    );
+    const response = await fetch(`${API_URL}/api/places/geocode?lat=${lat}&lng=${lng}`);
 
     const data = await response.json();
 
-    // Use the first result's formatted_address
-    const loc = data.results?.[0]?.formatted_address;
+    const loc = data.address;
     if (loc) {
       // Cache the successful result
       locationCache.set(cacheKey, loc);

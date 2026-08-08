@@ -80,19 +80,16 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         return;
       }
       if (latitude && longitude && latitude !== 0 && longitude !== 0) {
-        const MAPS_API_KEY = import.meta.env.VITE_MAP_KEY;
-        if (MAPS_API_KEY) {
-          try {
-            const location = await getCachedLocation(latitude, longitude, MAPS_API_KEY);
-            const cityName = (location.split(',')[0] ?? '').trim();
-            const name = cityName || location || '';
-            setLocationName(name);
-            onLocationNameChange?.(name);
-          } catch (error) {
-            console.error('Error fetching location name:', error);
-            setLocationName('');
-            onLocationNameChange?.('');
-          }
+        try {
+          const location = await getCachedLocation(latitude, longitude);
+          const cityName = (location.split(',')[0] ?? '').trim();
+          const name = cityName || location || '';
+          setLocationName(name);
+          onLocationNameChange?.(name);
+        } catch (error) {
+          console.error('Error fetching location name:', error);
+          setLocationName('');
+          onLocationNameChange?.('');
         }
       } else {
         setLocationName('');

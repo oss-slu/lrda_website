@@ -8,7 +8,6 @@ interface MapControlsProps {
   // Search
   onSearch: (address: string, lat?: number, lng?: number, isNoteClick?: boolean) => void;
   onNotesSearch: (searchText: string) => void;
-  isLoaded: boolean;
   filteredNotes: Note[];
 
   // View toggle
@@ -33,7 +32,6 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
     {
       onSearch,
       onNotesSearch,
-      isLoaded,
       filteredNotes,
       isLoggedIn,
       isGlobalView,
@@ -53,7 +51,6 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
             <SearchBarMap
               onSearch={onSearch}
               onNotesSearch={onNotesSearch}
-              isLoaded={isLoaded}
               filteredNotes={filteredNotes}
             />
           </div>

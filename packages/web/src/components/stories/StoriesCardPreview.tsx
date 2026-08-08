@@ -72,12 +72,9 @@ export const StoriesCardPreview: React.FC<StoriesCardPreviewProps> = ({ note, on
       return;
     }
     if (hasValidCoordinates) {
-      const apiKey = import.meta.env.VITE_MAP_KEY;
-      if (apiKey) {
-        getCachedLocation(note.latitude!, note.longitude!, apiKey)
-          .then(loc => setLocation(loc))
-          .catch(() => setLocation('Location unavailable'));
-      }
+      getCachedLocation(note.latitude!, note.longitude!)
+        .then(loc => setLocation(loc))
+        .catch(() => setLocation('Location unavailable'));
     }
   }, [note.latitude, note.longitude, note.locationName, hasValidCoordinates]);
 
