@@ -8,6 +8,13 @@ const pool = new Pool({
   max: 20,
 });
 
+// Idle clients emit 'error' when the server drops their connection (e.g. a
+// postgres restart). Without a listener the event is an uncaught exception
+// that crashes the process; the pool discards the dead client on its own.
+pool.on('error', err => {
+  console.error('pg pool idle client error', err.message);
+});
+
 export const db = drizzle(pool, { schema });
 
 export type Database = typeof db;
