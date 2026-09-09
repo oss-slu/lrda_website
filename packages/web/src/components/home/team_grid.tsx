@@ -100,6 +100,15 @@ const devTeam = [
       linkedin: 'https://www.linkedin.com/in/andres-castellanos-carrillo-536a10331/',
     },
   },
+  {
+    name: 'Garrett Glencoe',
+    role: 'Developer',
+    src: 'https://github.com/GGlencoe.png',
+    socials: {
+      github: 'https://github.com/GGlencoe',
+      linkedin: 'https://www.linkedin.com/in/garrett-glencoe/',
+    },
+  },
 ];
 
 export default function TeamGrid() {
