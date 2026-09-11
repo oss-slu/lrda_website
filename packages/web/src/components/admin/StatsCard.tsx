@@ -18,21 +18,22 @@ export function StatsCard({
   highlight = false,
 }: StatsCardProps) {
   return (
-    <Card className={highlight ? 'border-orange-200 bg-orange-50' : ''}>
+    <Card className={`min-w-0 ${highlight ? 'border-orange-200 bg-orange-50' : ''}`}>
       <CardContent className='pt-6'>
-        <div className='flex items-center justify-between'>
-          <div>
+        <div className='flex items-center justify-between gap-4'>
+          <div className='min-w-0 flex-1'>
             <p className='text-sm font-medium text-gray-500'>{title}</p>
             {loading ?
               <Skeleton className='mt-1 h-8 w-16' />
             : <p
-                className={`text-2xl font-bold ${highlight ? 'text-orange-600' : 'text-gray-900'}`}
+                className={`truncate text-2xl font-bold ${highlight ? 'text-orange-600' : 'text-gray-900'}`}
+                title={String(value)}
               >
                 {value}
               </p>
             }
           </div>
-          <div className={`rounded-full p-3 ${highlight ? 'bg-orange-100' : 'bg-gray-100'}`}>
+          <div className={`shrink-0 rounded-full p-3 ${highlight ? 'bg-orange-100' : 'bg-gray-100'}`}>
             <Icon className={`h-5 w-5 ${highlight ? 'text-orange-600' : 'text-gray-600'}`} />
           </div>
         </div>
