@@ -34,7 +34,7 @@ interface SignupFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'none' | 'instructor' | 'student';
+  role: 'researcher' | 'instructor' | 'student';
   instructorId?: string;
   instructorDescription?: string;
 }
@@ -62,7 +62,7 @@ function SignupPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'none',
+      role: 'researcher',
       instructorId: '',
       instructorDescription: '',
     },
@@ -312,7 +312,7 @@ function SignupPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value='none'>None</SelectItem>
+                        <SelectItem value='researcher'>Researcher</SelectItem>
                         <SelectItem value='student'>Student</SelectItem>
                         <SelectItem value='instructor'>Instructor</SelectItem>
                       </SelectContent>
