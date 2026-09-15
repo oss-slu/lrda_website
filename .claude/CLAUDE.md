@@ -73,7 +73,6 @@ This is the **Where's Religion?** desktop web application -- a TanStack Start pr
    - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
 3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
 
-**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`), Firebase sync script, or `firebase-admin` dependency -- they are all needed for the migration period.
 
 ## Architecture
 
