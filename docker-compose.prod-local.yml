@@ -35,6 +35,7 @@ services:
     ports:
       - "3002:3002"
     environment:
+      ENVIRONMENT: production
       NODE_ENV: production
       PORT: 3002
       DATABASE_URL: postgresql://lrda_app:lrda_local_prod@postgres:5432/lrda_production
@@ -55,6 +56,7 @@ services:
     ports:
       - "3003:3002"
     environment:
+      ENVIRONMENT: production
       NODE_ENV: production
       PORT: 3002
       DATABASE_URL: postgresql://lrda_app:lrda_local_prod@postgres:5432/lrda_production
