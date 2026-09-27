@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { UserIcon, Plus, Minus, Users, Crosshair } from 'lucide-react';
 import SearchBarMap from '@/components/search_bar_map';
 import { Note } from '@/types';
-import { PANEL_WIDTH } from '@/utils/mapConstants';
+import { cn } from '@/lib/utils';
 
 interface MapControlsProps {
   // Search
@@ -25,6 +25,9 @@ interface MapControlsProps {
 
   // Panel state (for positioning)
   isPanelOpen: boolean;
+  panelWidth: number;
+  /** Skip the margin transition while dragging so the controls track the panel edge 1:1 */
+  isResizingPanel: boolean;
 }
 
 const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
@@ -40,6 +43,8 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
       onZoomOut,
       onLocate,
       isPanelOpen,
+      panelWidth,
+      isResizingPanel,
     },
     searchBarRef,
   ) => {
@@ -72,9 +77,12 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
 
         {/* Right side - Zoom and location controls */}
         <div
-          className='pointer-events-auto mr-4 flex flex-row items-center gap-3 transition-all duration-300 ease-in-out md:mr-0'
+          className={cn(
+            'pointer-events-auto mr-4 flex flex-row items-center gap-3 md:mr-0',
+            !isResizingPanel && 'transition-all duration-300 ease-in-out',
+          )}
           style={{
-            marginRight: isPanelOpen ? `calc(${PANEL_WIDTH} + 1rem)` : undefined,
+            marginRight: isPanelOpen ? `calc(${panelWidth}px + 1rem)` : undefined,
           }}
         >
           {/* Zoom controls grouped in a pill */}

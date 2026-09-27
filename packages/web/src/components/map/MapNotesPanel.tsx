@@ -1,12 +1,12 @@
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef, useCallback, useRef } from 'react';
 import { Note } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CircleAlert, ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
+import { CircleAlert, X, MapPin, PanelLeft } from 'lucide-react';
 import NoteCard from '@/components/note_card';
 import NoteDetail from '@/components/NoteDetail';
-import { PANEL_WIDTH } from '@/utils/mapConstants';
+import { MIN_PANEL_WIDTH, MIN_MAP_VISIBLE_WIDTH } from '@/utils/mapConstants';
 import { cn } from '@/lib/utils';
 
 interface Refs {
@@ -15,6 +15,11 @@ interface Refs {
 
 interface MapNotesPanelProps {
   isPanelOpen: boolean;
+  /** Current notes panel width in pixels (desktop only) */
+  panelWidth: number;
+  onPanelWidthChange: (width: number) => void;
+  onResizeStart: () => void;
+  onResizeEnd: () => void;
   isLoading: boolean;
   isError?: boolean;
   errorMessage?: string;
@@ -51,6 +56,10 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
   (
     {
       isPanelOpen,
+      panelWidth,
+      onPanelWidthChange,
+      onResizeStart,
+      onResizeEnd,
       isLoading,
       isError,
       errorMessage,
@@ -71,35 +80,82 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
     // Stable callback for clearing hover
     const handleMouseLeave = useCallback(() => onNoteHover(null), [onNoteHover]);
 
+    // Drag-to-resize on desktop -- pointer capture keeps move/up events
+    // firing on this element even once the cursor leaves the thin handle.
+    const isDraggingRef = useRef(false);
+
+    const handleResizePointerDown = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        isDraggingRef.current = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onResizeStart();
+      },
+      [onResizeStart],
+    );
+
+    const handleResizePointerMove = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDraggingRef.current) return;
+        const maxWidth = Math.max(MIN_PANEL_WIDTH, window.innerWidth - MIN_MAP_VISIBLE_WIDTH);
+        const nextWidth = Math.min(
+          maxWidth,
+          Math.max(MIN_PANEL_WIDTH, window.innerWidth - e.clientX),
+        );
+        onPanelWidthChange(nextWidth);
+      },
+      [onPanelWidthChange],
+    );
+
+    const handleResizePointerUp = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDraggingRef.current) return;
+        isDraggingRef.current = false;
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        onResizeEnd();
+      },
+      [onResizeEnd],
+    );
+
     return (
       <>
-        {/* Toggle Button - hidden on mobile when panel is open */}
+        {/* Mobile-only FAB -- desktop always shows the panel and resizes via the drag handle below */}
         <Button
           variant='secondary'
           size='icon'
           onClick={onTogglePanel}
-          aria-label={isPanelOpen ? 'Close notes panel' : 'Open notes panel'}
+          aria-label='Open notes panel'
           className={cn(
-            'absolute top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl',
-            isPanelOpen ? 'hidden md:flex' : 'flex',
+            'absolute top-1/2 right-4 z-20 h-10 w-10 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl md:hidden',
+            isPanelOpen ? 'hidden' : 'flex',
           )}
-          style={{
-            right: isPanelOpen ? PANEL_WIDTH : '1rem',
-          }}
         >
-          {isPanelOpen ?
-            <ChevronRight className='h-5 w-5' />
-          : <ChevronLeft className='h-5 w-5' />}
+          <PanelLeft className='h-5 w-5' />
         </Button>
 
         {/* Notes Panel */}
         <div
           className={cn(
-            'bg-background absolute top-0 right-0 z-30 h-full w-full overflow-hidden border-l transition-transform duration-300 ease-in-out md:w-[34rem]',
+            'bg-background absolute top-0 right-0 z-30 h-full w-full overflow-hidden border-l transition-transform duration-300 ease-in-out md:w-[var(--panel-width)]',
             isPanelOpen ? 'translate-x-0' : 'translate-x-full',
           )}
+          style={{ '--panel-width': `${panelWidth}px` } as React.CSSProperties}
           ref={notesListRef}
         >
+          {/* Drag handle -- resizes the panel on desktop; hit area is wider than the visible line.
+              z-50 keeps it above the note detail overlay (z-40) so an open note can be resized too. */}
+          <div
+            role='separator'
+            aria-orientation='vertical'
+            aria-label='Resize notes panel'
+            onPointerDown={handleResizePointerDown}
+            onPointerMove={handleResizePointerMove}
+            onPointerUp={handleResizePointerUp}
+            onPointerCancel={handleResizePointerUp}
+            className='group absolute top-0 left-0 z-50 hidden h-full w-2 -translate-x-1/2 cursor-col-resize touch-none md:block'
+          >
+            <div className='mx-auto h-full w-1 bg-transparent transition-colors group-hover:bg-blue-400' />
+          </div>
+
           {/* Scrollable list -- kept mounted so scroll position is preserved when viewing a note */}
           <div className='h-full overflow-y-auto'>
             {/* Mobile header */}
@@ -116,7 +172,11 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
               </Button>
             </div>
 
-            <div className='grid grid-cols-1 content-start gap-1 p-4 md:grid-cols-2'>
+            {/* Fixed-width columns on desktop: a wider panel fits more cards rather than
+                stretching them. 15rem fits two columns in the default 34rem panel even with
+                a Windows scrollbar (~17px) showing, matching main's card size. Mobile keeps
+                main's single column. */}
+            <div className='grid grid-cols-1 content-start gap-1 p-4 md:grid-cols-[repeat(auto-fill,15rem)] md:justify-center'>
               {isLoading ?
                 // Loading skeletons with staggered pulse
                 skeletonIndices.map(index => <SkeletonCard key={index} index={index} />)

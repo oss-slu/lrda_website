@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useRef, useCallback, useDeferredValue } from 'react';
+import { useEffect, useRef, useCallback, useDeferredValue, useState } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
 import { Note } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
@@ -13,7 +13,6 @@ import { useViewportNotes } from '@/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/hooks/useMapLocation';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMapIntro } from '@/hooks/useMapIntro';
-import { MAP_WIDTH_WITH_PANEL } from '@/utils/mapConstants';
 
 export const Route = createFileRoute('/_app/map')({
   ssr: false,
@@ -35,6 +34,7 @@ function MapPage() {
     mapBounds,
     locationFound,
     isPanelOpen,
+    panelWidth,
     activeNote,
     detailNoteId,
     isGlobalView,
@@ -43,6 +43,7 @@ function MapPage() {
     setMapBounds,
     setLocationFound,
     setIsPanelOpen,
+    setPanelWidth,
     setIsLoading,
     setActiveNote,
     setHoveredNoteId,
@@ -57,6 +58,7 @@ function MapPage() {
       mapBounds: state.mapBounds,
       locationFound: state.locationFound,
       isPanelOpen: state.isPanelOpen,
+      panelWidth: state.panelWidth,
       activeNote: state.activeNote,
       detailNoteId: state.detailNoteId,
       isGlobalView: state.isGlobalView,
@@ -65,6 +67,7 @@ function MapPage() {
       setMapBounds: state.setMapBounds,
       setLocationFound: state.setLocationFound,
       setIsPanelOpen: state.setIsPanelOpen,
+      setPanelWidth: state.setPanelWidth,
       setIsLoading: state.setIsLoading,
       setActiveNote: state.setActiveNote,
       setHoveredNoteId: state.setHoveredNoteId,
@@ -116,6 +119,11 @@ function MapPage() {
   const filteredNotes = isGlobalView ? viewportNotes : personalNotes;
   // All accumulated notes for markers (keeps markers drawn beyond viewport)
   const markerNotes = isGlobalView ? allViewportNotes : allPersonalNotes;
+
+  // True only while the panel's resize handle is being dragged -- suppresses
+  // the map controls' margin transition so they track the cursor 1:1 instead
+  // of chasing it through a 300ms easing curve.
+  const [isResizingPanel, setIsResizingPanel] = useState(false);
 
   // Refs
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -185,18 +193,6 @@ function MapPage() {
       setIsLoading(true);
     };
   }, [setMapBounds, setIsLoading]);
-
-  // Resize map when panel opens/closes
-  useEffect(() => {
-    if (mapRef.current) {
-      const timer = setTimeout(() => {
-        if (mapRef.current) {
-          google.maps.event.trigger(mapRef.current, 'resize');
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isPanelOpen]);
 
   // Map load handler -- uses 'idle' event to batch drag+zoom into a single bounds update
   const onMapLoad = useCallback(
@@ -271,6 +267,8 @@ function MapPage() {
       <MapControls
         ref={searchBarRef}
         isPanelOpen={isPanelOpen}
+        panelWidth={panelWidth}
+        isResizingPanel={isResizingPanel}
         isGlobalView={isGlobalView}
         isLoggedIn={authIsLoggedIn}
         mapZoom={mapZoom}
@@ -289,13 +287,9 @@ function MapPage() {
         onLocate={handleSetLocation}
       />
 
-      {/* Map Container - full width on mobile (panel overlays), adjusted on desktop */}
-      <div
-        className='h-full w-full md:transition-all md:duration-300 md:ease-in-out'
-        style={{
-          width: isPanelOpen ? MAP_WIDTH_WITH_PANEL : '100%',
-        }}
-      >
+      {/* Map Container - always full width; the panel overlays it so resizing or
+          toggling the panel never shrinks the map bounds that filter the notes list */}
+      <div className='h-full w-full'>
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -315,10 +309,14 @@ function MapPage() {
         )}
       </div>
 
-      {/* Notes Panel with toggle button */}
+      {/* Notes Panel -- drag its left edge to resize on desktop */}
       <MapNotesPanel
         ref={notesListRef}
         isPanelOpen={isPanelOpen}
+        panelWidth={panelWidth}
+        onPanelWidthChange={setPanelWidth}
+        onResizeStart={() => setIsResizingPanel(true)}
+        onResizeEnd={() => setIsResizingPanel(false)}
         isLoading={notesLoading || (notesFetching && deferredFilteredNotes.length === 0)}
         isError={notesError}
         errorMessage={notesErrorMessage}

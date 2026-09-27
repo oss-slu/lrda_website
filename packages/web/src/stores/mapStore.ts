@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Note } from '@/types';
 import type { Location } from '@/utils/mapUtils';
+import { DEFAULT_PANEL_WIDTH } from '@/utils/mapConstants';
 
 interface MapState {
   // Map viewport state
@@ -11,6 +12,8 @@ interface MapState {
 
   // UI state
   isPanelOpen: boolean;
+  /** Notes panel width in pixels (desktop only -- user-resizable) */
+  panelWidth: number;
   isLoading: boolean;
 
   // Note interaction state
@@ -31,6 +34,7 @@ interface MapState {
   setMapBounds: (bounds: google.maps.LatLngBounds | null) => void;
   setLocationFound: (found: boolean) => void;
   setIsPanelOpen: (open: boolean) => void;
+  setPanelWidth: (width: number) => void;
   setIsLoading: (loading: boolean) => void;
   setActiveNote: (note: Note | null) => void;
   setHoveredNoteId: (id: string | null) => void;
@@ -50,6 +54,7 @@ export const useMapStore = create<MapState>()(set => ({
   mapBounds: null,
   locationFound: false,
   isPanelOpen: true,
+  panelWidth: DEFAULT_PANEL_WIDTH,
   isLoading: true,
   activeNote: null,
   hoveredNoteId: null,
@@ -64,6 +69,7 @@ export const useMapStore = create<MapState>()(set => ({
   setMapBounds: bounds => set({ mapBounds: bounds }),
   setLocationFound: found => set({ locationFound: found }),
   setIsPanelOpen: open => set({ isPanelOpen: open }),
+  setPanelWidth: width => set({ panelWidth: width }),
   setIsLoading: loading => set({ isLoading: loading }),
   setActiveNote: note => set({ activeNote: note }),
   setHoveredNoteId: id => set({ hoveredNoteId: id }),
