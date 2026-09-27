@@ -2,7 +2,8 @@ import { forwardRef } from 'react';
 import { UserIcon, Plus, Minus, Users, Crosshair } from 'lucide-react';
 import SearchBarMap from '@/components/search_bar_map';
 import { Note } from '@/types';
-import { PANEL_WIDTH } from '@/utils/mapConstants';
+import { cn } from '@/lib/utils';
+import type { PanelFocus } from '@/stores/mapStore';
 
 interface MapControlsProps {
   // Search
@@ -23,8 +24,8 @@ interface MapControlsProps {
   // Location
   onLocate: () => void;
 
-  // Panel state (for positioning)
-  isPanelOpen: boolean;
+  // Panel state -- controls shift left of the docked panel, and hide when the map is covered
+  panelFocus: PanelFocus;
 }
 
 const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
@@ -39,7 +40,7 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
       onZoomIn,
       onZoomOut,
       onLocate,
-      isPanelOpen,
+      panelFocus,
     },
     searchBarRef,
   ) => {
@@ -70,44 +71,48 @@ const MapControls = forwardRef<HTMLDivElement, MapControlsProps>(
           )}
         </div>
 
-        {/* Right side - Zoom and location controls */}
-        <div
-          className='pointer-events-auto mr-4 flex flex-row items-center gap-3 transition-all duration-300 ease-in-out md:mr-0'
-          style={{
-            marginRight: isPanelOpen ? `calc(${PANEL_WIDTH} + 1rem)` : undefined,
-          }}
-        >
-          {/* Zoom controls grouped in a pill */}
-          <div className='bg-card flex items-center gap-0.5 rounded-full p-1 shadow-lg'>
+        {/* Right side - Zoom and location controls (target the map, so hidden while it is) */}
+        {panelFocus !== 'notes' && (
+          <div
+            className={cn(
+              // Slides by transform on the panel's timing (docked width + 1rem gap) so it
+              // moves in lockstep with the panel instead of lagging behind a margin animation
+              'pointer-events-auto mr-4 flex flex-row items-center gap-3 transition-transform duration-300 ease-in-out md:mr-0',
+              panelFocus === 'split' && '-translate-x-[35rem]',
+            )}
+          >
+            {/* Zoom controls grouped in a pill */}
+            <div className='bg-card flex items-center gap-0.5 rounded-full p-1 shadow-lg'>
+              <button
+                onClick={onZoomOut}
+                aria-label='Zoom out'
+                title='Zoom out'
+                className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
+              >
+                <Minus className='h-4 w-4' />
+              </button>
+              <div className='bg-border h-4 w-px' />
+              <button
+                onClick={onZoomIn}
+                aria-label='Zoom in'
+                title='Zoom in'
+                className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
+              >
+                <Plus className='h-4 w-4' />
+              </button>
+            </div>
+
+            {/* Location button */}
             <button
-              onClick={onZoomOut}
-              aria-label='Zoom out'
-              title='Zoom out'
-              className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
+              onClick={onLocate}
+              aria-label='Find my location'
+              title='Find my location'
+              className='bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-accent hover:shadow-xl'
             >
-              <Minus className='h-4 w-4' />
-            </button>
-            <div className='bg-border h-4 w-px' />
-            <button
-              onClick={onZoomIn}
-              aria-label='Zoom in'
-              title='Zoom in'
-              className='text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors'
-            >
-              <Plus className='h-4 w-4' />
+              <Crosshair className='text-muted-foreground h-5 w-5' />
             </button>
           </div>
-
-          {/* Location button */}
-          <button
-            onClick={onLocate}
-            aria-label='Find my location'
-            title='Find my location'
-            className='bg-secondary inline-flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:bg-accent hover:shadow-xl'
-          >
-            <Crosshair className='text-muted-foreground h-5 w-5' />
-          </button>
-        </div>
+        )}
       </div>
     );
   },

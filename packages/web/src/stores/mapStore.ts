@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { Note } from '@/types';
 import type { Location } from '@/utils/mapUtils';
 
+/** Notes panel layout: hidden (full map), docked on the side, or full width. */
+export type PanelFocus = 'map' | 'split' | 'notes';
+
 interface MapState {
   // Map viewport state
   mapCenter: Location;
@@ -10,7 +13,7 @@ interface MapState {
   locationFound: boolean;
 
   // UI state
-  isPanelOpen: boolean;
+  panelFocus: PanelFocus;
   isLoading: boolean;
 
   // Note interaction state
@@ -30,7 +33,7 @@ interface MapState {
   setMapZoom: (zoom: number) => void;
   setMapBounds: (bounds: google.maps.LatLngBounds | null) => void;
   setLocationFound: (found: boolean) => void;
-  setIsPanelOpen: (open: boolean) => void;
+  setPanelFocus: (focus: PanelFocus) => void;
   setIsLoading: (loading: boolean) => void;
   setActiveNote: (note: Note | null) => void;
   setHoveredNoteId: (id: string | null) => void;
@@ -49,7 +52,7 @@ export const useMapStore = create<MapState>()(set => ({
   mapZoom: DEFAULT_ZOOM,
   mapBounds: null,
   locationFound: false,
-  isPanelOpen: true,
+  panelFocus: 'split',
   isLoading: true,
   activeNote: null,
   hoveredNoteId: null,
@@ -63,7 +66,7 @@ export const useMapStore = create<MapState>()(set => ({
   setMapZoom: zoom => set({ mapZoom: zoom }),
   setMapBounds: bounds => set({ mapBounds: bounds }),
   setLocationFound: found => set({ locationFound: found }),
-  setIsPanelOpen: open => set({ isPanelOpen: open }),
+  setPanelFocus: focus => set({ panelFocus: focus }),
   setIsLoading: loading => set({ isLoading: loading }),
   setActiveNote: note => set({ activeNote: note }),
   setHoveredNoteId: id => set({ hoveredNoteId: id }),

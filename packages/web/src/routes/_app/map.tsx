@@ -13,7 +13,6 @@ import { useViewportNotes } from '@/hooks/queries/useViewportNotes';
 import { useMapLocation } from '@/hooks/useMapLocation';
 import { useMapMarkers } from '@/hooks/useMapMarkers';
 import { useMapIntro } from '@/hooks/useMapIntro';
-import { MAP_WIDTH_WITH_PANEL } from '@/utils/mapConstants';
 
 export const Route = createFileRoute('/_app/map')({
   ssr: false,
@@ -34,7 +33,7 @@ function MapPage() {
     mapZoom,
     mapBounds,
     locationFound,
-    isPanelOpen,
+    panelFocus,
     activeNote,
     detailNoteId,
     isGlobalView,
@@ -42,7 +41,7 @@ function MapPage() {
     setMapZoom,
     setMapBounds,
     setLocationFound,
-    setIsPanelOpen,
+    setPanelFocus,
     setIsLoading,
     setActiveNote,
     setHoveredNoteId,
@@ -56,7 +55,7 @@ function MapPage() {
       mapZoom: state.mapZoom,
       mapBounds: state.mapBounds,
       locationFound: state.locationFound,
-      isPanelOpen: state.isPanelOpen,
+      panelFocus: state.panelFocus,
       activeNote: state.activeNote,
       detailNoteId: state.detailNoteId,
       isGlobalView: state.isGlobalView,
@@ -64,7 +63,7 @@ function MapPage() {
       setMapZoom: state.setMapZoom,
       setMapBounds: state.setMapBounds,
       setLocationFound: state.setLocationFound,
-      setIsPanelOpen: state.setIsPanelOpen,
+      setPanelFocus: state.setPanelFocus,
       setIsLoading: state.setIsLoading,
       setActiveNote: state.setActiveNote,
       setHoveredNoteId: state.setHoveredNoteId,
@@ -153,9 +152,9 @@ function MapPage() {
   const handleSelectNote = useCallback(
     (noteId: string) => {
       setDetailNoteId(noteId);
-      setIsPanelOpen(true);
+      if (useMapStore.getState().panelFocus === 'map') setPanelFocus('split');
     },
-    [setDetailNoteId, setIsPanelOpen],
+    [setDetailNoteId, setPanelFocus],
   );
 
   // Markers hook -- uses all accumulated notes so markers persist beyond viewport
@@ -164,7 +163,7 @@ function MapPage() {
     isMapsApiLoaded,
     isMapReady: mapBounds !== null,
     filteredNotes: markerNotes,
-    isPanelOpen,
+    isPanelOpen: panelFocus !== 'map',
     setActiveNote,
     setHoveredNoteId,
     setIsLoading,
@@ -185,18 +184,6 @@ function MapPage() {
       setIsLoading(true);
     };
   }, [setMapBounds, setIsLoading]);
-
-  // Resize map when panel opens/closes
-  useEffect(() => {
-    if (mapRef.current) {
-      const timer = setTimeout(() => {
-        if (mapRef.current) {
-          google.maps.event.trigger(mapRef.current, 'resize');
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isPanelOpen]);
 
   // Map load handler -- uses 'idle' event to batch drag+zoom into a single bounds update
   const onMapLoad = useCallback(
@@ -270,7 +257,7 @@ function MapPage() {
       {/* Map Controls - Search, zoom, location buttons */}
       <MapControls
         ref={searchBarRef}
-        isPanelOpen={isPanelOpen}
+        panelFocus={panelFocus}
         isGlobalView={isGlobalView}
         isLoggedIn={authIsLoggedIn}
         mapZoom={mapZoom}
@@ -289,13 +276,9 @@ function MapPage() {
         onLocate={handleSetLocation}
       />
 
-      {/* Map Container - full width on mobile (panel overlays), adjusted on desktop */}
-      <div
-        className='h-full w-full md:transition-all md:duration-300 md:ease-in-out'
-        style={{
-          width: isPanelOpen ? MAP_WIDTH_WITH_PANEL : '100%',
-        }}
-      >
+      {/* Map Container - always full width; the notes panel covers it when focused, so
+          toggling never shrinks the map bounds that filter the notes list */}
+      <div className='h-full w-full'>
         {isMapsApiLoaded && (
           <GoogleMap
             mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -318,7 +301,7 @@ function MapPage() {
       {/* Notes Panel with toggle button */}
       <MapNotesPanel
         ref={notesListRef}
-        isPanelOpen={isPanelOpen}
+        focus={panelFocus}
         isLoading={notesLoading || (notesFetching && deferredFilteredNotes.length === 0)}
         isError={notesError}
         errorMessage={notesErrorMessage}
@@ -332,7 +315,7 @@ function MapPage() {
         onNoteHover={setHoveredNoteId}
         onNoteClick={setDetailNoteId}
         onNoteClose={() => setDetailNoteId(null)}
-        onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
+        onFocusChange={setPanelFocus}
       />
     </div>
   );

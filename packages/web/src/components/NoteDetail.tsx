@@ -20,6 +20,7 @@ import { DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button';
 import { useNoteDetail } from '@/hooks/queries/useNotes';
 import { formatDate, format12hourTime } from '@/utils/data_conversion';
+import { cn } from '@/lib/utils';
 
 const convertOldTags = (tags: (Tag | string)[] | undefined): Tag[] => {
   if (!Array.isArray(tags)) return [];
@@ -39,6 +40,12 @@ const NoteDetail: React.FC<{
   const { data: creator = 'Loading...' } = useCreatorName(note?.creator ?? null);
   const tags: Tag[] = convertOldTags(note?.tags);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Reset the hero carousel position when a different note is opened
+  useEffect(() => {
+    setHeroIndex(0);
+  }, [noteId]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -102,25 +109,76 @@ const NoteDetail: React.FC<{
     );
   }
 
-  const firstImage = note.media.find(m => m.type === 'image');
-  const firstVideo = note.media.find(m => m.type === 'video');
-  const heroSrc = firstImage?.uri ?? firstVideo?.thumbnail;
+  const heroMedia = note.media.length > 0 ? note.media[heroIndex] : undefined;
+  const heroSrc = heroMedia && (heroMedia.type === 'image' ? heroMedia.uri : heroMedia.thumbnail);
+  const canStepHero = note.media.length > 1;
   const hasAttachments = note.media.length > 0 || note.audio.length > 0;
   const imageCount = note.media.filter(m => m.type === 'image').length;
   const videoCount = note.media.filter(m => m.type === 'video').length;
 
+  const stepHero = (direction: 1 | -1) => {
+    setHeroIndex(prev => (prev + direction + note.media.length) % note.media.length);
+  };
+
   const body = (
     <>
-      {/* Hero */}
+      {/* Hero -- click-through carousel over the same attachments listed below. In the
+          resizable map panel its height tracks the width (13rem at the default 34rem width,
+          capped at 24rem) so a wide panel doesn't crop photos down to a thin strip. */}
       <div
-        className='relative shrink-0 overflow-hidden'
-        style={{ height: heroSrc ? '13rem' : '7rem' }}
+        className={cn(
+          'relative shrink-0 overflow-hidden',
+          isPanel && note.media.length > 0 && 'aspect-[34/13] max-h-[24rem]',
+        )}
+        style={{
+          height:
+            note.media.length === 0 ? '7rem'
+            : isPanel ? undefined
+            : '13rem',
+        }}
       >
         {heroSrc ?
-          <img src={heroSrc} className='h-full w-full object-cover' alt='' decoding='async' />
+          <button
+            type='button'
+            onClick={() => setLightboxIndex(heroIndex)}
+            aria-label='View full size'
+            className='block h-full w-full cursor-zoom-in'
+          >
+            <img src={heroSrc} className='h-full w-full object-cover' alt='' decoding='async' />
+          </button>
         : <div className='h-full w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' />
         }
-        <div className='absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent' />
+        <div className='pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent' />
+
+        {canStepHero && (
+          <>
+            <button
+              type='button'
+              onClick={e => {
+                e.stopPropagation();
+                stepHero(-1);
+              }}
+              aria-label='Previous photo'
+              className='absolute top-1/2 left-4 z-10 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50'
+            >
+              <ChevronLeft className='h-5 w-5' />
+            </button>
+            <button
+              type='button'
+              onClick={e => {
+                e.stopPropagation();
+                stepHero(1);
+              }}
+              aria-label='Next photo'
+              className='absolute top-1/2 right-4 z-10 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50'
+            >
+              <ChevronRight className='h-5 w-5' />
+            </button>
+            <span className='absolute top-14 right-4 z-10 rounded-full bg-black/30 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm'>
+              {heroIndex + 1} / {note.media.length}
+            </span>
+          </>
+        )}
 
         <button
           type='button'
