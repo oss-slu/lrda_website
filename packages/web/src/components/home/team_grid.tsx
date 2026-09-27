@@ -109,6 +109,15 @@ const devTeam = [
       linkedin: 'https://www.linkedin.com/in/garrett-glencoe/',
     },
   },
+  {
+    name: 'Sean Kee',
+    role: 'Developer',
+    src: 'https://github.com/keeini.png',
+    socials: {
+      github: 'https://github.com/keeini',
+      linkedin: 'https://www.linkedin.com/in/sean-kee-05032a177/',
+    },
+  },
 ];
 
 export default function TeamGrid() {
