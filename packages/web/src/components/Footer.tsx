@@ -52,19 +52,7 @@ export default function Footer() {
             <h3 className='mb-3 text-sm font-semibold tracking-wide text-gray-900 uppercase'>
               Connect
             </h3>
-            <ul className='space-y-2'>
-              <li>
-                <a
-                  href='https://religioninplace.org'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-sm text-gray-600 transition-colors hover:text-gray-900'
-                >
-                  religioninplace.org
-                </a>
-              </li>
-            </ul>
-            <div className='mt-4 flex gap-2'>
+            <div className='flex gap-2'>
               <IconLink
                 icon='instagram'
                 href='https://www.instagram.com/livedreligion/'
