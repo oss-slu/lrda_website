@@ -154,15 +154,13 @@ app.all('/api/auth/*', async c => {
   if (cookie) headers.set('cookie', cookie);
   const authorization = c.req.raw.headers.get('authorization');
   if (authorization) headers.set('authorization', authorization);
-  const response = await auth.handler(
+  return auth.handler(
     new Request(c.req.url, {
       method: c.req.method,
       headers,
       body,
     }),
   );
-
-  return response;
 });
 
 // Dev-only test endpoint for e2e tests (raw SQL access)
