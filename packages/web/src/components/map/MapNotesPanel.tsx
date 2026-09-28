@@ -91,13 +91,14 @@ const MapNotesPanel = forwardRef<HTMLDivElement, MapNotesPanelProps>(
             same transform, so they never lag behind its edge */}
         <div
           className={cn(
-            'absolute top-0 right-0 z-30 h-full w-full transition-[translate,width,padding] duration-300 ease-in-out',
+            'bg-background absolute top-0 right-0 z-30 h-full w-full transition-[translate,width,padding] duration-300 ease-in-out',
             // Only full-notes is full width -- the hidden state keeps the docked width so
             // showing the panel again is a pure slide, not a full-screen width sweep
             focus !== 'notes' && 'md:w-[34rem]',
             // Full-notes: leave a top strip for the floating search bar so it doesn't
-            // cover "Back to notes" or the first row of cards
-            focus === 'notes' && 'bg-background md:pt-18',
+            // cover "Back to notes" or the first row of cards. The wrapper's background is
+            // unconditional so the strip stays opaque while it animates closed.
+            focus === 'notes' && 'md:pt-18',
             focus === 'map' ? 'translate-x-full' : 'translate-x-0',
           )}
         >
