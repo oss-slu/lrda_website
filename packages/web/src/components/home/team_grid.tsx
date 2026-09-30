@@ -37,9 +37,19 @@ const devTeam = [
     },
   },
   {
-    name: 'Jacob Maynard',
+    name: 'Mathew Shereni',
     role: 'Tech Lead',
     offset: 40,
+    src: 'https://github.com/MATHEW-SHERENI.png',
+    socials: {
+      github: 'https://github.com/MATHEW-SHERENI',
+      linkedin: 'https://www.linkedin.com/in/mathew-shereni-213130aa/',
+    },
+  },
+  {
+    name: 'Jacob Maynard',
+    role: 'Tech Lead',
+    offset: 70,
     src: 'https://github.com/InfinityBowman.png',
     socials: {
       github: 'https://github.com/InfinityBowman',
