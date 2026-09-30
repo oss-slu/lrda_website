@@ -118,6 +118,15 @@ const devTeam = [
       linkedin: 'https://www.linkedin.com/in/sean-kee-05032a177/',
     },
   },
+  {
+    name: 'Nolen Cowans',
+    role: 'Developer',
+    src: 'https://github.com/Nolencc24.png',
+    socials: {
+      github: 'https://github.com/Nolencc24',
+      linkedin: 'https://www.linkedin.com/in/nolen-cowans-625354305',
+    },
+  },
 ];
 
 export default function TeamGrid() {
