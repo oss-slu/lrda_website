@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
-import { Menu, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, User, LogOut, LayoutDashboard, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -144,6 +144,12 @@ export default function Navbar() {
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuItem asChild className='cursor-pointer'>
+                    <Link to='/delete-account'>
+                      <UserX className='mr-2 h-4 w-4' />
+                      Delete account
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
                     <LogOut className='mr-2 h-4 w-4' />
                     Log out
@@ -192,6 +198,16 @@ export default function Navbar() {
                         </Link>
                       </Button>
                     )}
+                    <Button
+                      variant='ghost'
+                      asChild
+                      className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'
+                    >
+                      <Link to='/delete-account' onClick={() => setMobileOpen(false)}>
+                        <UserX className='mr-2 h-4 w-4' />
+                        Delete account
+                      </Link>
+                    </Button>
                     <Button
                       variant='ghost'
                       className='w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-blue-600'

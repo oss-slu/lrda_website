@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, bearer } from 'better-auth/plugins';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { expo } from '@better-auth/expo';
 import { db } from './db';
 import { env } from './env';
@@ -28,6 +29,9 @@ export const auth = betterAuth({
   basePath: '/api/auth',
   trustedOrigins: env.ENVIRONMENT === 'development' ? ['*'] : getTrustedOrigins(),
   user: {
+    deleteUser: {
+      enabled: true,
+    },
     additionalFields: {
       isInstructor: {
         type: 'boolean',
@@ -97,6 +101,15 @@ export const auth = betterAuth({
       const verificationUrl = `${env.WEB_URL}/verify-email?token=${data.token}`;
       await sendVerificationEmail(data.user.email, verificationUrl);
     },
+  },
+  hooks: {
+    // Better Auth lets a session younger than a day delete its user without a
+    // password. Always require one so a stolen session can't erase an account.
+    before: createAuthMiddleware(async ctx => {
+      if (ctx.path === '/delete-user' && !ctx.body?.password) {
+        throw new APIError('BAD_REQUEST', { message: 'Password is required' });
+      }
+    }),
   },
   session: {
     cookieCache: {

@@ -20,6 +20,7 @@ import { Route as PublicResourcesRouteImport } from './routes/_public/resources'
 import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as PublicForgotPasswordRouteImport } from './routes/_public/forgot-password'
+import { Route as PublicDeleteAccountRouteImport } from './routes/_public/delete-account'
 import { Route as PublicConfirmRouteImport } from './routes/_public/confirm'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -81,6 +82,11 @@ const PublicForgotPasswordRoute = PublicForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicDeleteAccountRoute = PublicDeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicConfirmRoute = PublicConfirmRouteImport.update({
   id: '/confirm',
   path: '/confirm',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/map': typeof AppMapRoute
   '/confirm': typeof PublicConfirmRoute
+  '/delete-account': typeof PublicDeleteAccountRoute
   '/forgot-password': typeof PublicForgotPasswordRoute
   '/login': typeof PublicLoginRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/map': typeof AppMapRoute
   '/confirm': typeof PublicConfirmRoute
+  '/delete-account': typeof PublicDeleteAccountRoute
   '/forgot-password': typeof PublicForgotPasswordRoute
   '/login': typeof PublicLoginRoute
   '/reset-password': typeof PublicResetPasswordRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/map': typeof AppMapRoute
   '/_public/confirm': typeof PublicConfirmRoute
+  '/_public/delete-account': typeof PublicDeleteAccountRoute
   '/_public/forgot-password': typeof PublicForgotPasswordRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/reset-password': typeof PublicResetPasswordRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/map'
     | '/confirm'
+    | '/delete-account'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/map'
     | '/confirm'
+    | '/delete-account'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/map'
     | '/_public/confirm'
+    | '/_public/delete-account'
     | '/_public/forgot-password'
     | '/_public/login'
     | '/_public/reset-password'
@@ -314,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicForgotPasswordRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/delete-account': {
+      id: '/_public/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof PublicDeleteAccountRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/confirm': {
       id: '/_public/confirm'
       path: '/confirm'
@@ -396,6 +415,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface PublicRouteChildren {
   PublicConfirmRoute: typeof PublicConfirmRoute
+  PublicDeleteAccountRoute: typeof PublicDeleteAccountRoute
   PublicForgotPasswordRoute: typeof PublicForgotPasswordRoute
   PublicLoginRoute: typeof PublicLoginRoute
   PublicResetPasswordRoute: typeof PublicResetPasswordRoute
@@ -410,6 +430,7 @@ interface PublicRouteChildren {
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicConfirmRoute: PublicConfirmRoute,
+  PublicDeleteAccountRoute: PublicDeleteAccountRoute,
   PublicForgotPasswordRoute: PublicForgotPasswordRoute,
   PublicLoginRoute: PublicLoginRoute,
   PublicResetPasswordRoute: PublicResetPasswordRoute,

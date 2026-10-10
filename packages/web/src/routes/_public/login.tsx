@@ -12,6 +12,10 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { LogIn } from 'lucide-react';
 
 export const Route = createFileRoute('/_public/login')({
+  // Only known paths are accepted so the param can't be used as an open redirect.
+  validateSearch: (search: Record<string, unknown>): { redirect?: '/delete-account' } => ({
+    redirect: search.redirect === '/delete-account' ? search.redirect : undefined,
+  }),
   head: () => ({
     meta: [{ title: "Log In | Where's Religion?" }],
   }),
@@ -20,6 +24,7 @@ export const Route = createFileRoute('/_public/login')({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const { login } = useAuthStore(
     useShallow(state => ({
       login: state.login,
@@ -39,7 +44,7 @@ function LoginPage() {
     try {
       const status = await login(email, password);
       if (status === 'success') {
-        navigate({ to: '/map' });
+        navigate({ to: redirect ?? '/map' });
       }
     } catch (err) {
       console.error(err);

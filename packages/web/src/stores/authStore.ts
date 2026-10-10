@@ -5,6 +5,7 @@ import {
   signInWithEmail,
   signUpWithEmail,
   signOut as authSignOut,
+  deleteAccount as authDeleteAccount,
   getCurrentSession,
 } from '@/auth/client';
 import { fetchMe } from '@/services/users.service';
@@ -26,6 +27,7 @@ interface AuthState {
     instructorId?: string;
   }) => Promise<string>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   initialize: () => void;
 }
 
@@ -117,6 +119,17 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Logout error:', error);
         }
+      },
+
+      deleteAccount: async (password: string) => {
+        const response = await authDeleteAccount(password);
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to delete account');
+        }
+        set({
+          user: null,
+          isLoggedIn: false,
+        });
       },
 
       initialize: () => {

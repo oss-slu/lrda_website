@@ -37,3 +37,8 @@ export async function getCurrentSession() {
 export async function signOut() {
   return authClient.signOut();
 }
+
+// Permanently delete the signed-in user's account
+export async function deleteAccount(password: string) {
+  return authClient.deleteUser({ password });
+}
