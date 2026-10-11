@@ -26,7 +26,7 @@
     "@scalar/hono-api-reference": "^0.10.19",
     "better-auth": "^1.6.22",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.5",
+    "hono": "^4.13.7",
     "pg": "^8.21.0",
     "resend": "^6.12.4",
     "tsx": "^4.22.3",
