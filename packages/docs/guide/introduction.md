@@ -17,18 +17,18 @@ The platform consists of three main components:
 - **Web app** ([`lrda_website`](https://github.com/oss-slu/lrda_website)): [TanStack Start](https://tanstack.com/start) (React 19 + Vite), deployed to Cloudflare Workers
 - **Mobile app** ([`lrda_mobile`](https://github.com/oss-slu/lrda_mobile)): Expo + React Native for iOS and Android
 - **Backend API**: [Hono](https://hono.dev/) REST API with [Drizzle ORM](https://orm.drizzle.team/) on PostgreSQL, deployed to AWS Lightsail via Docker
-- **Authentication**: [Better Auth](https://www.better-auth.com/) (session-based, self-hosted) for web; Firebase Auth for mobile (migrating)
+- **Authentication**: [Better Auth](https://www.better-auth.com/) (session-based, self-hosted) for web and mobile
 
 See the [Architecture Overview](/architecture/overview) and [Mobile Overview](/mobile/overview) for deeper looks.
 
 ## History
 
-The platform was originally built on **RERUM** (a shared Linked Data research infrastructure at SLU) for data storage and **Firebase** for authentication. The web app was a Next.js application hosted on Netlify with domains on GoDaddy.
+The platform was originally built on **RERUM** (a shared Linked Data research infrastructure at SLU) for data storage and a third-party hosted service for authentication. The web app was a Next.js application hosted on Netlify with domains on GoDaddy.
 
 In Spring 2026, the entire web application was migrated to an AWS + Cloudflare stack:
 
 - **RERUM** was replaced with a Hono API server backed by PostgreSQL and Drizzle ORM, deployed to AWS Lightsail. RERUM stored notes as JSON-LD documents in MongoDB, which made simple queries unnecessarily complex and slow. It was also shared research infrastructure we did not control -- we could not add features like full-text search, analytics, or custom auth flows without working around someone else's system. Our RERUM usage was also highly insecure at the time, with no authentication on database modifications.
-- **Firebase Auth** was replaced with Better Auth (session-based, self-hosted). Firebase was adding complexity for what amounted to basic email/password auth.
+- **Hosted auth** was replaced with Better Auth (session-based, self-hosted). The hosted service was adding complexity for what amounted to basic email/password auth.
 - **Next.js** was replaced with TanStack Start (Vite + TanStack Router), deployed to Cloudflare Workers.
 - **Netlify** hosting and **GoDaddy** domains were both migrated to **Cloudflare**, giving us bot protection, edge deployment, and unified domain management.
 

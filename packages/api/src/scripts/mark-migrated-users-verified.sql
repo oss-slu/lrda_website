@@ -1,5 +1,5 @@
 -- One-time migration: set email_verified = true for all users who were
--- migrated from Firebase and have no credential account yet.
+-- were imported from the legacy system and have no credential account yet.
 --
 -- Without this, Better Auth's requireEmailVerification blocks sign-in
 -- even after the user sets a password via the reset flow.

@@ -38,8 +38,5 @@
     "drizzle-kit": "^0.31.9",
     "typescript": "^5.9.3",
     "vitest": "^5.0.0"
-  },
-  "optionalDependencies": {
-    "firebase-admin": "^13.7.0"
   }
 }

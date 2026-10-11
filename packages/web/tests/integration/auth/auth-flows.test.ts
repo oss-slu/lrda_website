@@ -177,7 +177,7 @@ describe('Forgot password -> reset -> login with new password', () => {
   });
 });
 
-describe('Firebase migration -> password setup', () => {
+describe('Imported user -> password setup', () => {
   const email = `${PREFIX}-migrate@e2e.test`;
   const userId = `e2e-migrate-${Date.now()}`;
 
@@ -189,7 +189,7 @@ describe('Firebase migration -> password setup', () => {
   });
 
   it('detects migrated user, sets password via reset, then logs in', async () => {
-    // 1. Insert a Firebase-style user: verified email, no credential account
+    // 1. Insert an imported user: verified email, no credential account
     await execute(
       `INSERT INTO "user" (id, name, email, email_verified, role, created_at, updated_at)
        VALUES ($1, $2, $3, TRUE, 'user', NOW(), NOW())`,

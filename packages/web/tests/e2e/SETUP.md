@@ -83,13 +83,12 @@ minting via the test-only `/api/test` endpoints, which are disabled in productio
 - `authenticated.spec.ts` -- Authenticated flows: notes page, admin dashboard, nav state
 - `auth-pages.spec.ts` -- Auth UI: protected-route guard, full signup -> verify -> login
 - `comments.spec.ts` -- Comment threading between student and instructor
-- `firebase-password-sync.spec.ts` -- Password reset syncs to Firebase
 - `notes-editor.spec.ts` -- Note CRUD and metadata editing
 
 ### API Integration Tests (in `tests/integration/`)
 
 - `admin/admin.test.ts` -- Admin API endpoints
-- `auth/auth-flows.test.ts` -- Full auth lifecycle: signup, email verification, password reset, Firebase migration
+- `auth/auth-flows.test.ts` -- Full auth lifecycle: signup, email verification, password reset, imported-user password setup
 - `auth/security.test.ts` -- Auth guards, CSRF, admin access control
 - `comments/comments-threading.test.ts` -- Comment threading API
 - `notes/notes-crud.test.ts` -- Note CRUD operations

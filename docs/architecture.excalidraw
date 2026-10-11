@@ -2100,7 +2100,7 @@
       "x": 1290,
       "y": 960,
       "width": 240,
-      "height": 54,
+      "height": 36,
       "angle": 0,
       "strokeColor": "#868e96",
       "backgroundColor": "transparent",
@@ -2120,13 +2120,13 @@
       "updated": 1773863220504,
       "link": null,
       "locked": false,
-      "text": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL\nFirebase users -> PostgreSQL",
+      "text": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL",
       "fontSize": 12,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL\nFirebase users -> PostgreSQL",
+      "originalText": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL",
       "autoResize": true,
       "lineHeight": 1.25,
       "index": "aq"
@@ -2237,10 +2237,6 @@
         {
           "id": "a-mob-rerum",
           "type": "arrow"
-        },
-        {
-          "id": "a-mob-fb",
-          "type": "arrow"
         }
       ],
       "updated": 1773863400000,
@@ -2284,82 +2280,6 @@
       "autoResize": true,
       "lineHeight": 1.25,
       "index": "au"
-    },
-    {
-      "id": "firebase",
-      "type": "rectangle",
-      "x": 1610,
-      "y": 910,
-      "width": 230,
-      "height": 60,
-      "angle": 0,
-      "strokeColor": "#e8590c",
-      "backgroundColor": "#ffd8a8",
-      "fillStyle": "solid",
-      "strokeWidth": 1,
-      "strokeStyle": "dashed",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": {
-        "type": 3
-      },
-      "seed": 2004,
-      "version": 1,
-      "versionNonce": 2004,
-      "isDeleted": false,
-      "boundElements": [
-        {
-          "id": "firebase-t",
-          "type": "text"
-        },
-        {
-          "id": "a-mob-fb",
-          "type": "arrow"
-        }
-      ],
-      "updated": 1773863400000,
-      "link": null,
-      "locked": false,
-      "index": "av"
-    },
-    {
-      "id": "firebase-t",
-      "type": "text",
-      "x": 1615,
-      "y": 918,
-      "width": 220,
-      "height": 35,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 1,
-      "strokeStyle": "solid",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": null,
-      "seed": 2005,
-      "version": 1,
-      "versionNonce": 2005,
-      "isDeleted": false,
-      "boundElements": [],
-      "updated": 1773863400000,
-      "link": null,
-      "locked": false,
-      "text": "Firebase Auth\n(Legacy)",
-      "fontSize": 14,
-      "fontFamily": 1,
-      "textAlign": "center",
-      "verticalAlign": "middle",
-      "containerId": "firebase",
-      "originalText": "Firebase Auth\n(Legacy)",
-      "autoResize": true,
-      "lineHeight": 1.25,
-      "index": "aw"
     },
     {
       "id": "a-mob-rerum",
@@ -2413,59 +2333,6 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "index": "ax"
-    },
-    {
-      "id": "a-mob-fb",
-      "type": "arrow",
-      "x": 1725,
-      "y": 870,
-      "width": 0,
-      "height": 40,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 2,
-      "strokeStyle": "solid",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": {
-        "type": 2
-      },
-      "seed": 2007,
-      "version": 1,
-      "versionNonce": 2007,
-      "isDeleted": false,
-      "boundElements": [],
-      "updated": 1773863400000,
-      "link": null,
-      "locked": false,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          0,
-          40
-        ]
-      ],
-      "lastCommittedPoint": null,
-      "startBinding": {
-        "elementId": "mobile",
-        "focus": 0,
-        "gap": 1
-      },
-      "endBinding": {
-        "elementId": "firebase",
-        "focus": 0,
-        "gap": 1
-      },
-      "startArrowhead": null,
-      "endArrowhead": "arrow",
-      "index": "ay"
     },
     {
       "id": "planned",

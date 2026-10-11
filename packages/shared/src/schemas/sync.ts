@@ -39,9 +39,3 @@ export const SyncLogResponseSchema = z.object({
   runs: z.array(SyncRunSchema),
   total: z.number(),
 });
-
-export const SyncUserResultSchema = z.object({
-  created: z.number(),
-  updated: z.number(),
-  skipped: z.number(),
-});

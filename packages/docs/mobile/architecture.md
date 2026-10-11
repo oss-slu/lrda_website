@@ -7,7 +7,7 @@ The mobile app is an Expo-managed React Native application with Redux for state 
 ```
 lrda_mobile/
 ├── App.tsx                    # Entry point (Redux + Theme + Context providers)
-├── app.config.js              # Expo config (Firebase env vars, permissions)
+├── app.config.js              # Expo config (env vars, permissions)
 ├── types.ts                   # TypeScript types (Note, UserData)
 ├── redux/
 │   ├── slice/
@@ -28,15 +28,16 @@ lrda_mobile/
 │   │   ├── ProfilePage.tsx    # User account
 │   │   └── ...
 │   ├── components/            # 21 reusable UI components
+│   ├── auth/
+│   │   └── client.ts          # Better Auth client (session stored in SecureStore)
+│   ├── stores/
+│   │   └── authStore.ts       # Session state (Zustand)
 │   ├── models/
-│   │   ├── user_class.ts      # User singleton (Firebase auth)
 │   │   └── media_class.ts     # Media type hierarchy
 │   ├── utils/
 │   │   ├── api_calls.ts       # RERUM API client
 │   │   ├── S3_proxy.ts        # Media upload client
 │   │   └── ...
-│   └── config/
-│       └── firebase.js        # Firebase initialization
 ├── assets/                    # Icons, fonts, splash screen
 └── styles/
     └── globalStyles.ts        # Global style constants
@@ -68,7 +69,7 @@ Bottom tab navigator with 5 tabs:
 - **Redux Toolkit** with 3 slices: `navigation`, `theme`, `addNoteState`
 - **Redux Persist** with AsyncStorage for offline persistence
 - **React Context** (`AddNoteContext`) for note publishing coordination between screens
-- **User Singleton** (`user_class.ts`) for Firebase auth state
+- **authStore** (`lib/stores/authStore.ts`, Zustand) for Better Auth session state
 
 ## API Integration
 
@@ -93,19 +94,18 @@ Handles image, video, and audio uploads. Returns a `Location` header with the fi
 
 ## Authentication
 
-Firebase Auth with email/password. The `User` singleton (`lib/models/user_class.ts`) manages:
+Better Auth with email/password, via the website API (`AUTH_API_URL`). The client in `lib/auth/client.ts` uses `@better-auth/expo` to keep the session in SecureStore, and `lib/stores/authStore.ts` exposes:
 
-- `login(email, password)` -- Firebase sign-in + persist to AsyncStorage
-- `logout()` -- Sign out + clear storage
-- `initializeUser()` -- `onAuthStateChanged` listener
-- Role checks via `getRoles()` (administrator, contributor)
+- `login(email, password)` -- Sign in and store the session
+- `logout()` -- Sign out and clear the session
+- `initialize()` -- Restore an existing session on launch
 
 ## Key Differences from Web
 
 | Aspect | Web | Mobile |
 | --- | --- | --- |
-| Backend | Hono API + PostgreSQL | RERUM + Firebase |
-| Auth | Better Auth (sessions) | Firebase Auth (tokens) |
+| Backend | Hono API + PostgreSQL | Hono API + PostgreSQL |
+| Auth | Better Auth (sessions) | Better Auth (Bearer token) |
 | Rich text | Tiptap | tentap-editor + pell-rich-editor |
 | Maps | `@react-google-maps/api` | `react-native-maps` |
 | State | Zustand + React Query | Redux Toolkit + Redux Persist |

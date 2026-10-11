@@ -5,7 +5,7 @@ The Where's Religion? platform is in the middle of a backend migration. The web 
 ## Migration Overview
 
 ```
-Before:  Web + Mobile  -->  RERUM API + Firebase Auth
+Before:  Web + Mobile  -->  RERUM API + legacy auth
                               |
 After:   Web           -->  Hono API + PostgreSQL + Better Auth  (done)
          Mobile        -->  Hono API + PostgreSQL + Better Auth  (planned)
@@ -29,22 +29,21 @@ During the transition, sync scripts keep data consistent between the old and new
 | --- | --- | --- |
 | `sync-from-rerum.ts` | `packages/api/src/scripts/` | Pull notes from RERUM into PostgreSQL |
 | `sync-to-rerum.ts` | `packages/api/src/scripts/` | Push notes from PostgreSQL back to RERUM |
-| `sync-users-from-firebase.ts` | `packages/api/src/scripts/` | Sync Firebase users into PostgreSQL |
 
-These scripts and the `firebase-admin` dependency in the API package must **not** be removed until the mobile app migration is complete.
+These scripts must **not** be removed until the mobile app migration is complete.
 
 ## Mobile Migration Plans
 
 Two migration plans exist in the mobile repo:
 
-### Auth Migration (`MIGRATION_PLAN.md`)
+### Auth Migration (`MIGRATION_PLAN.md`) -- complete
 
-Replace Firebase Auth with Better Auth via the website API:
+The mobile app authenticates with Better Auth via the website API:
 
-- **Login**: `POST /api/auth/sign-in/email` instead of `firebase.auth().signInWithEmailAndPassword()`
-- **Session**: Bearer token via `Authorization` header instead of Firebase ID tokens
-- **Validation**: `GET /api/auth/get-session` instead of `onAuthStateChanged`
-- **Logout**: `POST /api/auth/sign-out` instead of `firebase.auth().signOut()`
+- **Login**: `POST /api/auth/sign-in/email`
+- **Session**: Bearer token via `Authorization` header
+- **Validation**: `GET /api/auth/get-session`
+- **Logout**: `POST /api/auth/sign-out`
 
 ### API Migration (`RERUM_MIGRATION_PLAN.md`)
 
@@ -59,6 +58,4 @@ Replace RERUM API calls with the website Hono API using an adapter pattern:
 Once the mobile app is fully migrated:
 
 1. RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`)
-2. Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`)
-3. `firebase-admin` dependency from the API package
-4. Any RERUM-specific data format handling in the API
+2. Any RERUM-specific data format handling in the API

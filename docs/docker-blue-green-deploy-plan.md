@@ -102,8 +102,7 @@ COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
 # Install all deps (devDependencies needed for tsc build + drizzle-kit migrations)
-# --no-optional skips firebase-admin (~100MB, only needed for sync scripts)
-RUN pnpm install --frozen-lockfile --no-optional
+RUN pnpm install --frozen-lockfile
 
 # ---- Stage 2: Build ----
 FROM node:24-slim AS build
@@ -169,7 +168,6 @@ CMD ["node", "--import", "tsx", "dist/index.js"]
 
 **Key design decisions:**
 
-- `--no-optional` skips `firebase-admin` (~100MB) -- only needed for sync scripts which don't run in the container
 - `tsx` is required at runtime because `@lrda/shared` exports raw `.ts` files and `tsc` doesn't rewrite import specifiers (e.g., `from '@lrda/shared/schemas'` resolves to `packages/shared/src/schemas/index.ts`)
 - `drizzle-kit` + schema + migration files are included so deploy.sh can run `drizzle-kit migrate` from a temporary container
 - `~300MB` image, `~200MB` RAM per container
@@ -202,7 +200,6 @@ dist/
 .env.*
 *.log
 .git/
-firebase-service-account.json
 *-service-account.json
 src/__tests__/
 src/scripts/

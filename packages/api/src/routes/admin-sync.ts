@@ -6,7 +6,6 @@ import {
   SyncRunSchema,
   SyncRunWithDetailsSchema,
   SyncLogResponseSchema,
-  SyncUserResultSchema,
 } from '@lrda/shared';
 import { desc, eq, count } from 'drizzle-orm';
 import { syncRun, syncRunDetail } from '../db/schema';
@@ -15,7 +14,6 @@ import {
   startSync,
   stopSync,
   triggerSync,
-  syncUsersFromFirebase,
 } from '../lib/sync-service';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import type { AppEnv } from '../types';
@@ -197,31 +195,6 @@ const getRunDetailRoute = createRoute({
   },
 });
 
-const syncUsersRoute = createRoute({
-  method: 'post',
-  path: '/users',
-  tags: ['Sync'],
-  middleware: [requireAuth, requireAdmin],
-  responses: {
-    200: {
-      content: { 'application/json': { schema: SyncUserResultSchema } },
-      description: 'User sync completed',
-    },
-    401: {
-      content: { 'application/json': { schema: ErrorSchema } },
-      description: 'Unauthorized',
-    },
-    403: {
-      content: { 'application/json': { schema: ErrorSchema } },
-      description: 'Forbidden - Admin access required',
-    },
-    500: {
-      content: { 'application/json': { schema: ErrorSchema } },
-      description: 'User sync failed',
-    },
-  },
-});
-
 // ============================================
 // Router
 // ============================================
@@ -351,14 +324,4 @@ export const adminSyncRoutes = new OpenAPIHono<AppEnv>()
       },
       200,
     );
-  })
-
-  .openapi(syncUsersRoute, async c => {
-    try {
-      const result = await syncUsersFromFirebase();
-      return c.json(result, 200);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      return c.json({ error: msg }, 500);
-    }
   });

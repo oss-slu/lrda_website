@@ -35,7 +35,6 @@ export {
   SyncRunDetailSchema,
   SyncRunWithDetailsSchema,
   SyncLogResponseSchema,
-  SyncUserResultSchema,
 } from './sync';
 
 export {

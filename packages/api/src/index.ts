@@ -6,10 +6,9 @@ import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { env } from './env';
 import { db, closePool } from './db';
-import { user, account, verification } from './db/schema';
+import { user, account } from './db/schema';
 import { routes } from './routes';
 import { auth } from './auth';
-import { stashPassword } from './lib/pending-password-resets';
 import { testRoutes } from './routes/test';
 import type { AppEnv } from './types';
 
@@ -81,34 +80,14 @@ app.post('/api/auth/reset-password', async c => {
       return c.json(PASSWORD_ERROR, 400);
     }
 
-    // Stash plaintext password so onPasswordReset can push it to Firebase.
-    // Resolve token -> userId -> email via the verification table.
-    // Coupled to Better Auth's internal storage format: `reset-password:${token}` as identifier.
-    const token = json?.token;
-    if (token) {
-      const verifRows = await db
-        .select({ value: verification.value })
-        .from(verification)
-        .where(eq(verification.identifier, `reset-password:${token}`))
-        .limit(1);
-      if (verifRows.length > 0) {
-        const usrRows = await db
-          .select({ email: user.email })
-          .from(user)
-          .where(eq(user.id, verifRows[0].value))
-          .limit(1);
-        if (usrRows.length > 0) stashPassword(usrRows[0].email, newPassword);
-      }
-    }
-
     return forwardToAuth(c, json);
   } catch {
     return c.json({ error: 'Invalid request' }, 400);
   }
 });
 
-// Migration status check -- TEMPORARY, remove after Firebase migration is complete.
-// Checks if a user was migrated from Firebase and needs to set a password.
+// Migration status check -- TEMPORARY, remove once no imported users remain without a password.
+// Checks if a user was imported from the legacy system and needs to set a password.
 // Returns { needsPasswordReset: false } for unknown emails to avoid account enumeration.
 app.post('/api/auth/migration-status', async c => {
   try {

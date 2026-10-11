@@ -1,7 +1,7 @@
 /**
- * Migration service -- TEMPORARY, remove after Firebase migration is complete.
+ * Migration service -- TEMPORARY, remove once no imported users remain without a password.
  *
- * Checks whether a user was migrated from Firebase and needs to set a password
+ * Checks whether a user was imported from the legacy system and needs to set a password
  * before they can log in with Better Auth.
  */
 
@@ -12,7 +12,7 @@ interface MigrationStatus {
 }
 
 /**
- * Check if a user needs to set a password (migrated from Firebase).
+ * Check if a user needs to set a password (imported from the legacy system).
  * Returns false for unknown emails to avoid account enumeration.
  */
 export async function checkMigrationStatus(email: string): Promise<boolean> {

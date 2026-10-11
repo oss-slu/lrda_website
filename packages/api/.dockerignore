@@ -4,7 +4,6 @@ dist/
 .env.*
 *.log
 .git/
-firebase-service-account.json
 *-service-account.json
 src/__tests__/
 src/scripts/

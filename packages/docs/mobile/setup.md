@@ -19,17 +19,14 @@ yarn install
 
 ## 2. Environment Setup
 
-The app uses Firebase for authentication. You need Firebase configuration values set as environment variables. Contact the team lead for the development Firebase project credentials.
+The app signs in with Better Auth and loads data through the website API. Point it at a running API (locally, `pnpm dev` in `lrda_website` serves it on port 3002).
 
 Key environment variables (configured in `app.config.js`):
 
-- `FIREBASE_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `FIREBASE_PROJECT_ID`
-- `FIREBASE_STORAGE_BUCKET`
-- `FIREBASE_MESSAGING_SENDER_ID`
-- `FIREBASE_APP_ID`
-- `FIREBASE_DATABASE_URL`
+- `AUTH_API_URL` -- Better Auth server (e.g. `http://localhost:3002`)
+- `API_BASE_URL` -- Hono API (e.g. `http://localhost:3002`)
+- `S3_PROXY_PREFIX` -- Media upload proxy
+- `MAP_API_KEY` -- Google Maps key (Android)
 
 ## 3. Start the Dev Server
 

@@ -76,12 +76,9 @@ Secrets are stored in `.env` (loaded via `--env-file`).
 
 ### Migration Sync Scripts
 
-These scripts sync data from Firebase/RERUM to PostgreSQL during the migration period.
+These scripts sync data from RERUM to PostgreSQL during the migration period.
 
-**Run order for initial sync:**
-
-1. `pnpm sync:users:yolo` - Sync users from Firebase first
-2. `pnpm sync:from-rerum:yolo --full` - Then sync notes/comments from RERUM
+- `pnpm sync:from-rerum:yolo --full` - Sync notes/comments from RERUM
 
 ## API Endpoints
 

@@ -34,7 +34,6 @@ import type {
   SyncRunDetailSchema,
   SyncRunWithDetailsSchema,
   SyncLogResponseSchema,
-  SyncUserResultSchema,
 } from './schemas';
 
 // Note types
@@ -72,4 +71,3 @@ export type SyncRun = z.infer<typeof SyncRunSchema>;
 export type SyncRunDetail = z.infer<typeof SyncRunDetailSchema>;
 export type SyncRunWithDetails = z.infer<typeof SyncRunWithDetailsSchema>;
 export type SyncLogResponse = z.infer<typeof SyncLogResponseSchema>;
-export type SyncUserResult = z.infer<typeof SyncUserResultSchema>;

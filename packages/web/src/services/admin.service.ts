@@ -19,7 +19,6 @@ import type {
   SyncRun,
   SyncRunWithDetails,
   SyncLogResponse,
-  SyncUserResult,
 } from '@lrda/shared';
 import { z } from 'zod';
 import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared';
@@ -28,7 +27,7 @@ import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared'
 export type AdminUserData = AdminUser;
 export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
-export type { SyncStatus, SyncRun, SyncRunWithDetails, SyncLogResponse, SyncUserResult };
+export type { SyncStatus, SyncRun, SyncRunWithDetails, SyncLogResponse };
 
 // Infer analytics types from Zod schemas
 export type AnalyticsSummary = z.infer<typeof AnalyticsSummarySchema>;
@@ -199,10 +198,6 @@ export async function getSyncLog(limit = 20, offset = 0): Promise<SyncLogRespons
 
 export async function getSyncRunDetail(runId: string): Promise<SyncRunWithDetails> {
   return fetchWithAuth<SyncRunWithDetails>(`/api/admin/sync/log/${runId}`);
-}
-
-export async function syncUsers(): Promise<SyncUserResult> {
-  return fetchWithAuth<SyncUserResult>('/api/admin/sync/users', { method: 'POST' });
 }
 
 /**

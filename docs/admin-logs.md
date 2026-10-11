@@ -15,9 +15,7 @@ Expose persistent, queryable application logs through the admin UI in the web ap
 
 Several background processes produce important operational output that is currently only visible in container stdout:
 
-- Firebase password sync on reset (`[auth] Synced password reset to Firebase for ...`)
 - RERUM note sync results
-- Firebase user sync results
 - Email delivery failures
 
 Surfacing these in the admin UI removes the need to SSH into Lightsail to diagnose issues.

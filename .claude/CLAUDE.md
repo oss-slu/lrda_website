@@ -67,11 +67,10 @@ This is the **Where's Religion?** desktop web application -- a TanStack Start pr
 
 **Migration status:**
 
-1. The web app has migrated (RERUM + Firebase -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
+1. The web app has migrated (RERUM + legacy auth -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
 2. During the transition:
    - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
-   - Firebase user sync script (`packages/api/src/scripts/sync-users-from-firebase.ts`) syncs Firebase users into PostgreSQL
-3. Once the mobile app is also migrated, the sync scripts and `firebase-admin` dependency can be removed
+3. Once the mobile app is also migrated, the RERUM sync scripts can be removed
 
 
 ## Architecture

@@ -130,13 +130,11 @@ Authenticated access to RERUM has been set up with a private key for our applica
 
 ### Migration-Period Sync Scripts
 
-These scripts exist for the migration period while the mobile app still uses RERUM and Firebase. They are not needed for regular development.
+These scripts exist for the migration period while the mobile app still uses RERUM. They are not needed for regular development.
 
 **RERUM note sync:** `sync-from-rerum.ts` pulls notes from RERUM into PostgreSQL (incremental or full). `sync-to-rerum.ts` pushes web app changes back to RERUM for the mobile app. Both scripts are in `packages/api/src/scripts/`.
 
-**Firebase user sync:** `sync-users-from-firebase.ts` pulls users from Firebase Auth/Firestore into PostgreSQL, resolving instructor relationships after all users are created.
-
-**When can these be removed?** Once the mobile app is migrated to use the PostgreSQL backend directly, all three sync scripts, the `syncState`/`syncRun`/`syncRunDetail` tables, and the `firebase-admin` dependency can be removed. Publishing to RERUM should be integrated directly into the note publish API endpoint rather than relying on the batch sync infrastructure.
+**When can these be removed?** Once the mobile app is migrated to use the PostgreSQL backend directly, the sync scripts and the `syncState`/`syncRun`/`syncRunDetail` tables can be removed. Publishing to RERUM should be integrated directly into the note publish API endpoint rather than relying on the batch sync infrastructure.
 
 ## Key Files
 

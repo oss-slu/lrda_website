@@ -70,7 +70,7 @@ An interactive architecture diagram is available as an Excalidraw file at [`arch
 
 ## Mobile App
 
-The companion mobile app ([`lrda_mobile`](https://github.com/oss-slu/lrda_mobile)) is a separate Expo/React Native application for iOS and Android. It provides the same core features (note creation, media capture, map exploration) but currently uses the legacy RERUM + Firebase backend. It is being migrated to use this same API.
+The companion mobile app ([`lrda_mobile`](https://github.com/oss-slu/lrda_mobile)) is a separate Expo/React Native application for iOS and Android. It provides the same core features (note creation, media capture, map exploration) but currently uses the legacy RERUM backend. It is being migrated to use this same API.
 
 See the [Mobile App docs](/mobile/overview) for details.
 

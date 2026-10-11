@@ -13,8 +13,7 @@ scheduled_tasks.lock
 all_notes.json
 *.tsbuildinfo
 
-# Firebase service account (sensitive)
-firebase-service-account.json
+# Service account keys (sensitive)
 *-service-account.json
 
 # LocalStack (local S3)
@@ -48,7 +47,7 @@ docs/issues/*
 **/.wrangler**
 .open-next
 rerum-notes-dump.json
-firebase-users-dump.json
+*-users-dump.json
 d1-seed-dump.sql
 
 # Database dumps from staging->production migration (contain real user data)
