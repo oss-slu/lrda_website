@@ -12,7 +12,6 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().default('noreply@wheresreligion.org'),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   COOKIE_DOMAIN: z.string().optional(),
-  RERUM_API_URL: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   // Comma-separated list of models. OpenRouter tries them in order as fallbacks.
   OPENROUTER_MODELS: z.string().optional(),

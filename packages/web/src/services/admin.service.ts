@@ -15,10 +15,6 @@ import type {
   Stats,
   ContentStats,
   RecentActivityItem,
-  SyncStatus,
-  SyncRun,
-  SyncRunWithDetails,
-  SyncLogResponse,
 } from '@lrda/shared';
 import { z } from 'zod';
 import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared';
@@ -27,7 +23,6 @@ import { AnalyticsSummarySchema, AnalyticsTimeSeriesSchema } from '@lrda/shared'
 export type AdminUserData = AdminUser;
 export type { PendingApplication, ContentStats, RecentActivityItem };
 export type AdminStats = Stats;
-export type { SyncStatus, SyncRun, SyncRunWithDetails, SyncLogResponse };
 
 // Infer analytics types from Zod schemas
 export type AnalyticsSummary = z.infer<typeof AnalyticsSummarySchema>;
@@ -169,35 +164,6 @@ export async function removeUser(userId: string) {
     throw new Error(result.error.message || 'Failed to remove user');
   }
   return result.data;
-}
-
-// Sync endpoints
-
-export async function getSyncStatus(): Promise<SyncStatus> {
-  return fetchWithAuth<SyncStatus>('/api/admin/sync/status');
-}
-
-export async function startSync(): Promise<{ success: boolean; message: string }> {
-  return fetchWithAuth('/api/admin/sync/start', { method: 'POST' });
-}
-
-export async function stopSync(): Promise<{ success: boolean; message: string }> {
-  return fetchWithAuth('/api/admin/sync/stop', { method: 'POST' });
-}
-
-export async function triggerSync(dryRun = false): Promise<SyncRun & { logs?: string[] }> {
-  return fetchWithAuth<SyncRun & { logs?: string[] }>('/api/admin/sync/trigger', {
-    method: 'POST',
-    body: JSON.stringify({ dryRun }),
-  });
-}
-
-export async function getSyncLog(limit = 20, offset = 0): Promise<SyncLogResponse> {
-  return fetchWithAuth<SyncLogResponse>(`/api/admin/sync/log?limit=${limit}&offset=${offset}`);
-}
-
-export async function getSyncRunDetail(runId: string): Promise<SyncRunWithDetails> {
-  return fetchWithAuth<SyncRunWithDetails>(`/api/admin/sync/log/${runId}`);
 }
 
 /**

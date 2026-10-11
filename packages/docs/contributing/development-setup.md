@@ -64,10 +64,6 @@ Used to auto-generate tags for notes. The production key has a $2 spend limit. F
 
 **Without OpenRouter:** Tags can only be added manually. The AI tag button won't appear.
 
-### RERUM (migration period only)
-
-This is only needed to run sync scripts during the migration period while the mobile app still uses RERUM. Not needed for regular development. See [Database: Sync Scripts](/architecture/database#sync-scripts) for details.
-
 ## Ports
 
 | Service | Port |

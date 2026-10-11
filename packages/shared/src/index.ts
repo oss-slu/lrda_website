@@ -29,11 +29,6 @@ import type {
   StatsSchema,
   ContentStatsSchema,
   RecentActivityItemSchema,
-  SyncStatusSchema,
-  SyncRunSchema,
-  SyncRunDetailSchema,
-  SyncRunWithDetailsSchema,
-  SyncLogResponseSchema,
 } from './schemas';
 
 // Note types
@@ -65,9 +60,3 @@ export type Stats = z.infer<typeof StatsSchema>;
 export type ContentStats = z.infer<typeof ContentStatsSchema>;
 export type RecentActivityItem = z.infer<typeof RecentActivityItemSchema>;
 
-// Sync types
-export type SyncStatus = z.infer<typeof SyncStatusSchema>;
-export type SyncRun = z.infer<typeof SyncRunSchema>;
-export type SyncRunDetail = z.infer<typeof SyncRunDetailSchema>;
-export type SyncRunWithDetails = z.infer<typeof SyncRunWithDetailsSchema>;
-export type SyncLogResponse = z.infer<typeof SyncLogResponseSchema>;

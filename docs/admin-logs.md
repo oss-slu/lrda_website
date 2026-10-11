@@ -8,14 +8,13 @@ Expose persistent, queryable application logs through the admin UI in the web ap
 
 - Persist structured log entries (timestamp, level, category, message, metadata) to PostgreSQL
 - Admin UI page to browse, filter, and search logs
-- Categories should include at minimum: `auth`, `sync`, `email`
+- Categories should include at minimum: `auth`, `email`
 - Retention policy to prevent unbounded growth (e.g. 30 days)
 
 ## Motivation
 
 Several background processes produce important operational output that is currently only visible in container stdout:
 
-- RERUM note sync results
 - Email delivery failures
 
 Surfacing these in the admin UI removes the need to SSH into Lightsail to diagnose issues.

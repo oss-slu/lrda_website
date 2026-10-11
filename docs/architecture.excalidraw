@@ -842,11 +842,11 @@
           "type": "arrow"
         },
         {
-          "id": "a9",
+          "id": "a-plan-ls",
           "type": "arrow"
         },
         {
-          "id": "a-plan-ls",
+          "id": "a-mob-ls",
           "type": "arrow"
         }
       ],
@@ -1651,86 +1651,6 @@
       "index": "af"
     },
     {
-      "id": "rerum",
-      "type": "rectangle",
-      "x": 1280,
-      "y": 880,
-      "width": 260,
-      "height": 65,
-      "angle": 0,
-      "strokeColor": "#e8590c",
-      "backgroundColor": "#ffd8a8",
-      "fillStyle": "solid",
-      "strokeWidth": 1,
-      "strokeStyle": "dashed",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": {
-        "type": 3
-      },
-      "seed": 1043,
-      "version": 2,
-      "versionNonce": 1146260976,
-      "isDeleted": false,
-      "boundElements": [
-        {
-          "id": "rerum-t",
-          "type": "text"
-        },
-        {
-          "id": "a9",
-          "type": "arrow"
-        },
-        {
-          "id": "a-mob-rerum",
-          "type": "arrow"
-        }
-      ],
-      "updated": 1773863220504,
-      "link": null,
-      "locked": false,
-      "index": "ag"
-    },
-    {
-      "id": "rerum-t",
-      "type": "text",
-      "x": 1285,
-      "y": 888,
-      "width": 250,
-      "height": 35,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 1,
-      "strokeStyle": "solid",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": null,
-      "seed": 1044,
-      "version": 2,
-      "versionNonce": 1247381776,
-      "isDeleted": false,
-      "boundElements": [],
-      "updated": 1773863220504,
-      "link": null,
-      "locked": false,
-      "text": "RERUM (Legacy)\nMobile App Sync Scripts",
-      "fontSize": 14,
-      "fontFamily": 1,
-      "textAlign": "center",
-      "verticalAlign": "middle",
-      "containerId": "rerum",
-      "originalText": "RERUM (Legacy)\nMobile App Sync Scripts",
-      "autoResize": true,
-      "lineHeight": 1.25,
-      "index": "ah"
-    },
-    {
       "id": "ghcr",
       "type": "rectangle",
       "x": 1280,
@@ -1913,59 +1833,6 @@
       "index": "al"
     },
     {
-      "id": "a9",
-      "type": "arrow",
-      "x": 1160,
-      "y": 912,
-      "width": 120,
-      "height": 0,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 2,
-      "strokeStyle": "dashed",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": {
-        "type": 2
-      },
-      "seed": 1049,
-      "version": 2,
-      "versionNonce": 992744432,
-      "isDeleted": false,
-      "boundElements": [],
-      "updated": 1773863220504,
-      "link": null,
-      "locked": false,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          120,
-          0
-        ]
-      ],
-      "lastCommittedPoint": null,
-      "startBinding": {
-        "elementId": "ls",
-        "focus": 0,
-        "gap": 1
-      },
-      "endBinding": {
-        "elementId": "rerum",
-        "focus": 0,
-        "gap": 1
-      },
-      "startArrowhead": null,
-      "endArrowhead": "arrow",
-      "index": "am"
-    },
-    {
       "id": "cicd",
       "type": "rectangle",
       "x": 80,
@@ -2095,43 +1962,6 @@
       "index": "ap"
     },
     {
-      "id": "mobile-note",
-      "type": "text",
-      "x": 1290,
-      "y": 960,
-      "width": 240,
-      "height": 36,
-      "angle": 0,
-      "strokeColor": "#868e96",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 1,
-      "strokeStyle": "solid",
-      "roughness": 1,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "roundness": null,
-      "seed": 1053,
-      "version": 2,
-      "versionNonce": 1330370544,
-      "isDeleted": false,
-      "boundElements": [],
-      "updated": 1773863220504,
-      "link": null,
-      "locked": false,
-      "text": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL",
-      "fontSize": 12,
-      "fontFamily": 3,
-      "textAlign": "left",
-      "verticalAlign": "top",
-      "containerId": null,
-      "originalText": "Sync scripts in API bridge:\nRERUM <-> PostgreSQL",
-      "autoResize": true,
-      "lineHeight": 1.25,
-      "index": "aq"
-    },
-    {
       "id": "domain-note",
       "type": "text",
       "x": 1290,
@@ -2235,7 +2065,7 @@
           "type": "text"
         },
         {
-          "id": "a-mob-rerum",
+          "id": "a-mob-ls",
           "type": "arrow"
         }
       ],
@@ -2282,12 +2112,12 @@
       "index": "au"
     },
     {
-      "id": "a-mob-rerum",
+      "id": "a-mob-ls",
       "type": "arrow",
       "x": 1610,
       "y": 840,
-      "width": 70,
-      "height": 72,
+      "width": 450,
+      "height": 0,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2315,8 +2145,8 @@
           0
         ],
         [
-          -70,
-          72
+          -450,
+          0
         ]
       ],
       "lastCommittedPoint": null,
@@ -2326,7 +2156,7 @@
         "gap": 1
       },
       "endBinding": {
-        "elementId": "rerum",
+        "elementId": "ls",
         "focus": 0,
         "gap": 1
       },

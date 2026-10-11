@@ -43,6 +43,13 @@
       "when": 1780168301809,
       "tag": "0005_slim_starhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791681843910,
+      "tag": "0006_drop_rerum_sync_tables",
+      "breakpoints": true
     }
   ]
 }

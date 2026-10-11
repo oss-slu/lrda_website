@@ -30,14 +30,6 @@ export {
 } from './admin';
 
 export {
-  SyncStatusSchema,
-  SyncRunSchema,
-  SyncRunDetailSchema,
-  SyncRunWithDetailsSchema,
-  SyncLogResponseSchema,
-} from './sync';
-
-export {
   PageViewTrackingSchema,
   TimeSeriesDataSchema,
   TopPageSchema,

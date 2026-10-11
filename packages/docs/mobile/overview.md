@@ -4,15 +4,7 @@ The **Where's Religion?** mobile app ([`lrda_mobile`](https://github.com/oss-slu
 
 ## Current Status
 
-The mobile app is in a **transition period**. It signs in with Better Auth through the website API, while parts of the data layer are still moving off the legacy RERUM backend:
-
-| Component | Current (Mobile) | Target (After Migration) |
-| --- | --- | --- |
-| **Auth** | Better Auth (via website API) | Better Auth (via website API) |
-| **API** | RERUM (`lived-religion-dev.rerum.io`) | Website API (`/api/*`) |
-| **Media** | S3 Proxy (`s3-proxy.rerum.io`) | TBD (likely R2 or S3) |
-
-During the transition, sync scripts in the website repo keep RERUM data in sync with PostgreSQL. See [Migration Status](/mobile/migration) for details.
+The mobile app uses the same backend as the web app: Better Auth and the Hono API from the website repo. Media uploads go through the S3 proxy (`s3-proxy.rerum.io`), which is planned to move to our own S3 or R2 storage.
 
 ## Tech Stack
 
@@ -26,7 +18,7 @@ During the transition, sync scripts in the website repo keep RERUM data in sync 
 | **Maps** | `react-native-maps` |
 | **Media** | Expo modules (camera, image-picker, video-thumbnails, audio) |
 | **Auth** | Better Auth (email/password, via website API) |
-| **Backend** | RERUM API + S3 Proxy |
+| **Backend** | Website Hono API + S3 Proxy |
 | **Styling** | React Native Paper (Material Design) + custom themes |
 
 ## Key Features

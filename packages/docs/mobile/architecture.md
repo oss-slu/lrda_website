@@ -35,7 +35,7 @@ lrda_mobile/
 │   ├── models/
 │   │   └── media_class.ts     # Media type hierarchy
 │   ├── utils/
-│   │   ├── api_calls.ts       # RERUM API client
+│   │   ├── api_calls.ts       # Hono API client
 │   │   ├── S3_proxy.ts        # Media upload client
 │   │   └── ...
 ├── assets/                    # Icons, fonts, splash screen
@@ -75,17 +75,17 @@ Bottom tab navigator with 5 tabs:
 
 The mobile app communicates with two external services:
 
-### RERUM API
-Base URL: `https://lived-religion-dev.rerum.io/deer-lr/`
+### Hono API
+Base URL: `API_BASE_URL` (production: `https://api.wheresreligion.org`)
 
 | Function | Endpoint | Purpose |
 | --- | --- | --- |
-| `fetchMessages()` | `/query` | All notes (recursive pagination) |
-| `fetchMessagesBatch()` | `/query` | User's notes (batch mode) |
-| `writeNewNote()` | `/create` | Create note |
-| `overwriteNote()` | `/overwrite` | Update note |
-| `deleteNoteFromAPI()` | `/delete` | Delete note |
-| `searchMessages()` | `/query` | Search by title/tags |
+| `fetchNotes()` | `GET /api/notes` | Notes page (filters via query params) |
+| `fetchAllNotes()` | `GET /api/notes` | All matching notes across pages |
+| `createNote()` | `POST /api/notes` | Create note |
+| `updateNote()` | `PATCH /api/notes/:id` | Update note |
+| `deleteNote()` | `DELETE /api/notes/:id` | Delete note |
+| `fetchUser()` | `GET /api/users/:id` | User profile |
 
 ### S3 Proxy
 Base URL: `http://s3-proxy.rerum.io/S3/`

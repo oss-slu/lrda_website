@@ -72,7 +72,6 @@ export default defineConfig({
           { text: 'Setup', link: '/mobile/setup' },
           { text: 'Architecture', link: '/mobile/architecture' },
           { text: 'Screens', link: '/mobile/screens' },
-          { text: 'Migration Status', link: '/mobile/migration' },
         ],
       },
       {

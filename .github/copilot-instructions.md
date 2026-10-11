@@ -6,16 +6,9 @@ This is the **Where's Religion?** desktop web application -- a TanStack Start pr
 
 ### Migration Context
 
-This codebase has migrated off the legacy RERUM backend and legacy auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that still uses RERUM.
+This codebase has migrated off the legacy RERUM backend and legacy auth to a self-hosted stack: Hono API on Node.js with PostgreSQL and Better Auth, deployed to AWS Lightsail via Docker. There is a companion **mobile app** (`lrda_mobile`) that uses the same API.
 
-**Migration status:**
-
-1. The web app has migrated (RERUM + legacy auth -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
-2. During the transition:
-   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
-3. Once the mobile app is also migrated, the RERUM sync scripts can be removed
-
-**Do not delete** the RERUM sync scripts (`packages/api/src/scripts/sync-*.ts`) -- they are needed for the migration period.
+**Backend:** Hono/Node.js + PostgreSQL + Better Auth on Lightsail, shared by the web app and the mobile app (`lrda_mobile`). Media uploads still go through the external S3 proxy (`s3-proxy.rerum.io`).
 
 ### Packages
 

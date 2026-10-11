@@ -74,12 +74,6 @@ Secrets are stored in `.env` (loaded via `--env-file`).
 | `pnpm db:push`     | Push schema directly (dev shortcut)  |
 | `pnpm db:studio`   | Open Drizzle Studio GUI              |
 
-### Migration Sync Scripts
-
-These scripts sync data from RERUM to PostgreSQL during the migration period.
-
-- `pnpm sync:from-rerum:yolo --full` - Sync notes/comments from RERUM
-
 ## API Endpoints
 
 ### Health

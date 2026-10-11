@@ -65,12 +65,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 This is the **Where's Religion?** desktop web application -- a TanStack Start project for documenting and mapping lived religion research. The app uses Google Maps for mapping and supports rich text editing with media uploads.
 
-**Migration status:**
-
-1. The web app has migrated (RERUM + legacy auth -> Hono/Node.js + PostgreSQL + Better Auth on Lightsail)
-2. During the transition:
-   - RERUM sync scripts (`packages/api/src/scripts/sync-from-rerum.ts`, `sync-to-rerum.ts`) keep the mobile app's RERUM data in sync with the new PostgreSQL backend
-3. Once the mobile app is also migrated, the RERUM sync scripts can be removed
+**Backend:** Hono/Node.js + PostgreSQL + Better Auth on Lightsail, shared by the web app and the mobile app (`lrda_mobile`). Media uploads still go through the external S3 proxy (`s3-proxy.rerum.io`).
 
 
 ## Architecture

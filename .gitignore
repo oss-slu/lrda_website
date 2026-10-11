@@ -46,7 +46,7 @@ docs/issues/*
 **/.wrangler
 **/.wrangler**
 .open-next
-rerum-notes-dump.json
+*-notes-dump.json
 *-users-dump.json
 d1-seed-dump.sql
 

@@ -32,8 +32,6 @@ In Spring 2026, the entire web application was migrated to an AWS + Cloudflare s
 - **Next.js** was replaced with TanStack Start (Vite + TanStack Router), deployed to Cloudflare Workers.
 - **Netlify** hosting and **GoDaddy** domains were both migrated to **Cloudflare**, giving us bot protection, edge deployment, and unified domain management.
 
-During the transition, sync scripts keep RERUM and PostgreSQL in sync so the mobile app (which still uses RERUM) continues to work. See [Migration Status](/mobile/migration) for details on what remains.
-
 **Media storage** currently goes through a Java proxy server (`s3-proxy.rerum.io`) managed by the RERUM team at SLU. The plan is to migrate media to our own S3 or Cloudflare R2 storage so we fully own the data pipeline.
 
 ## Decision Framework

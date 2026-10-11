@@ -112,7 +112,7 @@ New box bootstraps via `user-data.sh` (~3-5 min; creates empty `lrda_production`
 - [x] `pg_restore` into `lrda_production` (1653 notes, 1743 media, 314 users, etc.;
       only benign `COMMENT ON EXTENSION pgcrypto` error ignored)
 - [x] Merged `.env` secrets from local `packages/api/.env`: RESEND_API_KEY,
-      OPENROUTER_API_KEY, OPENROUTER_MODELS, RERUM_API_URL. CORS widened to include
+      OPENROUTER_API_KEY, OPENROUTER_MODELS. CORS widened to include
       `https://staging.wheresreligion.org` for the validation window.
       NOTE: `GOOGLE_MAPS_API_KEY` left BLANK (not in local .env; optional -- used only for
       server-side reverse geocoding of note coords in `notes.ts`/`lib/geocode.ts`).

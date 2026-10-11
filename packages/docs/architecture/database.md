@@ -26,7 +26,7 @@ The schema is defined in `packages/api/src/db/schema.ts` -- that file is the sou
 
 **Content tables:** `note`, `media`, `audio`, `comment` -- the core application data. Notes have location, text, media attachments, and threaded comments.
 
-**Sync/analytics:** `syncState`, `syncRun`, `syncRunDetail` (migration-period audit logging), `pageView` (privacy-first analytics, no PII).
+**Analytics:** `pageView` (privacy-first analytics, no PII).
 
 ### Relationships
 
@@ -119,22 +119,6 @@ pnpm api:db:seed
 ```
 
 Truncates all tables and populates them with fixture data (users, notes with media/audio, threaded comments). Uses a shared seed password for all test accounts. Safe to re-run.
-
-## RERUM Integration
-
-[RERUM](https://rerum.io) is an open Linked Data store maintained by SLU's research computing team (primary contact: Bryan). It was originally the primary backend for Where's Religion?, but has been replaced by our own PostgreSQL database.
-
-Going forward, RERUM will serve as a **public API layer for published notes**. When a note is published, we push its content to RERUM, where it becomes part of their open Linked Data store -- publicly queryable, version-controlled, and interoperable with other Linked Data consumers. This gives us the benefits of RERUM's open data ecosystem without the data format drawbacks of using it as a primary backend. There are no privacy concerns since only published notes (which are already public on our map) are pushed.
-
-Authenticated access to RERUM has been set up with a private key for our application.
-
-### Migration-Period Sync Scripts
-
-These scripts exist for the migration period while the mobile app still uses RERUM. They are not needed for regular development.
-
-**RERUM note sync:** `sync-from-rerum.ts` pulls notes from RERUM into PostgreSQL (incremental or full). `sync-to-rerum.ts` pushes web app changes back to RERUM for the mobile app. Both scripts are in `packages/api/src/scripts/`.
-
-**When can these be removed?** Once the mobile app is migrated to use the PostgreSQL backend directly, the sync scripts and the `syncState`/`syncRun`/`syncRunDetail` tables can be removed. Publishing to RERUM should be integrated directly into the note publish API endpoint rather than relying on the batch sync infrastructure.
 
 ## Key Files
 
