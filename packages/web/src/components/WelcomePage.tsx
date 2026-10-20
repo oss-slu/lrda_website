@@ -66,10 +66,11 @@ export default function WelcomePage() {
               className={`mb-6 text-5xl leading-tight font-black text-gray-900 sm:text-6xl lg:text-7xl ${ANIMATE_CLASS}`}
               style={{ animationDelay: '0.2s' }}
             >
-              Map the world's{' '}
+              Map and explore{' '}
               <span className='bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700 bg-clip-text text-transparent'>
-                religious landscape
-              </span>
+                lived religion
+              </span>{' '}
+              around the globe
             </h2>
 
             {/* Subheading */}
@@ -77,8 +78,8 @@ export default function WelcomePage() {
               className={`mb-8 text-lg leading-relaxed text-gray-600 sm:text-xl ${ANIMATE_CLASS}`}
               style={{ animationDelay: '0.3s' }}
             >
-              Document, share, and explore religious sites anywhere. Built for researchers, by
-              researchers.
+              Where's Religion makes documenting, sharing, and exploring multimedia records of lived
+              religion accessible to everyone.
             </p>
 
             {/* Feature pills */}
