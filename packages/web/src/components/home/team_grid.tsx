@@ -1,4 +1,3 @@
-import TeamCard from './team_card';
 import ContributorCard from './contributor_card';
 import { useReveal, motionVariants } from '@/utils/motion';
 
@@ -7,6 +6,7 @@ const initiativeTeam = [
     name: 'Rachel Lindsey',
     role: 'Director of Center on Lived Religion',
     src: '/aboutPageImages/Rachel.webp',
+    href: 'https://www.slu.edu/arts-and-sciences/theological-studies/faculty/lindsey-rachel.php',
   },
   {
     name: 'Adam Park',
@@ -188,8 +188,8 @@ export default function TeamGrid() {
 
             <div className='mx-auto flex max-w-4xl flex-wrap justify-center gap-8'>
               {initiativeTeam.map((person, index) => (
-                <div key={person.name} className='w-full sm:w-auto'>
-                  <TeamCard {...person} delay={index * 100} />
+                <div key={person.name} className='w-full max-w-xs basis-72'>
+                  <ContributorCard {...person} delay={index * 100} />
                 </div>
               ))}
             </div>
