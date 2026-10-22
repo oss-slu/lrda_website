@@ -23,8 +23,7 @@ export default function AboutIntro() {
             </span>
           </h2>
           <p className='mx-auto max-w-3xl text-xl leading-relaxed text-slate-600'>
-            Building the Where's Religion platform with cutting-edge technology and innovative
-            design
+            Advancing the study of religion and public life at Saint Louis University
           </p>
         </div>
 
