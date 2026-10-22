@@ -19,12 +19,20 @@ export default function Footer() {
               Where&apos;s Religion?
             </Link>
             <p className='text-sm leading-relaxed text-gray-600'>
-              Advancing the study of religion and public life through rigorous scholarly methods.
+              A research, teaching, and learning platform for advancing the understanding of
+              religion and human experience.
             </p>
             <p className='text-sm text-gray-500'>
               Saint Louis University
               <br />
-              Center on Lived Religion
+              <a
+                href='https://www.slu.edu/arts-and-sciences/center-on-lived-religion/index.php'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='rounded-sm font-medium text-blue-700 underline underline-offset-4 transition-colors hover:text-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700'
+              >
+                Center on Lived Religion
+              </a>
             </p>
           </div>
 
