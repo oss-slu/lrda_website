@@ -8,6 +8,8 @@ type ContributorCardProps = {
   socials?: { github?: string; linkedin?: string };
   delay?: number;
   offset?: number;
+  // Optional page (e.g. a faculty profile) opened when the name or card is clicked.
+  href?: string;
 };
 
 export default function ContributorCard({
@@ -17,6 +19,7 @@ export default function ContributorCard({
   socials,
   delay = 0,
   offset = 20,
+  href,
 }: ContributorCardProps) {
   const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: '120px 0px' });
 
@@ -57,12 +60,23 @@ export default function ContributorCard({
             </span>
           </div>
 
-          {/* Name */}
-          <h3 className='text-xl font-bold tracking-tight text-white'>{name}</h3>
+          {/* Name; with href, its ::after stretches the link over the whole card */}
+          <h3 className='text-xl font-bold tracking-tight text-white'>
+            {href ?
+              <a
+                href={href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='after:absolute after:inset-0 hover:underline'
+              >
+                {name}
+              </a>
+            : name}
+          </h3>
 
-          {/* Social links bottom right */}
+          {/* Social links bottom right (z-20 keeps them above a stretched name link) */}
           {socials && (
-            <div className='absolute right-5 bottom-5 flex gap-2'>
+            <div className='absolute right-5 bottom-5 z-20 flex gap-2'>
               {socials.github && (
                 <a
                   href={socials.github}
