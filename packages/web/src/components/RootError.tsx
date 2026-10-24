@@ -1,7 +1,13 @@
-import { Link } from '@tanstack/react-router';
+import { Link, type ErrorComponentProps } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 
-export default function RootError({ error }: { error: Error }) {
+export default function RootError({ error }: ErrorComponentProps) {
+  // The router types the thrown value as unknown, so it may not be an Error.
+  const message =
+    error instanceof Error ? error.message
+    : error ? String(error)
+    : '';
+
   return (
     <div
       className='relative flex h-full flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-blue-900 to-black'
@@ -31,9 +37,9 @@ export default function RootError({ error }: { error: Error }) {
           An unexpected error occurred. Please try refreshing the page.
         </p>
 
-        {import.meta.env.DEV && error.message && (
+        {import.meta.env.DEV && message && (
           <pre className='mx-auto mb-8 max-w-2xl overflow-auto rounded-lg border border-white/10 bg-white/5 p-4 text-left text-sm text-blue-300'>
-            {error.message}
+            {message}
           </pre>
         )}
 
