@@ -35,6 +35,17 @@ type OnlineResource = {
 
 const onlineResources: OnlineResource[] = [
   {
+    title:
+      'American Academy of Religion Guidelines for Supporting and Evaluating Public Scholarship in Religion',
+    url: 'https://aarweb.org/news/aar-guidelines-for-supporting-and-evaluating-public-scholarship-in-religion/',
+    plain: true,
+  },
+  {
+    title: 'American Academy of Religion Guidelines for Evaluating Digital Scholarship',
+    url: 'https://aarweb.org/news/guidelines-for-evaluating-digital-scholarship/',
+    plain: true,
+  },
+  {
     title: 'American Anthropological Association Resources on Ethics',
     url: 'https://americananthro.org/about/anthropological-ethics/',
     plain: true,
