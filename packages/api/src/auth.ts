@@ -26,7 +26,9 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   basePath: '/api/auth',
-  trustedOrigins: env.ENVIRONMENT === 'development' ? ['*'] : getTrustedOrigins(),
+  // '*' only matches origins with a host, so the mobile app's scheme origin (lrda://, sent by
+  // the Expo plugin) must be listed explicitly or sign-up fails with "Invalid origin".
+  trustedOrigins: env.ENVIRONMENT === 'development' ? ['*', 'lrda://'] : getTrustedOrigins(),
   user: {
     deleteUser: {
       enabled: true,
