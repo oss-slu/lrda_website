@@ -119,13 +119,7 @@ export default function WelcomePage() {
                     size='h-6 w-6'
                     className='flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-md shadow-blue-500/30 backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/40 hover:bg-white/20'
                   />
-                  <IconLink
-                    icon='twitterX'
-                    href='https://twitter.com/livedreligion'
-                    label='Visit Twitter/X'
-                    size='h-6 w-6'
-                    className='flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-md shadow-blue-500/30 backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/40 hover:bg-white/20 hover:text-black'
-                  />
+
                   <IconLink
                     icon='github'
                     href='https://github.com/oss-slu/lrda_website'
