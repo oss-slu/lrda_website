@@ -82,21 +82,6 @@ export default function WelcomePage() {
               religion accessible to everyone.
             </p>
 
-            {/* Feature pills */}
-            <div
-              className={`mb-8 flex flex-wrap gap-3 ${ANIMATE_CLASS}`}
-              style={{ animationDelay: '0.4s' }}
-            >
-              {['Global Mapping', 'Data Collection', 'Open Source'].map((feature, i) => (
-                <div
-                  key={i}
-                  className='cursor-default rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm'
-                >
-                  {feature}
-                </div>
-              ))}
-            </div>
-
             {/* CTA and Social Links */}
             <div className='flex flex-col items-center gap-4 sm:flex-row'>
               {/* Primary CTA */}
