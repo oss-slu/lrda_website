@@ -132,7 +132,7 @@ const devTeam = [
   {
     name: 'Sean Kee',
     role: 'Developer',
-    src: 'https://github.com/keeini.png',
+    src: '/aboutPageImages/sean kee.jpg',
     socials: {
       github: 'https://github.com/keeini',
       linkedin: 'https://www.linkedin.com/in/sean-kee-05032a177/',
