@@ -87,9 +87,7 @@ export default function WelcomePage() {
               {/* Primary CTA */}
               <a
                 className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:ring-4 focus-visible:ring-blue-400/50 focus-visible:outline-none'
-                href='https://religioninplace.org'
-                target='_blank'
-                rel='noopener noreferrer'
+                href='/wheres-religion'
               >
                 <span className='absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
                 <span className='relative flex items-center gap-2'>
