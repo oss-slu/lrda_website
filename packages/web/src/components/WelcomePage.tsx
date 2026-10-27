@@ -82,29 +82,12 @@ export default function WelcomePage() {
               religion accessible to everyone.
             </p>
 
-            {/* Feature pills */}
-            <div
-              className={`mb-8 flex flex-wrap gap-3 ${ANIMATE_CLASS}`}
-              style={{ animationDelay: '0.4s' }}
-            >
-              {['Global Mapping', 'Data Collection', 'Open Source'].map((feature, i) => (
-                <div
-                  key={i}
-                  className='cursor-default rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm'
-                >
-                  {feature}
-                </div>
-              ))}
-            </div>
-
             {/* CTA and Social Links */}
             <div className='flex flex-col items-center gap-4 sm:flex-row'>
               {/* Primary CTA */}
               <a
                 className='group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-blue-500/70 focus-visible:ring-4 focus-visible:ring-blue-400/50 focus-visible:outline-none'
-                href='https://religioninplace.org'
-                target='_blank'
-                rel='noopener noreferrer'
+                href='/wheres-religion'
               >
                 <span className='absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
                 <span className='relative flex items-center gap-2'>
@@ -136,13 +119,7 @@ export default function WelcomePage() {
                     size='h-6 w-6'
                     className='flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-md shadow-blue-500/30 backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/40 hover:bg-white/20'
                   />
-                  <IconLink
-                    icon='twitterX'
-                    href='https://twitter.com/livedreligion'
-                    label='Visit Twitter/X'
-                    size='h-6 w-6'
-                    className='flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-md shadow-blue-500/30 backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/40 hover:bg-white/20 hover:text-black'
-                  />
+
                   <IconLink
                     icon='github'
                     href='https://github.com/oss-slu/lrda_website'
