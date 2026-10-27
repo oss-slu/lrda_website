@@ -19,12 +19,13 @@ const devTeam = [
   // Tech Leads
   {
     name: 'Yash Bhatia',
-    role: 'Software Engineer and Tech Lead',
+    role: 'Tech Lead',
     src: '/aboutPageImages/Yash.webp',
     socials: {
       github: 'https://github.com/yashb196',
       linkedin: 'https://www.linkedin.com/in/yashbhatia238/',
     },
+    current: false,
   },
   {
     name: 'Zanxiang Wang',
@@ -35,6 +36,7 @@ const devTeam = [
       github: 'https://github.com/BaloneyBoy97',
       linkedin: 'https://www.linkedin.com/in/zanxiang-wang-352b112a0/',
     },
+    current: false,
   },
   {
     name: 'Mathew Shereni',
@@ -45,6 +47,7 @@ const devTeam = [
       github: 'https://github.com/MATHEW-SHERENI',
       linkedin: 'https://www.linkedin.com/in/mathew-shereni-213130aa/',
     },
+    current: true,
   },
   {
     name: 'Jacob Maynard',
@@ -55,13 +58,14 @@ const devTeam = [
       github: 'https://github.com/InfinityBowman',
       linkedin: 'https://www.linkedin.com/in/jacob-maynard-283767230/',
     },
+    current: false,
   },
   // Senior Developers
-  { name: 'Patrick Cuba', role: 'IT Architect', src: '/aboutPageImages/Patrick.webp', offset: 10 },
-  { name: 'Bryan Haberberger', role: 'Full Stack Developer', src: '/aboutPageImages/Bryan.webp' },
+  { name: 'Patrick Cuba', role: 'IT Architect', src: '/aboutPageImages/Patrick.webp', offset: 10, current: false },
+  { name: 'Bryan Haberberger', role: 'Developer', src: '/aboutPageImages/Bryan.webp', current: false },
   // Developers
   { name: 'Izak Robles', role: 'Developer', src: '/aboutPageImages/Izak.webp', offset: 60 },
-  { name: 'Stuart Ray', role: 'Developer', src: '/aboutPageImages/Stuart.webp' },
+  { name: 'Stuart Ray', role: 'Developer', src: '/aboutPageImages/Stuart.webp', current: false },
   {
     name: 'Amy Chen',
     role: 'Developer',
@@ -70,6 +74,7 @@ const devTeam = [
       github: 'https://github.com/amychen108',
       linkedin: 'https://www.linkedin.com/in/amy-chen-0a1232258/',
     },
+    current: false,
   },
   {
     name: 'Justin Wang',
@@ -80,6 +85,7 @@ const devTeam = [
       github: 'https://github.com/jwang-101',
       linkedin: 'https://www.linkedin.com/in/justin-wang-2a67b1295/',
     },
+    current: false,
   },
   { name: 'Sam Sheppard', role: 'Developer', src: '/aboutPageImages/Sam.webp', offset: 40 },
   {
@@ -91,6 +97,7 @@ const devTeam = [
       github: 'https://github.com/PunSon',
       linkedin: 'https://www.linkedin.com/in/puneet-sontha/',
     },
+    current: false,
   },
   {
     name: 'Muhammad Hashir',
@@ -100,6 +107,7 @@ const devTeam = [
       github: 'https://github.com/mhashir03',
       linkedin: 'https://www.linkedin.com/in/muhammad-hashir03',
     },
+    current: false,
   },
   {
     name: 'Andres Castellanos',
@@ -109,6 +117,7 @@ const devTeam = [
       github: 'https://github.com/andycaste2004',
       linkedin: 'https://www.linkedin.com/in/andres-castellanos-carrillo-536a10331/',
     },
+    current: false,
   },
   {
     name: 'Garrett Glencoe',
@@ -118,24 +127,27 @@ const devTeam = [
       github: 'https://github.com/GGlencoe',
       linkedin: 'https://www.linkedin.com/in/garrett-glencoe/',
     },
+    current: true,
   },
   {
     name: 'Sean Kee',
     role: 'Developer',
-    src: 'https://github.com/keeini.png',
+    src: '/aboutPageImages/sean kee.jpg',
     socials: {
       github: 'https://github.com/keeini',
       linkedin: 'https://www.linkedin.com/in/sean-kee-05032a177/',
     },
+    current: true,
   },
   {
     name: 'Nolen Cowans',
     role: 'Developer',
-    src: 'https://github.com/Nolencc24.png',
+    src: '/aboutPageImages/Nolen Cowans.jpg',
     socials: {
       github: 'https://github.com/Nolencc24',
       linkedin: 'https://www.linkedin.com/in/nolen-cowans-625354305',
     },
+    current: true,
   },
 ];
 
@@ -201,13 +213,31 @@ export default function TeamGrid() {
               <h3 className='mb-4 text-2xl font-bold text-slate-900 sm:text-3xl'>Contributors</h3>
               <p className='mx-auto max-w-3xl text-xl leading-relaxed text-slate-600'>
                 {' '}
-                Building the platform
+                The development team is a partnership with SLU's Department of 
+                Computer Science, Open Source with SLU, and IT professionals in 
+                Saint Louis University's Research Computing Group
               </p>
             </div>
 
             <div className='flex flex-wrap justify-evenly gap-8'>
-              {devTeam.map((person, index) => (
+              {devTeam.filter(person => person.current === true).map((person, index) => (
                 <div key={person.name} className='max-w-xs flex-grow basis-72'>
+                  <ContributorCard {...person} delay={index * 50} />
+                </div>
+              ))}
+            </div>
+
+            <div className='mt-16 mb-8 text-center'>
+              <h3 className='mb-4 text-2xl font-bold text-slate-900 sm:text-3xl'>Past Contributors</h3>
+              <p className='mx-auto max-w-3xl text-xl leading-relaxed text-slate-600'>
+                {' '}
+                The developers who have contributed to the project in the past, but are no longer active members of the team.
+              </p>
+            </div>
+
+            <div className='flex flex-wrap justify-evenly gap-8'>
+              {devTeam.filter(person => person.current === false).map((person, index) => (
+                <div key={person.name} className='max-w-xs basis-40'>
                   <ContributorCard {...person} delay={index * 50} />
                 </div>
               ))}

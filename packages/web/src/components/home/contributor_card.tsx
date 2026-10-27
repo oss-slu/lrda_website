@@ -10,6 +10,7 @@ type ContributorCardProps = {
   offset?: number;
   // Optional page (e.g. a faculty profile) opened when the name or card is clicked.
   href?: string;
+  current?: boolean;
 };
 
 export default function ContributorCard({
@@ -74,9 +75,9 @@ export default function ContributorCard({
             : name}
           </h3>
 
-          {/* Social links bottom right (z-20 keeps them above a stretched name link) */}
+          {/* Social links top right*/}
           {socials && (
-            <div className='absolute right-5 bottom-5 z-20 flex gap-2'>
+            <div className='absolute right-5 top-5 z-20 flex gap-2'>
               {socials.github && (
                 <a
                   href={socials.github}
