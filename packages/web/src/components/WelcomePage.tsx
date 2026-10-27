@@ -29,8 +29,8 @@ function WelcomeHero() {
           Where&apos;s Religion?
         </h1>
         <p className='mx-auto mt-6 max-w-2xl text-xl leading-relaxed font-light text-white/95 sm:text-2xl md:text-3xl'>
-          advancing the study of <span className='font-semibold text-blue-300'>religion</span> and{' '}
-          <span className='font-semibold text-blue-300'>public life</span>
+          a research, teaching, and learning platform for advancing the understanding of <span className='font-semibold text-blue-300'>religion</span> and{' '}
+          <span className='font-semibold text-blue-300'>human experience</span>
         </p>
         {/* CTA Buttons */}
         <div className='mt-8 flex flex-col justify-center gap-4 sm:flex-row'>
