@@ -24,7 +24,7 @@
     "@hono/zod-openapi": "^1.4.0",
     "@lrda/shared": "workspace:*",
     "@scalar/hono-api-reference": "^0.10.19",
-    "better-auth": "^1.6.22",
+    "better-auth": "^1.7.7",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.11",
     "pg": "^8.21.0",
