@@ -87,7 +87,7 @@
     "@tiptap/pm": "^3.23.6",
     "@tiptap/react": "^3.23.6",
     "@tiptap/static-renderer": "^3.23.6",
-    "better-auth": "^1.6.22",
+    "better-auth": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -131,7 +131,7 @@
     "playwright": "^1.60.0",
     "tailwindcss": "^4.3.0",
     "typescript": "5.9.3",
-    "vite": "^8.2.4",
+    "vite": "^8.3.3",
     "vitest": "^5.0.0",
     "wrangler": "^4.95.0"
   },
