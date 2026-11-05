@@ -1,10 +1,23 @@
+import { useSearch } from '@tanstack/react-router';
 import { useReveal, motionVariants } from '@/utils/motion';
 import { IconLink } from './IconLink';
 
 const ANIMATE_CLASS = 'animate-fade-in opacity-0';
 
+// Hero title typeface candidates for the client to compare (#368), previewed with
+// /?heroFont=fraunces|playfair|bricolage. Without the param the title is unchanged.
+const HERO_FONTS: Record<string, string> = {
+  fraunces: "font-hero-fraunces font-semibold tracking-tight [font-variation-settings:'SOFT'_100]",
+  playfair: 'font-hero-playfair font-bold',
+  bricolage: 'font-hero-bricolage font-extrabold tracking-tight',
+};
+const DEFAULT_HERO_FONT = 'font-black tracking-tight';
+
 function WelcomeHero() {
   const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: '120px 0px', threshold: 0.1 });
+  const search: Record<string, unknown> = useSearch({ strict: false });
+  const heroFont = typeof search.heroFont === 'string' ? search.heroFont : '';
+  const titleFont = Object.hasOwn(HERO_FONTS, heroFont) ? HERO_FONTS[heroFont] : DEFAULT_HERO_FONT;
   return (
     <section
       ref={ref}
@@ -25,7 +38,9 @@ function WelcomeHero() {
       </div>
 
       <div className='relative z-10 w-full p-8 text-center text-white sm:p-12'>
-        <h1 className='mb-4 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text pb-2 text-5xl leading-none font-black tracking-tight whitespace-nowrap text-transparent sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl'>
+        <h1
+          className={`mb-4 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text pb-2 text-5xl leading-none whitespace-normal text-transparent sm:text-6xl sm:whitespace-nowrap md:text-7xl lg:text-8xl xl:text-9xl ${titleFont}`}
+        >
           Where&apos;s Religion?
         </h1>
         <p className='mx-auto mt-6 max-w-2xl text-xl leading-relaxed font-light text-white/95 sm:text-2xl md:text-3xl'>
