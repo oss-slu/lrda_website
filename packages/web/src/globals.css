@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+/* Hero title typeface candidates (#368), self-hosted via Fontsource */
+@import '@fontsource-variable/fraunces/soft.css';
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource-variable/bricolage-grotesque';
 
 :root {
   --background: hsl(0 0% 100%);
@@ -89,6 +93,10 @@
 
   --animate-fade-in: fadeIn 1s ease-in forwards;
   --animate-zoom-slow: zoomIn 10s ease-in-out infinite alternate;
+
+  --font-hero-fraunces: 'Fraunces Variable', Georgia, serif;
+  --font-hero-playfair: 'Playfair Display Variable', Georgia, serif;
+  --font-hero-bricolage: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
 }
 
 @keyframes fadeIn {
