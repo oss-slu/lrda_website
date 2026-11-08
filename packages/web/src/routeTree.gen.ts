@@ -9,92 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
-import { Route as PublicWheresReligionRouteImport } from './routes/_public/wheres-religion'
-import { Route as PublicVerifyEmailRouteImport } from './routes/_public/verify-email'
-import { Route as PublicStoriesRouteImport } from './routes/_public/stories'
-import { Route as PublicSignupRouteImport } from './routes/_public/signup'
-import { Route as PublicResourcesRouteImport } from './routes/_public/resources'
-import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
-import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as PublicForgotPasswordRouteImport } from './routes/_public/forgot-password'
-import { Route as PublicDeleteAccountRouteImport } from './routes/_public/delete-account'
-import { Route as PublicConfirmRouteImport } from './routes/_public/confirm'
-import { Route as AppMapRouteImport } from './routes/_app/map'
-import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AppAuthenticatedRouteImport } from './routes/_app/_authenticated'
-import { Route as PublicNotesIdRouteImport } from './routes/_public/notes.$id'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppMapRouteImport } from './routes/_app/map'
+import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicConfirmRouteImport } from './routes/_public/confirm'
+import { Route as PublicDeleteAccountRouteImport } from './routes/_public/delete-account'
+import { Route as PublicForgotPasswordRouteImport } from './routes/_public/forgot-password'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
+import { Route as PublicResourcesRouteImport } from './routes/_public/resources'
+import { Route as PublicSignupRouteImport } from './routes/_public/signup'
+import { Route as PublicStoriesRouteImport } from './routes/_public/stories'
+import { Route as PublicVerifyEmailRouteImport } from './routes/_public/verify-email'
+import { Route as PublicWheresReligionRouteImport } from './routes/_public/wheres-religion'
 import { Route as AppAuthenticatedInstructorDashboardRouteImport } from './routes/_app/_authenticated/instructor-dashboard'
+import { Route as PublicNotesIdRouteImport } from './routes/_public/notes.$id'
 import { Route as AppAuthenticatedNotesIndexRouteImport } from './routes/_app/_authenticated/notes.index'
 
-const PublicRoute = PublicRouteImport.update({
-  id: '/_public',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const PublicWheresReligionRoute = PublicWheresReligionRouteImport.update({
-  id: '/wheres-religion',
-  path: '/wheres-religion',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicVerifyEmailRoute = PublicVerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicStoriesRoute = PublicStoriesRouteImport.update({
-  id: '/stories',
-  path: '/stories',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicSignupRoute = PublicSignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicResourcesRoute = PublicResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicResetPasswordRoute = PublicResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicLoginRoute = PublicLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicForgotPasswordRoute = PublicForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicDeleteAccountRoute = PublicDeleteAccountRouteImport.update({
-  id: '/delete-account',
-  path: '/delete-account',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicConfirmRoute = PublicConfirmRouteImport.update({
-  id: '/confirm',
-  path: '/confirm',
-  getParentRoute: () => PublicRoute,
-} as any)
-const AppMapRoute = AppMapRouteImport.update({
-  id: '/map',
-  path: '/map',
+const AppAuthenticatedRoute = AppAuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminRoute = AppAdminRouteImport.update({
@@ -102,13 +46,64 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAuthenticatedRoute = AppAuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const AppMapRoute = AppMapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => AppRoute,
 } as any)
-const PublicNotesIdRoute = PublicNotesIdRouteImport.update({
-  id: '/notes/$id',
-  path: '/notes/$id',
+const PublicIndexRoute = PublicIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicConfirmRoute = PublicConfirmRouteImport.update({
+  id: '/confirm',
+  path: '/confirm',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDeleteAccountRoute = PublicDeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicForgotPasswordRoute = PublicForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResetPasswordRoute = PublicResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResourcesRoute = PublicResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSignupRoute = PublicSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicStoriesRoute = PublicStoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicVerifyEmailRoute = PublicVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicWheresReligionRoute = PublicWheresReligionRouteImport.update({
+  id: '/wheres-religion',
+  path: '/wheres-religion',
   getParentRoute: () => PublicRoute,
 } as any)
 const AppAuthenticatedInstructorDashboardRoute =
@@ -117,6 +112,11 @@ const AppAuthenticatedInstructorDashboardRoute =
     path: '/instructor-dashboard',
     getParentRoute: () => AppAuthenticatedRoute,
   } as any)
+const PublicNotesIdRoute = PublicNotesIdRouteImport.update({
+  id: '/notes/$id',
+  path: '/notes/$id',
+  getParentRoute: () => PublicRoute,
+} as any)
 const AppAuthenticatedNotesIndexRoute =
   AppAuthenticatedNotesIndexRouteImport.update({
     id: '/notes/',
@@ -249,13 +249,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_public': {
-      id: '/_public'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof PublicRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -263,88 +256,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
+    '/_public': {
+      id: '/_public'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_public/wheres-religion': {
-      id: '/_public/wheres-religion'
-      path: '/wheres-religion'
-      fullPath: '/wheres-religion'
-      preLoaderRoute: typeof PublicWheresReligionRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/verify-email': {
-      id: '/_public/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof PublicVerifyEmailRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/stories': {
-      id: '/_public/stories'
-      path: '/stories'
-      fullPath: '/stories'
-      preLoaderRoute: typeof PublicStoriesRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/signup': {
-      id: '/_public/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof PublicSignupRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/resources': {
-      id: '/_public/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof PublicResourcesRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/reset-password': {
-      id: '/_public/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof PublicResetPasswordRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/login': {
-      id: '/_public/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof PublicLoginRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/forgot-password': {
-      id: '/_public/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof PublicForgotPasswordRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/delete-account': {
-      id: '/_public/delete-account'
-      path: '/delete-account'
-      fullPath: '/delete-account'
-      preLoaderRoute: typeof PublicDeleteAccountRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/confirm': {
-      id: '/_public/confirm'
-      path: '/confirm'
-      fullPath: '/confirm'
-      preLoaderRoute: typeof PublicConfirmRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_app/map': {
-      id: '/_app/map'
-      path: '/map'
-      fullPath: '/map'
-      preLoaderRoute: typeof AppMapRouteImport
+    '/_app/_authenticated': {
+      id: '/_app/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppAuthenticatedRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin': {
@@ -354,18 +277,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/_authenticated': {
-      id: '/_app/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AppAuthenticatedRouteImport
+    '/_app/map': {
+      id: '/_app/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof AppMapRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_public/notes/$id': {
-      id: '/_public/notes/$id'
-      path: '/notes/$id'
-      fullPath: '/notes/$id'
-      preLoaderRoute: typeof PublicNotesIdRouteImport
+    '/_public/': {
+      id: '/_public/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/confirm': {
+      id: '/_public/confirm'
+      path: '/confirm'
+      fullPath: '/confirm'
+      preLoaderRoute: typeof PublicConfirmRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/delete-account': {
+      id: '/_public/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof PublicDeleteAccountRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/forgot-password': {
+      id: '/_public/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof PublicForgotPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/reset-password': {
+      id: '/_public/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof PublicResetPasswordRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/resources': {
+      id: '/_public/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof PublicResourcesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/signup': {
+      id: '/_public/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof PublicSignupRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/stories': {
+      id: '/_public/stories'
+      path: '/stories'
+      fullPath: '/stories'
+      preLoaderRoute: typeof PublicStoriesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/verify-email': {
+      id: '/_public/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof PublicVerifyEmailRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/wheres-religion': {
+      id: '/_public/wheres-religion'
+      path: '/wheres-religion'
+      fullPath: '/wheres-religion'
+      preLoaderRoute: typeof PublicWheresReligionRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_app/_authenticated/instructor-dashboard': {
@@ -374,6 +367,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/instructor-dashboard'
       preLoaderRoute: typeof AppAuthenticatedInstructorDashboardRouteImport
       parentRoute: typeof AppAuthenticatedRoute
+    }
+    '/_public/notes/$id': {
+      id: '/_public/notes/$id'
+      path: '/notes/$id'
+      fullPath: '/notes/$id'
+      preLoaderRoute: typeof PublicNotesIdRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_app/_authenticated/notes/': {
       id: '/_app/_authenticated/notes/'
