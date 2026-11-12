@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { useReveal, motionVariants } from '@/utils/motion';
 import { IconLink } from './IconLink';
@@ -16,7 +17,12 @@ const DEFAULT_HERO_FONT = 'font-black tracking-tight';
 function WelcomeHero() {
   const { ref, isVisible } = useReveal<HTMLDivElement>({ rootMargin: '120px 0px', threshold: 0.1 });
   const search: Record<string, unknown> = useSearch({ strict: false });
-  const heroFont = typeof search.heroFont === 'string' ? search.heroFont : '';
+  // Cloudflare caches the landing page ignoring the query string, so the server-rendered
+  // title always uses the default font, and hydration does not patch the class. Apply the
+  // preview font only after mount so the client re-renders with it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const heroFont = mounted && typeof search.heroFont === 'string' ? search.heroFont : '';
   const titleFont = Object.hasOwn(HERO_FONTS, heroFont) ? HERO_FONTS[heroFont] : DEFAULT_HERO_FONT;
   return (
     <section
