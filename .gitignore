@@ -20,6 +20,9 @@ all_notes.json
 .localstack/
 localstack-data/
 
+# Test coverage
+coverage/
+
 # Playwright
 playwright-report/
 test-results/
