@@ -5,6 +5,13 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.d.ts', 'src/**/__tests__/**'],
+      reporter: ['text-summary', 'html'],
+      reportOnFailure: true,
+    },
     env: {
       NODE_ENV: 'test',
       ENVIRONMENT: 'test',
