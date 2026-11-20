@@ -10,6 +10,9 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.d.ts', 'src/**/__tests__/**'],
       reporter: ['text-summary', 'html'],
+      thresholds: {
+        lines: 19.63,
+      },
       reportOnFailure: true,
     },
     env: {

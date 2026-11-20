@@ -21,6 +21,9 @@ export default defineConfig({
         'src/routeTree.gen.ts',
       ],
       reporter: ['text-summary', 'html'],
+      thresholds: {
+        lines: 5.67,
+      },
       reportOnFailure: true,
     },
     alias: {
