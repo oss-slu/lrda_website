@@ -23,6 +23,7 @@ export default defineConfig({
       LOG_LEVEL: 'silent',
       BETTER_AUTH_SECRET: 'test-secret-key-for-testing-only',
       BETTER_AUTH_URL: 'http://localhost:3003',
+      ...(process.env.DATABASE_URL && { DATABASE_URL: process.env.DATABASE_URL }),
     },
   },
   resolve: {
