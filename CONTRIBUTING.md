@@ -206,3 +206,17 @@ pnpm test:e2e      # End-to-end tests (Playwright)
 2. Run `pnpm test` and ensure tests pass
 3. Test your changes locally
 4. Update documentation if needed
+
+---
+
+## Issue Guidelines
+
+When you open a new issue on GitHub, choose a template from [`.github/ISSUE_TEMPLATE/`](./.github/ISSUE_TEMPLATE/):
+
+- **Bug report**: steps to reproduce, expected and actual behavior, and your environment.
+- **Feature request**: a user story, tasks, acceptance criteria, and test cases.
+
+## Pull Request Process
+
+New pull requests pre-fill from [`.github/pull_request_template.md`](./.github/pull_request_template.md). Link the issue
+with `Closes #N`, describe what changed and how you tested it, and work through the checklist before requesting review.
