@@ -46,7 +46,7 @@ Open [http://localhost:3000](http://localhost:3000) - the full stack is running!
 
 ### Windows
 
-`pnpm run setup` and `pnpm dev` don't work on Windows, because they rely on Unix commands that aren't available when pnpm runs scripts there. Run these steps in **Git Bash** or **PowerShell** instead, after `pnpm install`. In Command Prompt, step 1 is `copy packages\web\.env.example packages\web\.env.local` and `copy packages\api\.env.example packages\api\.env`; the other steps are the same.
+`pnpm run setup` and `pnpm dev` don't work on Windows, because they rely on Unix commands that aren't available when pnpm runs scripts there. Run these steps in **Git Bash** or **PowerShell** instead, from the `lrda_website` folder (the repository root), after `pnpm install`. In Command Prompt, step 1 is `copy packages\web\.env.example packages\web\.env.local` and `copy packages\api\.env.example packages\api\.env`; the other steps are the same.
 
 ```bash
 # 1. Create your environment files from the examples (one time only)
