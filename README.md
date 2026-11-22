@@ -44,7 +44,26 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) - the full stack is running! The API runs on port 3002 and the docs site on port 3001.
 
-> **Windows:** `pnpm run setup` and `pnpm dev` use Unix commands (`cp`, `lsof`, `sleep`) and fail in Windows shells. Copy `packages/web/.env.example` to `packages/web/.env.local` and `packages/api/.env.example` to `packages/api/.env`, then run `pnpm api:docker:up`, `pnpm api:db:push`, and `pnpm exec concurrently -k "pnpm dev:api" "pnpm dev:web"`.
+### Windows
+
+`pnpm run setup` and `pnpm dev` don't work on Windows, because they rely on Unix commands that aren't available when pnpm runs scripts there. Run these steps in **Git Bash** instead, after `pnpm install`:
+
+```bash
+# 1. Create your environment files from the examples (one time only)
+cp packages/web/.env.example packages/web/.env.local
+cp packages/api/.env.example packages/api/.env
+
+# 2. Start the local database (open Docker Desktop first)
+pnpm api:docker:up
+
+# 3. Create the database tables (again after pulling changes to the database schema)
+pnpm api:db:push
+
+# 4. Start the API and the website
+pnpm exec concurrently -k "pnpm dev:api" "pnpm dev:web"
+```
+
+Then open [http://localhost:3000](http://localhost:3000). Day to day, you only need steps 2 and 4.
 
 > **New Contributors:** See our detailed [Contributing Guide](CONTRIBUTING.md) for more options and troubleshooting.
 
