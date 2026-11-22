@@ -29,6 +29,8 @@ This repository holds the desktop web application and the API behind it:
 
 **Prerequisites:** Node.js 24+, pnpm 10+, and [Docker](https://www.docker.com/products/docker-desktop/) (the local PostgreSQL database runs in a container).
 
+> **On Windows?** Clone and run `pnpm install` as below, then follow the [Windows](#windows) steps instead of `pnpm run setup` and `pnpm dev`.
+
 ```bash
 # Clone and install
 git clone https://github.com/oss-slu/lrda_website.git
