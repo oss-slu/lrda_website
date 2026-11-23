@@ -19,29 +19,7 @@ concurrency:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run unit tests
-        run: pnpm test:unit --silent --no-coverage
-        env:
-          VITE_API_URL: 'http://localhost:3002'
-          CI: 'true'
-          SUPPRESS_CONSOLE: 'true'
+    uses: ./.github/workflows/ci-cd.yml
 
   deploy:
     name: Deploy to Cloudflare Workers

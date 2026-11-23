@@ -5,6 +5,16 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.d.ts', 'src/**/__tests__/**'],
+      reporter: ['text-summary', 'html'],
+      thresholds: {
+        lines: 19.63,
+      },
+      reportOnFailure: true,
+    },
     env: {
       NODE_ENV: 'test',
       ENVIRONMENT: 'test',
@@ -13,6 +23,7 @@ export default defineConfig({
       LOG_LEVEL: 'silent',
       BETTER_AUTH_SECRET: 'test-secret-key-for-testing-only',
       BETTER_AUTH_URL: 'http://localhost:3003',
+      ...(process.env.DATABASE_URL && { DATABASE_URL: process.env.DATABASE_URL }),
     },
   },
   resolve: {
